@@ -8,5 +8,9 @@ export default defineConfig({
     alias: {
       '@': resolve(__dirname, 'src')
     }
+  },
+  server: {
+    host: '0.0.0.0', // 监听所有 IP 地址
+    port: 3000        // 可以指定你希望的端口
   }
 })
