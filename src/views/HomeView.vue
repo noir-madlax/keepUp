@@ -1,37 +1,46 @@
 <template>
-  <div class="container mx-auto px-4">
-    <header class="py-6">
-      <h1 class="text-2xl font-bold">Keep Up (跟上)</h1>
+  <div class="min-h-screen bg-gray-50">
+    <!-- 顶部导航栏 -->
+    <header class="bg-blue-50 border-b border-blue-100">
+      <div class="container mx-auto px-4 py-4">
+        <div class="flex items-center gap-3">
+          <img src="/images/logo.png" alt="Keep Up Logo" class="h-8 w-8" />
+          <h1 class="text-2xl font-bold text-gray-900">Keep Up (跟上)</h1>
+        </div>
+      </div>
     </header>
     
-    <div class="mb-8">
-      <h2 class="text-xl mb-4">Discover Articles by Tag</h2>
-      <div class="flex gap-2 flex-wrap">
-        <button 
-          class="px-4 py-2 rounded-full border"
-          :class="selectedTag === 'all' ? 'bg-blue-500 text-white' : ''"
-          @click="selectTag('all')"
-        >
-          全部
-        </button>
-        <button 
-          v-for="tag in tags" 
-          :key="tag"
-          class="px-4 py-2 rounded-full border"
-          :class="selectedTag === tag ? 'bg-blue-500 text-white' : ''"
-          @click="selectTag(tag)"
-        >
-          {{ tag }}
-        </button>
+    <!-- 主要内容 -->
+    <div class="container mx-auto px-4 py-6">
+      <div class="mb-8">
+        <h2 class="text-xl mb-4">Discover Articles by Tag</h2>
+        <div class="flex gap-2 flex-wrap">
+          <button 
+            class="px-4 py-2 rounded-full border"
+            :class="selectedTag === 'all' ? 'bg-blue-500 text-white' : ''"
+            @click="selectTag('all')"
+          >
+            全部
+          </button>
+          <button 
+            v-for="tag in tags" 
+            :key="tag"
+            class="px-4 py-2 rounded-full border"
+            :class="selectedTag === tag ? 'bg-blue-500 text-white' : ''"
+            @click="selectTag(tag)"
+          >
+            {{ tag }}
+          </button>
+        </div>
       </div>
-    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <article-card
-        v-for="article in filteredArticles"
-        :key="article.id"
-        :article="article"
-      />
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <article-card
+          v-for="article in filteredArticles"
+          :key="article.id"
+          :article="article"
+        />
+      </div>
     </div>
   </div>
 </template>
