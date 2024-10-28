@@ -16,20 +16,21 @@
     <div class="bg-blue-50 pb-8">
       <div class="px-8">
         <div class="max-w-screen-2xl mx-auto">
-          <div class="flex gap-8">
-            <!-- 左侧图片 -->
-            <div class="w-[200px] h-[200px] flex-shrink-0">
+          <!-- 使用响应式类控制布局 -->
+          <div class="flex flex-col md:flex-row gap-8">
+            <!-- 图片容器：移动端居中显示 -->
+            <div class="w-full md:w-[200px] flex-shrink-0">
               <img 
                 :src="article?.coverImage" 
                 :alt="article?.title"
-                class="w-full h-full object-cover rounded-lg"
+                class="w-[200px] h-[200px] mx-auto md:mx-0 object-cover rounded-lg"
               />
             </div>
             
-            <!-- 右侧内容 -->
-            <div class="flex-1 pt-4">
-              <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ article?.title }}</h1>
-              <div class="flex items-center gap-4 text-gray-600">
+            <!-- 右侧内容：移动端居中对齐 -->
+            <div class="flex-1 text-center md:text-left">
+              <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{{ article?.title }}</h1>
+              <div class="flex items-center justify-center md:justify-start gap-4 text-gray-600">
                 <span class="text-sm">作者</span>
                 <span class="text-sm">{{ article?.publishDate }}</span>
               </div>
@@ -37,7 +38,7 @@
                 v-if="article?.originalLink"
                 :href="article.originalLink" 
                 target="_blank"
-                class="inline-flex items-center text-blue-500 hover:text-blue-600 mt-4"
+                class="inline-flex items-center justify-center md:justify-start text-blue-500 hover:text-blue-600 mt-4"
               >
                 <span>查看原文内容</span>
                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
