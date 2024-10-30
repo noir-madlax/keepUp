@@ -70,3 +70,9 @@ Thumbs.db
 # GitHub Pages
 !.github/
 
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env*.local
