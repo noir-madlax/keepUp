@@ -7,6 +7,8 @@ import router from './router'
 import './assets/tailwind.css'
 // 导入 markdown 样式
 import './assets/markdown.css'
+// 导入 element-plus 样式
+import 'element-plus/dist/index.css'
 
 const app = createApp(App)
 
