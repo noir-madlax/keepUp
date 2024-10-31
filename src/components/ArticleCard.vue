@@ -1,75 +1,67 @@
 <template>
-  <router-link 
-    :to="{ name: 'article', params: { id: props.article.id }}"
-    class="block bg-white rounded-2xl overflow-hidden shadow hover:shadow-lg transition duration-300 p-4"
+  <div 
+    class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+    @click="navigateToDetail(article.id)"
   >
-    <div class="flex gap-4 h-[120px]">
-      <!-- 左侧内容 -->
+    <div class="p-4 flex gap-4">
       <div class="flex-1">
-        <h3 class="text-xl font-semibold text-gray-900 line-clamp-3">
-          {{ props.article.title }}
-        </h3>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">{{ article.title }}</h3>
       </div>
-      
-      <!-- 右侧图片 -->
-      <div class="w-[120px] h-[120px] flex-shrink-0">
-        <img 
-          :src="props.article.coverImage" 
-          :alt="props.article.title"
-          class="w-full h-full object-cover rounded-lg"
-        />
-      </div>
+      <img src="/public/images/covers/article-1.png" alt="Article cover" class="w-24 h-24 object-cover rounded" />
     </div>
-    
-    <!-- 底部信息栏 -->
-    <div class="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-      <!-- 左侧：渠道信息 -->
+    <div class="px-4 py-3 bg-gray-50 flex justify-between items-center text-sm text-gray-600">
       <div class="flex items-center gap-2">
-        <img 
-          :src="getChannelIcon(props.article.channel)"
-          :alt="props.article.channel"
-          class="w-6 h-6"
-        />
-        <span class="text-sm text-gray-600">{{ props.article.channel }}</span>
+        <img :src="getChannelIcon(article.channel)" :alt="article.channel" class="w-4 h-4" />
+        <span>{{ article.channel }}</span>
       </div>
-      
-      <!-- 右侧：作者和时间 -->
-      <div class="flex items-center gap-4 text-sm text-gray-500">
-        <span>{{ props.article.author.name }}</span>
-        <span>{{ props.article.publishDate }}</span>
+      <div class="flex items-center gap-2">
+        <span>{{ article.author_name }}</span>
+        <span>{{ formatDate(article.created_at) }}</span>
       </div>
     </div>
-  </router-link>
+  </div>
 </template>
 
-<style scoped>
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-</style>
-
 <script setup lang="ts">
-import type { Article } from '../types/article'
-import { defineProps } from 'vue'
+import { format } from 'date-fns'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 interface Props {
-  article: Article
+  article: {
+    id: number
+    title: string
+    channel: string
+    author_name: string
+    created_at: string
+  }
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
-// 根据渠道返回对应的图标路径
-const getChannelIcon = (channel: string): string => {
-  const icons: Record<string, string> = {
-    '微信': '/images/icons/wechat.svg',
-    'YouTube': '/images/icons/youtube.svg',
-    '小宇宙': '/images/icons/xiaoyuzhou.svg',
-    'PDF': '/images/icons/pdf.svg',
-    '视频': '/images/icons/video.svg'
+const formatDate = (date: string | null) => {
+  if (!date) return ''
+  try {
+    return format(new Date(date), 'yyyy-MM-dd')
+  } catch (error) {
+    console.error('日期格式化错误:', error)
+    return ''
   }
-  return icons[channel] || '/images/icons/default.svg'
+}
+
+const getChannelIcon = (channel: string): string => {
+  const iconMap: Record<string, string> = {
+    '微信': '/public/images/icons/wechat.svg',
+    'YouTube': '/public/images/icons/youtube.svg',
+    '小宇宙': '/public/images/icons/xiaoyuzhou.svg',
+    'PDF': '/public/images/icons/pdf.svg',
+    '视频': '/public/images/icons/video.svg'
+  }
+  return iconMap[channel] || '/public/images/icons/default.svg'
+}
+
+const navigateToDetail = (id: number) => {
+  router.push(`/article/${id}`)
 }
 </script>

@@ -163,53 +163,36 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import ArticleCard from '../components/ArticleCard.vue'
-import type { Article } from '../types/article'
-import { articles as articleData } from '../data/articles'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
 
-const articles = ref<Article[]>(articleData)
-const selectedTag = ref<string>('all')
-const showUploadModal = ref(false)
-const newArticle = ref({ title: '', author: '' })
+// 预定义的标签
+const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微信', '视频']
 
-const tags = computed((): string[] => {
-  const allTags = new Set<string>()
-  articles.value.forEach((article: Article) => {
-    article.tags.forEach((tag: string) => allTags.add(tag))
-  })
-  return Array.from(allTags)
-})
-
-const filteredArticles = computed((): Article[] => {
-  if (selectedTag.value === 'all') return articles.value
-  return articles.value.filter((article: Article) => 
-    article.tags.includes(selectedTag.value)
-  )
-})
-
-const selectTag = (tag: string): void => {
-  selectedTag.value = tag
+interface Article {
+  id: number
+  title: string
+  author_name: string
+  channel: string
+  created_at: string
+  tags: string[]
 }
 
-const articleForm = reactive({
-  title: '',
-  author_name: '',
-  author_avatar: '',
-  content: '',
-  tags: [],
-  channel: '',
-  publish_date: null,
-  original_link: ''
-})
+const articles = ref<Article[]>([])
+const selectedTag = ref('all')
+const showUploadModal = ref(false)
 
+// 使用预定义的标签替代动态计算的标签
+const tags = computed(() => PREDEFINED_TAGS)
+
+// 修改文章获取函数，不获取 content 字段
 const fetchArticles = async () => {
   try {
     const { data, error } = await supabase
       .from('keep_articles')
-      .select('*')
+      .select('id, title, author_name, channel, created_at, tags')
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -223,6 +206,34 @@ const fetchArticles = async () => {
     console.error('获取文章列表时出错:', error)
     ElMessage.error('系统错误，请稍后重试')
   }
+}
+
+// 修改筛选逻辑以适应新的数据结构
+const filteredArticles = computed(() => {
+  if (selectedTag.value === 'all') return articles.value
+  return articles.value.filter(article => 
+    article.tags && article.tags.includes(selectedTag.value)
+  )
+})
+
+// 页面加载时获取文章列表
+onMounted(() => {
+  fetchArticles()
+})
+
+const articleForm = reactive({
+  title: '',
+  author_name: '',
+  author_avatar: '',
+  content: '',
+  tags: [],
+  channel: '',
+  publish_date: null,
+  original_link: ''
+})
+
+const selectTag = (tag: string): void => {
+  selectedTag.value = tag
 }
 
 const submitArticle = async () => {
