@@ -111,12 +111,8 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">作者</label>
-            <input 
-              v-model="articleForm.author_name" 
-              class="w-full border rounded-md px-3 py-2" 
-              placeholder="请输入作者名称"
-            />
+            <label class="block text-sm font-medium text-gray-700 mb-1">作者 *</label>
+            <author-select v-model="articleForm.author_id" />
           </div>
 
           <div>
@@ -204,6 +200,8 @@ import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
 import LoginModal from '../components/LoginModal.vue'
+import type { Article } from '../types/article'
+import AuthorSelect from '../components/AuthorSelect.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -212,27 +210,26 @@ const showUploadModal = ref(false)
 // 预定义的标签
 const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微信', '视频']
 
-interface Article {
-  id: number
-  title: string
-  author_name: string
-  channel: string
-  created_at: string
-  tags: string[]
-}
-
 const articles = ref<Article[]>([])
 const selectedTag = ref('all')
 
 // 使用预定义的标签替代动态计算的标签
 const tags = computed(() => PREDEFINED_TAGS)
 
-// 修改文章获取函数，不获取 content 字段
+// 修改文章获取函数
 const fetchArticles = async () => {
   try {
     const { data, error } = await supabase
       .from('keep_articles')
-      .select('id, title, author_name, channel, created_at, tags')
+      .select(`
+        id,
+        title,
+        channel,
+        created_at,
+        tags,
+        author_id,
+        author:keep_authors(id, name, icon)
+      `)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -264,13 +261,12 @@ onMounted(() => {
 
 const articleForm = reactive({
   title: '',
-  author_name: '',
-  author_avatar: '',
   content: '',
-  tags: [],
+  author_id: null as number | null,
+  tags: [] as string[],
   channel: '',
-  publish_date: null,
-  original_link: ''
+  publish_date: null as string | null,
+  original_link: null as string | null
 })
 
 const selectTag = (tag: string): void => {
@@ -296,6 +292,18 @@ const handleLogout = async () => {
   }
 }
 
+const resetForm = () => {
+  Object.assign(articleForm, {
+    title: '',
+    content: '',
+    author_id: null,
+    tags: [],
+    channel: '',
+    publish_date: null,
+    original_link: null
+  })
+}
+
 const submitArticle = async () => {
   try {
     if (!authStore.isAuthenticated) {
@@ -304,8 +312,8 @@ const submitArticle = async () => {
       return
     }
 
-    if (!articleForm.title || !articleForm.content) {
-      ElMessage.error('标题和内容为必填项')
+    if (!articleForm.title || !articleForm.content || !articleForm.author_id) {
+      ElMessage.error('标题、内容和作者为必填项')
       return
     }
     
@@ -315,6 +323,8 @@ const submitArticle = async () => {
         ...articleForm,
         user_id: authStore.user?.id
       }])
+      .select()
+      .single()
 
     if (error) {
       console.error('添加文章失败:', error)
@@ -324,7 +334,7 @@ const submitArticle = async () => {
 
     ElMessage.success('文章添加成功')
     showUploadModal.value = false
-
+    resetForm()
     await fetchArticles()
   } catch (error) {
     console.error('提交文章时出错:', error)

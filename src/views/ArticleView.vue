@@ -20,7 +20,15 @@
           <div class="flex-1">
             <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{{ article.title }}</h1>
             <div class="flex items-center gap-4 text-gray-600 text-sm md:text-base">
-              <span>{{ article.author_name }}</span>
+              <div class="flex items-center gap-2">
+                <img 
+                  v-if="article.author?.icon" 
+                  :src="article.author.icon" 
+                  :alt="article.author.name" 
+                  class="w-5 h-5 rounded-full"
+                />
+                <span>{{ article.author?.name }}</span>
+              </div>
               <span>{{ formatDate(article.created_at) }}</span>
             </div>
             <a 
@@ -53,18 +61,10 @@ import { format } from 'date-fns'
 import { marked } from 'marked'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
+import type { Article } from '../types/article'
 
 const route = useRoute()
 const router = useRouter()
-
-interface Article {
-  id: number
-  title: string
-  author_name: string
-  content: string
-  created_at: string
-  original_link: string | null
-}
 
 const article = ref<Article>({
   id: 0,
@@ -100,7 +100,14 @@ const fetchArticle = async () => {
   try {
     const { data, error } = await supabase
       .from('keep_articles')
-      .select('id, title, author_name, content, created_at, original_link')
+      .select(`
+        id,
+        title,
+        content,
+        created_at,
+        original_link,
+        author:keep_authors(id, name, icon)
+      `)
       .eq('id', articleId)
       .single()
 
@@ -117,7 +124,7 @@ const fetchArticle = async () => {
       return
     }
 
-    article.value = data as Article
+    article.value = data
   } catch (error) {
     console.error('获取文章详情时出错:', error)
     ElMessage.error('系统错误，请稍后重试')

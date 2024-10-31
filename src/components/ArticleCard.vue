@@ -15,7 +15,13 @@
         <span>{{ article.channel }}</span>
       </div>
       <div class="flex items-center gap-2">
-        <span>{{ article.author_name }}</span>
+        <img 
+          v-if="article.author?.icon" 
+          :src="article.author.icon" 
+          :alt="article.author.name" 
+          class="w-4 h-4 rounded-full"
+        />
+        <span>{{ article.author?.name }}</span>
         <span>{{ formatDate(article.created_at) }}</span>
       </div>
     </div>
@@ -25,17 +31,12 @@
 <script setup lang="ts">
 import { format } from 'date-fns'
 import { useRouter } from 'vue-router'
+import type { Article } from '../types/article'
 
 const router = useRouter()
 
 interface Props {
-  article: {
-    id: number
-    title: string
-    channel: string
-    author_name: string
-    created_at: string
-  }
+  article: Article
 }
 
 defineProps<Props>()

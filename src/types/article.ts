@@ -1,14 +1,13 @@
 export interface Article {
-  id: string;
+  id: number;
   title: string;
   content: string;
-  author: {
-    name: string;
-    avatar: string;
-  };
-  tags: string[];
-  publishDate: string;
-  coverImage: string;
+  author_id: number;
+  author?: Author;
   channel: string;
-  originalLink: string; // 添加原文链接
+  created_at: string;
+  tags: string[];
+  publish_date: string | null;
+  original_link: string | null;
+  user_id: string | null;
 }
