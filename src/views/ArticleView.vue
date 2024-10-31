@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { format } from 'date-fns'
 import { marked } from 'marked'
@@ -90,11 +90,18 @@ const formatDate = (date: string | null) => {
 }
 
 const fetchArticle = async () => {
+  const articleId = route.params.id
+  if (!articleId) {
+    ElMessage.error('文章ID不存在')
+    router.push('/')
+    return
+  }
+
   try {
     const { data, error } = await supabase
       .from('keep_articles')
       .select('id, title, author_name, content, created_at, original_link')
-      .eq('id', route.params.id)
+      .eq('id', articleId)
       .single()
 
     if (error) {
@@ -110,13 +117,20 @@ const fetchArticle = async () => {
       return
     }
 
-    article.value = data
+    article.value = data as Article
   } catch (error) {
     console.error('获取文章详情时出错:', error)
     ElMessage.error('系统错误，请稍后重试')
     router.push('/')
   }
 }
+
+// 监听路由参数变化，重新获取文章
+watch(() => route.params.id, (newId) => {
+  if (newId) {
+    fetchArticle()
+  }
+})
 
 onMounted(() => {
   fetchArticle()
