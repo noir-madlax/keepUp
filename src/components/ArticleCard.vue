@@ -52,13 +52,13 @@ const formatDate = (date: string | null) => {
 
 const getChannelIcon = (channel: string): string => {
   const iconMap: Record<string, string> = {
-    '微信': '/public/images/icons/wechat.svg',
-    'YouTube': '/public/images/icons/youtube.svg',
-    '小宇宙': '/public/images/icons/xiaoyuzhou.svg',
-    'PDF': '/public/images/icons/pdf.svg',
-    '视频': '/public/images/icons/video.svg'
+    '微信': '/images/icons/wechat.svg',
+    'YouTube': '/images/icons/youtube.svg',
+    '小宇宙': '/images/icons/xiaoyuzhou.svg',
+    'PDF': '/images/icons/pdf.svg',
+    '视频': '/images/icons/video.svg'
   }
-  return iconMap[channel] || '/public/images/icons/default.svg'
+  return iconMap[channel] || '/images/icons/default.svg'
 }
 
 const navigateToDetail = (id: number) => {
