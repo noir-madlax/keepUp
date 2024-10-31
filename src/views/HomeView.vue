@@ -7,12 +7,47 @@
           <img src="/images/logo.png" alt="Keep Up Logo" class="h-8 w-8" />
           <h1 class="text-2xl font-bold text-gray-900">Keep Up (跟牢)</h1>
         </div>
-        <button @click="showUploadModal = true" class="bg-blue-500 text-white px-4 py-2 rounded">
-          上传
-        </button>
+        <div class="flex items-center gap-4">
+          <template v-if="authStore.isAuthenticated">
+            <div class="flex items-center gap-2">
+              <img 
+                :src="authStore.user?.user_metadata?.avatar_url" 
+                alt="User Avatar" 
+                class="w-8 h-8 rounded-full"
+              />
+              <span>{{ authStore.user?.user_metadata?.user_name }}</span>
+            </div>
+            <button 
+              @click="handleLogout" 
+              class="text-gray-600 hover:text-gray-800"
+            >
+              退出
+            </button>
+          </template>
+          <template v-else>
+            <button 
+              @click="showLoginModal = true"
+              class="text-gray-600 hover:text-gray-800"
+            >
+              登录
+            </button>
+          </template>
+          <button 
+            @click="handleUpload" 
+            class="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            上传
+          </button>
+        </div>
       </div>
     </header>
     
+    <!-- 添加登录模态框 -->
+    <login-modal 
+      v-if="showLoginModal" 
+      @close="showLoginModal = false"
+    />
+
     <!-- 主要内容 -->
     <div class="px-8 py-6">
       <div class="max-w-screen-2xl mx-auto">
@@ -167,6 +202,12 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import ArticleCard from '../components/ArticleCard.vue'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
+import { useAuthStore } from '../stores/auth'
+import LoginModal from '../components/LoginModal.vue'
+
+const authStore = useAuthStore()
+const showLoginModal = ref(false)
+const showUploadModal = ref(false)
 
 // 预定义的标签
 const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微信', '视频']
@@ -182,7 +223,6 @@ interface Article {
 
 const articles = ref<Article[]>([])
 const selectedTag = ref('all')
-const showUploadModal = ref(false)
 
 // 使用预定义的标签替代动态计算的标签
 const tags = computed(() => PREDEFINED_TAGS)
@@ -219,6 +259,7 @@ const filteredArticles = computed(() => {
 // 页面加载时获取文章列表
 onMounted(() => {
   fetchArticles()
+  authStore.loadUser()
 })
 
 const articleForm = reactive({
@@ -236,8 +277,33 @@ const selectTag = (tag: string): void => {
   selectedTag.value = tag
 }
 
+const handleUpload = () => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning('请先登录')
+    showLoginModal.value = true
+    return
+  }
+  showUploadModal.value = true
+}
+
+const handleLogout = async () => {
+  try {
+    await authStore.signOut()
+    ElMessage.success('已退出登录')
+  } catch (error) {
+    console.error('Logout error:', error)
+    ElMessage.error('退出失败，请重试')
+  }
+}
+
 const submitArticle = async () => {
   try {
+    if (!authStore.isAuthenticated) {
+      ElMessage.warning('请先登录')
+      showLoginModal.value = true
+      return
+    }
+
     if (!articleForm.title || !articleForm.content) {
       ElMessage.error('标题和内容为必填项')
       return
@@ -245,7 +311,10 @@ const submitArticle = async () => {
     
     const { data, error } = await supabase
       .from('keep_articles')
-      .insert([articleForm])
+      .insert([{
+        ...articleForm,
+        user_id: authStore.user?.id
+      }])
 
     if (error) {
       console.error('添加文章失败:', error)
@@ -255,18 +324,7 @@ const submitArticle = async () => {
 
     ElMessage.success('文章添加成功')
     showUploadModal.value = false
-    // 重置表单
-    Object.assign(articleForm, {
-      title: '',
-      author_name: '',
-      author_avatar: '',
-      content: '',
-      tags: [],
-      channel: '',
-      publish_date: null,
-      original_link: ''
-    })
-    // 刷新文章列表
+    resetForm()
     await fetchArticles()
   } catch (error) {
     console.error('提交文章时出错:', error)
