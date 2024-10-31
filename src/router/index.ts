@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
 import HomeView from '../views/HomeView.vue'
 import ArticleView from '../views/ArticleView.vue'
 import AuthCallback from '../views/AuthCallback.vue'

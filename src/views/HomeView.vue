@@ -324,7 +324,7 @@ const submitArticle = async () => {
 
     ElMessage.success('文章添加成功')
     showUploadModal.value = false
-    resetForm()
+
     await fetchArticles()
   } catch (error) {
     console.error('提交文章时出错:', error)
