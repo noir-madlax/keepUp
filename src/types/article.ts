@@ -3,7 +3,11 @@ export interface Article {
   title: string;
   content: string;
   author_id: number;
-  author?: Author;
+  author?: {
+    id: number;
+    name: string;
+    icon?: string;
+  };
   channel: string;
   created_at: string;
   tags: string[];

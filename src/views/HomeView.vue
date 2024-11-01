@@ -100,79 +100,7 @@
           </button>
         </div>
 
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">标题 *</label>
-            <input 
-              v-model="articleForm.title" 
-              class="w-full border rounded-md px-3 py-2" 
-              placeholder="请输入文章标题"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">作者 *</label>
-            <author-select v-model="articleForm.author_id" />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">内容 *</label>
-            <textarea 
-              v-model="articleForm.content" 
-              rows="6" 
-              class="w-full border rounded-md px-3 py-2" 
-              placeholder="请输入文章内容"
-            ></textarea>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">标签</label>
-            <div class="space-x-4">
-              <label v-for="tag in ['24小时', '博客', '论文', '微信', '视频']" :key="tag" class="inline-flex items-center">
-                <input 
-                  type="checkbox" 
-                  :value="tag" 
-                  v-model="articleForm.tags" 
-                  class="rounded border-gray-300"
-                />
-                <span class="ml-2">{{ tag }}</span>
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">频道</label>
-            <div class="space-x-4">
-              <label v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF','视频']" :key="channel" class="inline-flex items-center">
-                <input 
-                  type="radio" 
-                  :value="channel" 
-                  v-model="articleForm.channel" 
-                  class="border-gray-300"
-                />
-                <span class="ml-2">{{ channel }}</span>
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">发布日期</label>
-            <input 
-              type="datetime-local" 
-              v-model="articleForm.publish_date" 
-              class="w-full border rounded-md px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">原文链接</label>
-            <input 
-              v-model="articleForm.original_link" 
-              class="w-full border rounded-md px-3 py-2" 
-              placeholder="请输入原文链接"
-            />
-          </div>
-        </div>
+        <article-form v-model="articleForm" />
 
         <div class="mt-6 flex justify-end space-x-3">
           <button 
@@ -202,6 +130,7 @@ import { useAuthStore } from '../stores/auth'
 import LoginModal from '../components/LoginModal.vue'
 import type { Article } from '../types/article'
 import AuthorSelect from '../components/AuthorSelect.vue'
+import ArticleForm from '../components/ArticleForm.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -253,20 +182,20 @@ const filteredArticles = computed(() => {
   )
 })
 
-// 页面加载时获取文章列表
+// 页面加载时获文章列表
 onMounted(() => {
   fetchArticles()
   authStore.loadUser()
 })
 
-const articleForm = reactive({
+const articleForm = ref<Partial<Article>>({
   title: '',
   content: '',
-  author_id: null as number | null,
-  tags: [] as string[],
+  author_id: undefined,
+  tags: [],
   channel: '',
-  publish_date: null as string | null,
-  original_link: null as string | null
+  publish_date: null,
+  original_link: null
 })
 
 const selectTag = (tag: string): void => {
@@ -293,15 +222,15 @@ const handleLogout = async () => {
 }
 
 const resetForm = () => {
-  Object.assign(articleForm, {
+  articleForm.value = {
     title: '',
     content: '',
-    author_id: null,
+    author_id: undefined,
     tags: [],
     channel: '',
     publish_date: null,
     original_link: null
-  })
+  }
 }
 
 const submitArticle = async () => {
@@ -312,17 +241,26 @@ const submitArticle = async () => {
       return
     }
 
-    if (!articleForm.title || !articleForm.content || !articleForm.author_id) {
+    if (!articleForm.value.title || !articleForm.value.content || !articleForm.value.author_id) {
       ElMessage.error('标题、内容和作者为必填项')
       return
     }
     
+    // 创建一个普通对象，只包含需要的字段
+    const submitData = {
+      title: articleForm.value.title,
+      content: articleForm.value.content,
+      author_id: articleForm.value.author_id,
+      tags: articleForm.value.tags || [],
+      channel: articleForm.value.channel || '',
+      publish_date: articleForm.value.publish_date,
+      original_link: articleForm.value.original_link,
+      user_id: authStore.user?.id
+    }
+
     const { data, error } = await supabase
       .from('keep_articles')
-      .insert([{
-        ...articleForm,
-        user_id: authStore.user?.id
-      }])
+      .insert([submitData])
       .select()
       .single()
 

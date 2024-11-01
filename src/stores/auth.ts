@@ -1,51 +1,56 @@
 import { defineStore } from 'pinia'
-import { supabase } from '../supabaseClient'
-import type { User, AuthState } from '../types/auth'
 import { ref, computed } from 'vue'
+import { supabase } from '../supabaseClient'
+import type { User } from '@supabase/supabase-js'
+import type { Provider } from '@supabase/supabase-js'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
-  const loading = ref(false)
-
   const isAuthenticated = computed(() => !!user.value)
 
-  async function setUser(userData: User | null) {
-    user.value = userData
-  }
-
-  async function loadUser() {
+  const loadUser = async () => {
     try {
-      loading.value = true
-      const { data: { user: userData } } = await supabase.auth.getUser()
-      user.value = userData
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      console.log('Loaded user:', currentUser)
+      user.value = currentUser
     } catch (error) {
       console.error('Error loading user:', error)
-    } finally {
-      loading.value = false
+      user.value = null
     }
   }
 
-  async function signInWithGithub() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
-    if (error) throw error
+  const signInWithOAuth = async (provider: Provider) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) throw error
+      return data
+    } catch (error) {
+      console.error('OAuth sign in error:', error)
+      throw error
+    }
   }
 
-  async function signInWithGoogle() {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
-    if (error) throw error
+  const signInWithGithub = () => {
+    return signInWithOAuth('github')
   }
 
-  async function signOut() {
+  const signInWithGoogle = () => {
+    return signInWithOAuth('google')
+  }
+
+  // 在用户登录时更新用户信息
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Auth state changed:', event, session?.user)
+    user.value = session?.user || null
+  })
+
+  const signOut = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     user.value = null
@@ -53,9 +58,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     user,
-    loading,
     isAuthenticated,
-    setUser,
     loadUser,
     signInWithGithub,
     signInWithGoogle,
