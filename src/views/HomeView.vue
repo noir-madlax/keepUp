@@ -156,6 +156,7 @@ const fetchArticles = async () => {
         channel,
         created_at,
         tags,
+        publish_date,
         author_id,
         author:keep_authors(id, name, icon)
       `)

@@ -22,7 +22,7 @@
           class="w-4 h-4 rounded-full"
         />
         <span>{{ article.author?.name }}</span>
-        <span>{{ formatDate(article.created_at) }}</span>
+        <span>{{ formatDate(article.publish_date) }}</span>
       </div>
     </div>
   </div>

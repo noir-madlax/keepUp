@@ -6,6 +6,13 @@
           <img src="/images/logo.png" alt="Keep Up Logo" class="h-8 w-8" />
           <h1 class="text-2xl font-bold text-gray-900">Keep Up (跟牢)</h1>
         </div>
+        <button 
+              v-if="canEdit"
+              @click="showEditModal = true"
+                class="absolute top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              >
+          编辑文章
+        </button>
       </div>
     </header>
 
@@ -13,13 +20,7 @@
       <div class="bg-blue-50">
         <div class="max-w-4xl mx-auto">
           <div class="relative px-4 py-8">
-            <button 
-              v-if="canEdit"
-              @click="showEditModal = true"
-              class="absolute top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              编辑文章
-            </button>
+           
 
             <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
               <img 
@@ -39,7 +40,7 @@
                     />
                     <span>{{ article.author?.name }}</span>
                   </div>
-                  <span>{{ formatDate(article.created_at) }}</span>
+                  <span>{{ formatDate(article.publish_date) }}</span>
                 </div>
                 <a 
                   v-if="article.original_link"
