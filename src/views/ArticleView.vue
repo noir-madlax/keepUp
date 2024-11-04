@@ -17,7 +17,7 @@
     </header>
 
     <template v-if="article">
-      <div class="bg-blue-50">
+      <div>
         <div class="max-w-4xl mx-auto">
           <div class="relative px-4 py-8">
            
