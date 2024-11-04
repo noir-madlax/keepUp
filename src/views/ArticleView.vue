@@ -169,12 +169,13 @@ const fetchArticle = async () => {
       return
     }
 
-    console.log('Article data:', data)
-    console.log('Current user:', authStore.user)
-    console.log('User ID match:', data.user_id === authStore.user?.id)
+    const formattedData = {
+      ...data,
+      publish_date: data.publish_date ? new Date(data.publish_date).toISOString().split('T')[0] : null
+    }
 
-    article.value = data as Article
-    editForm.value = { ...data }
+    article.value = formattedData as Article
+    editForm.value = { ...formattedData }
   } catch (error) {
     console.error('获取文章详情失败:', error)
     ElMessage.error('获取文章失败')
@@ -194,7 +195,7 @@ const submitEdit = async () => {
       author_id: editForm.value.author_id,
       tags: editForm.value.tags || [],
       channel: editForm.value.channel,
-      publish_date: editForm.value.publish_date,
+      publish_date: editForm.value.publish_date ? new Date(editForm.value.publish_date).toISOString() : null,
       original_link: editForm.value.original_link
     }
 
