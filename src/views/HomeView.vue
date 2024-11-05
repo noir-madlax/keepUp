@@ -100,7 +100,10 @@
           </button>
         </div>
 
-        <article-form v-model="articleForm" />
+        <article-form 
+          v-model="articleForm" 
+          ref="formRef"
+        />
 
         <div class="mt-6 flex justify-end space-x-3">
           <button 
@@ -234,6 +237,9 @@ const resetForm = () => {
   }
 }
 
+// 在组件顶部定义 formRef
+const formRef = ref<InstanceType<typeof ArticleForm> | null>(null)
+
 const submitArticle = async () => {
   try {
     if (!authStore.isAuthenticated) {
@@ -247,7 +253,6 @@ const submitArticle = async () => {
       return
     }
     
-    // 创建一个普通对象，只包含需要的字段
     const submitData = {
       title: articleForm.value.title,
       content: articleForm.value.content,
@@ -259,16 +264,29 @@ const submitArticle = async () => {
       user_id: authStore.user?.id
     }
 
+    // 提交文章基本信息
     const { data, error } = await supabase
       .from('keep_articles')
       .insert([submitData])
       .select()
       .single()
 
-    if (error) {
-      console.error('添加文章失败:', error)
-      ElMessage.error('添加失败：' + error.message)
-      return
+    if (error) throw error
+
+    // 使用正确引用的 formRef
+    if (formRef.value) {
+      // 提交小节内容
+      const sectionsData = formRef.value.getSectionsData()
+      if (sectionsData.length > 0) {
+        const { error: sectionsError } = await supabase
+          .from('keep_article_sections')
+          .insert(sectionsData.map(section => ({
+            ...section,
+            article_id: data.id
+          })))
+
+        if (sectionsError) throw sectionsError
+      }
     }
 
     ElMessage.success('文章添加成功')

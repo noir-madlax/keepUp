@@ -7,21 +7,19 @@
           <h1 class="text-2xl font-bold text-gray-900">Keep Up (跟牢)</h1>
         </div>
         <button 
-              v-if="canEdit"
-              @click="showEditModal = true"
-                class="bg-blue-500 text-white px-4 py-2 rounded"
-              >
+          v-if="canEdit"
+          @click="showEditModal = true"
+          class="bg-blue-500 text-white px-4 py-2 rounded"
+        >
           编辑文章
         </button>
       </div>
     </header>
 
     <template v-if="article">
-      <div>
+      <div class="bg-blue-50">
         <div class="max-w-4xl mx-auto">
           <div class="relative px-4 py-8">
-           
-
             <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
               <img 
                 src="/public/images/covers/article-1.png" 
@@ -56,10 +54,55 @@
         </div>
       </div>
 
+      <!-- 视角选择 -->
+      <div class="max-w-4xl mx-auto px-4 mt-6">
+        <div class="flex gap-4 mb-6">
+          <button
+            v-for="viewType in ['精读', '热闹', '原文']"
+            :key="viewType"
+            @click="selectView(viewType)"
+            class="px-4 py-2 rounded-full"
+            :class="currentView === viewType ? 'bg-blue-500 text-white' : 'border border-gray-300'"
+          >
+            {{ viewType === '精读' ? '🌟这篇我要精读' : 
+               viewType === '热闹' ? '🔥我先看看热闹' : 
+               '📚我要看看原文' }}
+          </button>
+        </div>
+
+        <!-- 小节标签 -->
+        <div class="flex flex-wrap gap-2 mb-6">
+          <button
+            v-for="sectionType in availableSectionTypes"
+            :key="sectionType"
+            @click="toggleSection(sectionType)"
+            class="px-3 py-1 rounded-full text-sm"
+            :class="selectedSections.includes(sectionType) ? 
+              'bg-blue-500 text-white' : 
+              'bg-gray-100 text-gray-600'"
+          >
+            {{ sectionType }}
+          </button>
+        </div>
+      </div>
+
+      <!-- 文章内容 -->
       <div class="max-w-4xl mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-sm p-4 md:p-8">
           <article class="prose prose-sm md:prose-lg max-w-none">
-            <div v-html="markdownContent"></div>
+            <template v-if="sections.length">
+              <div 
+                v-for="section in displaySections" 
+                :key="section.id"
+                class="mb-8"
+              >
+                <h2 class="text-xl font-bold mb-4">{{ section.section_type }}</h2>
+                <div v-html="marked(section.content)"></div>
+              </div>
+            </template>
+            <div v-else>
+              <div v-html="markdownContent"></div>
+            </div>
           </article>
         </div>
       </div>
@@ -69,6 +112,7 @@
       <p>加载中...</p>
     </div>
 
+    <!-- 编辑模态框 -->
     <div 
       v-if="showEditModal" 
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -85,7 +129,12 @@
           </button>
         </div>
 
-        <article-form v-if="article" v-model="editForm" />
+        <article-form 
+          v-if="article" 
+          v-model="editForm" 
+          :articleId="article.id"
+          ref="formRef"
+        />
 
         <div class="mt-6 flex justify-end space-x-3">
           <button 
@@ -116,13 +165,50 @@ import { useAuthStore } from '../stores/auth'
 import { ElMessage } from 'element-plus'
 import ArticleForm from '../components/ArticleForm.vue'
 import type { Article } from '../types/article'
+import type { ArticleSection, SectionType, ViewType } from '../types/section'
+import { VIEW_CONFIGS, ALL_SECTION_TYPES } from '../types/section'
 
-  const route = useRoute()
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 const article = ref<Article | null>(null)
+const sections = ref<ArticleSection[]>([])
 const showEditModal = ref(false)
 const editForm = ref<Partial<Article>>({})
+
+// 视角和小节管理
+const currentView = ref<ViewType>('精读')
+const selectedSections = ref<SectionType[]>([])
+
+// 根据当前视角获取可用的小节类型
+const availableSectionTypes = computed(() => {
+  return ALL_SECTION_TYPES.filter(type => 
+    VIEW_CONFIGS[currentView.value].includedSections.includes(type)
+  )
+})
+
+// 根据选中的小节筛选显示内容
+const displaySections = computed(() => {
+  return sections.value
+    .filter(section => selectedSections.value.includes(section.section_type))
+    .sort((a, b) => a.sort_order - b.sort_order)
+})
+
+// 选择视角
+const selectView = (view: ViewType) => {
+  currentView.value = view
+  selectedSections.value = [...VIEW_CONFIGS[view].includedSections]
+}
+
+// 切换小节显示状态
+const toggleSection = (sectionType: SectionType) => {
+  const index = selectedSections.value.indexOf(sectionType)
+  if (index === -1) {
+    selectedSections.value.push(sectionType)
+  } else {
+    selectedSections.value.splice(index, 1)
+  }
+}
 
 const markdownContent = computed(() => {
   return article.value?.content ? marked(article.value.content) : ''
@@ -139,22 +225,15 @@ const formatDate = (date: string | null) => {
 }
 
 const canEdit = computed(() => {
-  const isAuth = authStore.isAuthenticated
-  const userId = authStore.user?.id
-  const articleUserId = article.value?.user_id
-  
-  console.log('Auth status:', {
-    isAuthenticated: isAuth,
-    userId: userId,
-    articleUserId: articleUserId
-  })
-  
-  return isAuth && userId === articleUserId
+  return authStore.isAuthenticated && 
+         article.value?.user_id === authStore.user?.id
 })
 
+// 获取文章和小节内容
 const fetchArticle = async () => {
   try {
-    const { data, error } = await supabase
+    // 获取文章基本信息
+    const { data: articleData, error: articleError } = await supabase
       .from('keep_articles')
       .select(`
         *,
@@ -164,23 +243,37 @@ const fetchArticle = async () => {
       .eq('id', route.params.id)
       .single()
 
-    if (error) {
-      ElMessage.error('获取文章失败')
-      return
-    }
+    if (articleError) throw articleError
+
+    // 获取文章小节内容
+    const { data: sectionsData, error: sectionsError } = await supabase
+      .from('keep_article_sections')
+      .select('*')
+      .eq('article_id', route.params.id)
+      .order('sort_order', { ascending: true })
+
+    if (sectionsError) throw sectionsError
 
     const formattedData = {
-      ...data,
-      publish_date: data.publish_date ? new Date(data.publish_date).toISOString().split('T')[0] : null
+      ...articleData,
+      publish_date: articleData.publish_date ? 
+        new Date(articleData.publish_date).toISOString().split('T')[0] : null
     }
 
     article.value = formattedData as Article
+    sections.value = sectionsData as ArticleSection[]
     editForm.value = { ...formattedData }
+
+    // 初始化选中的小节
+    selectedSections.value = [...VIEW_CONFIGS['精读'].includedSections]
   } catch (error) {
     console.error('获取文章详情失败:', error)
     ElMessage.error('获取文章失败')
   }
 }
+
+// 添加表单引用
+const formRef = ref<InstanceType<typeof ArticleForm> | null>(null)
 
 const submitEdit = async () => {
   try {
@@ -189,22 +282,47 @@ const submitEdit = async () => {
       return
     }
 
+    // 更新文章基本信息
     const updateData = {
       title: editForm.value.title,
       content: editForm.value.content,
       author_id: editForm.value.author_id,
       tags: editForm.value.tags || [],
       channel: editForm.value.channel,
-      publish_date: editForm.value.publish_date ? new Date(editForm.value.publish_date).toISOString() : null,
+      publish_date: editForm.value.publish_date ? 
+        new Date(editForm.value.publish_date).toISOString() : null,
       original_link: editForm.value.original_link
     }
 
-    const { error } = await supabase
+    const { error: articleError } = await supabase
       .from('keep_articles')
       .update(updateData)
       .eq('id', article.value?.id)
 
-    if (error) throw error
+    if (articleError) throw articleError
+
+    if (formRef.value) {
+      // 删除现有小节
+      const { error: deleteError } = await supabase
+        .from('keep_article_sections')
+        .delete()
+        .eq('article_id', article.value?.id)
+
+      if (deleteError) throw deleteError
+
+      // 添加新的小节
+      const sectionsData = formRef.value.getSectionsData()
+      if (sectionsData.length > 0) {
+        const { error: insertError } = await supabase
+          .from('keep_article_sections')
+          .insert(sectionsData.map(section => ({
+            ...section,
+            article_id: article.value?.id
+          })))
+
+        if (insertError) throw insertError
+      }
+    }
 
     ElMessage.success('更新成功')
     showEditModal.value = false
