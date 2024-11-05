@@ -54,56 +54,59 @@
         </div>
       </div>
 
-      <!-- 视角选择 -->
+      <!-- 修改视角选择和标签部分 -->
       <div class="max-w-4xl mx-auto px-4 mt-6">
-        <div class="flex gap-4 mb-6">
+        <!-- 视角选择 - 添加下划线效果 -->
+        <div class="flex gap-6 mb-6">
           <button
-            v-for="viewType in ['精读', '热闹', '原文']"
+            v-for="(viewType, index) in ['精读', '热闹', '原文']"
             :key="viewType"
             @click="selectView(viewType)"
-            class="px-4 py-2 rounded-full"
-            :class="currentView === viewType ? 'bg-blue-500 text-white' : 'border border-gray-300'"
+            class="relative pb-1 transition-colors duration-200"
+            :class="currentView === viewType ? 
+              'text-blue-600 font-medium after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-blue-600' : 
+              'text-gray-500 hover:text-gray-700'"
           >
-            {{ viewType === '精读' ? '🌟这篇我要精读' : 
-               viewType === '热闹' ? '🔥我先看看热闹' : 
-               '📚我要看看原文' }}
+            {{ index === 0 ? '🌟 这篇我要精读' : 
+               index === 1 ? '🔥 我先看看热闹' : 
+               '🔍 我先了解一下再去看原文' }}
           </button>
         </div>
 
-        <!-- 小节标签 -->
-        <div class="flex flex-wrap gap-2 mb-6">
+        <!-- 小节标签 - 修改为方形淡蓝色标签 -->
+        <div class="flex flex-wrap gap-3 pb-4 border-b border-gray-200">
           <button
             v-for="sectionType in availableSectionTypes"
             :key="sectionType"
             @click="toggleSection(sectionType)"
-            class="px-3 py-1 rounded-full text-sm"
+            class="px-4 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
             :class="selectedSections.includes(sectionType) ? 
-              'bg-blue-500 text-white' : 
-              'bg-gray-100 text-gray-600'"
+              'bg-blue-50 border-blue-400 text-blue-400' : 
+              'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
           >
             {{ sectionType }}
           </button>
         </div>
-      </div>
 
-      <!-- 文章内容 -->
-      <div class="max-w-4xl mx-auto px-4 py-8">
-        <div class="bg-white rounded-lg shadow-sm p-4 md:p-8">
-          <article class="prose prose-sm md:prose-lg max-w-none">
-            <template v-if="sections.length">
-              <div 
-                v-for="section in displaySections" 
-                :key="section.id"
-                class="mb-8"
-              >
-                <h2 class="text-xl font-bold mb-4">{{ section.section_type }}</h2>
-                <div v-html="marked(section.content)"></div>
+        <!-- 文章内容部分添加上边距 -->
+        <div class="mt-6">
+          <div class="bg-white rounded-lg shadow-sm p-4 md:p-8">
+            <article class="prose prose-sm md:prose-lg max-w-none">
+              <template v-if="sections.length">
+                <div 
+                  v-for="section in displaySections" 
+                  :key="section.id"
+                  class="mb-8"
+                >
+                  <h2 class="text-xl font-bold mb-4">{{ section.section_type }}</h2>
+                  <div v-html="marked(section.content)"></div>
+                </div>
+              </template>
+              <div v-else>
+                <div v-html="markdownContent"></div>
               </div>
-            </template>
-            <div v-else>
-              <div v-html="markdownContent"></div>
-            </div>
-          </article>
+            </article>
+          </div>
         </div>
       </div>
     </template>
@@ -166,7 +169,7 @@ import { ElMessage } from 'element-plus'
 import ArticleForm from '../components/ArticleForm.vue'
 import type { Article } from '../types/article'
 import type { ArticleSection, SectionType, ViewType } from '../types/section'
-import { VIEW_CONFIGS, ALL_SECTION_TYPES } from '../types/section'
+import { VIEW_CONFIGS, ALL_SECTION_TYPES, DETAILED_EXCLUDED_SECTIONS } from '../types/section'
 
 const route = useRoute()
 const router = useRouter()
@@ -182,6 +185,9 @@ const selectedSections = ref<SectionType[]>([])
 
 // 根据当前视角获取可用的小节类型
 const availableSectionTypes = computed(() => {
+  if (currentView.value === '精读') {
+    return ALL_SECTION_TYPES // 精读模式显示所有标签
+  }
   return ALL_SECTION_TYPES.filter(type => 
     VIEW_CONFIGS[currentView.value].includedSections.includes(type)
   )
@@ -197,7 +203,15 @@ const displaySections = computed(() => {
 // 选择视角
 const selectView = (view: ViewType) => {
   currentView.value = view
-  selectedSections.value = [...VIEW_CONFIGS[view].includedSections]
+  if (view === '精读') {
+    // 精读模式：显示所有标签，但某些标签默认不选中
+    selectedSections.value = ALL_SECTION_TYPES.filter(
+      type => !DETAILED_EXCLUDED_SECTIONS.includes(type as typeof DETAILED_EXCLUDED_SECTIONS[number])
+    )
+  } else {
+    // 其他模式：只显示和选中配置中包含的标签
+    selectedSections.value = [...VIEW_CONFIGS[view].includedSections]
+  }
 }
 
 // 切换小节显示状态
@@ -265,7 +279,9 @@ const fetchArticle = async () => {
     editForm.value = { ...formattedData }
 
     // 初始化选中的小节
-    selectedSections.value = [...VIEW_CONFIGS['精读'].includedSections]
+    if (!selectedSections.value.length) {
+      selectView('精读')
+    }
   } catch (error) {
     console.error('获取文章详情失败:', error)
     ElMessage.error('获取文章失败')
