@@ -8,11 +8,10 @@ export type SectionType =
   | '分段提纲'
   | '分段详述'
   | 'qa'
-  | '关键词'
   | '金句'
   | '未总结内容'
   | '其他'
-  | '原文双语版本';
+  | '原文双语版本（暂不支持）';
 
 export interface ArticleSection {
   id: number;
@@ -35,18 +34,17 @@ export const ALL_SECTION_TYPES: SectionType[] = [
   '分段提纲',
   '分段详述',
   'qa',
-  '关键词',
   '金句',
   '未总结内容',
   '其他',
-  '原文双语版本'
+  '原文双语版本（暂不支持）'
 ];
 
 // 精读视图默认不选中的标签
 export const DETAILED_EXCLUDED_SECTIONS = [
   '未总结内容',
   '其他',
-  '原文双语版本'
+  '原文双语版本（暂不支持）'
 ] as const;
 
 // 视角预设配置
@@ -71,7 +69,6 @@ export const VIEW_CONFIGS = {
       '核心观点',
       '分段提纲',
       'qa',
-      '关键词',
       '金句'
     ] as SectionType[]
   }

@@ -55,20 +55,51 @@
           <h2 class="text-xl mb-4">Discover Articles by Tag</h2>
           <div class="flex gap-2 flex-wrap">
             <button 
-              class="px-4 py-2 rounded-full border"
-              :class="selectedTag === 'all' ? 'bg-blue-500 text-white' : ''"
+              class="px-4 py-2 rounded-full border transition-colors duration-200"
+              :class="selectedTag === 'all' ? 'bg-blue-500 text-white' : 'hover:bg-gray-50'"
               @click="selectTag('all')"
             >
               全部
             </button>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h2 class="text-sm text-gray-600 mb-2">渠道选择（多选）</h2>
+          <div class="flex flex-wrap gap-2">
             <button 
-              v-for="tag in tags" 
-              :key="tag"
-              class="px-4 py-2 rounded-full border"
-              :class="selectedTag === tag ? 'bg-blue-500 text-white' : ''"
-              @click="selectTag(tag)"
+              v-for="channel in ['24小时', '公众号', '播客', '视频', '论文']"
+              :key="channel"
+              @click="toggleChannel(channel)"
+              class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
+              :class="selectedChannels.includes(channel) ? 
+                'bg-blue-50 border-blue-400 text-blue-400' : 
+                'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
             >
-              {{ tag }}
+              {{ channel }}
+            </button>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h2 class="text-sm text-gray-600 mb-2">作者选择（多选）</h2>
+          <div class="flex flex-wrap gap-3">
+            <button
+              v-for="author in authors"
+              :key="author.id"
+              @click="toggleAuthor(author)"
+              class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
+              :class="selectedAuthors.includes(author.id) ? 
+                'bg-blue-50 border-blue-400 text-blue-400' : 
+                'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
+            >
+              <img 
+                v-if="author.icon" 
+                :src="author.icon" 
+                :alt="author.name"
+                class="w-5 h-5 rounded-full"
+              />
+              {{ author.name }}
             </button>
           </div>
         </div>
@@ -180,15 +211,36 @@ const fetchArticles = async () => {
 
 // 修改筛选逻辑以适应新的数据结构
 const filteredArticles = computed(() => {
-  if (selectedTag.value === 'all') return articles.value
-  return articles.value.filter(article => 
-    article.tags && article.tags.includes(selectedTag.value)
-  )
+  let result = articles.value
+
+  // 标签筛选
+  if (selectedTag.value !== 'all') {
+    result = result.filter(article => 
+      article.tags && article.tags.includes(selectedTag.value)
+    )
+  }
+
+  // 渠道筛选
+  if (selectedChannels.value.length > 0) {
+    result = result.filter(article => 
+      article.channel && selectedChannels.value.includes(article.channel)
+    )
+  }
+
+  // 作者筛选
+  if (selectedAuthors.value.length > 0) {
+    result = result.filter(article => 
+      article.author_id && selectedAuthors.value.includes(article.author_id)
+    )
+  }
+
+  return result
 })
 
 // 页面加载时获文章列表
 onMounted(() => {
   fetchArticles()
+  fetchAuthors()
   authStore.loadUser()
 })
 
@@ -203,7 +255,10 @@ const articleForm = ref<Partial<Article>>({
 })
 
 const selectTag = (tag: string): void => {
-  selectedTag.value = tag
+  if (tag === 'all' && (selectedTag.value !== 'all' || selectedChannels.value.length > 0)) {
+    selectedTag.value = 'all'
+    selectedChannels.value = []
+  }
 }
 
 const handleUpload = () => {
@@ -296,6 +351,53 @@ const submitArticle = async () => {
   } catch (error) {
     console.error('提交文章时出错:', error)
     ElMessage.error('系统错误，请稍后重试')
+  }
+}
+
+// 添加作者相关的状态
+interface Author {
+  id: number;
+  name: string;
+  icon?: string;
+}
+
+const authors = ref<Author[]>([])
+const selectedChannels = ref<string[]>([])
+const selectedAuthors = ref<number[]>([])
+
+// 获取所有作者
+const fetchAuthors = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('keep_authors')
+      .select('*')
+      .order('name')
+
+    if (error) throw error
+    authors.value = data
+  } catch (error) {
+    console.error('获取作者列表失败:', error)
+    ElMessage.error('获取作者列表失败')
+  }
+}
+
+// 切换渠道选择
+const toggleChannel = (channel: string) => {
+  const index = selectedChannels.value.indexOf(channel)
+  if (index === -1) {
+    selectedChannels.value.push(channel)
+  } else {
+    selectedChannels.value.splice(index, 1)
+  }
+}
+
+// 切换作者选择
+const toggleAuthor = (author: Author) => {
+  const index = selectedAuthors.value.indexOf(author.id)
+  if (index === -1) {
+    selectedAuthors.value.push(author.id)
+  } else {
+    selectedAuthors.value.splice(index, 1)
   }
 }
 </script>
