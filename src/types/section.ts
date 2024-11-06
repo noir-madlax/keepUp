@@ -1,13 +1,13 @@
 export type SectionType = 
   | '背景'
   | '人物介绍'
+  | '整体总结'
   | '为什么要读'
   | '核心观点'
   | '名词解释'
-  | '整体总结'
   | '分段提纲'
   | '分段详述'
-  | 'qa'
+  | 'QA环节'
   | '金句'
   | '未总结内容'
   | '其他'
@@ -27,13 +27,13 @@ export type ViewType = '精读' | '热闹' | '原文';
 export const ALL_SECTION_TYPES: SectionType[] = [
   '背景',
   '人物介绍',
+  '整体总结',
   '为什么要读',
   '核心观点',
   '名词解释',
-  '整体总结',
   '分段提纲',
   '分段详述',
-  'qa',
+  'QA环节',
   '金句',
   '未总结内容',
   '其他',
@@ -56,10 +56,10 @@ export const VIEW_CONFIGS = {
     includedSections: [
       '背景',
       '人物介绍',
+      '整体总结',
       '为什么要读',
       '核心观点',
       '名词解释',
-      '整体总结',
       '金句'
     ] as SectionType[]
   },
@@ -68,8 +68,27 @@ export const VIEW_CONFIGS = {
       '为什么要读',
       '核心观点',
       '分段提纲',
-      'qa',
+      'QA环节',
       '金句'
     ] as SectionType[]
   }
 }; 
+
+export const SECTION_TYPES = {
+  CHARACTER: '人物介绍',
+  SUMMARY: '整体总结',
+  CONTENT: '内容概要',
+  HIGHLIGHT: '精彩片段',
+  QA: 'QA环节',
+  NOTE: '创作笔记'
+} as const;
+
+// 定义默认的小节顺序
+export const DEFAULT_SECTION_ORDER = [
+  SECTION_TYPES.CONTENT,
+  SECTION_TYPES.HIGHLIGHT,
+  SECTION_TYPES.CHARACTER,
+  SECTION_TYPES.SUMMARY,
+  SECTION_TYPES.QA,
+  SECTION_TYPES.NOTE
+] as const; 
