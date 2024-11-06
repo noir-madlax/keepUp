@@ -73,22 +73,3 @@ export const VIEW_CONFIGS = {
     ] as SectionType[]
   }
 }; 
-
-export const SECTION_TYPES = {
-  CHARACTER: '人物介绍',
-  SUMMARY: '整体总结',
-  CONTENT: '内容概要',
-  HIGHLIGHT: '精彩片段',
-  QA: 'QA环节',
-  NOTE: '创作笔记'
-} as const;
-
-// 定义默认的小节顺序
-export const DEFAULT_SECTION_ORDER = [
-  SECTION_TYPES.CONTENT,
-  SECTION_TYPES.HIGHLIGHT,
-  SECTION_TYPES.CHARACTER,
-  SECTION_TYPES.SUMMARY,
-  SECTION_TYPES.QA,
-  SECTION_TYPES.NOTE
-] as const; 
