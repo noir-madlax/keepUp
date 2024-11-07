@@ -28,24 +28,9 @@
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">标签</label>
-        <div class="space-x-4">
-          <label v-for="tag in ['24小时', '博客', '论文', '微信', '视频']" :key="tag" class="inline-flex items-center">
-            <input 
-              type="checkbox" 
-              :value="tag" 
-              v-model="form.tags" 
-              class="rounded border-gray-300"
-            />
-            <span class="ml-2">{{ tag }}</span>
-          </label>
-        </div>
-      </div>
-
-      <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">频道</label>
         <div class="space-x-4">
-          <label v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF','视频']" :key="channel" class="inline-flex items-center">
+          <label v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF', '网页']" :key="channel" class="inline-flex items-center">
             <input 
               type="radio" 
               :value="channel" 

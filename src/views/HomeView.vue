@@ -65,10 +65,10 @@
         </div>
 
         <div class="mb-8">
-          <h2 class="text-sm text-gray-600 mb-2">渠道选择（多选）</h2>
+          <h2 class="text-sm text-gray-600 mb-2">频道选择（多选）</h2>
           <div class="flex flex-wrap gap-2">
             <button 
-              v-for="channel in ['24小时', '公众号', '播客', '视频', '论文']"
+              v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF', '网页']"
               :key="channel"
               @click="toggleChannel(channel)"
               class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
