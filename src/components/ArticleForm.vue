@@ -93,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, computed, ref, watch } from 'vue'
+import { defineProps, defineEmits, computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import AuthorSelect from './AuthorSelect.vue'
 import type { Article } from '../types/article'
 import type { ArticleSection, SectionType } from '../types/section'
@@ -117,9 +117,75 @@ const form = computed({
 const sections = ref<Record<SectionType, string>>({} as Record<SectionType, string>)
 const expandedSections = ref<Set<SectionType>>(new Set(ALL_SECTION_TYPES))
 
+// 添加自动保存定时器
+let autoSaveTimerId: number | null = null
+
+// 保存所有表单数据的方法
+const saveFormData = () => {
+  // 如果是编辑模式，不保存草稿
+  if (props.articleId) {
+    return
+  }
+
+  const formData = {
+    basic: form.value,
+    sections: sections.value
+  }
+  localStorage.setItem('articleFormDraft', JSON.stringify(formData))
+}
+
+// 恢复表单数据的方法
+const restoreFormData = () => {
+  // 如果是编辑模式（有 articleId），则不恢复草稿
+  if (props.articleId) {
+    return
+  }
+
+  const savedData = localStorage.getItem('articleFormDraft')
+  if (savedData) {
+    const parsedData = JSON.parse(savedData)
+    // 恢复基本表单数据
+    emit('update:modelValue', parsedData.basic)
+    // 恢复小节内容
+    if (parsedData.sections) {
+      sections.value = parsedData.sections
+    }
+  }
+}
+
+// 清除草稿的方法
+const clearDraft = () => {
+  localStorage.removeItem('articleFormDraft')
+  // 重置基本表单
+  emit('update:modelValue', {})
+  // 重置小节内容
+  sections.value = {} as Record<SectionType, string>
+}
+
+// 设置自动保存
+onMounted(() => {
+  restoreFormData()
+  autoSaveTimerId = window.setInterval(saveFormData, 30000) // 每30秒保存一次
+})
+
+// 清理定时器
+onBeforeUnmount(() => {
+  if (autoSaveTimerId) {
+    clearInterval(autoSaveTimerId)
+  }
+})
+
+// 监听表单和小节内容的变化
+watch([form, sections], () => {
+  saveFormData()
+}, { deep: true })
+
 // 监听 articleId 的变化
 watch(() => props.articleId, async (newId) => {
   if (newId) {
+    // 如果是编辑模式，清除草稿数据
+    localStorage.removeItem('articleFormDraft')
+    
     const { data, error } = await supabase
       .from('keep_article_sections')
       .select('*')
@@ -130,9 +196,9 @@ watch(() => props.articleId, async (newId) => {
       // 清空之前的数据
       sections.value = {} as Record<SectionType, string>
       // 设置新数据
-      data.forEach((section) => {
+      data.forEach((section: any) => {
         if (section && 'section_type' in section && 'content' in section) {
-          sections.value[section.section_type as SectionType] = section.content
+          sections.value[section.section_type as SectionType] = section.content as string
         }
       })
     }
@@ -154,3 +220,6 @@ defineExpose({
   getSectionsData
 })
 </script> 
+
+<style scoped>
+</style> 
