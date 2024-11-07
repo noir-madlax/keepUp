@@ -71,11 +71,16 @@
               v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF', '网页']"
               :key="channel"
               @click="toggleChannel(channel)"
-              class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
+              class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200 flex items-center gap-2"
               :class="selectedChannels.includes(channel) ? 
                 'bg-blue-50 border-blue-400 text-blue-400' : 
                 'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
             >
+              <img 
+                :src="`/images/icons/${getChannelIcon(channel)}`" 
+                :alt="channel"
+                class="w-4 h-4"
+              />
               {{ channel }}
             </button>
           </div>
@@ -165,6 +170,7 @@ import LoginModal from '../components/LoginModal.vue'
 import type { Article } from '../types/article'
 import AuthorSelect from '../components/AuthorSelect.vue'
 import ArticleForm from '../components/ArticleForm.vue'
+import { getChannelIcon } from '../utils/channel'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -328,7 +334,7 @@ const submitArticle = async () => {
 
     if (error) throw error
 
-    // 使用正确引用的 formRef
+    // ��用正确引用的 formRef
     if (formRef.value) {
       // 提交小节内容
       const sectionsData = formRef.value.getSectionsData()

@@ -11,7 +11,7 @@
     </div>
     <div class="px-4 py-3 bg-gray-50 flex justify-between items-center text-sm text-gray-600">
       <div class="flex items-center gap-2">
-        <img :src="getChannelIcon(article.channel)" :alt="article.channel" class="w-4 h-4" />
+        <img :src="`/images/icons/${getChannelIcon(article.channel)}`" :alt="article.channel" class="w-4 h-4" />
         <span>{{ article.channel }}</span>
       </div>
       <div class="flex items-center gap-2">
@@ -32,6 +32,7 @@
 import { format } from 'date-fns'
 import { useRouter } from 'vue-router'
 import type { Article } from '../types/article'
+import { getChannelIcon } from '../utils/channel'
 
 const router = useRouter()
 
@@ -49,17 +50,6 @@ const formatDate = (date: string | null) => {
     console.error('日期格式化错误:', error)
     return ''
   }
-}
-
-const getChannelIcon = (channel: string): string => {
-  const iconMap: Record<string, string> = {
-    '微信': '/images/icons/wechat.svg',
-    'YouTube': '/images/icons/youtube.svg',
-    '小宇宙': '/images/icons/xiaoyuzhou.svg',
-    'PDF': '/images/icons/pdf.svg',
-    '视频': '/images/icons/video.svg'
-  }
-  return iconMap[channel] || '/images/icons/default.svg'
 }
 
 const navigateToDetail = (id: number) => {
