@@ -50,7 +50,18 @@ export const DETAILED_EXCLUDED_SECTIONS = [
 // 视角预设配置
 export const VIEW_CONFIGS = {
   精读: {
-    includedSections: ALL_SECTION_TYPES
+    includedSections: [
+      '背景',
+      '人物介绍',
+      '整体总结',
+      '为什么要读',
+      '核心观点',
+      '名词解释',
+      '分段提纲',
+      '分段详述',
+      'QA环节',
+      '金句'
+    ] as SectionType[]
   },
   热闹: {
     includedSections: [

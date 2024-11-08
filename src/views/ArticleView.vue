@@ -185,12 +185,8 @@ const selectedSections = ref<SectionType[]>([])
 
 // 根据当前视角获取可用的小节类型
 const availableSectionTypes = computed(() => {
-  if (currentView.value === '精读') {
-    return ALL_SECTION_TYPES // 精读模式显示所有标签
-  }
-  return ALL_SECTION_TYPES.filter(type => 
-    VIEW_CONFIGS[currentView.value].includedSections.includes(type)
-  )
+  // 始终返回所有小节类型
+  return ALL_SECTION_TYPES
 })
 
 // 根据选中的小节筛选显示内容
@@ -203,15 +199,8 @@ const displaySections = computed(() => {
 // 选择视角
 const selectView = (view: ViewType) => {
   currentView.value = view
-  if (view === '精读') {
-    // 精读模式：显示所有标签，但某些标签默认不选中
-    selectedSections.value = ALL_SECTION_TYPES.filter(
-      type => !DETAILED_EXCLUDED_SECTIONS.includes(type as typeof DETAILED_EXCLUDED_SECTIONS[number])
-    )
-  } else {
-    // 其他模式：只显示和选中配置中包含的标签
-    selectedSections.value = [...VIEW_CONFIGS[view].includedSections]
-  }
+  // 根据视角配置设置选中的小节
+  selectedSections.value = [...VIEW_CONFIGS[view].includedSections]
 }
 
 // 切换小节显示状态
@@ -358,6 +347,8 @@ watch(() => route.params.id, (newId) => {
 onMounted(async () => {
   await authStore.loadUser()
   await fetchArticle()
+  // 设置默认视角为精读
+  selectView('精读')
 })
 </script>
 
