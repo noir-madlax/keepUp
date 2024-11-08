@@ -296,6 +296,9 @@ const resetForm = () => {
     publish_date: null,
     original_link: null
   }
+
+  // 提交成功后清除草稿
+  localStorage.removeItem('articleFormDraft')
 }
 
 // 在组件顶部定义 formRef
@@ -334,7 +337,6 @@ const submitArticle = async () => {
 
     if (error) throw error
 
-    // ��用正确引用的 formRef
     if (formRef.value) {
       // 提交小节内容
       const sectionsData = formRef.value.getSectionsData()
@@ -351,6 +353,7 @@ const submitArticle = async () => {
     }
 
     ElMessage.success('文章添加成功')
+
     showUploadModal.value = false
     resetForm()
     await fetchArticles()
