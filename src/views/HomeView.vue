@@ -7,7 +7,12 @@
           <img src="/images/logo.png" alt="Keep Up Logo" class="h-8 w-8" />
           <h1 class="text-2xl font-bold text-gray-900">Keep Up (跟牢)</h1>
         </div>
+
+        <!-- 添加导航栏右侧部分的容器 -->
         <div class="flex items-center gap-4">
+          <!-- 将 ArticleRequestForm 放在这里 -->
+          <article-request-form />
+          
           <template v-if="authStore.isAuthenticated">
             <div class="flex items-center gap-2">
               <img 
@@ -41,8 +46,8 @@
         </div>
       </div>
     </header>
-    
-    <!-- 添加登录模态框 -->
+
+    <!-- 登录模态框 -->
     <login-modal 
       v-if="showLoginModal" 
       @close="showLoginModal = false"
@@ -171,6 +176,7 @@ import type { Article } from '../types/article'
 import AuthorSelect from '../components/AuthorSelect.vue'
 import ArticleForm from '../components/ArticleForm.vue'
 import { getChannelIcon } from '../utils/channel'
+import ArticleRequestForm from '../components/ArticleRequestForm.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -215,7 +221,7 @@ const fetchArticles = async () => {
   }
 }
 
-// 修改筛选逻辑以适应新的数据结构
+// 修改筛选逻辑以适应的数据结构
 const filteredArticles = computed(() => {
   let result = articles.value
 
