@@ -20,9 +20,7 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { supabase } from '../supabaseClient'
-import { useAuthStore } from '../stores/auth'
 
-const authStore = useAuthStore()
 const requestUrl = ref('')
 
 // URL验证函数
@@ -56,42 +54,16 @@ const checkDuplicate = async (url: string): Promise<boolean> => {
   return true
 }
 
-// 检查提交频率
-const checkSubmitFrequency = async (userId: string): Promise<boolean> => {
-  const timeLimit = new Date()
-  timeLimit.setSeconds(timeLimit.getSeconds() - 30)
-  
-  const { data, error } = await supabase
-    .from('keep_article_requests')
-    .select('id')
-    .eq('user_id', userId)
-    .gt('created_at', timeLimit.toISOString())
-    .single()
-    
-  if (data) {
-    ElMessage.error('提交太频繁，请30秒后再试')
-    return false
-  }
-  return true
-}
-
 // 提交请求
 const submitRequest = async () => {
-  if (!authStore.isAuthenticated) {
-    ElMessage.error('请先登录')
-    return
-  }
-
   if (!validateUrl(requestUrl.value)) return
   if (!await checkDuplicate(requestUrl.value)) return
-  if (!await checkSubmitFrequency(authStore.user?.id as string)) return
   
   try {
     const { error } = await supabase
       .from('keep_article_requests')
       .insert({
         url: requestUrl.value,
-        user_id: authStore.user?.id
       })
       
     if (error) throw error
