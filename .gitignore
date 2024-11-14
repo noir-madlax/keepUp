@@ -75,3 +75,6 @@ Thumbs.db
 .env.development
 .env.production
 .env*.local
+
+# Python
+python/
