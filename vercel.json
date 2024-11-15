@@ -8,8 +8,7 @@
   "functions": {
     "api/parse.py": {
       "memory": 1024,
-      "maxDuration": 60,
-      "runtime": "python3.9"
+      "maxDuration": 60
     }
   },
   "github": {
