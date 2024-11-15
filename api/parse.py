@@ -4,6 +4,7 @@ import os
 import time
 import threading
 import logging
+import requests
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
@@ -36,18 +37,57 @@ def get_supabase_client() -> Client:
     
     return create_client(url, key)
 
-def handle_request_processing(request_id: int) -> None:
+def call_coze_api(url: str, content: str) -> dict:
+    """调用 Coze API"""
+    coze_api_url = "https://api.coze.com/v1/workflow/run"
+    coze_token = os.getenv("COZE_API_TOKEN")
+    workflow_id = os.getenv("COZE_WORKFLOW_ID")
+    
+    if not coze_token or not workflow_id:
+        raise ValueError("Missing COZE_API_TOKEN or COZE_WORKFLOW_ID environment variables")
+    
+    headers = {
+        'Authorization': f'Bearer {coze_token}',
+        'Content-Type': 'application/json',
+        'Accept': '*/*',
+        'Host': 'api.coze.com',
+        'Connection': 'keep-alive'
+    }
+    
+    payload = {
+        "workflow_id": workflow_id,
+        "parameters": {
+            "BOT_USER_INPUT": "",
+            "timestamp": None,
+            "link": url,
+            "content": content or ""
+        }
+    }
+    
+    logger.info("调用 Coze API...")
+    logger.info(f"Request payload: {json.dumps(payload, ensure_ascii=False)}")
+    
+    response = requests.post(coze_api_url, headers=headers, json=payload)
+    response.raise_for_status()
+    
+    result = response.json()
+    logger.info(f"Coze API 响应: {json.dumps(result, ensure_ascii=False)}")
+    
+    return result
+
+def handle_request_processing(request_id: int, url: str, content: str) -> None:
     """处理请求的具体逻辑"""
     try:
         logger.info(f"开始处理请求 ID: {request_id}")
         
-        # 模拟处理过程
-        time.sleep(5)
+        # 调用 Coze API
+        result = call_coze_api(url, content)
         
-        # 更新状态为已处理
+        # 更新数据库
         supabase = get_supabase_client()
         data = supabase.table('keep_article_requests').update({
-            'status': 'processed'
+            'status': 'processed',
+            'parsed_content': json.dumps(result, ensure_ascii=False)  # 保存解析结果
         }).eq('id', request_id).execute()
         
         logger.info(f"请求 {request_id} 处理完成")
@@ -74,7 +114,7 @@ def process_content_async(url: str, content: str, request_id: int):
         start_time = time.time()
         
         # 调用具体的处理逻辑
-        handle_request_processing(request_id)
+        handle_request_processing(request_id, url, content)
         
         # 记录处理时间
         process_time = time.time() - start_time
