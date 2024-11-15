@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import parse
+from app.routers import parse, fetch
 from app.config import settings
 
 app = FastAPI(title="Keep Up API")
@@ -16,6 +16,7 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(parse.router)
+app.include_router(fetch.router)
 
 if __name__ == "__main__":
     import uvicorn

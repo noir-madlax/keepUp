@@ -293,26 +293,53 @@ const handleFetchContent = async (request: Request) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ url: request.url })
+      body: JSON.stringify({ 
+        id: request.id,
+        url: request.url 
+      })
     })
 
-    if (!response.ok) throw new Error('获取原文失败')
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || '获取原文失败')
+    }
 
-    const { content } = await response.json()
+    const { message } = await response.json()
+    ElMessage.success(message)
     
-    // 更新数据库
-    const { error } = await supabase
-      .from('keep_article_requests')
-      .update({ content })
-      .eq('id', request.id)
+    // 开始轮询状态
+    const checkStatus = setInterval(async () => {
+      const { data, error } = await supabase
+        .from('keep_article_requests')
+        .select('status, content, error_message')
+        .eq('id', request.id)
+        .single()
 
-    if (error) throw error
+      if (error) {
+        clearInterval(checkStatus)
+        ElMessage.error('检查状态失败')
+        return
+      }
 
-    ElMessage.success('原文获取成功')
-    await fetchRequests() // 刷新列表
+      if (data.status === 'processed') {
+        clearInterval(checkStatus)
+        ElMessage.success('原文获取成功')
+        await fetchRequests() // 刷新列表
+      } else if (data.status === 'failed') {
+        clearInterval(checkStatus)
+        ElMessage.error(`获取失败: ${data.error_message}`)
+        await fetchRequests()
+      }
+    }, 2000) // 每2秒检查一次状态
+
+    // 60秒后停止轮询
+    setTimeout(() => {
+      clearInterval(checkStatus)
+    }, 60000)
+
   } catch (error) {
     console.error('获取原文失败:', error)
-    ElMessage.error('获取原文失败，请重试')
+    ElMessage.error(error instanceof Error ? error.message : '获取原文失败，请重试')
   }
 }
 

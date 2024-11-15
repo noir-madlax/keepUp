@@ -59,3 +59,14 @@ class SupabaseService:
         result = client.table("keep_article_sections").insert(sections_data).execute()
         logger.info(f"文章小节创建成功: {len(sections)} 个小节")
         return result.data
+    
+    @classmethod
+    async def update_content(cls, request_id: int, content: str):
+        """更新请求内容"""
+        client = cls.get_client()
+        result = client.table("keep_article_requests").update({
+            "content": content,
+            "status": "processed"
+        }).eq("id", request_id).execute()
+        logger.info(f"内容更新成功: ID={request_id}")
+        return result
