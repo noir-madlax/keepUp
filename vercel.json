@@ -5,12 +5,6 @@
       "destination": "/index.html"
     }
   ],
-  "functions": {
-    "api/parse.py": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  },
   "github": {
     "enabled": true,
     "silent": false
