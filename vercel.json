@@ -8,7 +8,19 @@
   "functions": {
     "api/parse.py": {
       "memory": 1024,
-      "maxDuration": 60
+      "maxDuration": 60,
+      "runtime": "python3.9"
     }
+  },
+  "github": {
+    "enabled": true,
+    "silent": false
+  },
+  "builds": [
+    { "src": "api/*.py", "use": "@vercel/python" }
+  ],
+  "env": {
+    "PYTHONUNBUFFERED": "1",
+    "FORCE_COLOR": "1"
   }
 } 

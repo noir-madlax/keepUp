@@ -11,8 +11,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # 配置日志
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True
+)
 logger = logging.getLogger(__name__)
+
+# 添加一个处理器确保输出到 stderr
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+logger.addHandler(handler)
 
 def get_supabase_client() -> Client:
     """获取 Supabase 客户端实例"""
