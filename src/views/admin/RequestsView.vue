@@ -324,26 +324,54 @@ const handleParse = async (request: Request) => {
       return
     }
 
-    ElMessage.info('正在解析...')
-    const response = await fetch('/api/parse-content', {
+    ElMessage.info('开始解析...')
+    const response = await fetch('/api/parse', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ 
         url: request.url,
-        content: request.content 
+        content: request.content,
+        id: request.id
       })
     })
 
     if (!response.ok) throw new Error('解析失败')
 
-    const { parsedData } = await response.json()
+    const { message } = await response.json()
+    ElMessage.success(message)
     
-    // 这里可以根据需要处理解析后的数据
-    // 例如：创建新文章、更新状态等
-    
-    ElMessage.success('解析成功')
+    // 开始轮询状态
+    const checkStatus = setInterval(async () => {
+      const { data, error } = await supabase
+        .from('keep_article_requests')
+        .select('status, error_message')
+        .eq('id', request.id)
+        .single()
+
+      if (error) {
+        clearInterval(checkStatus)
+        ElMessage.error('检查状态失败')
+        return
+      }
+
+      if (data.status === 'processed') {
+        clearInterval(checkStatus)
+        ElMessage.success('解析完成')
+        await fetchRequests()
+      } else if (data.status === 'failed') {
+        clearInterval(checkStatus)
+        ElMessage.error(`解析失败: ${data.error_message}`)
+        await fetchRequests()
+      }
+    }, 2000) // 每2秒检查一次状态
+
+    // 60秒后停止轮询
+    setTimeout(() => {
+      clearInterval(checkStatus)
+    }, 60000)
+
   } catch (error) {
     console.error('解析失败:', error)
     ElMessage.error('解析失败，请重试')
