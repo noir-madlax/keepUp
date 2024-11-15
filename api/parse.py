@@ -65,13 +65,14 @@ def call_coze_api(url: str, content: str) -> dict:
     }
     
     logger.info("调用 Coze API...")
-    logger.info(f"Request payload: {json.dumps(payload, ensure_ascii=False)}")
+    # logger.info(f"Request payload: {json.dumps(payload, ensure_ascii=False)}")
     
     response = requests.post(coze_api_url, headers=headers, json=payload)
     response.raise_for_status()
     
     result = response.json()
-    logger.info(f"Coze API 响应: {json.dumps(result, ensure_ascii=False)}")
+    logger.info("调用 Coze API结束")
+    # logger.info(f"Coze API 响应: {json.dumps(result, ensure_ascii=False)}")
     
     return result
 
@@ -91,7 +92,6 @@ def handle_request_processing(request_id: int, url: str, content: str) -> None:
         }).eq('id', request_id).execute()
         
         logger.info(f"请求 {request_id} 处理完成")
-        logger.info(data)
         
     except Exception as e:
         logger.error(f"处理失败: {str(e)}", exc_info=True)
@@ -109,7 +109,6 @@ def process_content_async(url: str, content: str, request_id: int):
     try:
         logger.info(f"开始处理请求 ID: {request_id}")
         logger.info(f"URL: {url}")
-        logger.info(f"Content 长度: {len(content) if content else 0}")
         
         start_time = time.time()
         

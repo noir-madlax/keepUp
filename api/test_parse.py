@@ -25,8 +25,5 @@ def run(server_class=HTTPServer, handler_class=CORSRequestHandler, port=8000):
     httpd.serve_forever()
 
 if __name__ == '__main__':
-    # 设置环境变量
-    os.environ['VITE_SUPABASE_URL'] = '你的_SUPABASE_URL'
-    os.environ['VITE_SUPABASE_SERVICE_ROLE_KEY'] = '你的_SUPABASE_SERVICE_ROLE_KEY'
     
     run() 

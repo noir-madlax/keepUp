@@ -1,0 +1,21 @@
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    # Supabase 配置
+    SUPABASE_URL: str
+    SUPABASE_SERVICE_ROLE_KEY: str
+    
+    # Coze 配置
+    COZE_API_TOKEN: str
+    COZE_WORKFLOW_ID: str
+    
+    # CORS 配置
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "https://your-production-domain.com"
+    ]
+    
+    class Config:
+        env_file = ".env"
+
+settings = Settings() 
