@@ -15,9 +15,6 @@
     "enabled": true,
     "silent": false
   },
-  "builds": [
-    { "src": "api/*.py", "use": "@vercel/python" }
-  ],
   "env": {
     "PYTHONUNBUFFERED": "1",
     "FORCE_COLOR": "1"
