@@ -94,6 +94,12 @@
                   >
                     删除
                   </button>
+                  <button 
+                    @click="handleFullProcess(request)"
+                    class="text-purple-600 hover:text-purple-900"
+                  >
+                    一键处理
+                  </button>
                 </div>
               </td>
             </tr>
@@ -402,6 +408,41 @@ const handleParse = async (request: Request) => {
   } catch (error) {
     console.error('解析失败:', error)
     ElMessage.error('解析失败，请重试')
+  }
+}
+
+// 添加一键处理函数
+const handleFullProcess = async (request: Request) => {
+  try {
+    ElMessage.info('开始处理...')
+    const response = await fetch('/api/workflow/process', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        id: request.id,
+        url: request.url 
+      })
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.detail || '处理失败')
+    }
+
+    const { message, steps } = await response.json()
+    
+    // 显示处理步骤
+    steps.forEach((step: string) => {
+      ElMessage.success(step)
+    })
+    
+    await fetchRequests() // 刷新列表
+    
+  } catch (error) {
+    console.error('处理失败:', error)
+    ElMessage.error(error instanceof Error ? error.message : '处理失败，请重试')
   }
 }
 

@@ -11,8 +11,8 @@ class Settings(BaseSettings):
     
     # CORS 配置
     CORS_ORIGINS: list[str] = [
-        "http://localhost:3000",
-        "https://your-production-domain.com"
+        "http://localhost:8000",
+        "http://47.116.210.164:8000"
     ]
     
     class Config:
