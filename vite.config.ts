@@ -15,7 +15,9 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: process.env.NODE_ENV === 'production' 
+          ? 'http://'  // 生产环境后端地址
+          : 'http://47.116.210.164:8000',  // 开发环境后端地址
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
