@@ -37,9 +37,14 @@ class YouTubeFetcher(ContentFetcher):
             if not video_id:
                 logger.error(f"无法从 URL 提取视频 ID: {url}")
                 return None
-            
+        
+            #proxy
+            proxy = {
+                "http": "http://198.23.239.134:6540"
+            }
+
             # 获取字幕
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'],proxies=proxy)
             
             # 将字幕组合成文本
             content = []
