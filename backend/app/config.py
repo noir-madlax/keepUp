@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+from app.utils.logger import logger
 
 class Settings(BaseSettings):
     # Supabase 配置
@@ -24,5 +25,12 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # 确保 USE_PROXY 是布尔值
+        if isinstance(self.USE_PROXY, str):
+            self.USE_PROXY = self.USE_PROXY.lower() == 'true'
+        logger.info(f"代理配置 - USE_PROXY: {self.USE_PROXY}, PROXY_URL: {self.PROXY_URL}")
 
 settings = Settings() 

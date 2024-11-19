@@ -11,9 +11,12 @@ class YouTubeFetcher(ContentFetcher):
         self.proxies = None
         if settings.USE_PROXY and settings.PROXY_URL:
             self.proxies = {
-                'http://': settings.PROXY_URL,
-                'https://': settings.PROXY_URL
+                'http': settings.PROXY_URL,
+                'https': settings.PROXY_URL
             }
+            logger.info(f"YouTube fetcher 初始化 - 使用代理: {self.proxies}")
+        else:
+            logger.info("YouTube fetcher 初始化 - 不使用代理")
     
     def can_handle(self, url: str) -> bool:
         """检查是否是 YouTube URL"""
@@ -41,24 +44,18 @@ class YouTubeFetcher(ContentFetcher):
         """获取 YouTube 视频内容"""
         try:
             logger.info(f"获取 YouTube 内容: {url}")
+            logger.info(f"当前代理配置: {self.proxies}")
             
             # 提取视频 ID
             video_id = self.extract_video_id(url)
             if not video_id:
                 logger.error(f"无法从 URL 提取视频 ID: {url}")
                 return None
-        
+
             # 使用代理获取字幕
-            transcript_list = YouTubeTranscriptApi.get_transcript(
-                video_id,
-                proxies=self.proxies if settings.USE_PROXY else None
-            )
+            logger.info(f"开始获取字幕，代理状态: {'启用' if self.proxies else '禁用'}")
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id,proxies=self.proxies)
             
-            # 使用代理获取视频信息
-            async with httpx.AsyncClient(proxies=self.proxies if settings.USE_PROXY else None) as client:
-                # 获取视频信息的代码...
-                pass
-                
             # 将字幕组合成文本
             content = []
             for entry in transcript_list:
