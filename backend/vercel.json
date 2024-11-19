@@ -6,7 +6,8 @@
             "use": "@vercel/python",
             "config": {
                 "runtime": "python3.9",
-                "maxLambdaSize": "15mb"
+                "maxLambdaSize": "15mb",
+                "maxDuration": 300
             }
         }
     ],
@@ -16,12 +17,6 @@
             "dest": "app/main.py"
         }
     ],
-    "functions": {
-        "app/main.py": {
-            "memory": 1024,
-            "maxDuration": 300
-        }
-    },
     "env": {
         "PYTHONUNBUFFERED": "1"
     }
