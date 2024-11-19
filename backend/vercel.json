@@ -2,7 +2,6 @@
     "version": 2,
     "functions": {
         "app/main.py": {
-            "use": "@vercel/python",
             "memory": 1024,
             "maxDuration": 300
         }
