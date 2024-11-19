@@ -5,12 +5,19 @@ from app.utils.logger import logger
 class CozeService:
     @staticmethod
     async def parse_content(url: str, content: str) -> dict:
-        async with httpx.AsyncClient() as client:
+        # 设置超时时间为 5 分钟 (300 秒)
+        timeout = httpx.Timeout(300.0, connect=60.0)
+        
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            logger.info(f"发送请求到 Coze API - URL: {url}")
             response = await client.post(
                 "https://api.coze.com/v1/workflow/run",
                 headers={
                     "Authorization": f"Bearer {settings.COZE_API_TOKEN}",
                     "Content-Type": "application/json",
+                    "Accept": "*/*",
+                    "Host": "api.coze.com",
+                    "Connection": "keep-alive"
                 },
                 json={
                     "workflow_id": settings.COZE_WORKFLOW_ID,

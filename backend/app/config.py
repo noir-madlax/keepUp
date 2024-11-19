@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     # Coze 配置
     COZE_API_TOKEN: str
     COZE_WORKFLOW_ID: str
+    USE_MOCK_COZE: bool = False
     
     # 代理配置
     USE_PROXY: bool = False

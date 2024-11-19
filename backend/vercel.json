@@ -5,7 +5,8 @@
             "src": "app/main.py",
             "use": "@vercel/python",
             "config": {
-                "runtime": "python3.9"
+                "runtime": "python3.9",
+                "maxLambdaSize": "15mb"
             }
         }
     ],
@@ -14,5 +15,8 @@
             "src": "/(.*)",
             "dest": "app/main.py"
         }
-    ]
+    ],
+    "env": {
+        "PYTHONUNBUFFERED": "1"
+    }
 }
