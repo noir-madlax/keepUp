@@ -38,13 +38,17 @@ class YouTubeFetcher(ContentFetcher):
                 logger.error(f"无法从 URL 提取视频 ID: {url}")
                 return None
         
-            #proxy
+            # 设置代理认证信息
+            proxy_username = "bfrveefc"  # 替换为实际用户名
+            proxy_password = "4gdviebvxmn2"  # 替换为实际密码
+            
+            # 带认证的代理配置
             proxy = {
-                "http": "http://198.23.239.134:6540"
+                "http": f"http://{proxy_username}:{proxy_password}@63.246.137.69:5698",
+                "https": f"http://{proxy_username}:{proxy_password}@63.246.137.69:5698"
             }
-
             # 获取字幕
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'],proxies=proxy)
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id,proxies=proxy)
             
             # 将字幕组合成文本
             content = []
