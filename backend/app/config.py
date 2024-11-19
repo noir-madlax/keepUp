@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from typing import Optional
 
 class Settings(BaseSettings):
     # Supabase 配置
@@ -8,6 +9,10 @@ class Settings(BaseSettings):
     # Coze 配置
     COZE_API_TOKEN: str
     COZE_WORKFLOW_ID: str
+    
+    # 代理配置
+    USE_PROXY: bool = False
+    PROXY_URL: Optional[str] = None
     
     # CORS 配置
     CORS_ORIGINS: list[str] = [
