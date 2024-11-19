@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 class FetchRequest(BaseModel):
@@ -7,4 +8,4 @@ class FetchRequest(BaseModel):
 class ParseRequest(BaseModel):
     id: int
     url: str
-    content: str | None = None 
+    content: Optional[str] = None 

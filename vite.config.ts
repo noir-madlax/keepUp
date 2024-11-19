@@ -16,8 +16,8 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: process.env.NODE_ENV === 'production' 
-          ? 'https://keep-up-backend.vercel.app'  // 生产环境后端地址
-          : 'http://localhost:8000',  // 开发环境后端地址
+          ? 'https://keep-up-backend.vercel.app'
+          : 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
@@ -33,7 +33,6 @@ export default defineConfig({
       }
     },
     sourcemap: true,
-    assetsDir: 'assets',
-    brotliSize: false
+    assetsDir: 'assets'
   }
 })
