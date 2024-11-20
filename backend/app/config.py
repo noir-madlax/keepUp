@@ -3,6 +3,10 @@ from typing import Optional
 from app.utils.logger import logger
 
 class Settings(BaseSettings):
+
+    # 日志配置
+    log_level: str 
+
     # Supabase 配置
     SUPABASE_URL: str
     SUPABASE_SERVICE_ROLE_KEY: str

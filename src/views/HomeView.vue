@@ -10,8 +10,8 @@
 
         <!-- 添加导航栏右侧部分的容器 -->
         <div class="flex items-center gap-4">
-          <!-- 将 ArticleRequestForm 放在这里 -->
-          <article-request-form />
+          <!-- 将 ArticleRequestForm 放在这里，并添加 @refresh 监听器 -->
+          <article-request-form @refresh="fetchArticles" />
           
           <template v-if="authStore.isAuthenticated">
             <div class="flex items-center gap-2">
