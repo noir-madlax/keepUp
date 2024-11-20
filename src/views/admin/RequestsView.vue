@@ -20,6 +20,9 @@
                 原文
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                解析内容
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 提交时间
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -42,6 +45,9 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ truncateText(request.content) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ truncateText(request.parsed_content) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{ formatDate(request.created_at) }}
@@ -137,6 +143,16 @@
             class="w-full"
           />
         </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">解析内容</label>
+          <el-input
+            v-model="editForm.parsed_content"
+            type="textarea"
+            :rows="10"
+            placeholder="请输入解析内容"
+            class="w-full"
+          />
+        </div>
       </div>
       <template #footer>
         <div class="flex justify-end gap-2">
@@ -158,6 +174,7 @@ interface Request {
   id: number
   url: string
   content?: string
+  parsed_content?: string
   created_at: string
   status: 'pending' | 'processed' | 'rejected'
 }
@@ -257,7 +274,8 @@ const handleEdit = (request: Request) => {
   editForm.value = {
     id: request.id,
     url: request.url,
-    content: request.content
+    content: request.content,
+    parsed_content: request.parsed_content
   }
   showEditDialog.value = true
 }
@@ -269,7 +287,8 @@ const submitEdit = async () => {
       .from('keep_article_requests')
       .update({
         url: editForm.value.url,
-        content: editForm.value.content
+        content: editForm.value.content,
+        parsed_content: editForm.value.parsed_content
       })
       .eq('id', editForm.value.id)
 

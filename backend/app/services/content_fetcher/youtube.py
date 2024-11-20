@@ -5,6 +5,7 @@ from app.utils.logger import logger
 from youtube_transcript_api import YouTubeTranscriptApi
 import httpx
 from app.config import settings
+import json
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
@@ -54,17 +55,14 @@ class YouTubeFetcher(ContentFetcher):
 
             # 使用代理获取字幕
             logger.info(f"开始获取字幕，代理状态: {'启用' if self.proxies else '禁用'}")
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id,proxies=self.proxies)
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=self.proxies)
             
-            # 将字幕组合成文本
-            content = []
-            for entry in transcript_list:
-                content.append(entry['text'])
+            # 将完整的字幕信息转换为 JSON 字符串
+            full_content = json.dumps(transcript_list, ensure_ascii=False)
             
-            full_text = ' '.join(content)
-            logger.info(f"成功获取视频字幕，长度: {len(full_text)} 字符")
+            logger.info(f"成功获取视频字幕，JSON 长度: {len(full_content)} 字符")
             
-            return full_text
+            return full_content
             
         except Exception as e:
             logger.error(f"获取 YouTube 内容失败: {str(e)}", exc_info=True)
