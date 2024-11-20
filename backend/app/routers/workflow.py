@@ -35,11 +35,11 @@ async def process_workflow(request: FetchRequest):
         # 5. 调用解析服务（复用 parse.py 中的方法）
         logger.info("步骤3: 解析内容")
         parse_request = ParseRequest(id=request.id, url=request.url, content=content)
-        article_content = await call_coze_and_parse(parse_request.url, parse_request.content)
+        coze_response = await call_coze_and_parse(parse_request.url, parse_request.content)
         
         # 6. 处理解析结果（复用 parse.py 中的方法）
         logger.info("步骤4: 保存解析结果")
-        await process_coze_result(article_content, request.id, request.url)
+        await process_coze_result(coze_response, request.id, request.url)
         
         return {
             "success": True, 

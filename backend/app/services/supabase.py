@@ -2,6 +2,7 @@ from supabase import create_client, Client
 from app.config import settings
 from app.utils.logger import logger
 from app.models.coze import ArticleCreate
+import json
 
 class SupabaseService:
     _client: Client = None
@@ -70,3 +71,23 @@ class SupabaseService:
         }).eq("id", request_id).execute()
         logger.info(f"内容更新成功: ID={request_id}")
         return result
+    
+    @classmethod
+    async def update_parsed_content(cls, request_id: int, parsed_content: dict) -> None:
+        """更新请求的解析内容"""
+        try:
+            client = cls.get_client()
+            parsed_content_json = json.dumps(parsed_content, ensure_ascii=False)
+            
+            result = client.table('keep_article_requests').update({
+                'parsed_content': parsed_content_json
+            }).eq('id', request_id).execute()
+            
+            if not result.data:
+                raise Exception(f"未找到 ID 为 {request_id} 的请求记录")
+            
+            logger.info(f"解析内容更新成功: ID={request_id}")
+            
+        except Exception as e:
+            logger.error(f"更新解析内容失败: {str(e)}", exc_info=True)
+            raise
