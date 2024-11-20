@@ -1,17 +1,21 @@
 import logging
 import sys
+import os
+
+# 根据环境变量设置日志级别
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG')
 
 # 创建日志记录器
 logger = logging.getLogger("keepup")
-logger.setLevel(logging.INFO)
+logger.setLevel(getattr(logging, LOG_LEVEL))
 
 # 创建控制台处理器
 console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(getattr(logging, LOG_LEVEL))
 
 # 创建格式化器
 formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    '[%(levelname)s] %(asctime)s - %(name)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
