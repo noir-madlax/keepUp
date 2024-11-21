@@ -1,17 +1,16 @@
 export type SectionType = 
-  | '背景'
+  | '总结'
   | '人物介绍'
-  | '整体总结'
-  | '为什么要读'
-  | '核心观点'
   | '名词解释'
   | '分段提纲'
-  | '分段详述'
   | 'QA环节'
   | '金句'
-  | '未总结内容'
-  | '其他'
-  | '原文双语版本（暂不支持）';
+  | '引用（测试）'
+  | '结构图（测试）'
+  | '案例（测试）'
+  | '原文字幕（测试）'
+  | '翻译字幕（测试）'
+  | '彩蛋（测试）';
 
 export interface ArticleSection {
   id: number;
@@ -21,66 +20,37 @@ export interface ArticleSection {
   sort_order: number;
 }
 
-export type ViewType = '精读' | '热闹' | '原文';
+export type ViewType = '默认视图';
 
-// 先定义所有小节类型
+// 先定义所有小节类型（确保总结在最前面）
 export const ALL_SECTION_TYPES: SectionType[] = [
-  '背景',
+  '总结',
   '人物介绍',
-  '整体总结',
-  '为什么要读',
-  '核心观点',
   '名词解释',
   '分段提纲',
-  '分段详述',
   'QA环节',
   '金句',
-  '未总结内容',
-  '其他',
-  '原文双语版本（暂不支持）'
+  '引用（测试）',
+  '结构图（测试）',
+  '案例（测试）',
+  '原文字幕（测试）',
+  '翻译字幕（测试）',
+  '彩蛋（测试）'
 ];
 
-// 精读视图默认不选中的标签
-export const DETAILED_EXCLUDED_SECTIONS = [
-  '未总结内容',
-  '其他',
-  '原文双语版本（暂不支持）'
-] as const;
+// 默认选中的小节（确保总结在最前面）
+export const DEFAULT_SELECTED_SECTIONS: SectionType[] = [
+  '总结',
+  '人物介绍',
+  '名词解释',
+  '分段提纲',
+  'QA环节',
+  '金句'
+];
 
 // 视角预设配置
 export const VIEW_CONFIGS = {
-  精读: {
-    includedSections: [
-      '背景',
-      '人物介绍',
-      '整体总结',
-      '为什么要读',
-      '核心观点',
-      '名词解释',
-      '分段提纲',
-      '分段详述',
-      'QA环节',
-      '金句'
-    ] as SectionType[]
-  },
-  热闹: {
-    includedSections: [
-      '背景',
-      '人物介绍',
-      '整体总结',
-      '为什么要读',
-      '核心观点',
-      '名词解释',
-      '金句'
-    ] as SectionType[]
-  },
-  原文: {
-    includedSections: [
-      '为什么要读',
-      '核心观点',
-      '分段提纲',
-      'QA环节',
-      '金句'
-    ] as SectionType[]
+  默认视图: {
+    includedSections: DEFAULT_SELECTED_SECTIONS
   }
 }; 
