@@ -1,32 +1,35 @@
-from typing import List, Optional
-from .base import ContentFetcher
+from typing import Optional, List
 from .youtube import YouTubeFetcher
 from .xiaoyuzhou import XiaoYuZhouFetcher
+from .base import VideoInfo
 from app.utils.logger import logger
 
 class ContentFetcherService:
+    """内容获取服务"""
     def __init__(self):
-        self.fetchers: List[ContentFetcher] = [
+        self.fetchers = [
             YouTubeFetcher(),
             XiaoYuZhouFetcher()
         ]
     
-    def get_fetcher(self, url: str) -> Optional[ContentFetcher]:
-        """获取合适的内容获取器"""
-        for fetcher in self.fetchers:
-            if fetcher.can_handle(url):
-                return fetcher
-        return None
-    
     async def fetch_content(self, url: str) -> Optional[str]:
         """获取内容"""
-        fetcher = self.get_fetcher(url)
-        if not fetcher:
-            logger.warning(f"未找到合适的内容获取器: {url}")
-            return None
-            
         try:
-            return await fetcher.fetch(url)
+            for fetcher in self.fetchers:
+                if fetcher.can_handle(url):
+                    return await fetcher.fetch(url)
+            return None
         except Exception as e:
             logger.error(f"获取内容失败: {str(e)}", exc_info=True)
+            return None
+
+    async def get_video_info(self, url: str) -> Optional[VideoInfo]:
+        """获取视频信息"""
+        try:
+            for fetcher in self.fetchers:
+                if fetcher.can_handle(url):
+                    return await fetcher.get_video_info(url)
+            return None
+        except Exception as e:
+            logger.error(f"获取视频信息失败: {str(e)}", exc_info=True)
             return None 

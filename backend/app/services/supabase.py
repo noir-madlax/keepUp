@@ -91,3 +91,39 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"更新解析内容失败: {str(e)}", exc_info=True)
             raise
+    
+    @classmethod
+    async def create_author(cls, author_data: dict):
+        """创建新作者"""
+        try:
+            client = cls.get_client()
+            result = client.table("keep_authors").insert({
+                "name": author_data["name"],
+                # "platform": author_data.get("platform", "YouTube"),  # 添加平台信息
+                "icon": None  # 默认无头像
+            }).execute()
+            
+            logger.info(f"作者创建成功: {author_data['name']}")
+            return result.data[0]
+            
+        except Exception as e:
+            logger.error(f"创建作者失败: {str(e)}", exc_info=True)
+            raise
+    
+    @classmethod
+    async def get_author_by_name(cls, name: str):
+        """根据作者名称获取作者信息"""
+        try:
+            client = cls.get_client()
+            result = client.table("keep_authors").select("*").eq("name", name).execute()
+            
+            if result.data:
+                logger.info(f"找到作者: {name}")
+                return result.data[0]
+            
+            logger.info(f"未找到作者: {name}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"获取作者信息失败: {str(e)}", exc_info=True)
+            return None

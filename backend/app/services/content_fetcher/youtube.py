@@ -1,23 +1,24 @@
-from .base import ContentFetcher
-from typing import Optional
+from typing import Optional, Dict
+from .base import ContentFetcher, VideoInfo
+from app.models.article import ArticleCreate
 import re
-from app.utils.logger import logger
-from youtube_transcript_api import YouTubeTranscriptApi
-import httpx
 from app.config import settings
+from youtube_transcript_api import YouTubeTranscriptApi
 import json
+from app.utils.logger import logger
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
+        # 保留现有的代理配置
         self.proxies = None
         if settings.USE_PROXY and settings.PROXY_URL:
             self.proxies = {
                 'http': settings.PROXY_URL,
                 'https': settings.PROXY_URL
             }
-            logger.info(f"YouTube fetcher 初始化 - 使用代理: {self.proxies}")
-        else:
-            logger.info("YouTube fetcher 初始化 - 不使用代理")
     
     def can_handle(self, url: str) -> bool:
         """检查是否是 YouTube URL"""
@@ -66,4 +67,69 @@ class YouTubeFetcher(ContentFetcher):
             
         except Exception as e:
             logger.error(f"获取 YouTube 内容失败: {str(e)}", exc_info=True)
+            return None 
+
+    async def get_video_info(self, url: str) -> Optional[VideoInfo]:
+        """获取YouTube视频信息"""
+        try:
+            logger.info(f"开始获取YouTube视频信息: {url}")
+            
+            # 获取页面内容
+            response = requests.get(url, proxies=self.proxies)
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            # 提取标题
+            title = soup.find('meta', {'name': 'title'})['content']
+            logger.info(f"获取到标题: {title}")
+
+            # 提取描述
+            description_meta = soup.find('meta', {'name': 'description'})
+            description = description_meta['content'] if description_meta else ""
+            logger.info(f"获取到描述: {description[:100]}...")  # 只打印前100个字符
+
+            # 提取作者
+            author_meta = soup.find('link', {'itemprop': 'name'})
+            author_name = author_meta['content'] if author_meta else "未知作者"
+            logger.info(f"获取到作者: {author_name}")
+
+            # 提取发布日期
+            publish_date_meta = soup.find('meta', {'itemprop': 'datePublished'})
+            publish_date = None
+            if publish_date_meta and publish_date_meta['content']:
+                try:
+                    publish_date = datetime.fromisoformat(publish_date_meta['content'].replace('Z', '+00:00'))
+                    logger.info(f"获取到发布日期: {publish_date}")
+                except ValueError:
+                    logger.warning(f"无法解析发布日期: {publish_date_meta['content']}")
+
+            # 构建作者信息
+            author = {
+                "name": author_name,
+                "platform": "YouTube"
+            }
+            logger.info(f"构建的作者信息: {author}")
+            
+            # 构建文章信息
+            article = ArticleCreate(
+                title=title,
+                content=description,
+                channel="YouTube",
+                tags=["视频"],
+                original_link=url,
+                publish_date=publish_date
+            )
+            logger.info(f"构建的文章信息: {article.dict()}")
+
+            video_info = VideoInfo(
+                title=title,
+                description=description,
+                author=author,
+                article=article
+            )
+            
+            logger.info(f"最终构建的VideoInfo: {video_info.dict()}")
+            return video_info
+
+        except Exception as e:
+            logger.error(f"获取YouTube视频信息失败: {str(e)}", exc_info=True)
             return None 

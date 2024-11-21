@@ -9,7 +9,7 @@ from app.config import settings
 
 router = APIRouter(prefix="")
 
-async def process_coze_result(coze_response: CozeResponse, request_id: int, url: str) -> None:
+async def process_coze_result(coze_response: CozeResponse, request_id: int, url: str,article : ArticleCreate) -> None:
     """处理 Coze 返回结果并保存到数据库"""
     try:
         # 首先将 CozeResponse 转换为字典，再更新到数据库
@@ -31,18 +31,6 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
         background_lines = article_content.key0_background.split('\n')
         title = next((line.replace('### 视频标题：', '') for line in background_lines if '视频标题：' in line), '')
         
-        # 创建文章数据
-        article_data = ArticleCreate(
-            title=title,
-            content=article_content.key5_summary,
-            original_link=url,
-            tags=["视频"],
-            channel="YouTube"
-        )
-        
-        # 保存文章
-        article_result = await SupabaseService.create_article(article_data)
-        
         # 准备小节数据
         sections = [
             {"section_type": "背景", "content": article_content.key0_background},
@@ -59,7 +47,7 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
         ]
         
         # 保存小节
-        await SupabaseService.create_article_sections(article_result['id'], sections)
+        await SupabaseService.create_article_sections(article['id'], sections)
         
         # 更新请求状态
         await SupabaseService.update_status(request_id, "processed")

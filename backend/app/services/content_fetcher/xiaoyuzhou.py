@@ -1,4 +1,4 @@
-from .base import ContentFetcher
+from .base import ContentFetcher, VideoInfo
 from typing import Optional
 import re
 from app.utils.logger import logger
@@ -12,4 +12,9 @@ class XiaoYuZhouFetcher(ContentFetcher):
         """获取小宇宙内容"""
         logger.info(f"获取小宇宙内容: {url}")
         # TODO: 实现小宇宙内容获取逻辑
+        return None 
+    
+    async def get_video_info(self, url: str) -> Optional[VideoInfo]:
+        """获取小宇宙视频信息"""
+        # TODO: 实现小宇宙视频信息获取逻辑
         return None 

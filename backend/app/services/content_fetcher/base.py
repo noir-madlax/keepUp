@@ -1,15 +1,31 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Dict
+from pydantic import BaseModel
+from app.models.article import ArticleCreate
+
+class VideoInfo(BaseModel):
+    """视频基本信息"""
+    title: str
+    description: str
+    author: Dict
+    article: ArticleCreate
+
+    class Config:
+        arbitrary_types_allowed = True
 
 class ContentFetcher(ABC):
-    """内容获取器的基类"""
-    
+    """内容获取基类"""
     @abstractmethod
     async def fetch(self, url: str) -> Optional[str]:
-        """获取内容的抽象方法"""
+        """获取内容"""
         pass
-    
+        
     @abstractmethod
     def can_handle(self, url: str) -> bool:
-        """判断是否可以处理该 URL"""
-        pass 
+        """检查是否可以处理该URL"""
+        pass
+        
+    @abstractmethod
+    async def get_video_info(self, url: str) -> Optional[VideoInfo]:
+        """获取视频基本信息"""
+        pass
