@@ -14,21 +14,21 @@ const authStore = useAuthStore()
 
 onMounted(async () => {
   try {
-    // 等待 supabase 处理认证回调
-    const { data, error } = await authStore.handleAuthCallback()
-    
-    if (error) {
-      console.error('认证回调处理失败:', error)
-      throw error
-    }
+    // 设置一个超时，确保不会永远停留在这个页面
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('认证超时')), 5000)
+    })
 
-    if (data) {
-      // 认证成功后，重定向到首页
-      await router.push('/')
-    }
+    // 等待 supabase 处理认证回调
+    const authPromise = authStore.handleAuthCallback()
+    
+    // 使用 Promise.race 确保不会永远等待
+    await Promise.race([authPromise, timeoutPromise])
+    
   } catch (error) {
-    console.error('认证失败:', error)
-    // 发生错误时重定向到首页
+    console.error('认证处理出错:', error)
+  } finally {
+    // 无论如何都重定向到首页
     await router.push('/')
   }
 })
