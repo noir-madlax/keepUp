@@ -1,9 +1,6 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center">
-    <div class="text-center">
-      <h2 class="text-2xl font-bold mb-4">正在处理登录...</h2>
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-    </div>
+  <div class="flex items-center justify-center min-h-screen">
+    <p>登录中...</p>
   </div>
 </template>
 
@@ -11,23 +8,28 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { supabase } from '../supabaseClient'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 onMounted(async () => {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession()
+    // 处理认证回调
+    const { data, error } = await authStore.handleAuthCallback()
     
-    if (error) throw error
-    
-    if (session?.user) {
-      await authStore.setUser(session.user)
+    if (error) {
+      console.error('认证回调处理失败:', error)
+      // 认证失败时重定向到首页
+      router.push('/')
+      return
+    }
+
+    if (data) {
+      // 认证成功后立即重定向到首页
       router.push('/')
     }
   } catch (error) {
-    console.error('Auth callback error:', error)
+    console.error('认证过程发生错误:', error)
     router.push('/')
   }
 })
