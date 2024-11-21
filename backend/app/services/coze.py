@@ -4,7 +4,7 @@ from app.utils.logger import logger
 
 class CozeService:
     @staticmethod
-    async def parse_content(url: str, content: str) -> dict:
+    async def parse_content(url: str, content: str, chapters: str) -> dict:
         # 设置超时时间为 5 分钟 (300 秒)
         timeout = httpx.Timeout(300.0, connect=60.0)
         
@@ -23,7 +23,7 @@ class CozeService:
                     "workflow_id": settings.COZE_WORKFLOW_ID,
                     "parameters": {
                         "BOT_USER_INPUT": "",
-                        "timestamp": None,
+                        "timestamp": chapters,
                         "link": url,
                         "content": content or ""
                     }

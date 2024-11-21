@@ -9,3 +9,4 @@ class ParseRequest(BaseModel):
     id: int
     url: str
     content: Optional[str] = None 
+    chapters: Optional[str] = None 

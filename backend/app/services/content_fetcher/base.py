@@ -29,3 +29,8 @@ class ContentFetcher(ABC):
     async def get_video_info(self, url: str) -> Optional[VideoInfo]:
         """获取视频基本信息"""
         pass
+
+    @abstractmethod
+    async def get_chapters(self, url: str) -> Optional[str]:
+        """获取视频章节信息"""
+        pass

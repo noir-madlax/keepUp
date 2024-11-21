@@ -56,7 +56,7 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
         await SupabaseService.update_status(request_id, "failed", str(e))
         raise
 
-async def call_coze_and_parse(url: str, content: str) -> CozeArticleContent:
+async def call_coze_and_parse(url: str, content: str, chapters: str) -> CozeArticleContent:
     """调用 Coze API 并解析结果"""
     try:
         if settings.USE_MOCK_COZE:
@@ -75,7 +75,7 @@ async def call_coze_and_parse(url: str, content: str) -> CozeArticleContent:
             logger.info("调用真实 Coze API")
             # 调用真实的 Coze API
             coze_service = CozeService()
-            result = await coze_service.parse_content(url, content)
+            result = await coze_service.parse_content(url, content, chapters)
             coze_response = CozeResponse(**result)
             
         return coze_response

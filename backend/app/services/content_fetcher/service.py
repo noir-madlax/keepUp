@@ -32,4 +32,15 @@ class ContentFetcherService:
             return None
         except Exception as e:
             logger.error(f"获取视频信息失败: {str(e)}", exc_info=True)
+            return None
+
+    async def get_chapters(self, url: str) -> Optional[str]:
+        """获取视频章节信息"""
+        try:
+            for fetcher in self.fetchers:
+                if fetcher.can_handle(url):
+                    return await fetcher.get_chapters(url)
+            return None
+        except Exception as e:
+            logger.error(f"获取视频章节信息失败: {str(e)}", exc_info=True)
             return None 

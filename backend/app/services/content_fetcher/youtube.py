@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from .base import ContentFetcher, VideoInfo
 from app.models.article import ArticleCreate
 import re
@@ -9,6 +9,7 @@ from app.utils.logger import logger
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
+from pytubefix import YouTube
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
@@ -133,3 +134,25 @@ class YouTubeFetcher(ContentFetcher):
         except Exception as e:
             logger.error(f"获取YouTube视频信息失败: {str(e)}", exc_info=True)
             return None 
+
+    async def get_chapters(self, url: str) -> Optional[str]:
+        """获取YouTube视频章节信息"""
+        try:
+            logger.info(f"开始获取YouTube视频章节信息: {url}")
+            
+            # 使用 pytubefix 获取视频信息
+            yt = YouTube(url)
+            chapters = yt.chapters
+            
+            if not chapters:
+                logger.info("该视频没有章节信息")
+                return None
+            
+            # 直接返回章节信息的字符串表示
+            chapters_str = str(chapters)
+            logger.info(f"成功获取到章节信息: {chapters_str}")
+            return chapters_str
+
+        except Exception as e:
+            logger.error(f"获取YouTube视频章节信息失败: {str(e)}", exc_info=True)
+            return None
