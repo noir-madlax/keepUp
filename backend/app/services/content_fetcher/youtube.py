@@ -44,7 +44,7 @@ class YouTubeFetcher(ContentFetcher):
         return None
     
     async def fetch(self, url: str) -> Optional[str]:
-        """获取 YouTube 视频内容"""
+        """获取 YouTube 视频内容并格式化字幕"""
         try:
             logger.info(f"获取 YouTube 内容: {url}")
             logger.info(f"当前代理配置: {self.proxies}")
@@ -59,12 +59,25 @@ class YouTubeFetcher(ContentFetcher):
             logger.info(f"开始获取字幕，代理状态: {'启用' if self.proxies else '禁用'}")
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=self.proxies)
             
-            # 将完整的字幕信息转换为 JSON 字符串
-            full_content = json.dumps(transcript_list, ensure_ascii=False)
+            # 格式化字幕内容
+            readable_text = []
+            for entry in transcript_list:
+                # 将时间戳（秒）转换为时:分:秒格式
+                start_time = float(entry['start'])
+                hours = int(start_time // 3600)
+                minutes = int((start_time % 3600) // 60)
+                seconds = int(start_time % 60)
+                
+                # 添加格式化的文本行
+                formatted_line = f"[{hours:02}:{minutes:02}:{seconds:02}] {entry['text']}"
+                readable_text.append(formatted_line)
             
-            logger.info(f"成功获取视频字幕，JSON 长度: {len(full_content)} 字符")
+            # 将所有行组合成最终文本
+            final_content = "\n".join(readable_text)
             
-            return full_content
+            logger.info(f"成功格式化视频字幕，总行数: {len(readable_text)}")
+            
+            return final_content
             
         except Exception as e:
             logger.error(f"获取 YouTube 内容失败: {str(e)}", exc_info=True)
