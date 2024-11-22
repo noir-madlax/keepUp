@@ -155,16 +155,22 @@ class YouTubeFetcher(ContentFetcher):
             
             # 使用 pytubefix 获取视频信息
             yt = YouTube(url)
-            chapters = yt.chapters
             
-            if not chapters:
+            if not yt.chapters:
                 logger.info("该视频没有章节信息")
                 return None
             
-            # 直接返回章节信息的字符串表示
-            chapters_str = str(chapters)
-            logger.info(f"成功获取到章节信息: {chapters_str}")
-            return chapters_str
+            # 将章节信息转换为格式化的文本
+            chapters_text = []
+            for chapter in yt.chapters:
+                formatted_line = f"[{chapter.start_label}] {chapter.title}"
+                chapters_text.append(formatted_line)
+            
+            # 将所有章节组合成最终文本
+            final_content = "\n".join(chapters_text)
+            
+            logger.info(f"成功获取到章节信息，共 {len(chapters_text)} 个章节")
+            return final_content
 
         except Exception as e:
             logger.error(f"获取YouTube视频章节信息失败: {str(e)}", exc_info=True)
