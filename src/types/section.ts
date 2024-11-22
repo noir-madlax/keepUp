@@ -7,6 +7,7 @@ export type SectionType =
   | '分段提纲'
   | 'QA环节'
   | '金句'
+  | '分段详述'
   | '引用（测试）'
   | '结构图（测试）'
   | '案例（测试）'
@@ -32,6 +33,7 @@ export const ALL_SECTION_TYPES: SectionType[] = [
   '分段提纲',
   'QA环节',
   '金句',
+  '分段详述',
   '引用（测试）',
   '结构图（测试）',
   '案例（测试）',

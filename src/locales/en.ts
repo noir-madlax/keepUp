@@ -31,6 +31,7 @@ export default {
         '分段提纲': 'Outline',
         'QA环节': 'Q&A',
         '金句': 'Quotes',
+        '分段详述': 'Detailed Outline',
         '引用（测试）': 'References (Beta)',
         '结构图（测试）': 'Structure (Beta)',
         '案例（测试）': 'Cases (Beta)',
