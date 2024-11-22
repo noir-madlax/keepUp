@@ -1,3 +1,5 @@
+import { useI18n } from 'vue-i18n'
+
 export type SectionType = 
   | '总结'
   | '人物介绍'
@@ -53,4 +55,21 @@ export const VIEW_CONFIGS = {
   默认视图: {
     includedSections: DEFAULT_SELECTED_SECTIONS
   }
-}; 
+};
+
+// 添加一个函数来获取本地化的小节类型显示文本
+export const getLocalizedSectionType = (type: SectionType): string => {
+  const { t, locale } = useI18n()
+  
+  // 如果是英文环境,使用翻译
+  if (locale.value === 'en') {
+    return t(`article.sections.types.${type}`)
+  }
+  // 中文环境直接返回原始类型
+  return type
+}
+
+// 添加一个函数来获取本地化的所有小节类型
+export const getLocalizedSectionTypes = (): string[] => {
+  return ALL_SECTION_TYPES.map(type => getLocalizedSectionType(type))
+} 

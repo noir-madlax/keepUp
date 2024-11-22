@@ -46,7 +46,7 @@
                   target="_blank" 
                   class="inline-block mt-4 text-blue-500 hover:text-blue-600"
                 >
-                  查看原文内容 →
+                  {{ t('article.viewOriginal') }} →
                 </a>
               </div>
             </div>
@@ -59,7 +59,7 @@
         <!-- 小节标签 - 修改为方形淡蓝色标签 -->
         <div class="flex flex-wrap gap-3 pb-4 border-b border-gray-200">
           <button
-            v-for="sectionType in availableSectionTypes"
+            v-for="sectionType in ALL_SECTION_TYPES"
             :key="sectionType"
             @click="toggleSection(sectionType)"
             class="px-4 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
@@ -67,7 +67,7 @@
               'bg-blue-50 border-blue-400 text-blue-400' : 
               'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
           >
-            {{ sectionType }}
+            {{ getLocalizedSectionType(sectionType) }}
           </button>
         </div>
 
@@ -81,7 +81,7 @@
                   :key="section.id"
                   class="mb-8"
                 >
-                  <h2 class="text-xl font-bold mb-4">{{ section.section_type }}</h2>
+                  <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
                   <div v-html="marked(section.content)"></div>
                 </div>
               </template>
@@ -152,7 +152,8 @@ import { ElMessage } from 'element-plus'
 import ArticleForm from '../components/ArticleForm.vue'
 import type { Article } from '../types/article'
 import type { ArticleSection, SectionType, ViewType } from '../types/section'
-import { ALL_SECTION_TYPES, DEFAULT_SELECTED_SECTIONS } from '../types/section'
+import { ALL_SECTION_TYPES, DEFAULT_SELECTED_SECTIONS, getLocalizedSectionType } from '../types/section'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -320,6 +321,8 @@ onMounted(async () => {
   await authStore.loadUser()
   await fetchArticle()
 })
+
+const { t, locale } = useI18n()
 </script>
 
 <style>
