@@ -5,12 +5,12 @@
       <div class="px-8 py-4 flex justify-between items-center">
         <div class="flex items-center gap-3">
           <img src="/images/logo.png" alt="Keep Up Logo" class="h-8 w-8" />
-          <h1 class="text-2xl font-bold text-gray-900">Keep Up (跟牢)</h1>
+          <h1 class="text-2xl font-bold text-gray-900">{{ t('home.title') }}</h1>
         </div>
 
         <!-- 添加导航栏右侧部分的容器 -->
         <div class="flex items-center gap-4">
-          <!-- 将 ArticleRequestForm 放在这里，并添加 @refresh 监听器 -->
+          <language-switch />
           <article-request-form @refresh="fetchArticles" />
           
           <template v-if="authStore.isAuthenticated">
@@ -26,7 +26,7 @@
               @click="handleLogout" 
               class="text-gray-600 hover:text-gray-800"
             >
-              退出
+              {{ t('home.nav.logout') }}
             </button>
           </template>
           <template v-else>
@@ -34,14 +34,14 @@
               @click="showLoginModal = true"
               class="text-gray-600 hover:text-gray-800"
             >
-              登录
+              {{ t('home.nav.login') }}
             </button>
           </template>
           <button 
             @click="handleUpload" 
             class="bg-blue-500 text-white px-4 py-2 rounded"
           >
-          手动上传
+            {{ t('home.nav.upload') }}
           </button>
         </div>
       </div>
@@ -57,20 +57,20 @@
     <div class="px-8 py-6">
       <div class="max-w-screen-2xl mx-auto">
         <div class="mb-8">
-          <h2 class="text-xl mb-4">Discover Articles by Tag</h2>
+          <h2 class="text-xl mb-4">{{ t('home.filter.discover') }}</h2>
           <div class="flex gap-2 flex-wrap">
             <button 
               class="px-4 py-2 rounded-full border transition-colors duration-200"
               :class="selectedTag === 'all' ? 'bg-blue-500 text-white' : 'hover:bg-gray-50'"
               @click="selectTag('all')"
             >
-              全部
+              {{ t('home.filter.all') }}
             </button>
           </div>
         </div>
 
         <div class="mb-8">
-          <h2 class="text-sm text-gray-600 mb-2">频道选择（多选）</h2>
+          <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.channelTitle') }}</h2>
           <div class="flex flex-wrap gap-2">
             <button 
               v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF', '网页']"
@@ -86,13 +86,13 @@
                 :alt="channel"
                 class="w-4 h-4"
               />
-              {{ channel }}
+              {{ t(`home.channels.${getChannelKey(channel)}`) }}
             </button>
           </div>
         </div>
 
         <div class="mb-8">
-          <h2 class="text-sm text-gray-600 mb-2">作者选择（多选）</h2>
+          <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.authorTitle') }}</h2>
           <div class="flex flex-wrap gap-3">
             <button
               v-for="author in authors"
@@ -177,6 +177,8 @@ import AuthorSelect from '../components/AuthorSelect.vue'
 import ArticleForm from '../components/ArticleForm.vue'
 import { getChannelIcon } from '../utils/channel'
 import ArticleRequestForm from '../components/ArticleRequestForm.vue'
+import { useI18n } from 'vue-i18n'
+import LanguageSwitch from '../components/LanguageSwitch.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -414,6 +416,20 @@ const toggleAuthor = (author: Author) => {
   } else {
     selectedAuthors.value.splice(index, 1)
   }
+}
+
+const { t } = useI18n()
+
+// 添加一个辅助函数来获取channel的key
+const getChannelKey = (channel: string): string => {
+  const keyMap: Record<string, string> = {
+    '微信': 'wechat',
+    'YouTube': 'youtube',
+    '小宇宙': 'xiaoyuzhou',
+    'PDF': 'pdf',
+    '网页': 'web'
+  }
+  return keyMap[channel] || channel.toLowerCase()
 }
 </script>
 
