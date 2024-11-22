@@ -39,9 +39,9 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
             # {"section_type": "核心观点", "content": article_content.key3_core},
             {"section_type": "名词解释", "content": article_content.key4_word},
             {"section_type": "分段提纲", "content": article_content.key6_part_title},
-            {"section_type": "分段详述", "content": article_content.key7_part_detail},
             {"section_type": "QA环节", "content": article_content.key8_qa},
             {"section_type": "金句", "content": article_content.key9_golden},
+            {"section_type": "分段详述", "content": article_content.key7_part_detail},
             {"section_type": "未总结内容", "content": article_content.key10_exclude}
         ]
         
