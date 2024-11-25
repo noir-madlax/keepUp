@@ -56,12 +56,30 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
   }
 
+  // 添加处理回调的方法
+  const handleAuthCallback = async () => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+      if (error) throw error
+      
+      if (session) {
+        user.value = session.user
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error('处理认证回调失败:', error)
+      throw error
+    }
+  }
+
   return {
     user,
     isAuthenticated,
     loadUser,
     signInWithGithub,
     signInWithGoogle,
-    signOut
+    signOut,
+    handleAuthCallback  // 导出新方法
   }
 }) 

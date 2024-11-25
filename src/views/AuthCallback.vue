@@ -8,11 +8,13 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 onMounted(async () => {
+  console.log('开始处理认证回调')
   try {
     // 设置一个超时，确保不会永远停留在这个页面
     const timeoutPromise = new Promise((_, reject) => {
@@ -23,12 +25,19 @@ onMounted(async () => {
     const authPromise = authStore.handleAuthCallback()
     
     // 使用 Promise.race 确保不会永远等待
-    await Promise.race([authPromise, timeoutPromise])
+    const success = await Promise.race([authPromise, timeoutPromise])
     
+    if (!success) {
+      throw new Error('认证失败')
+    }
+
+    console.log('认证成功，准备跳转')
+    await router.push('/')
+    console.log('跳转完成')
   } catch (error) {
-    console.error('认证处理出错:', error)
-  } finally {
-    // 无论如何都重定向到首页
+    console.error('认证处理详细错误:', error)
+    // 认证失败时跳转到登录页或显示错误信息
+    ElMessage.error('登录失败，请重试')
     await router.push('/')
   }
 })

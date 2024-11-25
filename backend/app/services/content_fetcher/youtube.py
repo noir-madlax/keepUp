@@ -169,7 +169,7 @@ class YouTubeFetcher(ContentFetcher):
             # 将所有章节组合成最终文本
             final_content = "\n".join(chapters_text)
             
-            logger.info(f"成功获取到章节信息，共 {len(chapters_text)} 个章节")
+            logger.info(f"成功获取到章节信息，共 {len(chapters_text)} 个字节")
             return final_content
 
         except Exception as e:
