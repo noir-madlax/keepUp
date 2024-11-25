@@ -59,8 +59,15 @@ export const useAuthStore = defineStore('auth', () => {
   // 添加处理回调的方法
   const handleAuthCallback = async () => {
     try {
+      // 先等待 Supabase 处理 URL 中的认证参数
+      const { error: callbackError } = await supabase.auth.getSession()
+      if (callbackError) throw callbackError
+
+      // 然后获取 session
       const { data: { session }, error } = await supabase.auth.getSession()
       if (error) throw error
+      
+      console.log('Callback session:', session) // 添加日志
       
       if (session) {
         user.value = session.user
@@ -73,6 +80,26 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 添加初始化方法
+  const init = async () => {
+    try {
+      // 获取初始会话状态
+      const { data: { session } } = await supabase.auth.getSession()
+      user.value = session?.user || null
+      
+      // 设置认证状态变化监听
+      supabase.auth.onAuthStateChange((event, session) => {
+        console.log('Auth state changed:', event, session?.user)
+        user.value = session?.user || null
+      })
+    } catch (error) {
+      console.error('Auth initialization error:', error)
+    }
+  }
+
+  // 在 store 创建时立即初始化
+  init()
+
   return {
     user,
     isAuthenticated,
@@ -80,6 +107,6 @@ export const useAuthStore = defineStore('auth', () => {
     signInWithGithub,
     signInWithGoogle,
     signOut,
-    handleAuthCallback  // 导出新方法
+    handleAuthCallback
   }
 }) 

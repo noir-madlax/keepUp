@@ -18,7 +18,7 @@ onMounted(async () => {
   try {
     // 设置一个超时，确保不会永远停留在这个页面
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('认证超时')), 5000)
+      setTimeout(() => reject(new Error('认证超时')), 10000)
     })
 
     // 等待 supabase 处理认证回调
@@ -32,13 +32,11 @@ onMounted(async () => {
     }
 
     console.log('认证成功，准备跳转')
-    await router.push('/')
-    console.log('跳转完成')
+    router.replace('/')
   } catch (error) {
     console.error('认证处理详细错误:', error)
-    // 认证失败时跳转到登录页或显示错误信息
     ElMessage.error('登录失败，请重试')
-    await router.push('/')
+    router.replace('/')
   }
 })
 </script> 
