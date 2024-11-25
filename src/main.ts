@@ -17,4 +17,10 @@ app.use(createPinia())
 app.use(router)
 app.use(i18n)
 
+// 添加全局路由守卫
+router.beforeEach((to, from) => {
+  console.log(`路由变化: 从 ${from.fullPath} 到 ${to.fullPath}`)
+  return true
+})
+
 app.mount('#app')
