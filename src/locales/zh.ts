@@ -10,7 +10,9 @@ export default {
       discover: 'Discover Articles by Tag',
       all: '全部',
       channelTitle: '频道选择（多选）',
-      authorTitle: '作者选择（多选）'
+      authorTitle: '作者选择（多选）',
+      expand: '展开更多',
+      collapse: '收起'
     },
     channels: {
       wechat: '微信',

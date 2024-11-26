@@ -10,7 +10,9 @@ export default {
       discover: 'Discover Articles by Tag',
       all: 'All',
       channelTitle: 'Select Channels (Multiple)',
-      authorTitle: 'Select Authors (Multiple)'
+      authorTitle: 'Select Authors (Multiple)',
+      expand: 'Show More',
+      collapse: 'Show Less'
     },
     channels: {
       wechat: 'WeChat',

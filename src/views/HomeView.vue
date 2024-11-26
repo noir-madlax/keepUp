@@ -94,22 +94,41 @@
         <div class="mb-8">
           <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.authorTitle') }}</h2>
           <div class="flex flex-wrap gap-3">
-            <button
-              v-for="author in authors"
-              :key="author.id"
-              @click="toggleAuthor(author)"
-              class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
-              :class="selectedAuthors.includes(author.id) ? 
-                'bg-blue-50 border-blue-400 text-blue-400' : 
-                'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
+            <!-- 始终显示的作者 -->
+            <template v-for="(author, index) in displayedAuthors" :key="author.id">
+              <button
+                @click="toggleAuthor(author)"
+                class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
+                :class="selectedAuthors.includes(author.id) ? 
+                  'bg-blue-50 border-blue-400 text-blue-400' : 
+                  'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
+              >
+                <img 
+                  v-if="author.icon" 
+                  :src="author.icon" 
+                  :alt="author.name"
+                  class="w-5 h-5 rounded-full"
+                />
+                {{ author.name }}
+              </button>
+            </template>
+
+            <!-- 展开/收起按钮 -->
+            <button 
+              v-if="authors.length > defaultDisplayCount"
+              @click="isExpanded = !isExpanded"
+              class="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
             >
-              <img 
-                v-if="author.icon" 
-                :src="author.icon" 
-                :alt="author.name"
-                class="w-5 h-5 rounded-full"
-              />
-              {{ author.name }}
+              <span>{{ isExpanded ? t('home.filter.collapse') : t('home.filter.expand') }}</span>
+              <svg 
+                class="w-4 h-4 transition-transform duration-200"
+                :class="{ 'transform rotate-180': isExpanded }"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
           </div>
         </div>
@@ -166,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
 import ArticleCard from '../components/ArticleCard.vue'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
@@ -431,6 +450,45 @@ const getChannelKey = (channel: string): string => {
   }
   return keyMap[channel] || channel.toLowerCase()
 }
+
+// 使用计算属性来根据屏幕大小返回不同的显示数量
+const defaultDisplayCount = computed(() => {
+  // 使用 window.innerWidth 获取当前视口宽度
+  const width = window.innerWidth
+  
+  // >= 1280px (xl): 显示16个 (4行)
+  if (width >= 1280) return 16
+  // >= 1024px (lg): 显示6个 (3行)
+  if (width >= 1024) return 6
+  // >= 768px (md): 显示4个 (2行)
+  if (width >= 768) return 4
+  // < 768px: 显示4个 (2行)
+  return 4
+})
+
+const isExpanded = ref(false)
+
+// 监听窗口大小变化
+onMounted(() => {
+  const handleResize = () => {
+    // 如果当前显示的作者数量大于新的默认显示数量，则收起列表
+    if (!isExpanded.value && displayedAuthors.value.length > defaultDisplayCount.value) {
+      isExpanded.value = false
+    }
+  }
+
+  window.addEventListener('resize', handleResize)
+  
+  // 组件卸载时移除事件监听
+  onUnmounted(() => {
+    window.removeEventListener('resize', handleResize)
+  })
+})
+
+// 计算要显示的作者列表
+const displayedAuthors = computed(() => {
+  return isExpanded.value ? authors.value : authors.value.slice(0, defaultDisplayCount.value)
+})
 </script>
 
 <style scoped>
