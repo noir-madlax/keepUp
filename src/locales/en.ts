@@ -65,8 +65,7 @@ export default {
       duplicateUrl: 'This URL has already been submitted',
       languageRequired: 'Please select at least one output language',
       submitSuccess: 'Submitted successfully, content is being processed',
-      submitFailed: 'Submission failed, please try again',
-      processing: 'Processing your request, this may take a few minutes...'
+      submitFailed: 'Submission failed, please try again'
     }
   }
 } 

@@ -135,13 +135,6 @@ const submitRequest = async () => {
     return
   }
   
-  isProcessing.value = true
-  const loading = ElLoading.service({
-    lock: true,
-    text: t('summarize.messages.processing'),
-    background: 'rgba(0, 0, 0, 0.7)'
-  })
-
   try {
     // 1. 创建请求记录
     const { data: requestData, error: requestError } = await supabase
@@ -154,8 +147,8 @@ const submitRequest = async () => {
       
     if (requestError) throw requestError
 
-    // 2. 调用后端 workflow 接口
-    const response = await fetch('/api/workflow/process', {
+    // 2. 触发后端处理但不等待完成
+    fetch('/api/workflow/process', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -167,12 +160,6 @@ const submitRequest = async () => {
       })
     })
 
-    if (!response.ok) {
-      throw new Error(`处理请求失败: ${response.statusText}`)
-    }
-
-    const result = await response.json()
-    
     ElMessage.success(t('summarize.messages.submitSuccess'))
     requestUrl.value = ''
     showUploadModal.value = false
@@ -181,9 +168,6 @@ const submitRequest = async () => {
   } catch (error) {
     console.error('提交失败:', error)
     ElMessage.error(t('summarize.messages.submitFailed'))
-  } finally {
-    loading.close()
-    isProcessing.value = false
   }
 }
 </script> 
