@@ -1,6 +1,6 @@
 export default {
   home: {
-    title: 'Keep Up (跟牢)',
+    title: 'Keep Up',
     nav: {
       login: '登录',
       logout: '退出',
@@ -39,6 +39,11 @@ export default {
         '翻译字幕（测试）': '翻译字幕（测试）',
         '彩蛋（测试）': '彩蛋（测试）'
       }
+    },
+    fallbackLanguage: {
+      zh: '中文',
+      en: '英文',
+      message: '当前显示 {language} 内容'
     }
   }
 } 

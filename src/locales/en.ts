@@ -39,6 +39,11 @@ export default {
         '翻译字幕（测试）': 'Translated Subtitles (Beta)',
         '彩蛋（测试）': 'Easter Eggs (Beta)'
       }
+    },
+    fallbackLanguage: {
+      zh: 'Chinese',
+      en: 'English',
+      message: 'Currently displaying {language} content'
     }
   }
 } 

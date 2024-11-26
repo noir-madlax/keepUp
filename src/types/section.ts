@@ -15,11 +15,14 @@ export type SectionType =
   | '翻译字幕（测试）'
   | '彩蛋（测试）';
 
+export type Language = 'zh' | 'en';
+
 export interface ArticleSection {
   id: number;
   article_id: number;
   section_type: SectionType;
   content: string;
+  language: Language;
   sort_order: number;
 }
 

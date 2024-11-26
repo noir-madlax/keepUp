@@ -4,7 +4,7 @@
       <div class="px-8 py-4 flex justify-between items-center">
         <div class="flex items-center gap-3" @click="router.push('/')" style="cursor: pointer">
           <img src="/images/logo.png" alt="Keep Up Logo" class="h-8 w-8" />
-          <h1 class="text-2xl font-bold text-gray-900">Keep Up (跟牢)</h1>
+          <h1 class="text-2xl font-bold text-gray-900">Keep Up</h1>
         </div>
         <button 
           v-if="canEdit"
@@ -155,6 +155,9 @@ import type { ArticleSection, SectionType, ViewType } from '../types/section'
 import { ALL_SECTION_TYPES, DEFAULT_SELECTED_SECTIONS, getLocalizedSectionType } from '../types/section'
 import { useI18n } from 'vue-i18n'
 
+// 将 i18n 相关初始化移到最前面
+const { t, locale } = useI18n()
+
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
@@ -223,27 +226,38 @@ const fetchArticle = async () => {
       .single()
 
     if (articleError) throw articleError
-    if (!articleData) return
 
-    // 获取文章小节内容
-    const { data: sectionsData, error: sectionsError } = await supabase
+    // 获取当前语言的文章小节内容
+    let { data: sectionsData, error: sectionsError } = await supabase
       .from('keep_article_sections')
       .select('*')
       .eq('article_id', route.params.id)
-      .order('sort_order', { ascending: true })
+      .eq('language', locale.value)
+      .order('sort_order')
 
     if (sectionsError) throw sectionsError
-    if (!sectionsData) return
 
-    const formattedData = {
-      ...articleData,
-      publish_date: articleData.publish_date ? 
-        new Date(articleData.publish_date).toISOString().split('T')[0] : null
+    // 如果当前语言没有内容,尝试获取另一种语言的内容
+    if (!sectionsData?.length) {
+      const fallbackLanguage = locale.value === 'zh' ? 'en' : 'zh'
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from('keep_article_sections')
+        .select('*')
+        .eq('article_id', route.params.id)
+        .eq('language', fallbackLanguage)
+        .order('sort_order')
+
+      if (!fallbackError && fallbackData?.length) {
+        sectionsData = fallbackData
+        // 使用翻译的提示信息
+        ElMessage.info(t('article.fallbackLanguage.message', {
+          language: t(`article.fallbackLanguage.${fallbackLanguage}`)
+        }))
+      }
     }
 
-    article.value = formattedData as Article
-    sections.value = sectionsData as ArticleSection[]
-    editForm.value = { ...formattedData }
+    article.value = articleData
+    sections.value = sectionsData || []
   } catch (error) {
     console.error('获取文章详情失败:', error)
     ElMessage.error('获取文章失败')
@@ -280,11 +294,12 @@ const submitEdit = async () => {
     if (articleError) throw articleError
 
     if (formRef.value) {
-      // 删除现有小节
+      // 删除当前语言的小节
       const { error: deleteError } = await supabase
         .from('keep_article_sections')
         .delete()
         .eq('article_id', article.value?.id)
+        .eq('language', locale.value)  // 只删除当前语言的内容
 
       if (deleteError) throw deleteError
 
@@ -295,7 +310,8 @@ const submitEdit = async () => {
           .from('keep_article_sections')
           .insert(sectionsData.map(section => ({
             ...section,
-            article_id: article.value?.id
+            article_id: article.value?.id,
+            language: locale.value  // 添加语言标识
           })))
 
         if (insertError) throw insertError
@@ -311,8 +327,9 @@ const submitEdit = async () => {
   }
 }
 
-watch(() => route.params.id, (newId) => {
-  if (newId) {
+// 监听语言变化,重新获取内容
+watch(() => locale.value, () => {
+  if (route.params.id) {
     fetchArticle()
   }
 })
@@ -321,8 +338,6 @@ onMounted(async () => {
   await authStore.loadUser()
   await fetchArticle()
 })
-
-const { t, locale } = useI18n()
 </script>
 
 <style>
