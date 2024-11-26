@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.models.request import FetchRequest, ParseRequest
 from app.services.content_fetcher.service import ContentFetcherService
 from app.services.supabase import SupabaseService
@@ -73,21 +73,19 @@ async def process_multilingual_content(request_id: int, url: str, content: str, 
     logger.info(f"多语言内容处理完成 - 请求ID: {request_id}, 结果: {results}")
     return results
 
-@router.post("/workflow/process")
-async def process_workflow(request: FetchRequest):
-    """完整的处理流程"""
+# 将原来的处理逻辑封装成一个独立的后台任务函数
+async def process_article_task(request: FetchRequest):
     try:
-        logger.info(f"开始完整处理流程: ID={request.id}, URL={request.url}, Languages={request.languages}")
-        
-        # 1. 更新状态为处理中
-        await SupabaseService.update_status(request.id, "processing")
+        logger.info(f"开始后台处理: ID={request.id}, URL={request.url}, Languages={request.languages}")
         
         # 2. 获取视频基础信息
         service = ContentFetcherService()
         video_info = await service.get_video_info(request.url)
         
         if not video_info:
-            raise HTTPException(status_code=400, detail="无法获取视频信息")
+            logger.error(f"无法获取视频信息: ID={request.id}")
+            await SupabaseService.update_status(request.id, "failed", "无法获取视频信息")
+            return
             
         # 3. 获取视频章节信息
         chapters = await service.get_chapters(request.url)
@@ -107,7 +105,9 @@ async def process_workflow(request: FetchRequest):
         # 6. 获取视频字幕
         content = await service.fetch_content(request.url)
         if not content:
-            raise HTTPException(status_code=400, detail="无法获取字幕内容")
+            logger.error(f"无法获取字幕内容: ID={request.id}")
+            await SupabaseService.update_status(request.id, "failed", "无法获取字幕内容")
+            return
         
         # 7. 保存字幕内容
         await SupabaseService.update_content(request.id, content)
@@ -116,7 +116,7 @@ async def process_workflow(request: FetchRequest):
         await asyncio.sleep(1)
         
         # 8. 处理多语言内容
-        results = await process_multilingual_content(
+        await process_multilingual_content(
             request.id,
             request.url,
             content,
@@ -125,21 +125,36 @@ async def process_workflow(request: FetchRequest):
             request.languages
         )
         
+        logger.info(f"后台处理完成: ID={request.id}")
+        
+    except Exception as e:
+        logger.error(f"后台处理失败: ID={request.id}, Error={str(e)}", exc_info=True)
+        await SupabaseService.update_status(
+            request.id, 
+            "failed", 
+            error_message=str(e)
+        )
+
+@router.post("/workflow/process")
+async def process_workflow(request: FetchRequest, background_tasks: BackgroundTasks):
+    """接收请求并立即返回,在后台继续处理"""
+    try:
+        logger.info(f"收到处理请求: ID={request.id}, URL={request.url}")
+        
+        # 1. 更新状态为处理中
+        await SupabaseService.update_status(request.id, "processing")
+        
+        # 将任务添加到后台处理队列
+        background_tasks.add_task(process_article_task, request)
+        
         return {
             "success": True,
-            "message": "处理完成",
-            "steps": [
-                "获取视频信息成功",
-                "获取章节信息成功",
-                "处理作者信息成功",
-                "创建文章成功",
-                "获取字幕成功",
-                *results  # 展开每种语言的处理结果
-            ]
+            "message": "请求已接受,开始后台处理",
+            "request_id": request.id
         }
         
     except Exception as e:
-        logger.error(f"工作流处理失败: {str(e)}", exc_info=True)
+        logger.error(f"请求处理失败: {str(e)}", exc_info=True)
         await SupabaseService.update_status(
             request.id, 
             "failed", 
