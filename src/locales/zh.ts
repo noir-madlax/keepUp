@@ -45,5 +45,28 @@ export default {
       en: '英文',
       message: '当前显示 {language} 内容'
     }
+  },
+  summarize: {
+    title: '帮我总结',
+    urlPlaceholder: '输入文章、视频内容的链接',
+    languageTitle: '选择输出语言',
+    languages: {
+      zh: '中文',
+      en: '英文'
+    },
+    buttons: {
+      cancel: '取消',
+      confirm: '确定',
+      processing: '处理中...'
+    },
+    messages: {
+      urlRequired: '请输入URL',
+      invalidUrl: '请输入有效的URL地址',
+      duplicateUrl: '该链接已经提交过了',
+      languageRequired: '请至少选择一种输出语言',
+      submitSuccess: '提交成功，内容正在处理中',
+      submitFailed: '提交失败，请重试',
+      processing: '正在处理您的请求，这可能需要几分钟时间...'
+    }
   }
 } 

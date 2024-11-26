@@ -45,5 +45,28 @@ export default {
       en: 'English',
       message: 'Currently displaying {language} content'
     }
+  },
+  summarize: {
+    title: 'Summarize for Me',
+    urlPlaceholder: 'Enter article or video content URL',
+    languageTitle: 'Select Output Languages',
+    languages: {
+      zh: 'Chinese',
+      en: 'English'
+    },
+    buttons: {
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+      processing: 'Processing...'
+    },
+    messages: {
+      urlRequired: 'Please enter URL',
+      invalidUrl: 'Please enter a valid URL',
+      duplicateUrl: 'This URL has already been submitted',
+      languageRequired: 'Please select at least one output language',
+      submitSuccess: 'Submitted successfully, content is being processed',
+      submitFailed: 'Submission failed, please try again',
+      processing: 'Processing your request, this may take a few minutes...'
+    }
   }
 } 

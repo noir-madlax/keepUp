@@ -53,7 +53,8 @@ class SupabaseService:
                 "article_id": article_id,
                 "section_type": section["section_type"],
                 "content": section["content"],
-                "sort_order": idx
+                "sort_order": idx,
+                "language": section["language"]
             }
             for idx, section in enumerate(sections)
         ]

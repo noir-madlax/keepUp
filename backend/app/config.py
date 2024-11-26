@@ -13,7 +13,8 @@ class Settings(BaseSettings):
     
     # Coze 配置
     COZE_API_TOKEN: str
-    COZE_WORKFLOW_ID: str
+    COZE_WORKFLOW_ID_ZH: str  # 中文工作流
+    COZE_WORKFLOW_ID_EN: str  # 英文工作流
     USE_MOCK_COZE: bool = False
     
     # 代理配置

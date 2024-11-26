@@ -1,20 +1,83 @@
 <template>
-  <div class="flex items-center gap-2">
-    <input 
-      type="text" 
-      v-model="requestUrl"
-      placeholder="输入文章、视频内容的链接" 
-      class="w-[280px] px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-      @keyup.enter="submitRequest"
-      :disabled="isProcessing"
-    />
+  <div>
+    <!-- 上传按钮 -->
     <button 
-      @click="submitRequest"
-      class="px-3 py-1.5 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
-      :disabled="isProcessing"
+      @click="showUploadModal = true"
+      class="flex items-center gap-2 px-4 py-2 text-sm border rounded hover:bg-gray-50"
     >
-      {{ isProcessing ? '处理中...' : '上传' }}
+      <span>{{ t('summarize.title') }}</span>
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
     </button>
+
+    <!-- 上传模态框 -->
+    <div 
+      v-if="showUploadModal" 
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click="showUploadModal = false"
+    >
+      <div 
+        class="bg-white p-6 rounded-lg shadow-lg w-[500px]"
+        @click.stop
+      >
+        <div class="mb-6">
+          <h3 class="text-lg font-medium mb-2">{{ t('summarize.title') }}</h3>
+          <input 
+            type="text" 
+            v-model="requestUrl"
+            :placeholder="t('summarize.urlPlaceholder')"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            @keyup.enter="submitRequest"
+          />
+        </div>
+
+        <div class="mb-6">
+          <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.languageTitle') }}</h3>
+          <div class="flex gap-2">
+            <label 
+              v-for="lang in ['en', 'zh']" 
+              :key="lang"
+              class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
+              :class="selectedLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+            >
+              <input 
+                type="checkbox" 
+                :value="lang" 
+                v-model="selectedLanguages"
+                class="hidden"
+              />
+              <span>{{ t(`summarize.languages.${lang}`) }}</span>
+              <svg 
+                v-if="selectedLanguages.includes(lang)"
+                class="w-4 h-4 text-blue-500" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <button 
+            @click="showUploadModal = false"
+            class="px-4 py-2 text-sm border rounded hover:bg-gray-50"
+          >
+            {{ t('summarize.buttons.cancel') }}
+          </button>
+          <button 
+            @click="submitRequest"
+            class="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+            :disabled="isProcessing || !selectedLanguages.length"
+          >
+            {{ isProcessing ? t('summarize.buttons.processing') : t('summarize.buttons.confirm') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -22,17 +85,20 @@
 import { ref } from 'vue'
 import { ElMessage, ElLoading } from 'element-plus'
 import { supabase } from '../supabaseClient'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const requestUrl = ref('')
 const isProcessing = ref(false)
+const showUploadModal = ref(false)
+const selectedLanguages = ref<string[]>(['en'])
 
-// 定义 emit
 const emit = defineEmits(['refresh'])
 
 // URL验证函数
 const validateUrl = (url: string): boolean => {
   if (!url.trim()) {
-    ElMessage.error('请输入URL')
+    ElMessage.error(t('summarize.messages.urlRequired'))
     return false
   }
 
@@ -40,7 +106,7 @@ const validateUrl = (url: string): boolean => {
     new URL(url)
     return true
   } catch (e) {
-    ElMessage.error('请输入有效的URL地址')
+    ElMessage.error(t('summarize.messages.invalidUrl'))
     return false
   }
 }
@@ -54,7 +120,7 @@ const checkDuplicate = async (url: string): Promise<boolean> => {
     .single()
     
   if (data) {
-    ElMessage.error('该链接已经提交过了')
+    ElMessage.error(t('summarize.messages.duplicateUrl'))
     return false
   }
   return true
@@ -64,11 +130,15 @@ const checkDuplicate = async (url: string): Promise<boolean> => {
 const submitRequest = async () => {
   if (!validateUrl(requestUrl.value)) return
   if (!await checkDuplicate(requestUrl.value)) return
+  if (!selectedLanguages.value.length) {
+    ElMessage.warning(t('summarize.messages.languageRequired'))
+    return
+  }
   
   isProcessing.value = true
   const loading = ElLoading.service({
     lock: true,
-    text: '正在处理您的请求，这可能需要几分钟时间...',
+    text: t('summarize.messages.processing'),
     background: 'rgba(0, 0, 0, 0.7)'
   })
 
@@ -92,7 +162,8 @@ const submitRequest = async () => {
       },
       body: JSON.stringify({
         id: requestData.id,
-        url: requestUrl.value
+        url: requestUrl.value,
+        languages: selectedLanguages.value
       })
     })
 
@@ -102,15 +173,14 @@ const submitRequest = async () => {
 
     const result = await response.json()
     
-    ElMessage.success('提交成功，内容正在处理中')
-    requestUrl.value = '' // 清空输入框
-    
-    // 触发刷新事件
+    ElMessage.success(t('summarize.messages.submitSuccess'))
+    requestUrl.value = ''
+    showUploadModal.value = false
     emit('refresh')
     
   } catch (error) {
     console.error('提交失败:', error)
-    ElMessage.error('提交失败，请重试')
+    ElMessage.error(t('summarize.messages.submitFailed'))
   } finally {
     loading.close()
     isProcessing.value = false
