@@ -49,7 +49,7 @@ export default {
     }
   },
   summarize: {
-    title: 'Summarize for Me',
+    title: 'Upload',
     urlPlaceholder: 'Enter article or video content URL',
     languageTitle: 'Select Output Languages',
     languages: {
