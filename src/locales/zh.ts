@@ -67,7 +67,11 @@ export default {
       duplicateUrl: '该链接已经提交过了',
       languageRequired: '请至少选择一种输出语言',
       submitSuccess: '提交成功，内容正在处理中',
-      submitFailed: '提交失败，请重试'
-    }
+      submitFailed: '提交失败，请重试',
+      maxSelectionsExceeded: '最多只能选择3个语言选项'
+    },
+    summaryLanguageTitle: '总结语言',
+    subtitleLanguageTitle: '全文字幕',
+    detailedLanguageTitle: '分段详述'
   }
 } 

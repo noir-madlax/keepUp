@@ -33,28 +33,68 @@
         </div>
 
         <div class="mb-6">
-          <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.languageTitle') }}</h3>
+          <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.summaryLanguageTitle') }}</h3>
           <div class="flex gap-2">
             <label 
               v-for="lang in ['en', 'zh']" 
-              :key="lang"
+              :key="`summary-${lang}`"
               class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
-              :class="selectedLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+              :class="summaryLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
             >
               <input 
                 type="checkbox" 
                 :value="lang" 
-                v-model="selectedLanguages"
+                v-model="summaryLanguages"
                 class="hidden"
               />
               <span>{{ t(`summarize.languages.${lang}`) }}</span>
-              <svg 
-                v-if="selectedLanguages.includes(lang)"
-                class="w-4 h-4 text-blue-500" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
+              <svg v-if="summaryLanguages.includes(lang)" class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </label>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.subtitleLanguageTitle') }}</h3>
+          <div class="flex gap-2">
+            <label 
+              v-for="lang in ['en', 'zh']" 
+              :key="`subtitle-${lang}`"
+              class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
+              :class="subtitleLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+            >
+              <input 
+                type="checkbox" 
+                :value="lang" 
+                v-model="subtitleLanguages"
+                class="hidden"
+              />
+              <span>{{ t(`summarize.languages.${lang}`) }}</span>
+              <svg v-if="subtitleLanguages.includes(lang)" class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </label>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.detailedLanguageTitle') }}</h3>
+          <div class="flex gap-2">
+            <label 
+              v-for="lang in ['en', 'zh']" 
+              :key="`detailed-${lang}`"
+              class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
+              :class="detailedLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+            >
+              <input 
+                type="checkbox" 
+                :value="lang" 
+                v-model="detailedLanguages"
+                class="hidden"
+              />
+              <span>{{ t(`summarize.languages.${lang}`) }}</span>
+              <svg v-if="detailedLanguages.includes(lang)" class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </label>
@@ -71,7 +111,7 @@
           <button 
             @click="submitRequest"
             class="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-            :disabled="isProcessing || !selectedLanguages.length"
+            :disabled="isProcessing || !validateLanguageSelections()"
           >
             {{ isProcessing ? t('summarize.buttons.processing') : t('summarize.buttons.confirm') }}
           </button>
@@ -92,6 +132,9 @@ const requestUrl = ref('')
 const isProcessing = ref(false)
 const showUploadModal = ref(false)
 const selectedLanguages = ref<string[]>(['en'])
+const summaryLanguages = ref<string[]>(['en'])
+const subtitleLanguages = ref<string[]>([])
+const detailedLanguages = ref<string[]>([])
 
 const emit = defineEmits(['refresh'])
 
@@ -126,12 +169,32 @@ const checkDuplicate = async (url: string): Promise<boolean> => {
   return true
 }
 
+// 添加最大选择数量的验函数
+const MAX_SELECTIONS = 3
+
+const validateLanguageSelections = (): boolean => {
+  const totalSelections = summaryLanguages.value.length + 
+    subtitleLanguages.value.length + 
+    detailedLanguages.value.length
+
+  return totalSelections > 0 && totalSelections <= MAX_SELECTIONS
+}
+
 // 提交请求
 const submitRequest = async () => {
   if (!validateUrl(requestUrl.value)) return
   if (!await checkDuplicate(requestUrl.value)) return
-  if (!selectedLanguages.value.length) {
+  
+  const totalSelections = summaryLanguages.value.length + 
+    subtitleLanguages.value.length + 
+    detailedLanguages.value.length
+    
+  if (totalSelections === 0) {
     ElMessage.warning(t('summarize.messages.languageRequired'))
+    return
+  }
+  if (totalSelections > MAX_SELECTIONS) {
+    ElMessage.warning(t('summarize.messages.maxSelectionsExceeded'))
     return
   }
   
@@ -156,7 +219,9 @@ const submitRequest = async () => {
       body: JSON.stringify({
         id: requestData.id,
         url: requestUrl.value,
-        languages: selectedLanguages.value
+        summary_languages: summaryLanguages.value,
+        subtitle_languages: subtitleLanguages.value,
+        detailed_languages: detailedLanguages.value
       })
     })
 

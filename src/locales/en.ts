@@ -67,7 +67,11 @@ export default {
       duplicateUrl: 'This URL has already been submitted',
       languageRequired: 'Please select at least one output language',
       submitSuccess: 'Submitted successfully, content is being processed',
-      submitFailed: 'Submission failed, please try again'
-    }
+      submitFailed: 'Submission failed, please try again',
+      maxSelectionsExceeded: 'You can select up to 3 language options'
+    },
+    summaryLanguageTitle: 'Summary Languages',
+    subtitleLanguageTitle: 'Subtitle Languages',
+    detailedLanguageTitle: 'Detailed Languages'
   }
 } 

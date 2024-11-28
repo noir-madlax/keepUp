@@ -5,12 +5,13 @@ from app.services.supabase import SupabaseService
 from app.utils.logger import logger
 from app.routers.parse import call_coze_and_parse, process_coze_result
 from app.config import settings
+from app.services.content_polisher import ContentPolisherService
 import asyncio
 
 router = APIRouter()
 
-async def process_multilingual_content(request_id: int, url: str, content: str, chapters: str, article, languages: list[str]) -> list[str]:
-    """处理多语言内容解析
+async def process_summary_content(request_id: int, url: str, content: str, chapters: str, article, languages: list[str]) -> list[str]:
+    """处理总结内容解析
     
     Args:
         request_id: 请求ID
@@ -24,7 +25,7 @@ async def process_multilingual_content(request_id: int, url: str, content: str, 
         list[str]: 处理结果信息列表
     """
     results = []
-    logger.info(f"开始多语言内容处理 - 请求ID: {request_id}, 语言列表: {languages}")
+    logger.info(f"开始总结内容处理 - 请求ID: {request_id}, 语言列表: {languages}")
     
     for lang in languages:
         
@@ -70,13 +71,66 @@ async def process_multilingual_content(request_id: int, url: str, content: str, 
             # 继续处理其他语言,不中断整个流程
             continue
     
-    logger.info(f"多语言内容处理完成 - 请求ID: {request_id}, 结果: {results}")
+    logger.info(f"总结内容处理完成 - 请求ID: {request_id}, 结果: {results}")
+    return results
+
+
+async def process_subtitle_content(request_id: int, url: str, content: str, chapters: str, article, languages: list[str]) -> list[str]:
+    """处理多语言字幕内容解析
+    
+    Args:
+        request_id: 请求ID
+        url: 视频URL
+        content: 视频内容
+        chapters: 章节信息
+        article: 文章信息
+        languages: 需要处理的语言列表
+        
+    Returns:
+        list[str]: 处理结果信息列表
+    """
+    results = []
+    logger.info(f"开始字幕内容处理 - 请求ID: {request_id}, 语言列表: {languages}")
+    
+    for lang in languages:
+        
+        polish_workflow_id = (
+            settings.COZE_POLISH_WORKFLOW_ID_ZH if lang == 'zh'
+            else settings.COZE_POLISH_WORKFLOW_ID_EN
+        )
+
+        logger.info(f"使用工作流 ID: {polish_workflow_id} 处理 {lang} 语言")
+        
+        try:
+            
+            # 添加内容润色处理
+            await ContentPolisherService.process_article_content(
+                article_id=article['id'],
+                original_content=content,
+                language=lang,
+                workflow_id=polish_workflow_id
+            )
+            
+            results.append(f"{lang} 内容处理完成")
+            
+        except Exception as e:
+            error_msg = f"{lang} 语言处理失败 - 请求ID: {request_id}, 错误: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            results.append(error_msg)
+            # 继续处理其他语言,不中断整个流程
+            continue
+    
+    logger.info(f"字幕内容处理完成 - 请求ID: {request_id}, 结果: {results}")
     return results
 
 # 将原来的处理逻辑封装成一个独立的后台任务函数
 async def process_article_task(request: FetchRequest):
     try:
-        logger.info(f"开始后台处理: ID={request.id}, URL={request.url}, Languages={request.languages}")
+        logger.info(f"开始后台处理: ID={request.id}, URL={request.url},"
+                    f"Languages={request.summary_languages},"
+                    f"Subtitle={request.subtitle_languages},"
+                    f"Detailed={request.detailed_languages}"
+                    )
         
         # 2. 获取视频基础信息
         service = ContentFetcherService()
@@ -115,15 +169,28 @@ async def process_article_task(request: FetchRequest):
         # 等待确保数据已保存
         await asyncio.sleep(1)
         
-        # 8. 处理多语言内容
-        await process_multilingual_content(
+        # 8. 处理总结内容
+        await process_summary_content(
             request.id,
             request.url,
             content,
             chapters,
             article,
-            request.languages
+            request.summary_languages
         )
+
+        # 9. 处理全文字幕内容
+        await process_subtitle_content(
+            request.id,
+            request.url,
+            content,
+            chapters,
+            article,
+            request.subtitle_languages
+        )
+
+        # 10. 处理分段详述内容
+        # TODO: 处理分段详述内容
         
         logger.info(f"后台处理完成: ID={request.id}")
         

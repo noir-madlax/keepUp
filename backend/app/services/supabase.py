@@ -64,7 +64,7 @@ class SupabaseService:
     
     @classmethod
     async def update_content(cls, request_id: int, content: str):
-        """更新请求内容"""
+        """更新请求容"""
         client = cls.get_client()
         result = client.table("keep_article_requests").update({
             "content": content,
@@ -128,3 +128,110 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"获取作者信息失败: {str(e)}", exc_info=True)
             return None
+    
+    @classmethod
+    async def delete_article_section(
+        cls,
+        article_id: int,
+        section_type: str,
+        language: str
+    ) -> None:
+        """删除指定文章的特定类型和语言的小节
+        
+        Args:
+            article_id: 文章ID
+            section_type: 小节类型
+            language: 语言类型
+        """
+        client = cls.get_client()
+        result = client.table("keep_article_sections").delete().match({
+            "article_id": article_id,
+            "section_type": section_type,
+            "language": language
+        }).execute()
+        
+        logger.info(f"删除小节成功: article_id={article_id}, type={section_type}, language={language}")
+        return result
+    
+    @classmethod
+    async def get_request_id_by_article_id(cls, article_id: int) -> int:
+        """通过文章ID获取对应的请求ID
+        
+        通过以下步骤获取:
+        1. 从 article 表获取 original_link
+        2. 用 original_link 查询 article_request 表获取请求ID
+        
+        Args:
+            article_id: 文章ID
+            
+        Returns:
+            int: 请求ID
+            
+        Raises:
+            ValueError: 当找不到对应的请求记录时
+        """
+        try:
+            logger.info(f"开始查找文章对应的请求ID: article_id={article_id}")
+            
+            # 1. 获取文章URL
+            client = cls.get_client()
+            article_result = client.table("keep_articles").select("original_link").eq("id", article_id).single().execute()
+            
+            if not article_result.data:
+                raise ValueError(f"未找到文章: {article_id}")
+                
+            url = article_result.data.get("original_link")
+            if not url:
+                raise ValueError(f"文章缺少原始链接: {article_id}")
+            
+            # 2. 通过URL获取请求记录
+            request_result = client.table("keep_article_requests").select("id").eq("url", url).single().execute()
+            
+            if not request_result.data:
+                raise ValueError(f"未找到对应的请求记录: {url}")
+            
+            request_id = request_result.data.get("id")
+            logger.info(f"找到对应的请求ID: article_id={article_id}, request_id={request_id}")
+            
+            return request_id
+            
+        except Exception as e:
+            logger.error(f"查找请求ID失败: {str(e)}", exc_info=True)
+            raise
+    
+    @classmethod
+    async def update_polished_content(
+        cls,
+        request_id: int,
+        polished_content: dict,
+        language: str
+    ) -> None:
+        """更新请求的润色内容
+        
+        Args:
+            request_id: 请求ID
+            polished_content: Coze返回的润色结果
+            language: 语言类型
+        """
+        try:
+            client = cls.get_client()
+            
+            # 将结果转换为JSON字符串
+            polished_content_json = json.dumps(polished_content, ensure_ascii=False)
+            
+            # 根据语言类型设置字段名
+            field_name = f"polished_content_{language}"
+            
+            # 更新数据
+            result = client.table('keep_article_requests').update({
+                field_name: polished_content_json
+            }).eq('id', request_id).execute()
+            
+            if not result.data:
+                raise Exception(f"未找到 ID 为 {request_id} 的请求记录")
+            
+            logger.info(f"润色内容更新成功: ID={request_id}, language={language}")
+            
+        except Exception as e:
+            logger.error(f"更新润色内容失败: {str(e)}", exc_info=True)
+            raise

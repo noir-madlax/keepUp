@@ -5,7 +5,9 @@ from typing import List
 class FetchRequest(BaseModel):
     id: int
     url: str
-    languages: List[str] = ['zh']  # 默认中文,可选 ['zh', 'en']
+    summary_languages: List[str] = ['zh']  # 默认中文,可选 ['zh', 'en']
+    subtitle_languages: List[str] = ['zh']  # 默认中文,可选 ['zh', 'en']
+    detailed_languages: List[str] = ['zh']  # 默认中文,可选 ['zh', 'en']
 
 class ParseRequest(BaseModel):
     id: int
