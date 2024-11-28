@@ -1,27 +1,41 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <!-- 根容器 -->
+  <div class="min-h-screen">
     <!-- 顶部导航栏 -->
-    <header class="bg-blue-50">
+    <header>
+      <!-- 导航栏内容容器 -->
       <div class="px-8 py-4 flex justify-between items-center">
+        <!-- 左侧Logo和标题容器 -->
         <div class="flex items-center gap-3">
-          <img src="/images/logo.png" alt="Keep Up Logo" class="h-8 w-8" />
-          <h1 class="text-2xl font-bold text-gray-900">{{ t('home.title') }}</h1>
+          <!-- 网站Logo图片 -->
+          <img src="/images/logo.png" alt="Keep Up Logo" class="h-12 w-12" />
+          <!-- 网站标题文本 -->
+          <h1 class="text-[20px] text-[#333333] font-[800] leading-6 font-['PingFang_SC']">
+            {{ t('home.title') }}
+          </h1>
         </div>
 
-        <!-- 添加导航栏右侧部分的容器 -->
+        <!-- 右侧导航元素容器 -->
         <div class="flex items-center gap-4">
+          <!-- 语言切换组件 -->
           <language-switch />
+          <!-- 文章请求表单组件 -->
           <article-request-form @refresh="fetchArticles" />
           
+          <!-- 已登录用户信息区域 -->
           <template v-if="authStore.isAuthenticated">
+            <!-- 用户信息容器 -->
             <div class="flex items-center gap-2">
+              <!-- 用户头像图片 -->
               <img 
                 :src="authStore.user?.user_metadata?.avatar_url" 
                 alt="User Avatar" 
                 class="w-8 h-8 rounded-full"
               />
+              <!-- 用户名称显示 -->
               <span>{{ authStore.user?.user_metadata?.user_name }}</span>
             </div>
+            <!-- 登出按钮 -->
             <button 
               @click="handleLogout" 
               class="text-gray-600 hover:text-gray-800"
@@ -29,20 +43,21 @@
               {{ t('home.nav.logout') }}
             </button>
           </template>
+
+          <!-- 未登录状态显示 -->
           <template v-else>
+            <!-- 登录按钮 -->
             <button 
               @click="showLoginModal = true"
-              class="text-gray-600 hover:text-gray-800"
+              class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800"
             >
-              {{ t('home.nav.login') }}
+              <img 
+                src="/images/icons/user_avatar_unlogin.png" 
+                alt="Login"
+                class="w-8 h-8 rounded-full"
+              />
             </button>
           </template>
-          <button 
-            @click="handleUpload" 
-            class="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            {{ t('home.nav.upload') }}
-          </button>
         </div>
       </div>
     </header>
@@ -53,12 +68,17 @@
       @close="showLoginModal = false"
     />
 
-    <!-- 主要内容 -->
+    <!-- 主要内容区域 -->
     <div class="px-8 py-6">
+      <!-- 内容最大宽度限制容器 -->
       <div class="max-w-screen-2xl mx-auto">
+        <!-- 发现区域 -->
         <div class="mb-8">
+          <!-- 发现标题 -->
           <h2 class="text-xl mb-4">{{ t('home.filter.discover') }}</h2>
+          <!-- 标签按钮容器 -->
           <div class="flex gap-2 flex-wrap">
+            <!-- 全部标签按钮 -->
             <button 
               class="px-4 py-2 rounded-full border transition-colors duration-200"
               :class="selectedTag === 'all' ? 'bg-blue-500 text-white' : 'hover:bg-gray-50'"
@@ -69,9 +89,13 @@
           </div>
         </div>
 
+        <!-- 渠道筛选区域 -->
         <div class="mb-8">
+          <!-- 渠道标题 -->
           <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.channelTitle') }}</h2>
+          <!-- 渠道按钮容器 -->
           <div class="flex flex-wrap gap-2">
+            <!-- 渠道选择按钮 -->
             <button 
               v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF', '网页']"
               :key="channel"
@@ -81,11 +105,13 @@
                 'bg-blue-50 border-blue-400 text-blue-400' : 
                 'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
             >
+              <!-- 渠道图标 -->
               <img 
                 :src="`/images/icons/${getChannelIcon(channel)}`" 
                 :alt="channel"
                 class="w-4 h-4"
               />
+              <!-- 渠道名称 -->
               {{ t(`home.channels.${getChannelKey(channel)}`) }}
             </button>
           </div>

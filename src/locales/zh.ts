@@ -49,7 +49,7 @@ export default {
     }
   },
   summarize: {
-    title: '帮我总结',
+    title: '上传',
     urlPlaceholder: '输入文章、视频内容的链接',
     languageTitle: '选择输出语言',
     languages: {

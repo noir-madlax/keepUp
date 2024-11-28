@@ -1,11 +1,16 @@
 <template>
+  <!-- 页面容器 -->
   <div class="min-h-screen bg-gray-50">
+    <!-- 顶部导航栏 -->
     <header class="bg-blue-50">
+      <!-- 导航栏内容 -->
       <div class="px-8 py-4 flex justify-between items-center">
+        <!-- 网站Logo和标题 -->
         <div class="flex items-center gap-3" @click="router.push('/')" style="cursor: pointer">
           <img src="/images/logo.png" alt="Keep Up Logo" class="h-8 w-8" />
           <h1 class="text-2xl font-bold text-gray-900">Keep Up</h1>
         </div>
+        <!-- 编辑按钮 -->
         <button 
           v-if="canEdit"
           @click="showEditModal = true"
@@ -17,17 +22,21 @@
     </header>
 
     <template v-if="article">
+      <!-- 文章标题和作者信息 -->
       <div class="bg-blue-50">
         <div class="max-w-4xl mx-auto">
           <div class="relative px-4 py-8">
             <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
+              <!-- 文章封面 -->
               <img 
                 src="/public/images/covers/article-1.png" 
                 alt="Article Banner" 
                 class="w-full md:w-64 h-48 md:h-64 object-cover rounded-lg shadow-md" 
               />
               <div class="flex-1">
+                <!-- 文章标题 --> 
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{{ article.title }}</h1>
+                <!-- 作者信息 -->
                 <div class="flex items-center gap-4 text-gray-600 text-sm md:text-base">
                   <div class="flex items-center gap-2">
                     <img 
@@ -40,6 +49,7 @@
                   </div>
                   <span>{{ formatDate(article.publish_date) }}</span>
                 </div>
+                <!-- 原文链接 -->
                 <a 
                   v-if="article.original_link"
                   :href="article.original_link" 
@@ -54,9 +64,9 @@
         </div>
       </div>
 
-      <!-- 小节标签 - 修改为方形淡蓝色标签 -->
+      <!-- 小节标签 -->
       <div class="max-w-4xl mx-auto px-4 mt-6">
-        <!-- 小节标签 - 修改为方形淡蓝色标签 -->
+        <!-- 小节标签 -->
         <div class="flex flex-wrap gap-3 pb-4 border-b border-gray-200">
           <button
             v-for="sectionType in ALL_SECTION_TYPES"
@@ -71,7 +81,7 @@
           </button>
         </div>
 
-        <!-- 文章内容部分添加上边距 -->
+        <!-- 文章内容部分 -->
         <div class="mt-6">
           <div class="bg-white rounded-lg shadow-sm p-4 md:p-8">
             <article class="prose prose-sm md:prose-lg max-w-none">
@@ -171,7 +181,7 @@ const selectedSections = ref<SectionType[]>(DEFAULT_SELECTED_SECTIONS)
 
 // 根据当前视角获取可用的小节类型
 const availableSectionTypes = computed(() => {
-  // 始终返回所有小节类型
+  // 始终返回所��小节类型
   return ALL_SECTION_TYPES
 })
 

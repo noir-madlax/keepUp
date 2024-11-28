@@ -1,80 +1,86 @@
 <template>
   <div>
-    <!-- 上传按钮 -->
+    <!-- 主要上传按钮，点击显示模态框 -->
     <button 
       @click="showUploadModal = true"
-      class="flex items-center gap-2 px-4 py-2 text-sm border rounded hover:bg-gray-50"
+      class="flex items-center gap-2 px-4 py-2 text-sm text-white rounded hover:opacity-90 transition-opacity"
+      style="background: linear-gradient(to right, #2272EB 0%, #00BEFF 100%)"
     >
+      <!-- 按钮图标 -->
+      <img 
+        src="/images/icons/upload_button.png" 
+        alt="upload icon" 
+        class="w-4 h-4"
+      />
+      <!-- 按钮文字 -->
       <span>{{ t('summarize.title') }}</span>
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-      </svg>
     </button>
 
-    <!-- 上传模态框 -->
-    <div 
-      v-if="showUploadModal" 
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      @click="showUploadModal = false"
-    >
+    <!-- 模态框组件，包含文章URL输入和语言选择 -->
+    <div v-if="showUploadModal">
       <div 
-        class="bg-white p-6 rounded-lg shadow-lg w-[500px]"
-        @click.stop
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        @click="showUploadModal = false"
       >
-        <div class="mb-6">
-          <h3 class="text-lg font-medium mb-2">{{ t('summarize.title') }}</h3>
-          <input 
-            type="text" 
-            v-model="requestUrl"
-            :placeholder="t('summarize.urlPlaceholder')"
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-            @keyup.enter="submitRequest"
-          />
-        </div>
-
-        <div class="mb-6">
-          <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.languageTitle') }}</h3>
-          <div class="flex gap-2">
-            <label 
-              v-for="lang in ['en', 'zh']" 
-              :key="lang"
-              class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
-              :class="selectedLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
-            >
-              <input 
-                type="checkbox" 
-                :value="lang" 
-                v-model="selectedLanguages"
-                class="hidden"
-              />
-              <span>{{ t(`summarize.languages.${lang}`) }}</span>
-              <svg 
-                v-if="selectedLanguages.includes(lang)"
-                class="w-4 h-4 text-blue-500" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-            </label>
+        <div 
+          class="bg-white p-6 rounded-lg shadow-lg w-[500px]"
+          @click.stop
+        >
+          <div class="mb-6">
+            <h3 class="text-lg font-medium mb-2">{{ t('summarize.title') }}</h3>
+            <input 
+              type="text" 
+              v-model="requestUrl"
+              :placeholder="t('summarize.urlPlaceholder')"
+              class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+              @keyup.enter="submitRequest"
+            />
           </div>
-        </div>
 
-        <div class="flex justify-end gap-2">
-          <button 
-            @click="showUploadModal = false"
-            class="px-4 py-2 text-sm border rounded hover:bg-gray-50"
-          >
-            {{ t('summarize.buttons.cancel') }}
-          </button>
-          <button 
-            @click="submitRequest"
-            class="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-            :disabled="isProcessing || !selectedLanguages.length"
-          >
-            {{ isProcessing ? t('summarize.buttons.processing') : t('summarize.buttons.confirm') }}
-          </button>
+          <div class="mb-6">
+            <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.languageTitle') }}</h3>
+            <div class="flex gap-2">
+              <label 
+                v-for="lang in ['en', 'zh']" 
+                :key="lang"
+                class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
+                :class="selectedLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+              >
+                <input 
+                  type="checkbox" 
+                  :value="lang" 
+                  v-model="selectedLanguages"
+                  class="hidden"
+                />
+                <span>{{ t(`summarize.languages.${lang}`) }}</span>
+                <svg 
+                  v-if="selectedLanguages.includes(lang)"
+                  class="w-4 h-4 text-blue-500" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <button 
+              @click="showUploadModal = false"
+              class="px-4 py-2 text-sm border rounded hover:bg-gray-50"
+            >
+              {{ t('summarize.buttons.cancel') }}
+            </button>
+            <button 
+              @click="submitRequest"
+              class="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+              :disabled="isProcessing || !selectedLanguages.length"
+            >
+              {{ isProcessing ? t('summarize.buttons.processing') : t('summarize.buttons.confirm') }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -82,20 +88,29 @@
 </template>
 
 <script setup lang="ts">
+// 导入必要的依赖
 import { ref } from 'vue'
 import { ElMessage, ElLoading } from 'element-plus'
 import { supabase } from '../supabaseClient'
 import { useI18n } from 'vue-i18n'
 
+// 初始化国际化工具
 const { t } = useI18n()
-const requestUrl = ref('')
-const isProcessing = ref(false)
-const showUploadModal = ref(false)
-const selectedLanguages = ref<string[]>(['en'])
 
+// 响应式状态管理
+const requestUrl = ref('') // 存储用户输入的URL
+const isProcessing = ref(false) // 处理状态标志
+const showUploadModal = ref(false) // 控制模态框显示
+const selectedLanguages = ref<string[]>(['en']) // 选中的语言列表，默认英语
+
+// 定义组件事件
 const emit = defineEmits(['refresh'])
 
-// URL验证函数
+/**
+ * URL格式验证函数
+ * @param url 待验证的URL字符串
+ * @returns boolean 验证结果
+ */
 const validateUrl = (url: string): boolean => {
   if (!url.trim()) {
     ElMessage.error(t('summarize.messages.urlRequired'))
@@ -111,7 +126,11 @@ const validateUrl = (url: string): boolean => {
   }
 }
 
-// 检查重复提交
+/**
+ * 检查URL是否重复提交
+ * @param url 待检查的URL
+ * @returns boolean 检查结果
+ */
 const checkDuplicate = async (url: string): Promise<boolean> => {
   const { data, error } = await supabase
     .from('keep_article_requests')
@@ -126,7 +145,12 @@ const checkDuplicate = async (url: string): Promise<boolean> => {
   return true
 }
 
-// 提交请求
+/**
+ * 提交文章处理请求
+ * 1. 验证输入
+ * 2. 创建数据库记录
+ * 3. 触发后端处理
+ */
 const submitRequest = async () => {
   if (!validateUrl(requestUrl.value)) return
   if (!await checkDuplicate(requestUrl.value)) return
