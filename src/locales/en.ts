@@ -37,7 +37,7 @@ export default {
         '引用（测试）': 'References (Beta)',
         '结构图（测试）': 'Structure (Beta)',
         '案例（测试）': 'Cases (Beta)',
-        '原文字幕（测试）': 'Original Subtitles (Beta)',
+        '原文字幕': 'Original Subtitles',
         '翻译字幕（测试）': 'Translated Subtitles (Beta)',
         '彩蛋（测试）': 'Easter Eggs (Beta)'
       }
