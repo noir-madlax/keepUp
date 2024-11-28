@@ -124,6 +124,7 @@
       </div>
     </div>
   </div>
+</div>
 </template>
 
 <script setup lang="ts">
@@ -138,16 +139,9 @@ const { t } = useI18n()
 const requestUrl = ref('')
 const isProcessing = ref(false)
 const showUploadModal = ref(false)
-const selectedLanguages = ref<string[]>(['en'])
 const summaryLanguages = ref<string[]>(['en'])
 const subtitleLanguages = ref<string[]>([])
 const detailedLanguages = ref<string[]>([])
-
-// 响应式状态管理
-const requestUrl = ref('') // 存储用户输入的URL
-const isProcessing = ref(false) // 处理状态标志
-const showUploadModal = ref(false) // 控制模态框显示
-const selectedLanguages = ref<string[]>(['en']) // 选中的语言列表，默认英语
 
 // 定义组件事件
 const emit = defineEmits(['refresh'])
