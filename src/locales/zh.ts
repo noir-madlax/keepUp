@@ -23,7 +23,9 @@ export default {
     }
   },
   article: {
-    viewOriginal: '查看原文内容',
+    viewOriginal: '查看原内容',
+    share: "分享",
+    copySuccess: "链接已复制",
     sections: {
       title: '小节类型选择',
       types: {
@@ -50,7 +52,8 @@ export default {
   },
   summarize: {
     title: '上传',
-    urlPlaceholder: '输入文章、视频内容的链接',
+    manualupload:'手工',
+    urlPlaceholder: '输入视频、播客内容的链接',
     languageTitle: '选择输出语言',
     languages: {
       zh: '中文',

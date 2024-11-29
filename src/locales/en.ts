@@ -23,7 +23,9 @@ export default {
     }
   },
   article: {
-    viewOriginal: 'View Original Content',
+    viewOriginal: 'View Original',
+    share: "Share",
+    copySuccess: "Link copied",
     sections: {
       title: 'Section Types',
       types: {
@@ -50,6 +52,7 @@ export default {
   },
   summarize: {
     title: 'Upload',
+    manualupload:'Manual',
     urlPlaceholder: 'Enter article or video content URL',
     languageTitle: 'Select Output Languages',
     languages: {

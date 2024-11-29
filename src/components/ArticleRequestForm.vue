@@ -18,16 +18,29 @@
 
     <!-- 模态框组件，包含文章URL输入和语言选择 -->
     <div v-if="showUploadModal">
+      <!-- 模态框遮罩层 -->
       <div
         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
         @click="showUploadModal = false"
       >
+        <!-- 模态框内容 -->
         <div
           class="bg-white p-6 rounded-lg shadow-lg w-[500px]"
           @click.stop
         >
+          <!-- 文章URL输入 -->
           <div class="mb-6">
-            <h3 class="text-lg font-medium mb-2">{{ t('summarize.title') }}</h3>
+            <!-- 标题和手工按钮的容器 -->
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-lg font-medium">{{ t('summarize.title') }}</h3>
+              <button 
+                class="px-4 py-2 text-sm bg-gray-100 text-gray-900 rounded border border-gray-300 hover:bg-gray-200 shadow-sm"
+                @click="handleManual"
+              >
+                {{ t('summarize.manualupload') }}
+              </button>
+            </div>
+            <!-- 文章URL输入框 -->
             <input
               type="text"
               v-model="requestUrl"
@@ -37,15 +50,18 @@
             />
           </div>
 
-        <div class="mb-6">
-          <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.summaryLanguageTitle') }}</h3>
-          <div class="flex gap-2">
-            <label
+          <div class="mb-6">
+            <!-- 摘要语言选择 -->
+            <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.summaryLanguageTitle') }}</h3>
+            <div class="flex gap-2">
+              <!-- 摘要语言选择复选框 -->
+              <label
               v-for="lang in ['en', 'zh']"
               :key="`summary-${lang}`"
               class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
               :class="summaryLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
             >
+              <!-- 摘要语言选择复选框 -->
               <input
                 type="checkbox"
                 :value="lang"
@@ -56,12 +72,14 @@
               <svg v-if="summaryLanguages.includes(lang)" class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-            </label>
+              </label>
+            </div>
           </div>
-        </div>
 
         <div class="mb-6">
+          <!-- 副标题语言选择 -->
           <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.subtitleLanguageTitle') }}</h3>
+          <!-- 副标题语言选择复选框 -->
           <div class="flex gap-2">
             <label
               v-for="lang in ['en', 'zh']"
@@ -69,6 +87,7 @@
               class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
               :class="subtitleLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
             >
+              <!-- 副标题语言选择复选框 -->
               <input
                 type="checkbox"
                 :value="lang"
@@ -84,7 +103,9 @@
         </div>
 
         <div class="mb-6">
+          <!-- 详细摘要语言选择 -->
           <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.detailedLanguageTitle') }}</h3>
+          <!-- 详细摘要语言选择复选框 -->
           <div class="flex gap-2">
             <label
               v-for="lang in ['en', 'zh']"
@@ -92,7 +113,8 @@
               class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
               :class="detailedLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
             >
-              <input
+              <!-- 详细摘要语言选择复选框 -->
+            <input
                 type="checkbox"
                 :value="lang"
                 v-model="detailedLanguages"
@@ -106,13 +128,15 @@
           </div>
         </div>
 
-        <div class="flex justify-end gap-2">
+          <div class="flex justify-end gap-2">
+          <!-- 取消按钮 -->
           <button 
             @click="showUploadModal = false"
             class="px-4 py-2 text-sm border rounded hover:bg-gray-50"
           >
             {{ t('summarize.buttons.cancel') }}
           </button>
+          <!-- 确认按钮 -->
           <button 
             @click="submitRequest"
             class="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
@@ -198,7 +222,7 @@ const validateLanguageSelections = (): boolean => {
 
 /**
  * 提交文章处理请求
- * 1. 验证输入
+ * 1. 验证入
  * 2. 创建数据库记录
  * 3. 触发后端处理
  */
