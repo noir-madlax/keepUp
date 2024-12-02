@@ -102,7 +102,7 @@ class CozeService:
                 json={
                     "workflow_id": workflow_id,
                     "parameters": {
-                        "key0": content,
+                        "content": content,
                         "BOT_USER_INPUT": ""
                     }
                 }

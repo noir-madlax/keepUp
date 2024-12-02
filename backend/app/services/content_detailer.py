@@ -5,6 +5,7 @@ from app.utils.logger import logger
 from app.services.coze import CozeService
 from app.services.supabase import SupabaseService
 from app.config import settings
+import asyncio
 
 class ContentDetailerService:
     """分段详述服务"""
@@ -54,9 +55,8 @@ class ContentDetailerService:
             logger.info(f"已保存分段详述结果到请求表: request_id={request_id}")
             
             # 6. 解析处理后的内容
-            result_data = json.loads(coze_result['data'])
             detailed_content = await cls.parse_detailed_content(
-                result_data['seg_header']
+                coze_result
             )
             
             # 7. 保存处理后的内容到小节
@@ -73,11 +73,11 @@ class ContentDetailerService:
             raise
             
     @staticmethod
-    async def process_content(content: str, language: str, workflow_id: str) -> dict:
+    async def process_content(content: List[str], language: str, workflow_id: str) -> dict:
         """调用 Coze API 处理内容
         
         Args:
-            content: 待处理的内容
+            content: 待处理的内容列表
             language: 语言类型
             workflow_id: Coze 工作流 ID
             
@@ -85,45 +85,90 @@ class ContentDetailerService:
             dict: Coze API 的响应结果
         """
         try:
-            logger.info(f"开始调用 Coze API 处理分段详述: language={language}")
+            logger.info(f"开始并发调用 Coze API 处理分段详述: language={language}, 段落数={len(content)}")
             
-            # 调用 Coze API
-            coze_result = await CozeService.process_detailed_content(
-                content=content,
-                workflow_id=workflow_id
-            )
+            # 创建信号量控制并发数
+            semaphore = asyncio.Semaphore(15)
             
-            logger.info(f"Coze API 处理完成: token_cost={coze_result.get('cost', 'unknown')}")
-            return coze_result
+            async def process_single_content(index: int, text: str) -> tuple[int, dict]:
+                """处理单个内容
+                
+                Args:
+                    index: 原始数组中的索引
+                    text: 待处理的文本
+                    
+                Returns:
+                    tuple: (索引, API响应结果)
+                """
+                async with semaphore:
+                    try:
+                        logger.info(f"开始处理第 {index + 1} 个段落")
+                        result = await CozeService.process_detailed_content(text, workflow_id)
+                        logger.info(f"处理第 {index + 1} 个段落成功")
+                        return index, result
+                    except Exception as e:
+                        logger.error(f"处理第 {index + 1} 个段落失败: {str(e)}")
+                        raise
+            
+            # 创建所有任务
+            tasks = [
+                process_single_content(i, text)
+                for i, text in enumerate(content)
+            ]
+            
+            # 并发执行所有任务
+            results = await asyncio.gather(*tasks)
+            
+            # 按原始顺序排序结果并合并
+            sorted_results = sorted(results, key=lambda x: x[0])
+            combined_result = [result[1] for result in sorted_results]
+            
+            logger.info(f"并发处理完成: 总段落数={len(combined_result)}")
+            return combined_result
             
         except Exception as e:
-            logger.error(f"调用 Coze API 处理分段详述失败: {str(e)}", exc_info=True)
+            logger.error(f"并发调用 Coze API 处理分段详述失败: {str(e)}")
             raise
             
     @staticmethod
     async def parse_detailed_content(
-        seg_headers: List[str]
+        coze_results: List[dict]
     ) -> str:
         """解析分段详述内容
         
         Args:
-            seg_headers: 段落标题数组
+            coze_results: Coze API 返回的结果列表
             
         Returns:
             str: 解析并格式化后的内容
         """
         try:
-            logger.info(f"开始解析分段详述内容: {len(seg_headers)} 个段落")
+            logger.info(f"开始解析分段详述内容: {len(coze_results)} 个结果")
             
-            # 初始化结果字符串
-            result = []
+            # 初始化结果列表
+            contents = []
             
-            # 处理所有段落标题
-            for header in seg_headers:
-                result.append(header.strip())
+            # 处理每个结果
+            for result in coze_results:
+                try:
+                    # 解析 data 字段的 JSON 字符串
+                    result_data = json.loads(result['data'])
+                    
+                    # 获取 seg_header 字段
+                    seg_header = result_data.get('seg_header', '')
+                    if seg_header:
+                        contents.append(seg_header)
+                    
+                    # 如果没有 seg_header
+                    else:
+                        logger.warning(f"没有找到 seg_header")
+                        
+                except Exception as e:
+                    logger.error(f"解析单个结果失败: {str(e)}")
+                    continue
             
-            # 合并所有内容
-            final_content = "\n".join(result)
+            # 合并所有内容，用换行符分隔
+            final_content = "\n\n".join(contents)
             logger.info(f"内容解析完成，最终长度: {len(final_content)}")
             
             return final_content
