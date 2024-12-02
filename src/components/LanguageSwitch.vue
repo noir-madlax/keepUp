@@ -4,9 +4,9 @@
     @click="toggleLanguage"
   >
     <img 
-      src="/images/icons/chn_english_switch.png"
+      src="/images/icons/chn_english_switch.svg"
       alt="Language Switch"
-      class="w-8 h-8"
+      class="w-10 h-10"
     />
   </button>
 </template>

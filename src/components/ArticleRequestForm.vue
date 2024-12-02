@@ -3,7 +3,7 @@
     <!-- 主要上传按钮，点击显示模态框 -->
     <button 
       @click="showUploadModal = true"
-      class="flex items-center gap-2 px-4 py-2 text-sm text-white rounded hover:opacity-90 transition-opacity"
+      class="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white rounded hover:opacity-90 transition-opacity w-[85px]"
       style="background: linear-gradient(to right, #2272EB 0%, #00BEFF 100%)"
     >
       <!-- 按钮图标 -->
