@@ -64,7 +64,7 @@ class SupabaseService:
     
     @classmethod
     async def update_content(cls, request_id: int, content: str):
-        """更新请求容"""
+        """更新请求"""
         client = cls.get_client()
         result = client.table("keep_article_requests").update({
             "content": content,
@@ -136,7 +136,7 @@ class SupabaseService:
         section_type: str,
         language: str
     ) -> None:
-        """删除指定文章的特定类型和语言的小节
+        """除指定文章的特定类型和语言的小节
         
         Args:
             article_id: 文章ID
@@ -235,3 +235,99 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"更新润色内容失败: {str(e)}", exc_info=True)
             raise
+    
+    @classmethod
+    async def update_detailed_content(
+        cls,
+        request_id: int,
+        detailed_content: dict,
+        language: str
+    ) -> None:
+        """更新请求的分段详述内容
+        
+        Args:
+            request_id: 请求ID
+            detailed_content: Coze返回的分段详述结果
+            language: 语言类型
+        """
+        try:
+            client = cls.get_client()
+            
+            # 将结果转换为JSON字符串
+            detailed_content_json = json.dumps(detailed_content, ensure_ascii=False)
+            
+            # 根据语言类型设置字段名
+            field_name = f"detailed_content_{language}"
+            
+            # 更新数据
+            result = client.table('keep_article_requests').update({
+                field_name: detailed_content_json
+            }).eq('id', request_id).execute()
+            
+            if not result.data:
+                raise Exception(f"未找到 ID 为 {request_id} 的请求记录")
+            
+            logger.info(f"分段详述内容更新成功: ID={request_id}, language={language}")
+            
+        except Exception as e:
+            logger.error(f"更新分段详述内容失败: {str(e)}", exc_info=True)
+            raise
+    
+    @classmethod
+    async def update_chapters(cls, request_id: int, chapters: str) -> None:
+        """更新请求的章节信息
+        
+        Args:
+            request_id: 请求ID
+            chapters: 章节信息
+        """
+        try:
+            client = cls.get_client()
+            
+            result = client.table('keep_article_requests').update({
+                'chapters': chapters
+            }).eq('id', request_id).execute()
+            
+            if not result.data:
+                raise Exception(f"未找到 ID 为 {request_id} 的请求记录")
+            
+            logger.info(f"章节信息更新成功: ID={request_id}, 长度: {len(chapters) if chapters else 0}")
+            
+        except Exception as e:
+            logger.error(f"更新章节信息失败: {str(e)}", exc_info=True)
+            raise
+    
+    @classmethod
+    async def get_article_section_by_type(
+        cls,
+        article_id: int,
+        section_type: str
+    ) -> list:
+        """获取文章指定类型的所有小节
+        
+        Args:
+            article_id: 文章ID
+            section_type: 小节类型
+            
+        Returns:
+            list: 小节信息列表，如果未找到则返回空列表
+        """
+        try:
+            client = cls.get_client()
+            
+            # 查询指定类型的所有小节，按创建时间排序
+            result = client.table("keep_article_sections").select("*").match({
+                "article_id": article_id,
+                "section_type": section_type
+            }).order("created_at").execute()
+            
+            if result.data:
+                logger.info(f"找到文章小节: article_id={article_id}, type={section_type}, count={len(result.data)}")
+                return result.data
+            
+            logger.info(f"未找到文章小节: article_id={article_id}, type={section_type}")
+            return []
+            
+        except Exception as e:
+            logger.error(f"获取文章小节失败: {str(e)}", exc_info=True)
+            return []

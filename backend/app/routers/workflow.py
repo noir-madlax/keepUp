@@ -6,6 +6,7 @@ from app.utils.logger import logger
 from app.routers.parse import call_coze_and_parse, process_coze_result
 from app.config import settings
 from app.services.content_polisher import ContentPolisherService
+from app.services.content_detailer import ContentDetailerService
 import asyncio
 
 router = APIRouter()
@@ -123,6 +124,53 @@ async def process_subtitle_content(request_id: int, url: str, content: str, chap
     logger.info(f"字幕内容处理完成 - 请求ID: {request_id}, 结果: {results}")
     return results
 
+async def process_detailed_content(request_id: int, url: str, content: str, chapters: str, article, languages: list[str]) -> list[str]:
+    """处理分段详述内容
+    
+    Args:
+        request_id: 请求ID
+        url: 视频URL
+        content: 视频内容
+        chapters: 章节信息
+        article: 文章信息
+        languages: 需要处理的语言列表
+        
+    Returns:
+        list[str]: 处理结果信息列表
+    """
+    results = []
+    logger.info(f"开始分段详述处理 - 请求ID: {request_id}, 语言列表: {languages}")
+    
+    for lang in languages:
+        
+        detailed_workflow_id = (
+            settings.COZE_DETAILED_WORKFLOW_ID_ZH if lang == 'zh'
+            else settings.COZE_DETAILED_WORKFLOW_ID_EN
+        )
+
+        logger.info(f"使用工作流 ID: {detailed_workflow_id} 处理 {lang} 语言")
+        
+        try:
+            # 处理分段详述内容
+            await ContentDetailerService.process_article_content(
+                article_id=article['id'],
+                chapters=chapters,
+                language=lang,
+                workflow_id=detailed_workflow_id
+            )
+            
+            results.append(f"分段详述 - {lang} 内容处理完成")
+            
+        except Exception as e:
+            error_msg = f"{lang} 分段详述处理失败 - 请求ID: {request_id}, 错误: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            results.append(error_msg)
+            # 继续处理其他语言,不中断整个流程
+            continue
+    
+    logger.info(f"分段详述处理完成 - 请求ID: {request_id}, 结果: {results}")
+    return results
+
 # 将原来的处理逻辑封装成一个独立的后台任务函数
 async def process_article_task(request: FetchRequest):
     try:
@@ -144,6 +192,9 @@ async def process_article_task(request: FetchRequest):
         # 3. 获取视频章节信息
         chapters = await service.get_chapters(request.url)
         logger.info(f"获取到章节信息: {len(chapters) if chapters else 0} 个章节")
+        
+        # 保存章节信息到数据库
+        await SupabaseService.update_chapters(request.id, chapters)
         
         # 4. 处理作者信息
         author = await SupabaseService.get_author_by_name(video_info.author["name"])
@@ -190,7 +241,14 @@ async def process_article_task(request: FetchRequest):
         )
 
         # 10. 处理分段详述内容
-        # TODO: 处理分段详述内容
+        await process_detailed_content(
+            request.id,
+            request.url,
+            content,
+            chapters,
+            article,
+            request.detailed_languages
+        )
         
         logger.info(f"后台处理完成: ID={request.id}")
         

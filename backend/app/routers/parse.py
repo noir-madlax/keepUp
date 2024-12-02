@@ -9,11 +9,17 @@ from app.services.supabase import SupabaseService
 from app.utils.logger import logger
 from app.config import settings
 from app.services.content_polisher import ContentPolisherService
+from app.services.content_detailer import ContentDetailerService
 
 router = APIRouter(prefix="")
 
 # 添加请求模型
 class PolishRequest(BaseModel):
+    article_id: int
+    language: str
+    content: Optional[str] = None
+
+class DetailRequest(BaseModel):
     article_id: int
     language: str
     content: Optional[str] = None
@@ -204,5 +210,65 @@ async def debug_save_polished(request: PolishRequest):
         
     except Exception as e:
         error_msg = f"保存润色内容失败: {str(e)}"
+        logger.error(error_msg, exc_info=True)
+        raise HTTPException(status_code=500, detail=error_msg) 
+    
+
+@router.post("/detail")
+async def debug_save_detail(request: DetailRequest):
+    """调试接口: 直接保存分段详述内容
+    
+    Args:
+        request: 包含 article_id, language 和可选的 content 的请求对象
+    """
+    try:
+        logger.info(f"调试接口 - 开始处理: article_id={request.article_id}, language={request.language}")
+        
+        if not request.content:
+            # 1. 获取文章URL
+            client = SupabaseService.get_client()
+            article_result = client.table("keep_articles").select("original_link").eq("id", request.article_id).single().execute()
+            
+            if not article_result.data:
+                raise HTTPException(status_code=404, detail=f"未找到文章: {request.article_id}")
+                
+            url = article_result.data.get("original_link")
+            if not url:
+                raise HTTPException(status_code=400, detail="文章缺少原始链接")
+            
+            # 2. 通过URL获取请求记录
+            request_result = client.table("keep_article_requests").select("chapters").eq("url", url).single().execute()
+            
+            if not request_result.data:
+                raise HTTPException(status_code=404, detail=f"未找到对应的请求记录: {url}")
+                
+            content = request_result.data.get("chapters")
+            if not content:
+                raise HTTPException(status_code=400, detail="请求记录缺少章节信息")
+        else:
+            content = request.content
+        
+        logger.info(f"获取到原文内容,长度: {len(content)}")
+        
+        # 保存分段详述内容
+        await ContentDetailerService.process_article_content(
+            article_id=request.article_id,
+            chapters=request_result.data.get("chapters"),
+            language=request.language,
+            workflow_id=settings.COZE_DETAILED_WORKFLOW_ID_EN
+        )
+        
+        return {
+            "success": True,
+            "message": "内容保存成功",
+            "data": {
+                "article_id": request.article_id,
+                "language": request.language,
+                "content_length": len(content)
+            }
+        }
+        
+    except Exception as e:
+        error_msg = f"保存分段详述内容失败: {str(e)}"
         logger.error(error_msg, exc_info=True)
         raise HTTPException(status_code=500, detail=error_msg) 
