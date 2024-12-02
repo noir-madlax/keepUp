@@ -23,7 +23,7 @@
 
     <template v-if="article">
       <!-- 文章标题和作者信息 -->
-      <div class="bg-blue-50">
+      <div class="bg-white">
         <div class="max-w-4xl mx-auto">
           <div class="relative px-4 py-8">
             <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
@@ -49,15 +49,29 @@
                   </div>
                   <span>{{ formatDate(article.publish_date) }}</span>
                 </div>
-                <!-- 原文链接 -->
-                <a 
-                  v-if="article.original_link"
-                  :href="article.original_link" 
-                  target="_blank" 
-                  class="inline-block mt-4 text-blue-500 hover:text-blue-600"
-                >
-                  {{ t('article.viewOriginal') }} →
-                </a>
+                <!-- 操作按钮组 -->
+                <div class="flex gap-3 mt-4">
+                  <a 
+                    v-if="article.original_link"
+                    :href="article.original_link" 
+                    target="_blank" 
+                    class="inline-flex items-center px-6 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    {{ t('article.viewOriginal') }}
+                  </a>
+                  <button 
+                    @click="copyCurrentUrl" 
+                    class="inline-flex items-center px-6 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    {{ t('article.share') }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -181,7 +195,7 @@ const selectedSections = ref<SectionType[]>(DEFAULT_SELECTED_SECTIONS)
 
 // 根据当前视角获取可用的小节类型
 const availableSectionTypes = computed(() => {
-  // 始终返回所��小节类型
+  // 始终返回所小节类型
   return ALL_SECTION_TYPES
 })
 
@@ -259,7 +273,7 @@ const fetchArticle = async () => {
 
       if (!fallbackError && fallbackData?.length) {
         sectionsData = fallbackData
-        // 使用翻译的提示信息
+        // 使用翻译的示信息
         ElMessage.info(t('article.fallbackLanguage.message', {
           language: t(`article.fallbackLanguage.${fallbackLanguage}`)
         }))
@@ -348,6 +362,17 @@ onMounted(async () => {
   await authStore.loadUser()
   await fetchArticle()
 })
+
+// 复制当前页面URL
+const copyCurrentUrl = async () => {
+  try {
+    await navigator.clipboard.writeText(window.location.href)
+    ElMessage.success(t('article.copySuccess'))
+  } catch (err) {
+    console.error('复制失败:', err)
+    ElMessage.error(t('article.copyError'))
+  }
+}
 </script>
 
 <style>

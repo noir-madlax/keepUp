@@ -4,19 +4,19 @@
     <!-- 顶部导航栏 -->
     <header>
       <!-- 导航栏内容容器 -->
-      <div class="px-8 py-4 flex justify-between items-center">
+      <div class="px-4 sm:px-8 py-4 flex justify-between items-center">
         <!-- 左侧Logo和标题容器 -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-0">
           <!-- 网站Logo图片 -->
-          <img src="/images/logo.png" alt="Keep Up Logo" class="h-12 w-12" />
+          <img src="/images/logo.png" alt="Keep Up Logo" class="h-14 w-14 sm:h-14 sm:w-14" />
           <!-- 网站标题文本 -->
-          <h1 class="text-[20px] text-[#333333] font-[800] leading-6 font-['PingFang_SC']">
+          <h1 class="text-[24px] sm:text-[24px] text-[#333333] font-[1000] leading-6 font-['PingFang_SC'] whitespace-nowrap">
             {{ t('home.title') }}
           </h1>
         </div>
 
         <!-- 右侧导航元素容器 -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 sm:gap-4">
           <!-- 语言切换组件 -->
           <language-switch />
           <!-- 文章请求表单组件 -->
@@ -405,7 +405,7 @@ const submitArticle = async () => {
       }
     }
 
-    ElMessage.success('文章添加成功')
+    ElMessage.success('文章添加成')
 
     showUploadModal.value = false
     resetForm()
