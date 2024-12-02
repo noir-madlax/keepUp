@@ -6,17 +6,17 @@
       <!-- 导航栏内容容器 -->
       <div class="px-4 sm:px-8 py-4 flex justify-between items-center">
         <!-- 左侧Logo和标题容器 -->
-        <div class="flex items-center gap-0">
+        <div class="flex items-center gap-2">
           <!-- 网站Logo图片 -->
-          <img src="/images/logo.png" alt="Keep Up Logo" class="h-14 w-14 sm:h-14 sm:w-14" />
+          <img src="/images/icons/logo.svg" alt="Keep Up Logo" class="h-14 w-14 sm:h-14 sm:w-14" />
           <!-- 网站标题文本 -->
-          <h1 class="text-[24px] sm:text-[24px] text-[#333333] font-[1000] leading-6 font-['PingFang_SC'] whitespace-nowrap">
+          <h1 class="text-[24px] sm:text-[24px] text-[#333333] font-[350] leading-6 font-['PingFang_SC'] whitespace-nowrap">
             {{ t('home.title') }}
           </h1>
         </div>
 
         <!-- 右侧导航元素容器 -->
-        <div class="flex items-center gap-2 sm:gap-4">
+        <div class="flex items-center gap-2 sm:gap-4 mr-0">
           <!-- 语言切换组件 -->
           <language-switch />
           <!-- 文章请求表单组件 -->
@@ -32,13 +32,14 @@
                 alt="User Avatar" 
                 class="w-8 h-8 rounded-full"
               />
-              <!-- 用户名称显示 -->
-              <span>{{ authStore.user?.user_metadata?.user_name }}</span>
+              <!-- 用户名称不显示了 -->
+             
             </div>
             <!-- 登出按钮 -->
             <button 
               @click="handleLogout" 
-              class="text-gray-600 hover:text-gray-800"
+              class="text-gray-600 hover:text-gray-800 text-sm px-0 mr-0"
+              style="width: 30px; word-break: break-all;"
             >
               {{ t('home.nav.logout') }}
             </button>
@@ -52,7 +53,7 @@
               class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800"
             >
               <img 
-                src="/images/icons/user_avatar_unlogin.png" 
+                src="/images/icons/login.svg" 
                 alt="Login"
                 class="w-8 h-8 rounded-full"
               />
@@ -60,6 +61,9 @@
           </template>
         </div>
       </div>
+      
+      <!-- 添加导航条分割线 -->
+      <div class="h-[1px] bg-[#E5E5E5] w-full"></div>
     </header>
 
     <!-- 登录模态框 -->
