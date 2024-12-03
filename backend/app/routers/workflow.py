@@ -220,35 +220,56 @@ async def process_article_task(request: FetchRequest):
         # 等待确保数据已保存
         await asyncio.sleep(1)
         
-        # 8. 处理总结内容
-        await process_summary_content(
-            request.id,
-            request.url,
-            content,
-            chapters,
-            article,
-            request.summary_languages
+        # 创建异步任务
+        summary_task = asyncio.create_task(
+            process_summary_content(
+                request.id,
+                request.url,
+                content,
+                chapters,
+                article,
+                request.summary_languages
+            )
         )
-
-        # 9. 处理全文字幕内容
-        await process_subtitle_content(
-            request.id,
-            request.url,
-            content,
-            chapters,
-            article,
-            request.subtitle_languages
+        
+        subtitle_task = asyncio.create_task(
+            process_subtitle_content(
+                request.id,
+                request.url,
+                content,
+                chapters,
+                article,
+                request.subtitle_languages
+            )
         )
-
-        # 10. 处理分段详述内容
-        await process_detailed_content(
-            request.id,
-            request.url,
-            content,
-            chapters,
-            article,
-            request.detailed_languages
+        
+        # 等待字幕处理完成后再处理详述内容
+        # TODO: 后续可以移除这个依赖，让detailed_task直接与其他任务并行
+        await subtitle_task
+        
+        detailed_task = asyncio.create_task(
+            process_detailed_content(
+                request.id,
+                request.url,
+                content,
+                chapters,
+                article,
+                request.detailed_languages
+            )
         )
+        
+        # 等待所有任务完成
+        results = await asyncio.gather(
+            summary_task,
+            detailed_task,
+            return_exceptions=True
+        )
+        
+        # 检查任务执行结果
+        for result in results:
+            if isinstance(result, Exception):
+                logger.error(f"任务执行出错: {str(result)}")
+                raise result
         
         logger.info(f"后台处理完成: ID={request.id}")
         
