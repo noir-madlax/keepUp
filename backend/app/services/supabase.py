@@ -331,3 +331,23 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"获取文章小节失败: {str(e)}", exc_info=True)
             return []
+    
+    @classmethod
+    async def get_article_request(cls, request_id: int) -> dict:
+        """获取文章请求记录
+        
+        Args:
+            request_id: 请求ID
+            
+        Returns:
+            dict: 请求记录
+        """
+        try:
+            client = cls.get_client()
+            response = client.table('keep_article_requests').select('*').eq('id', request_id).execute()
+            if response.data:
+                return response.data[0]
+            return None
+        except Exception as e:
+            logger.error(f"获取文章请求记录失败: {str(e)}")
+            raise

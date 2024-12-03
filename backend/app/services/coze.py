@@ -61,7 +61,7 @@ class CozeService:
                 json={
                     "workflow_id": workflow_id,
                     "parameters": {
-                        "key0": batch,
+                        "content": batch,
                         "BOT_USER_INPUT": ""  # 保持一致性
                     }
                 }
