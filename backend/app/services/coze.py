@@ -4,6 +4,26 @@ from app.utils.logger import logger
 
 class CozeService:
     @staticmethod
+    def _handle_coze_response(response_data: dict, action_type: str = "Coze API") -> dict:
+        """处理 Coze API 响应
+        
+        Args:
+            response_data: Coze API 的响应数据
+            action_type: 操作类型，用于日志记录
+            
+        Returns:
+            dict: 原始响应数据
+        """
+        code = response_data.get('code')
+        if code != 0:
+            logger.warning(
+                f"{action_type} 调用异常 - Code: {code}, "
+                f"Message: {response_data.get('msg')}, "
+                f"Debug URL: {response_data.get('debug_url')}"
+            )
+        return response_data
+
+    @staticmethod
     async def parse_content(url: str, content: str, chapters: str, workflow_id: str) -> dict:
         # 设置超时时间为 5 分钟 (300 秒)
         timeout = httpx.Timeout(300.0, connect=60.0)
@@ -30,7 +50,8 @@ class CozeService:
                 }
             )
             response.raise_for_status()
-            return response.json()
+            result = response.json()
+            return CozeService._handle_coze_response(result, "解析内容")
 
     @staticmethod
     async def polish_content(batch: str, workflow_id: str) -> dict:
@@ -71,7 +92,7 @@ class CozeService:
             result = response.json()
             logger.info(f"润色请求完成 - Token消耗: {result.get('cost', 'unknown')}")
             
-            return result 
+            return CozeService._handle_coze_response(result, "润色内容")
 
     @staticmethod
     async def process_detailed_content(content: str, workflow_id: str) -> dict:
@@ -112,4 +133,4 @@ class CozeService:
             result = response.json()
             logger.info(f"分段详述请求完成 - Token消耗: {result.get('cost', 'unknown')}")
             
-            return result
+            return CozeService._handle_coze_response(result, "分段详述")
