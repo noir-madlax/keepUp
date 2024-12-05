@@ -156,11 +156,9 @@ class YouTubeFetcher(ContentFetcher):
             # 设置代理
             if self.proxies:
                 logger.info("使用代理获取章节信息")
-                import pytubefix
-                pytubefix.request.core._default_proxy = self.proxies
-            
-            # 使用 pytubefix 获取视频信息
-            yt = YouTube(url)
+                yt = YouTube(url, proxies=self.proxies)
+            else:
+                yt = YouTube(url)
             
             if not yt.chapters:
                 logger.info("该视频没有章节信息")
