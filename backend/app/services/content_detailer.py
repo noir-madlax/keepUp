@@ -33,10 +33,10 @@ class ContentDetailerService:
             request_id = await SupabaseService.get_request_id_by_article_id(article_id)
 
             # 2. 获取原文字幕内容
-            subtitle_content = await cls.get_subtitle_content(article_id)
+            article_request = await SupabaseService.get_article_request(request_id)
             
             # 3. 按章节拆分内容
-            batches = cls.split_captions_to_batches(subtitle_content, chapters)
+            batches = cls.split_captions_to_batches(article_request.get("content"), chapters)
             logger.info(f"内容已拆分为 {len(batches)} 个批次")
             
             # 4. 调用 Coze 接口一次性处理所有批次

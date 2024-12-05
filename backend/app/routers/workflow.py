@@ -243,10 +243,6 @@ async def process_article_task(request: FetchRequest):
             )
         )
         
-        # 等待字幕处理完成后再处理详述内容
-        # TODO: 后续可以移除这个依赖，让detailed_task直接与其他任务并行
-        await subtitle_task
-        
         detailed_task = asyncio.create_task(
             process_detailed_content(
                 request.id,
@@ -261,6 +257,7 @@ async def process_article_task(request: FetchRequest):
         # 等待所有任务完成
         results = await asyncio.gather(
             summary_task,
+            subtitle_task,
             detailed_task,
             return_exceptions=True
         )
