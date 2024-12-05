@@ -153,6 +153,12 @@ class YouTubeFetcher(ContentFetcher):
         try:
             logger.info(f"开始获取YouTube视频章节信息: {url}")
             
+            # 设置代理
+            if self.proxies:
+                logger.info("使用代理获取章节信息")
+                import pytubefix
+                pytubefix.request.core._default_proxy = self.proxies
+            
             # 使用 pytubefix 获取视频信息
             yt = YouTube(url)
             
@@ -169,7 +175,7 @@ class YouTubeFetcher(ContentFetcher):
             # 将所有章节组合成最终文本
             final_content = "\n".join(chapters_text)
             
-            logger.info(f"成功获取到章节信息，共 {len(chapters_text)} 个字节")
+            logger.info(f"成功获取到章节信息，共 {len(chapters_text)} 个章节")
             return final_content
 
         except Exception as e:
