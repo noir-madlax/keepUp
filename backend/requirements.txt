@@ -9,3 +9,8 @@ youtube-transcript-api==0.6.1
 beautifulsoup4==4.12.2
 requests==2.31.0
 pytubefix==7.4.0
+
+# url 转换
+spotipy==2.24.0
+youtube-search-python==1.6.6
+google-api-python-client==2.154.0

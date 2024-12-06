@@ -26,7 +26,7 @@ class SupabaseService:
         result = client.table("keep_article_requests").update(data).eq("id", request_id).execute()
         logger.info(f"状态更新成功: ID={request_id}, status={status}")
         return result
-    
+
     @classmethod
     async def update_result(cls, request_id: int, status: str):
         client = cls.get_client()
@@ -350,4 +350,28 @@ class SupabaseService:
             return None
         except Exception as e:
             logger.error(f"获取文章请求记录失败: {str(e)}")
+            raise
+    
+    @classmethod
+    async def update_request_url(cls, request_id: int, url: str) -> None:
+        """更新文章请求的URL
+        
+        Args:
+            request_id: 请求ID
+            url: 新的URL地址
+        """
+        try:
+            client = cls.get_client()
+            
+            result = client.table('keep_article_requests').update({
+                'url': url
+            }).eq('id', request_id).execute()
+            
+            if not result.data:
+                raise Exception(f"未找到 ID 为 {request_id} 的请求记录")
+            
+            logger.info(f"URL更新成功: ID={request_id}, URL={url}")
+            
+        except Exception as e:
+            logger.error(f"更新URL失败: {str(e)}", exc_info=True)
             raise

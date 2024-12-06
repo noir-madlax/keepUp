@@ -7,6 +7,9 @@ from app.routers.parse import call_coze_and_parse, process_coze_result
 from app.config import settings
 from app.services.content_polisher import ContentPolisherService
 from app.services.content_detailer import ContentDetailerService
+from app.services.podcast_matcher import PodcastMatcher
+from app.services.content_fetcher.youtube import YouTubeFetcher
+
 import asyncio
 
 router = APIRouter()
@@ -104,7 +107,7 @@ async def process_subtitle_content(request_id: int, url: str, content: str, chap
         
         try:
             
-            # 添加内容润色处理
+            # 添加容润色处理
             await ContentPolisherService.process_article_content(
                 article_id=article['id'],
                 original_content=content,
@@ -284,6 +287,27 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
     try:
         logger.info(f"收到处理请求: ID={request.id}, URL={request.url}")
         
+        # 先判断是否为 YouTube URL
+        youtube_fetcher = YouTubeFetcher()
+        original_url = request.url
+        
+        if not youtube_fetcher.can_handle(request.url):
+            # 如果不是 YouTube URL，尝试转换为播客 URL
+            matcher = PodcastMatcher()
+            request.url = matcher.match_podcast_url(request.url)
+            logger.info(f"匹配到播客 URL: {request.url}")
+            await SupabaseService.update_request_url(request.id, request.url)
+
+            
+            if not request.url:
+                logger.error(f"无法匹配到目标 URL: ID={request.id}")
+                await SupabaseService.update_status(request.id, "failed", "无法匹配到目标 URL")
+                return {
+                    "success": False,
+                    "message": "无法匹配到目标 URL",
+                    "request_id": request.id
+                }
+
         # 1. 更新状态为处理中
         await SupabaseService.update_status(request.id, "processing")
         
@@ -293,7 +317,8 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
         return {
             "success": True,
             "message": "请求已接受,开始后台处理",
-            "request_id": request.id
+            "request_id": request.id,
+            "final_url": request.url if request.url != original_url else None  # 仅当 URL 发生变化时才返回
         }
         
     except Exception as e:
