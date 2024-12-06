@@ -394,7 +394,7 @@ def search_youtube(query, limit=5):
     
     
     except Exception as e:
-        logging.error(f"搜索 YouTube 时发生错误: {str(e)}", exc_info=True)
+        logging.error(f"搜索 YouTube 时发��错误: {str(e)}", exc_info=True)
         return []
 
 def calculate_similarity_scores(search_results, source_podcast_info, weights):
@@ -530,7 +530,7 @@ def write_results_to_markdown(spotify_data, apple_results, youtube_results, outp
             # YouTube 数据部分之后，修改相似度计算结果部分
             file.write("\n## 详细相似度计算结果\n\n")
             
-            # 先输出 Spotify 和 Apple 之间的比较���果有）
+            # 先输出 Spotify 和 Apple 之间的比较果有）
             if spotify_data and apple_results:
                 file.write("### Spotify vs Apple Podcast 比较结果\n")
                 for i, apple_result in enumerate(apple_results, 1):
@@ -704,7 +704,7 @@ def write_url_mapping(spotify_data, apple_results, youtube_results, output_dir):
                                 file.write(f"相似度: {result.get('similarity', 0):.4f}\n")
                                 file.write(f"相似的YouTube URL: {result.get('url', 'N/A')}\n\n")
                     else:
-                        file.write(f"没有满足阈值({threshold})的url，最高匹配��似度为: {max_similarity:.4f}\n")
+                        file.write(f"没有满足阈值({threshold})的url，最高匹配似度为: {max_similarity:.4f}\n")
                         if max_result:
                             file.write(f"最高相似度对应的URL: {max_result.get('url', 'N/A')}\n")
                 elif isinstance(youtube_results, dict):
@@ -815,7 +815,6 @@ def get_apple_podcast_episode(url):
 class PodcastMatcher:
     def __init__(self):
         """初始化播客匹配服务"""
-        self.output_dir = setup_output_directory()
         self.weights = {
             'title': 0.5,
             'show': 0.3,
@@ -839,8 +838,10 @@ class PodcastMatcher:
             # 获取源平台信息
             if 'spotify.com' in podcast_url:
                 source_data = get_spotify_episode(podcast_url)
+                logging.info(f"获取到 Spotify 节目信息: {source_data.get('episode_title')}")
             elif 'apple.com' in podcast_url:
                 source_data = get_apple_podcast_episode(podcast_url)
+                logging.info(f"获取到 Apple Podcast 节目信息: {source_data.get('episode_title')}")
             else:
                 logging.error("不支持的URL格式，仅支持Spotify和Apple Podcast URL")
                 return ""
@@ -856,42 +857,21 @@ class PodcastMatcher:
                 # 获取相似度最高的YouTube URL
                 if youtube_results:
                     best_match = max(youtube_results, key=lambda x: x.get('similarity', 0))
-                    if best_match.get('similarity', 0) >= SPOTIFY_YOUTUBE_THRESHOLD:
+                    similarity = best_match.get('similarity', 0)
+                    
+                    if similarity >= SPOTIFY_YOUTUBE_THRESHOLD:
                         youtube_url = best_match.get('url', '')
-
-                # 可选：保存详细结果用于调试
-                # self._save_results(
-                #     source_data if 'spotify.com' in podcast_url else None,
-                #     [source_data] if 'apple.com' in podcast_url else [],
-                #     youtube_results,
-                #     podcast_url
-                # )
+                        logging.info(f"找到最佳匹配 YouTube URL，相似度: {similarity:.4f}")
+                        logging.info(f"标题: {best_match.get('title')}")
+                        logging.info(f"URL: {youtube_url}")
+                    else:
+                        logging.info(f"最佳匹配相似度 {similarity:.4f} 低于阈值 {SPOTIFY_YOUTUBE_THRESHOLD}")
 
             return youtube_url
 
         except Exception as e:
             logging.error(f"匹配播客URL时发生错误: {str(e)}")
             return ""
-
-    def _save_results(self, spotify_data, apple_results, youtube_results, source_url):
-        """保存匹配结果到文件（用于调试）"""
-        try:
-            write_results_to_markdown(
-                spotify_data,
-                apple_results,
-                youtube_results,
-                self.output_dir,
-                spotify_data or apple_results[0]
-            )
-            
-            write_url_mapping(
-                spotify_data,
-                apple_results,
-                youtube_results,
-                self.output_dir
-            )
-        except Exception as e:
-            logging.error(f"保存结果文件时发生错误: {str(e)}")
 
 # 使用示例：
 if __name__ == "__main__":
