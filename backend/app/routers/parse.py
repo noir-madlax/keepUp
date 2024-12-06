@@ -50,7 +50,7 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
         sections = [
             {
                 "section_type": "总结",
-                "content": article_content.key2_why,
+                "content": article_content.key0_background,
                 "language": language
             },
             {
@@ -59,13 +59,33 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
                 "language": language
             },
             {
+                "section_type": "总结",
+                "content": article_content.key2_why,
+                "language": language
+            },
+            {
+                "section_type": "核心观点",
+                "content": article_content.key3_core,
+                "language": language
+            },
+            {
                 "section_type": "名词解释",
                 "content": article_content.key4_word,
                 "language": language
             },
             {
+                "section_type": "整体总结",
+                "content": article_content.key5_summary,
+                "language": language
+            },
+            {
                 "section_type": "分段提纲",
                 "content": article_content.key6_part_title,
+                "language": language
+            },
+            {
+                "section_type": "分段详述",
+                "content": article_content.key7_part_detail,
                 "language": language
             },
             {
@@ -79,13 +99,28 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
                 "language": language
             },
             {
-                "section_type": "分段详述",
-                "content": article_content.key7_part_detail,
+                "section_type": "未总结内容",
+                "content": article_content.key10_exclude,
                 "language": language
             },
             {
-                "section_type": "未总结内容",
-                "content": article_content.key10_exclude,
+                "section_type": "结构图",
+                "content": article_content.key11_map,
+                "language": language
+            },
+            {
+                "section_type": "思维导图",
+                "content": article_content.key17_xmind,
+                "language": language
+            },
+            {
+                "section_type": "要点总结",
+                "content": article_content.key19_Takeaways,
+                "language": language
+            },
+            {
+                "section_type": "彩蛋",
+                "content": article_content.key18_EasterEgg,
                 "language": language
             }
         ]

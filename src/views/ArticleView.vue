@@ -106,7 +106,13 @@
                   class="mb-8"
                 >
                   <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
-                  <div v-html="marked(section.content)"></div>
+                  <!-- 根据不同的小节类型使用不同的渲染方式 -->
+                  <template v-if="section.section_type === '思维导图'">
+                    <mind-map :content="section.content" />
+                  </template>
+                  <template v-else>
+                    <div v-html="marked(section.content)"></div>
+                  </template>
                 </div>
               </template>
               <div v-else>
@@ -178,6 +184,7 @@ import type { Article } from '../types/article'
 import type { ArticleSection, SectionType, ViewType } from '../types/section'
 import { ALL_SECTION_TYPES, DEFAULT_SELECTED_SECTIONS, getLocalizedSectionType } from '../types/section'
 import { useI18n } from 'vue-i18n'
+import MindMap from '../components/MindMap.vue'
 
 // 将 i18n 相关初始化移到最前面
 const { t, locale } = useI18n()

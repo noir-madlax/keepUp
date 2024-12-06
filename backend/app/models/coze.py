@@ -13,6 +13,10 @@ class CozeArticleContent(BaseModel):
     key8_qa: str = Field(..., description="QA环节")
     key9_golden: str = Field(..., description="金句")
     key10_exclude: str = Field(..., description="未总结内容")
+    key11_map: str = Field(..., description="结构图")
+    key19_Takeaways: str = Field(..., description="要点总结")
+    key17_xmind: str = Field(..., description="思维导图")
+    key18_EasterEgg: str = Field(..., description="彩蛋")
     video_author_name: Optional[str] = None
     video_date: Optional[str] = None
     video_link: Optional[str] = None
