@@ -860,12 +860,12 @@ class PodcastMatcher:
                         youtube_url = best_match.get('url', '')
 
                 # 可选：保存详细结果用于调试
-                self._save_results(
-                    source_data if 'spotify.com' in podcast_url else None,
-                    [source_data] if 'apple.com' in podcast_url else [],
-                    youtube_results,
-                    podcast_url
-                )
+                # self._save_results(
+                #     source_data if 'spotify.com' in podcast_url else None,
+                #     [source_data] if 'apple.com' in podcast_url else [],
+                #     youtube_results,
+                #     podcast_url
+                # )
 
             return youtube_url
 
