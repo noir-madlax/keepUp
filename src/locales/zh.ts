@@ -20,6 +20,16 @@ export default {
       xiaoyuzhou: '小宇宙',
       pdf: 'PDF',
       web: '网页'
+    },
+    pullToRefresh: {
+      pullDown: '下拉刷新',
+      release: '释放刷新',
+      refreshing: '刷新中...',
+      success: '刷新完成'
+    },
+    network: {
+      offline: '当前处于离线状态',
+      weak: '网络信号较弱'
     }
   },
   article: {
@@ -33,7 +43,7 @@ export default {
         '人物介绍': '人物介绍',
         '名词解释': '名词解释',
         '分段提纲': '分段提纲',
-        'QA环节': 'QA环节',
+        'QA环节': 'QA环���',
         '金句': '金句',
         '分段详述': '分段详述',
         '引用（测试）': '引用（测试）',
@@ -76,5 +86,8 @@ export default {
     summaryLanguageTitle: '总结语言',
     subtitleLanguageTitle: '全文字幕',
     detailedLanguageTitle: '分段详述'
+  },
+  common: {
+    retry: '重试'
   }
 } 

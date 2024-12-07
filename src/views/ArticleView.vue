@@ -373,6 +373,25 @@ const copyCurrentUrl = async () => {
     ElMessage.error(t('article.copyError'))
   }
 }
+
+// 当鼠标悬停在文章链接上时预取文章内容
+const prefetchArticle = async (id: string) => {
+  try {
+    const { data } = await supabase
+      .from('keep_articles')
+      .select('*')
+      .eq('id', id)
+      .single()
+    
+    // 将数据存入缓存
+    if (data) {
+      const cache = await caches.open('articles-cache')
+      await cache.put(`/article/${id}`, new Response(JSON.stringify(data)))
+    }
+  } catch (error) {
+    console.error('预取文章失败:', error)
+  }
+}
 </script>
 
 <style>

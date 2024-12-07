@@ -20,6 +20,16 @@ export default {
       xiaoyuzhou: 'XiaoYuZhou',
       pdf: 'PDF', 
       web: 'Web'
+    },
+    pullToRefresh: {
+      pullDown: 'Pull to refresh',
+      release: 'Release to refresh',
+      refreshing: 'Refreshing...',
+      success: 'Refresh complete'
+    },
+    network: {
+      offline: 'Currently offline',
+      weak: 'Weak network connection'
     }
   },
   article: {
@@ -76,5 +86,8 @@ export default {
     summaryLanguageTitle: 'Summary Languages',
     subtitleLanguageTitle: 'Subtitle Languages',
     detailedLanguageTitle: 'Detailed Languages'
+  },
+  common: {
+    retry: 'Retry'
   }
 } 
