@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { defineAsyncComponent } from 'vue'
 import HomeView from '../views/HomeView.vue'
 import AdminLayout from '../views/admin/AdminLayout.vue'
 import RequestsView from '../views/admin/RequestsView.vue'
@@ -16,7 +17,12 @@ const router = createRouter({
     {
       path: '/article/:id',
       name: 'article',
-      component: ArticleView
+      component: () => import('../views/ArticleView.vue'),
+      props: true,
+      beforeEnter: (to, from, next) => {
+        import('../views/ArticleView.vue')
+        next()
+      }
     },
     {
       path: '/admin',
@@ -36,6 +42,13 @@ const router = createRouter({
       component: AuthCallback
     }
   ]
+})
+
+router.beforeEach((to, from, next) => {
+  if (to.name === 'home') {
+    import('../views/ArticleView.vue')
+  }
+  next()
 })
 
 export default router

@@ -1,8 +1,23 @@
 <template>
   <!-- 根容器 -->
   <div class="min-h-screen">
+    
+    <!-- 网络状态提示 - 保留原有的离线提示，添加弱网提示 -->
+    <div v-if="!isOnline" 
+      class="bg-yellow-50 p-4">
+      <div class="flex items-center justify-center text-yellow-700">
+        <span>{{ t('home.network.offline') }}</span>
+      </div>
+    </div>
+    <div v-else-if="isSlowConnection" 
+      class="bg-blue-50 p-4">
+      <div class="flex items-center justify-center text-blue-700">
+        <span>{{ t('home.network.weak') }}</span>
+      </div>
+    </div>
+
     <!-- 顶部导航栏 -->
-    <header>
+    <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
       <!-- 导航栏内容容器 -->
       <div class="px-4 sm:px-8 py-4 flex justify-between items-center">
         <!-- 左侧Logo和标题容器 -->
@@ -73,105 +88,117 @@
     />
 
     <!-- 主要内容区域 -->
-    <div class="px-8 py-6">
-      <!-- 内容最大宽度限制容器 -->
-      <div class="max-w-screen-2xl mx-auto">
-        <!-- 发现区域 -->
-        <div class="mb-8">
-          <!-- 发现标题 -->
-          <h2 class="text-xl mb-4">{{ t('home.filter.discover') }}</h2>
-          <!-- 标签按钮容器 -->
-          <div class="flex gap-2 flex-wrap">
-            <!-- 全部标签按钮 -->
-            <button 
-              class="px-4 py-2 rounded-full border transition-colors duration-200"
-              :class="selectedTag === 'all' ? 'bg-blue-500 text-white' : 'hover:bg-gray-50'"
-              @click="selectTag('all')"
-            >
-              {{ t('home.filter.all') }}
-            </button>
+    <pull-to-refresh class="pt-[72px]" :onRefresh="fetchArticles">
+      <div class="px-8 py-6">
+        <!-- 内容最大宽度限制容器 -->
+        <div class="max-w-screen-2xl mx-auto">
+          <!-- 发现区域 -->
+          <div class="mb-8">
+            <!-- 发现标题 -->
+            <h2 class="text-xl mb-4">{{ t('home.filter.discover') }}</h2>
+            <!-- 标签按钮容器 -->
+            <div class="flex gap-2 flex-wrap">
+              <!-- 全部标签按钮 -->
+              <button 
+                class="px-4 py-2 rounded-full border transition-colors duration-200"
+                :class="selectedTag === 'all' ? 'bg-blue-500 text-white' : 'hover:bg-gray-50'"
+                @click="selectTag('all')"
+              >
+                {{ t('home.filter.all') }}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- 渠道筛选区域 -->
-        <div class="mb-8">
-          <!-- 渠道标题 -->
-          <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.channelTitle') }}</h2>
-          <!-- 渠道按钮容器 -->
-          <div class="flex flex-wrap gap-2">
-            <!-- 渠道选择按钮 -->
-            <button 
-              v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF', '网页']"
-              :key="channel"
-              @click="toggleChannel(channel)"
-              class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200 flex items-center gap-2"
-              :class="selectedChannels.includes(channel) ? 
-                'bg-blue-50 border-blue-400 text-blue-400' : 
-                'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
-            >
-              <!-- 渠道图标 -->
-              <img 
-                :src="`/images/icons/${getChannelIcon(channel)}`" 
-                :alt="channel"
-                class="w-4 h-4"
-              />
-              <!-- 渠道名称 -->
-              {{ t(`home.channels.${getChannelKey(channel)}`) }}
-            </button>
-          </div>
-        </div>
-
-        <div class="mb-8">
-          <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.authorTitle') }}</h2>
-          <div class="flex flex-wrap gap-3">
-            <!-- 始终显示的作者 -->
-            <template v-for="(author, index) in displayedAuthors" :key="author.id">
-              <button
-                @click="toggleAuthor(author)"
-                class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
-                :class="selectedAuthors.includes(author.id) ? 
+          <!-- 渠道筛选区域 -->
+          <div class="mb-8">
+            <!-- 渠道标题 -->
+            <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.channelTitle') }}</h2>
+            <!-- 渠道按钮容器 -->
+            <div class="flex flex-wrap gap-2">
+              <!-- 渠道选择按钮 -->
+              <button 
+                v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF', '网页']"
+                :key="channel"
+                @click="toggleChannel(channel)"
+                class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200 flex items-center gap-2"
+                :class="selectedChannels.includes(channel) ? 
                   'bg-blue-50 border-blue-400 text-blue-400' : 
                   'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
               >
+                <!-- 渠道图标 -->
                 <img 
-                  v-if="author.icon" 
-                  :src="author.icon" 
-                  :alt="author.name"
-                  class="w-5 h-5 rounded-full"
+                  :src="`/images/icons/${getChannelIcon(channel)}`" 
+                  :alt="channel"
+                  class="w-4 h-4"
                 />
-                {{ author.name }}
+                <!-- 渠道名称 -->
+                {{ t(`home.channels.${getChannelKey(channel)}`) }}
               </button>
-            </template>
+            </div>
+          </div>
 
-            <!-- 展开/收起按钮 -->
-            <button 
-              v-if="authors.length > defaultDisplayCount"
-              @click="isExpanded = !isExpanded"
-              class="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
-            >
-              <span>{{ isExpanded ? t('home.filter.collapse') : t('home.filter.expand') }}</span>
-              <svg 
-                class="w-4 h-4 transition-transform duration-200"
-                :class="{ 'transform rotate-180': isExpanded }"
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
+          <div class="mb-8">
+            <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.authorTitle') }}</h2>
+            <div class="flex flex-wrap gap-3">
+              <!-- 修改加载状态判断 -->
+              <template v-if="isLoadingAuthors">
+                <div v-for="n in 4" :key="n" 
+                  class="h-8 w-24 bg-gray-100 animate-pulse rounded-[2px]">
+                </div>
+              </template>
+
+              <template v-else>
+                <!-- 作者列表部分保持不变 -->
+                <template v-for="(author, index) in displayedAuthors" :key="author.id">
+                  <button
+                    @click="toggleAuthor(author)"
+                    class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
+                    :class="selectedAuthors.includes(author.id) ? 
+                      'bg-blue-50 border-blue-400 text-blue-400' : 
+                      'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
+                  >
+                    <img 
+                      v-if="author.icon" 
+                      :src="author.icon" 
+                      :alt="author.name"
+                      class="w-5 h-5 rounded-full"
+                      loading="lazy"
+                    />
+                    {{ author.name }}
+                  </button>
+                </template>
+              </template>
+
+              <!-- 展开/收起按钮保持不变 -->
+              <button 
+                v-if="authors.length > defaultDisplayCount"
+                @click="toggleExpand"
+                class="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
               >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+                <span>{{ isExpanded ? t('home.filter.collapse') : t('home.filter.expand') }}</span>
+                <svg 
+                  class="w-4 h-4 transition-transform duration-200"
+                  :class="{ 'transform rotate-180': isExpanded }"
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <article-card
+              v-for="article in filteredArticles"
+              :key="article.id"
+              :article="article"
+            />
           </div>
         </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          <article-card
-            v-for="article in filteredArticles"
-            :key="article.id"
-            :article="article"
-          />
-        </div>
       </div>
-    </div>
+    </pull-to-refresh>
 
     <!-- 上传弹框 -->
     <div 
@@ -184,7 +211,7 @@
         @click.stop
       >
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold">上传文章</h2>
+          <h2 class="text-xl font-bold">��传文章</h2>
           <button @click="showUploadModal = false" class="text-gray-500">
             <i class="el-icon-close"></i>
           </button>
@@ -211,6 +238,39 @@
         </div>
       </div>
     </div>
+
+    <!-- 网络状态提示 -->
+    <div 
+      v-if="!isOnline" 
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div 
+        class="bg-white p-6 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto"
+        @click.stop
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">{{ t('home.network.offline') }}</h2>
+          <button class="text-gray-500">
+            <i class="el-icon-close"></i>
+          </button>
+        </div>
+
+        <div class="flex justify-center items-center mb-4">
+          <div 
+            class="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin"
+          ></div>
+        </div>
+
+        <div class="mt-6 flex justify-end space-x-3">
+          <button 
+            @click="checkConnection" 
+            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            {{ t('common.retry') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -228,12 +288,14 @@ import { getChannelIcon } from '../utils/channel'
 import ArticleRequestForm from '../components/ArticleRequestForm.vue'
 import { useI18n } from 'vue-i18n'
 import LanguageSwitch from '../components/LanguageSwitch.vue'
+import PullToRefresh from '../components/PullToRefresh.vue'
+import localforage from 'localforage'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
 const showUploadModal = ref(false)
 
-// 预定义的标签
+// 预定义的签
 const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微信', '视频']
 
 const articles = ref<Article[]>([])
@@ -245,6 +307,18 @@ const tags = computed(() => PREDEFINED_TAGS)
 // 修改文章获取函数
 const fetchArticles = async () => {
   try {
+    // 1. 先尝试从 IndexedDB 获取缓存数据
+    const cachedArticles = await localforage.getItem('articles-cache')
+    if (cachedArticles) {
+      articles.value = cachedArticles as Article[]
+    }
+
+    // 2. 如果离线且有缓存，直接返回
+    if (!navigator.onLine && cachedArticles) {
+      return
+    }
+
+    // 3. 在线模式：从 API 获取最新数据
     const { data, error } = await supabase
       .from('keep_articles')
       .select(`
@@ -259,16 +333,15 @@ const fetchArticles = async () => {
       `)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('获取文章列表失败:', error)
-      ElMessage.error('获取文章列表失败')
-      return
-    }
+    if (error) throw error
 
+    // 4. 更新 IndexedDB 缓存
+    await localforage.setItem('articles-cache', data)
     articles.value = data
+
   } catch (error) {
     console.error('获取文章列表时出错:', error)
-    ElMessage.error('系统错误，请稍后重试')
+    ElMessage.error('获取文章列表失败，请稍后重试')
   }
 }
 
@@ -300,11 +373,83 @@ const filteredArticles = computed(() => {
   return result
 })
 
-// 页面加载时获文章列表
-onMounted(() => {
-  fetchArticles()
-  fetchAuthors()
+// 添加 loading 状态
+const isLoadingAuthors = ref(true)
+
+// 修改作者获取函数
+const fetchAuthors = async () => {
+  try {
+    // 1. 先从 IndexedDB 获取缓存数据
+    const cachedAuthors = await localforage.getItem('authors-cache')
+    if (cachedAuthors) {
+      authors.value = cachedAuthors as Author[]
+      isLoadingAuthors.value = false // 有缓存数据就关闭loading
+    }
+
+    // 2. 如果离线且有缓存，直接返回
+    if (!navigator.onLine && cachedAuthors) {
+      return
+    }
+
+    // 3. 从 API 获取数据
+    const { data, error } = await supabase
+      .from('keep_authors')
+      .select('*')
+      .order('name')
+
+    if (error) throw error
+
+    // 4. 更新 IndexedDB 缓存
+    await localforage.setItem('authors-cache', data)
+    authors.value = data
+    
+  } catch (error) {
+    console.error('获取作者列表失败:', error)
+    ElMessage.error('获取作者列表失败')
+  } finally {
+    isLoadingAuthors.value = false // 无论成功失败都关闭loading
+  }
+}
+
+// 修改 onMounted
+onMounted(async () => {
+  isLoadingAuthors.value = true // 初始化时设置loading
+
+  // 先恢复缓存的状态
+  const [savedSelectedAuthors, savedExpanded] = await Promise.all([
+    localforage.getItem('selected-authors'),
+    localforage.getItem('authors-expanded')
+  ])
+
+  if (savedSelectedAuthors) {
+    selectedAuthors.value = savedSelectedAuthors as number[]
+  }
+  if (savedExpanded !== null) {
+    isExpanded.value = savedExpanded as boolean
+  }
+
+  // 并行获取数据
+  await Promise.all([
+    fetchArticles(),
+    fetchAuthors(),
+    updateCacheTimestamp()
+  ])
+
   authStore.loadUser()
+  
+  // 预加载常用资源
+  const preloadLinks = [
+    '/images/icons/logo.svg',
+    // 其他常用资源...
+  ]
+  
+  preloadLinks.forEach(link => {
+    const preload = document.createElement('link')
+    preload.rel = 'preload'
+    preload.href = link
+    preload.as = link.endsWith('.svg') ? 'image' : 'script'
+    document.head.appendChild(preload)
+  })
 })
 
 const articleForm = ref<Partial<Article>>({
@@ -326,7 +471,7 @@ const selectTag = (tag: string): void => {
 
 const handleUpload = () => {
   if (!authStore.isAuthenticated) {
-    ElMessage.warning('请先登录')
+    ElMessage.warning('请登录')
     showLoginModal.value = true
     return
   }
@@ -370,7 +515,7 @@ const submitArticle = async () => {
     }
 
     if (!articleForm.value.title || !articleForm.value.content || !articleForm.value.author_id) {
-      ElMessage.error('标题、内容和作者为必填项')
+      ElMessage.error('题、内容和作者为必填项')
       return
     }
     
@@ -409,7 +554,7 @@ const submitArticle = async () => {
       }
     }
 
-    ElMessage.success('文章添加成')
+    ElMessage.success('文章添加成功')
 
     showUploadModal.value = false
     resetForm()
@@ -420,7 +565,7 @@ const submitArticle = async () => {
   }
 }
 
-// 添加作者相关的状态
+// 添作者相关的状态
 interface Author {
   id: number;
   name: string;
@@ -430,22 +575,6 @@ interface Author {
 const authors = ref<Author[]>([])
 const selectedChannels = ref<string[]>([])
 const selectedAuthors = ref<number[]>([])
-
-// 获取所有作者
-const fetchAuthors = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('keep_authors')
-      .select('*')
-      .order('name')
-
-    if (error) throw error
-    authors.value = data
-  } catch (error) {
-    console.error('获取作者列表失败:', error)
-    ElMessage.error('获取作者列表失败')
-  }
-}
 
 // 切换渠道选择
 const toggleChannel = (channel: string) => {
@@ -458,18 +587,20 @@ const toggleChannel = (channel: string) => {
 }
 
 // 切换作者选择
-const toggleAuthor = (author: Author) => {
+const toggleAuthor = async (author: Author) => {
   const index = selectedAuthors.value.indexOf(author.id)
   if (index === -1) {
     selectedAuthors.value.push(author.id)
   } else {
     selectedAuthors.value.splice(index, 1)
   }
+  // 保存选择状态
+  await localforage.setItem('selected-authors', selectedAuthors.value)
 }
 
 const { t } = useI18n()
 
-// 添加一个辅助函数来获取channel的key
+// 添加个辅助函来获取channel的key
 const getChannelKey = (channel: string): string => {
   const keyMap: Record<string, string> = {
     '微信': 'wechat',
@@ -498,6 +629,13 @@ const defaultDisplayCount = computed(() => {
 
 const isExpanded = ref(false)
 
+// 修改展开/收起处理
+const toggleExpand = async () => {
+  isExpanded.value = !isExpanded.value
+  // 保存展开状态
+  await localforage.setItem('authors-expanded', isExpanded.value)
+}
+
 // 监听窗口大小变化
 onMounted(() => {
   const handleResize = () => {
@@ -515,10 +653,87 @@ onMounted(() => {
   })
 })
 
-// 计算要显示的作者列表
+// 计算要显示作者列表
 const displayedAuthors = computed(() => {
   return isExpanded.value ? authors.value : authors.value.slice(0, defaultDisplayCount.value)
 })
+
+// 添加网络状态检测
+const isSlowConnection = computed(() => {
+  if ('connection' in navigator) {
+    const conn = (navigator as any).connection
+    return conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g'
+  }
+  return false
+})
+
+// 监听络状态变化
+onMounted(() => {
+  if ('connection' in navigator) {
+    (navigator as any).connection.addEventListener('change', () => {
+      // 网络状态变化时重新获取数据
+      if (isOnline.value && !isSlowConnection.value) {
+        fetchArticles()
+      }
+    })
+  }
+})
+
+// 网络状态检测
+const isOnline = ref(navigator.onLine)
+
+// 检查网络连接
+const checkConnection = async () => {
+  try {
+    await fetch('/api/health-check')
+    isOnline.value = true
+  } catch (error) {
+    isOnline.value = false
+  }
+}
+
+// 监听网络状态变化
+onMounted(() => {
+  window.addEventListener('online', () => {
+    isOnline.value = true
+    fetchArticles()
+  })
+  
+  window.addEventListener('offline', () => {
+    isOnline.value = false
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('online', () => {})
+  window.removeEventListener('offline', () => {})
+})
+
+// 添加清理缓存的函数
+const clearCache = async () => {
+  try {
+    await localforage.removeItem('articles-cache')
+    await localforage.removeItem('authors-cache')
+    await localforage.removeItem('selected-authors')
+    await localforage.removeItem('authors-expanded')
+  } catch (error) {
+    console.error('清理缓存失败:', error)
+  }
+}
+
+// 在组件卸载时清理过期缓存
+onUnmounted(async () => {
+  // 清理超过24小时的缓存
+  const cacheTime = await localforage.getItem('cache-timestamp')
+  if (cacheTime && Date.now() - (cacheTime as number) > 24 * 60 * 60 * 1000) {
+    await clearCache()
+  }
+})
+
+// 在数据更新时记录缓存时间
+const updateCacheTimestamp = async () => {
+  await localforage.setItem('cache-timestamp', Date.now())
+}
 </script>
 
 <style scoped>
