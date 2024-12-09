@@ -31,10 +31,32 @@
           <!-- 文章URL输入 -->
           <div class="mb-6">
             <!-- 标题和手工按钮的容器 -->
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-4 mb-2">
+              <!-- 标题 -->
               <h3 class="text-lg font-medium">{{ t('summarize.title') }}</h3>
+              
+              <!-- 3个支持的渠道图标 - 调整位置和大小 -->
+              <div class="flex items-center gap-3">
+                <img src="/images/icons/youtube.svg" alt="YouTube" class="w-6 h-6 text-gray-500" title="YouTube" />
+                <!-- 更新 Apple Podcast 图标 -->
+                <img 
+                  src="/images/icons/apple-podcast.svg" 
+                  alt="Apple Podcast" 
+                  class="w-6 h-6" 
+                  title="Apple Podcast" 
+                />
+                <!-- 更新 Spotify 图标 -->
+                <img 
+                  src="/images/icons/spotify.svg" 
+                  alt="Spotify" 
+                  class="w-6 h-6" 
+                  title="Spotify" 
+                />
+              </div>
+
+              <!-- 手工按钮 -->
               <button 
-                class="px-4 py-2 text-sm bg-gray-100 text-gray-900 rounded border border-gray-300 hover:bg-gray-200 shadow-sm"
+                class="px-4 py-2 text-sm bg-gray-100 text-gray-900 rounded border border-gray-300 hover:bg-gray-200 shadow-sm ml-auto"
                 @click="handleManual"
               >
                 {{ t('summarize.manualupload') }}

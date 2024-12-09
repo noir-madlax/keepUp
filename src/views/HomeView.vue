@@ -34,8 +34,34 @@
         <div class="flex items-center gap-2 sm:gap-4 mr-0">
           <!-- 语言切换组件 -->
           <language-switch />
-          <!-- 文章请求表单组件 -->
-          <article-request-form @refresh="fetchArticles" />
+          
+          <!-- 文章请求表单组件的容器 -->
+          <div class="relative">
+            <!-- 三个渠道图标,绝对定位到上方 -->
+            <div class="absolute -top-5 right-0 flex items-center gap-2 mr-1">
+              <img 
+                src="/images/icons/youtube.svg" 
+                alt="YouTube" 
+                class="w-4 h-4" 
+                title="YouTube" 
+              />
+              <img 
+                src="/images/icons/apple-podcast.svg"
+                alt="Apple Podcast" 
+                class="w-4 h-4" 
+                title="Apple Podcast" 
+              />
+              <img 
+                src="/images/icons/spotify.svg"
+                alt="Spotify" 
+                class="w-4 h-4" 
+                title="Spotify" 
+              />
+            </div>
+            
+            <!-- 文章请求表单组件 -->
+            <article-request-form @refresh="fetchArticles" />
+          </div>
           
           <!-- 已登录用户信息区域 -->
           <template v-if="authStore.isAuthenticated">
@@ -90,7 +116,7 @@
     <!-- 主要内容区域 -->
     <pull-to-refresh class="pt-[72px]" :onRefresh="fetchArticles">
       <div class="px-8 py-6">
-        <!-- 内容最大宽度限制容器 -->
+        <!-- 内容最大宽度限制容 -->
         <div class="max-w-screen-2xl mx-auto">
           <!-- 发现区域 -->
           <div class="mb-8">
@@ -211,7 +237,7 @@
         @click.stop
       >
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold">��传文章</h2>
+          <h2 class="text-xl font-bold">上传文章</h2>
           <button @click="showUploadModal = false" class="text-gray-500">
             <i class="el-icon-close"></i>
           </button>
@@ -565,7 +591,7 @@ const submitArticle = async () => {
   }
 }
 
-// 添作者相关的状态
+// 添作者相关��状态
 interface Author {
   id: number;
   name: string;
@@ -730,7 +756,7 @@ onUnmounted(async () => {
   }
 })
 
-// 在数据更新时记录缓存时间
+// 在数据更新时记录存时间
 const updateCacheTimestamp = async () => {
   await localforage.setItem('cache-timestamp', Date.now())
 }
