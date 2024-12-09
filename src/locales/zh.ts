@@ -16,7 +16,9 @@ export default {
     },
     channels: {
       wechat: '微信',
-      youtube: 'YouTube', 
+      youtube: 'YouTube',
+      applePodcast: '苹果播客',
+      spotify: 'Spotify',
       xiaoyuzhou: '小宇宙',
       pdf: 'PDF',
       web: '网页'
@@ -43,7 +45,7 @@ export default {
         '人物介绍': '人物介绍',
         '名词解释': '名词解释',
         '分段提纲': '分段提纲',
-        'QA环节': 'QA环���',
+        'QA环节': 'QA环节',
         '金句': '金句',
         '分段详述': '分段详述',
         '引用（测试）': '引用（测试）',
@@ -85,7 +87,7 @@ export default {
       submitFailed: '提交失败，请重试',
       maxSelectionsExceeded: '最多只能选择3个语言选项'
     },
-    summaryLanguageTitle: '总结语言',
+    summaryLanguageTitle: '总结语��',
     subtitleLanguageTitle: '全文字幕',
     detailedLanguageTitle: '分段详述'
   },

@@ -19,7 +19,9 @@ export default {
       youtube: 'YouTube',
       xiaoyuzhou: 'XiaoYuZhou',
       pdf: 'PDF', 
-      web: 'Web'
+      web: 'Web',
+      applePodcast: 'Apple Podcast',
+      spotify: 'Spotify'
     },
     pullToRefresh: {
       pullDown: 'Pull to refresh',

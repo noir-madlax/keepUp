@@ -141,9 +141,8 @@
             <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.channelTitle') }}</h2>
             <!-- 渠道按钮容器 -->
             <div class="flex flex-wrap gap-2">
-              <!-- 渠道选择按钮 -->
               <button 
-                v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF', '网页']"
+                v-for="channel in ['YouTube', 'Apple Podcast', 'Spotify']"
                 :key="channel"
                 @click="toggleChannel(channel)"
                 class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200 flex items-center gap-2"
@@ -591,7 +590,7 @@ const submitArticle = async () => {
   }
 }
 
-// 添作者相关��状态
+// 添作者相关状态
 interface Author {
   id: number;
   name: string;
@@ -626,14 +625,12 @@ const toggleAuthor = async (author: Author) => {
 
 const { t } = useI18n()
 
-// 添加个辅助函来获取channel的key
+// 修改 getChannelKey 函数
 const getChannelKey = (channel: string): string => {
   const keyMap: Record<string, string> = {
-    '微信': 'wechat',
     'YouTube': 'youtube',
-    '小宇宙': 'xiaoyuzhou',
-    'PDF': 'pdf',
-    '网页': 'web'
+    'Apple Podcast': 'applePodcast',
+    'Spotify': 'spotify'
   }
   return keyMap[channel] || channel.toLowerCase()
 }
@@ -759,6 +756,16 @@ onUnmounted(async () => {
 // 在数据更新时记录存时间
 const updateCacheTimestamp = async () => {
   await localforage.setItem('cache-timestamp', Date.now())
+}
+
+// 添加 getChannelIcon 函数
+const getChannelIcon = (channel: string): string => {
+  const iconMap: Record<string, string> = {
+    'YouTube': 'youtube.svg',
+    'Apple Podcast': 'apple-podcast.svg',
+    'Spotify': 'spotify.svg'
+  }
+  return iconMap[channel] || ''
 }
 </script>
 
