@@ -295,9 +295,6 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
             # 如果不是 YouTube URL，尝试转换为播客 URL
             matcher = PodcastMatcher()
             request.url = matcher.match_podcast_url(request.url)
-            logger.info(f"匹配到播客 URL: {request.url}")
-            await SupabaseService.update_request_url(request.id, request.url)
-
             
             if not request.url:
                 logger.error(f"无法匹配到目标 URL: ID={request.id}")
@@ -307,6 +304,9 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
                     "message": "无法匹配到目标 URL",
                     "request_id": request.id
                 }
+            else:
+                logger.info(f"匹配到播客 URL: {request.url}")
+                await SupabaseService.update_request_url(request.id, request.url)
 
         # 1. 更新状态为处理中
         await SupabaseService.update_status(request.id, "processing")
