@@ -349,7 +349,7 @@ const tags = computed(() => PREDEFINED_TAGS)
 const pageSize = 9 // 每页加载的文章数量
 const currentPage = ref(1)
 const isLoading = ref(false) // 加载状态
-const hasMore = ref(true) // ��否还有更多数据
+const hasMore = ref(true) // 否还有更多数据
 
 // 添加重置函数
 const resetPageState = () => {
@@ -364,11 +364,17 @@ onActivated(() => {
   resetPageState()
 })
 
-// 修改 fetchArticles 函数中的缓存逻辑
+// 添加一个计算属性来判断是否有筛选条件
+const hasFilters = computed(() => {
+  return selectedTag.value !== 'all' || 
+         selectedChannels.value.length > 0 || 
+         selectedAuthors.value.length > 0
+})
+
+// 修改 fetchArticles 函数
 const fetchArticles = async (isRefresh = false) => {
   try {
     if (isRefresh) {
-      // 如果是刷新，重置分页状态
       currentPage.value = 1
       articles.value = []
       hasMore.value = true
@@ -378,11 +384,11 @@ const fetchArticles = async (isRefresh = false) => {
 
     isLoading.value = true
 
-    // 计算分页范围
-    const from = (currentPage.value - 1) * pageSize
-    const to = from + pageSize - 1
+    // 如果有筛选条件，不使用分页
+    const from = hasFilters.value ? 0 : (currentPage.value - 1) * pageSize
+    const to = hasFilters.value ? 999 : from + pageSize - 1
 
-    // 在线模式：从 API 获取最新数据
+    // 从 API 获取数据
     const { data, error, count } = await supabase
       .from('keep_articles')
       .select(`
@@ -401,10 +407,11 @@ const fetchArticles = async (isRefresh = false) => {
     if (error) throw error
 
     // 更新文章列表
-    articles.value = isRefresh ? data : [...articles.value, ...data]
+    articles.value = isRefresh || hasFilters.value ? data : [...articles.value, ...data]
     
     // 更新是否还有更多数据
-    hasMore.value = count ? from + data.length < count : false
+    // 如果有筛选条件，就不显示加载更多
+    hasMore.value = hasFilters.value ? false : (count ? from + data.length < count : false)
 
     // 只在完整刷新时更新缓存
     if (isRefresh) {
@@ -540,10 +547,8 @@ const articleForm = ref<Partial<Article>>({
 })
 
 const selectTag = (tag: string): void => {
-  if (tag === 'all' && (selectedTag.value !== 'all' || selectedChannels.value.length > 0)) {
-    selectedTag.value = 'all'
-    selectedChannels.value = []
-  }
+  selectedTag.value = tag
+  resetPageState() // 重置并重新获取数据
 }
 
 const handleUpload = () => {
@@ -576,7 +581,7 @@ const resetForm = () => {
     original_link: null
   }
 
-  // 提交成功后清除��稿
+  // 提交成功后清除稿
   localStorage.removeItem('articleFormDraft')
 }
 
@@ -661,6 +666,7 @@ const toggleChannel = (channel: string) => {
   } else {
     selectedChannels.value.splice(index, 1)
   }
+  resetPageState() // 重置并重新获取数据
 }
 
 // 切换作者选择
@@ -673,6 +679,7 @@ const toggleAuthor = async (author: Author) => {
   }
   // 保存选择状态
   await localforage.setItem('selected-authors', selectedAuthors.value)
+  resetPageState() // 重置并重新获取数据
 }
 
 const { t } = useI18n()
@@ -822,7 +829,7 @@ const getChannelIcon = (channel: string): string => {
 
 // 添加滚动加载处理函数
 const handleScroll = () => {
-  // 获取滚动容器
+  // 获取滚��容器
   const container = document.documentElement
   
   // 计算距离底部的距离
