@@ -173,7 +173,7 @@
               </template>
 
               <template v-else>
-                <!-- 作者列表部分保持不变 -->
+                <!-- 作者列表部分 -->
                 <template v-for="(author, index) in displayedAuthors" :key="author.id">
                   <button
                     @click="toggleAuthor(author)"
@@ -194,7 +194,7 @@
                 </template>
               </template>
 
-              <!-- 展开/收起按钮保持不变 -->
+              <!-- 作者展开/收起按钮 -->
               <button 
                 v-if="authors.length > defaultDisplayCount"
                 @click="toggleExpand"
@@ -213,7 +213,7 @@
               </button>
             </div>
           </div>
-
+          <!-- 文章列表区域 -->
           <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             <article-card
               v-for="article in filteredArticles"
