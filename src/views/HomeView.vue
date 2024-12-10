@@ -114,7 +114,7 @@
     />
 
     <!-- 主要内容区域 -->
-    <pull-to-refresh class="pt-[72px]" :onRefresh="fetchArticles">
+    <pull-to-refresh class="pt-[72px]" :onRefresh="handleRefresh">
       <div class="px-8 py-6">
         <!-- 内容最大宽度限制容 -->
         <div class="max-w-screen-2xl mx-auto">
@@ -220,6 +220,22 @@
               :key="article.id"
               :article="article"
             />
+          </div>
+
+          <!-- 加载状态提示 -->
+          <div v-if="isLoading || hasMore" class="text-center py-4">
+            <div v-if="isLoading" class="flex justify-center items-center space-x-2">
+              <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-gray-500">{{ t('common.loading') }}</span>
+            </div>
+            <div v-else-if="hasMore" class="text-gray-500">
+              {{ t('common.scrollToLoadMore') }}
+            </div>
+          </div>
+          
+          <!-- 没有更多数据的提示 -->
+          <div v-if="!isLoading && !hasMore" class="text-center py-4 text-gray-500">
+            {{ t('common.noMoreData') }}
           </div>
         </div>
       </div>
@@ -329,22 +345,48 @@ const selectedTag = ref('all')
 // 使用预定义的标签替代动态计算的标签
 const tags = computed(() => PREDEFINED_TAGS)
 
+// 分页相关的状态
+const pageSize = 5 // 每页加载的文章数量
+const currentPage = ref(1)
+const isLoading = ref(false) // 加载状态
+const hasMore = ref(true) // 是否还有更多数据
+
 // 修改文章获取函数
-const fetchArticles = async () => {
+const fetchArticles = async (isRefresh = false) => {
   try {
+    if (isRefresh) {
+      // 如果是刷新，重置分页状态
+      currentPage.value = 1
+      articles.value = []
+      hasMore.value = true
+    }
+
+    if (!hasMore.value || isLoading.value) return
+
+    isLoading.value = true
+
+    // 计算分页范围
+    const from = (currentPage.value - 1) * pageSize
+    const to = from + pageSize - 1
+
     // 1. 先尝试从 IndexedDB 获取缓存数据
     const cachedArticles = await localforage.getItem('articles-cache')
     if (cachedArticles) {
-      articles.value = cachedArticles as Article[]
+      const cached = cachedArticles as Article[]
+      articles.value = isRefresh ? cached.slice(0, pageSize) : [
+        ...articles.value,
+        ...cached.slice(from, to + 1)
+      ]
     }
 
     // 2. 如果离线且有缓存，直接返回
     if (!navigator.onLine && cachedArticles) {
+      hasMore.value = (cachedArticles as Article[]).length > to
       return
     }
 
     // 3. 在线模式：从 API 获取最新数据
-    const { data, error } = await supabase
+    const { data, error, count } = await supabase
       .from('keep_articles')
       .select(`
         id,
@@ -355,18 +397,26 @@ const fetchArticles = async () => {
         publish_date,
         author_id,
         author:keep_authors(id, name, icon)
-      `)
+      `, { count: 'exact' })
       .order('created_at', { ascending: false })
+      .range(from, to)
 
     if (error) throw error
 
     // 4. 更新 IndexedDB 缓存
     await localforage.setItem('articles-cache', data)
-    articles.value = data
+    
+    // 5. 更新文章列表
+    articles.value = isRefresh ? data : [...articles.value, ...data]
+    
+    // 6. 更新是否还有更多数据
+    hasMore.value = count ? from + data.length < count : false
 
   } catch (error) {
     console.error('获取文章列表时出错:', error)
     ElMessage.error('获取文章列表失败，请稍后重试')
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -475,6 +525,9 @@ onMounted(async () => {
     preload.as = link.endsWith('.svg') ? 'image' : 'script'
     document.head.appendChild(preload)
   })
+
+  // 添加滚动监听
+  window.addEventListener('scroll', handleScroll)
 })
 
 const articleForm = ref<Partial<Article>>({
@@ -766,6 +819,26 @@ const getChannelIcon = (channel: string): string => {
     'Spotify': 'spotify.svg'
   }
   return iconMap[channel] || ''
+}
+
+// 添加滚动加载处理函数
+const handleScroll = () => {
+  // 获取滚动容器
+  const container = document.documentElement
+  
+  // 计算距离底部的距离
+  const bottomOfWindow = container.scrollHeight - container.scrollTop - container.clientHeight
+  
+  // 当距离底部100px时加载更多
+  if (bottomOfWindow < 100 && !isLoading.value && hasMore.value) {
+    currentPage.value++
+    fetchArticles()
+  }
+}
+
+// 修改 PullToRefresh 组件的刷新处理
+const handleRefresh = async () => {
+  await fetchArticles(true) // 传入 true 表示刷新
 }
 </script>
 

@@ -87,11 +87,14 @@ export default {
       submitFailed: '提交失败，请重试',
       maxSelectionsExceeded: '最多只能选择3个语言选项'
     },
-    summaryLanguageTitle: '总结语��',
+    summaryLanguageTitle: '总结语言',
     subtitleLanguageTitle: '全文字幕',
     detailedLanguageTitle: '分段详述'
   },
   common: {
-    retry: '重试'
+    retry: '重试',
+    loading: '加载中...',
+    scrollToLoadMore: '滚动加载更多',
+    noMoreData: '没有更多数据了'
   }
 } 

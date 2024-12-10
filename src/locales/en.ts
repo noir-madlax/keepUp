@@ -92,6 +92,9 @@ export default {
     detailedLanguageTitle: 'Detailed Languages'
   },
   common: {
-    retry: 'Retry'
+    retry: 'Retry',
+    loading: 'Loading...',
+    scrollToLoadMore: 'Scroll to load more',
+    noMoreData: 'No more data'
   }
 } 
