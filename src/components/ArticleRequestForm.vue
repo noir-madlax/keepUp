@@ -250,7 +250,8 @@ const validateLanguageSelections = (): boolean => {
  */
 const submitRequest = async () => {
   if (!validateUrl(requestUrl.value)) return
-  if (!await checkDuplicate(requestUrl.value)) return
+  // 移除前端的重复检查，由后端统一处理
+  // if (!await checkDuplicate(requestUrl.value)) return
 
   const totalSelections = summaryLanguages.value.length +
     subtitleLanguages.value.length +
@@ -266,25 +267,25 @@ const submitRequest = async () => {
   }
 
   try {
-    // 1. 创建请求记录
-    const { data: requestData, error: requestError } = await supabase
-      .from('keep_article_requests')
-      .insert({
-        url: requestUrl.value,
-      })
-      .select()
-      .single()
+    // 1. 创建请求记录，使用 original_url 字段
+    // const { data: requestData, error: requestError } = await supabase
+    //   .from('keep_article_requests')
+    //   .insert({
+    //     original_url: requestUrl.value,  // 使用 original_url 字段
+    //     platform: 'pending'              // 添加初始平台状态
+    //   })
+    //   .select()
+    //   .single()
       
-    if (requestError) throw requestError
+    // if (requestError) throw requestError
 
-    // 2. 触发后端处理但不等待完成
-    fetch('/api/workflow/process', {
+    // 2. 触发后端处理并等待响应
+    const response = await fetch('/api/workflow/process', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        id: requestData.id,
         url: requestUrl.value,
         summary_languages: summaryLanguages.value,
         subtitle_languages: subtitleLanguages.value,
@@ -292,6 +293,15 @@ const submitRequest = async () => {
       })
     })
 
+    const result = await response.json()
+
+    if (!result.success) {
+      // 如果后台处理失败，显示错误信息
+      ElMessage.error(result.message || t('summarize.messages.submitFailed'))
+      return
+    }
+
+    // 处理成功
     ElMessage.success(t('summarize.messages.submitSuccess'))
     requestUrl.value = ''
     showUploadModal.value = false

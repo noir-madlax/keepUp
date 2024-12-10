@@ -375,3 +375,95 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"更新URL失败: {str(e)}", exc_info=True)
             raise
+    
+    @classmethod
+    async def update_request_platform(
+        cls,
+        request_id: int,
+        platform: str,
+        parsed_url: str,
+        original_url: str
+    ) -> None:
+        """更新请求的平台信息
+        
+        Args:
+            request_id: 请求ID
+            platform: 平台类型(youtube/apple/spotify)
+            parsed_url: 解析后的YouTube URL
+            original_url: 原始URL
+        """
+        try:
+            client = cls.get_client()
+            
+            result = client.table('keep_article_requests').update({
+                'platform': platform,
+                'url': parsed_url,
+                'original_url': original_url
+            }).eq('id', request_id).execute()
+            
+            if not result.data:
+                raise Exception(f"未找到 ID 为 {request_id} 的请求记录")
+            
+            logger.info(f"平台信息更新成功: ID={request_id}, Platform={platform}")
+            
+        except Exception as e:
+            logger.error(f"更新平台信息失败: {str(e)}", exc_info=True)
+            raise
+    
+    @classmethod
+    async def check_url_exists(cls, url: str) -> bool:
+        """检查URL是否已存在
+        
+        Args:
+            url: 要检查的URL
+            
+        Returns:
+            bool: True 如果URL已存在，False 如果不存在
+        """
+        try:
+            client = cls.get_client()
+            
+            # 使用 Supabase Filter 语法
+            result = client.table('keep_article_requests').select('id').filter(
+                'original_url', 'eq', url
+            ).execute()
+            
+            # 如果没找到原始URL，再检查解析后的URL
+            if not result.data:
+                result = client.table('keep_article_requests').select('id').filter(
+                    'url', 'eq', url
+                ).execute()
+            
+            exists = bool(result.data)
+            if exists:
+                logger.info(f"URL已存在: {url}")
+            
+            return exists
+            
+        except Exception as e:
+            logger.error(f"检查URL是否存在时失败: {str(e)}", exc_info=True)
+            return False
+    
+    @classmethod
+    async def create_article_request(cls, request_data: dict) -> dict:
+        """创建文章请求记录
+        
+        Args:
+            request_data: 请求数据
+            
+        Returns:
+            dict: 创建的请求记录
+        """
+        try:
+            client = cls.get_client()
+            result = client.table('keep_article_requests').insert(request_data).execute()
+            
+            if not result.data:
+                raise Exception("创建请求记录失败")
+            
+            logger.info(f"创建请求记录成功: ID={result.data[0]['id']}")
+            return result.data[0]
+            
+        except Exception as e:
+            logger.error(f"创建请求记录失败: {str(e)}", exc_info=True)
+            raise

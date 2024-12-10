@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import List
 
 class FetchRequest(BaseModel):
-    id: int
+    id: Optional[int] = None
     url: str
     summary_languages: List[str] = ['zh']  # 默认中文,可选 ['zh', 'en']
     subtitle_languages: List[str] = ['zh']  # 默认中文,可选 ['zh', 'en']

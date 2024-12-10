@@ -9,6 +9,7 @@ from app.services.content_polisher import ContentPolisherService
 from app.services.content_detailer import ContentDetailerService
 from app.services.podcast_matcher import PodcastMatcher
 from app.services.content_fetcher.youtube import YouTubeFetcher
+from app.services.content_resolver import ContentResolver
 
 import asyncio
 
@@ -142,7 +143,7 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
         list[str]: 处理结果信息列表
     """
     results = []
-    logger.info(f"开始分段详述处理 - 请求ID: {request_id}, 语言列表: {languages}")
+    logger.info(f"开始分段详述处理 - 请��ID: {request_id}, 语言列表: {languages}")
     
     for lang in languages:
         
@@ -285,47 +286,77 @@ async def process_article_task(request: FetchRequest):
 async def process_workflow(request: FetchRequest, background_tasks: BackgroundTasks):
     """接收请求并立即返回,在后台继续处理"""
     try:
-        logger.info(f"收到处理请求: ID={request.id}, URL={request.url}")
+        logger.info(f"收到处理请求: URL={request.url}")
         
-        # 先判断是否为 YouTube URL
-        youtube_fetcher = YouTubeFetcher()
-        original_url = request.url
+        # 1. 检查URL是否重复
+        if await SupabaseService.check_url_exists(request.url):
+            return {
+                "success": False,
+                "message": "URL已经存在"
+            }
         
-        if not youtube_fetcher.can_handle(request.url):
-            # 如果不是 YouTube URL，尝试转换为播客 URL
-            matcher = PodcastMatcher()
-            request.url = matcher.match_podcast_url(request.url)
+        # 2. 创建请求记录
+        try:
+            request_data = await SupabaseService.create_article_request({
+                "original_url": request.url,
+                "platform": "pending",
+                "status": "pending"
+            })
+            request.id = request_data["id"]
+        except Exception as e:
+            logger.error(f"创建请求记录失败: {str(e)}")
+            return {
+                "success": False,
+                "message": "创建请求记录失败"
+            }
+        
+        # 3. 使用 ContentResolver 解析 URL
+        resolver = ContentResolver()
+        result = await resolver.resolve(request.url)
+        
+        if not result:
+            error_msg = "无法解析URL或找不到对应的YouTube内容"
+            logger.error(f"{error_msg}: ID={request.id}")
+            await SupabaseService.update_status(request.id, "failed", error_msg)
+            return {
+                "success": False,
+                "message": error_msg,
+                "request_id": request.id
+            }
             
-            if not request.url:
-                logger.error(f"无法匹配到目标 URL: ID={request.id}")
-                await SupabaseService.update_status(request.id, "failed", "无法匹配到目标 URL")
-                return {
-                    "success": False,
-                    "message": "无法匹配到目标 URL",
-                    "request_id": request.id
-                }
-            else:
-                logger.info(f"匹配到播客 URL: {request.url}")
-                await SupabaseService.update_request_url(request.id, request.url)
-
-        # 1. 更新状态为处理中
+        platform, parsed_url, original_url = result
+        
+        # 4. 更新平台信息
+        await SupabaseService.update_request_platform(
+            request_id=request.id,
+            platform=platform,
+            parsed_url=parsed_url,
+            original_url=original_url
+        )
+        
+        # 5. 更新状态为处理中
         await SupabaseService.update_status(request.id, "processing")
         
-        # 将任务添加到后台处理队列
+        # 6. 使用解析后的URL更新请求对象
+        request.url = parsed_url
+        
+        # 7. 添加后台任务
         background_tasks.add_task(process_article_task, request)
         
         return {
             "success": True,
             "message": "请求已接受,开始后台处理",
             "request_id": request.id,
-            "final_url": request.url if request.url != original_url else None  # 仅当 URL 发生变化时才返回
+            "platform": platform,
+            "parsed_url": parsed_url if parsed_url != original_url else None
         }
         
     except Exception as e:
         logger.error(f"请求处理失败: {str(e)}", exc_info=True)
-        await SupabaseService.update_status(
-            request.id, 
-            "failed", 
-            error_message=str(e)
-        )
+        if hasattr(request, 'id'):
+            await SupabaseService.update_status(
+                request.id, 
+                "failed", 
+                error_message=str(e)
+            )
         raise HTTPException(status_code=500, detail=str(e)) 
