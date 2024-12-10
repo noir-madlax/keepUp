@@ -316,7 +316,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted, onActivated } from 'vue'
 import ArticleCard from '../components/ArticleCard.vue'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
@@ -346,12 +346,25 @@ const selectedTag = ref('all')
 const tags = computed(() => PREDEFINED_TAGS)
 
 // 分页相关的状态
-const pageSize = 5 // 每页加载的文章数量
+const pageSize = 9 // 每页加载的文章数量
 const currentPage = ref(1)
 const isLoading = ref(false) // 加载状态
-const hasMore = ref(true) // 是否还有更多数据
+const hasMore = ref(true) // ��否还有更多数据
 
-// 修改文章获取函数
+// 添加重置函数
+const resetPageState = () => {
+  currentPage.value = 1
+  articles.value = []
+  hasMore.value = true
+  fetchArticles(true) // 重新获取第一页数据
+}
+
+// 监听路由激活
+onActivated(() => {
+  resetPageState()
+})
+
+// 修改 fetchArticles 函数中的缓存逻辑
 const fetchArticles = async (isRefresh = false) => {
   try {
     if (isRefresh) {
@@ -369,23 +382,7 @@ const fetchArticles = async (isRefresh = false) => {
     const from = (currentPage.value - 1) * pageSize
     const to = from + pageSize - 1
 
-    // 1. 先尝试从 IndexedDB 获取缓存数据
-    const cachedArticles = await localforage.getItem('articles-cache')
-    if (cachedArticles) {
-      const cached = cachedArticles as Article[]
-      articles.value = isRefresh ? cached.slice(0, pageSize) : [
-        ...articles.value,
-        ...cached.slice(from, to + 1)
-      ]
-    }
-
-    // 2. 如果离线且有缓存，直接返回
-    if (!navigator.onLine && cachedArticles) {
-      hasMore.value = (cachedArticles as Article[]).length > to
-      return
-    }
-
-    // 3. 在线模式：从 API 获取最新数据
+    // 在线模式：从 API 获取最新数据
     const { data, error, count } = await supabase
       .from('keep_articles')
       .select(`
@@ -403,14 +400,16 @@ const fetchArticles = async (isRefresh = false) => {
 
     if (error) throw error
 
-    // 4. 更新 IndexedDB 缓存
-    await localforage.setItem('articles-cache', data)
-    
-    // 5. 更新文章列表
+    // 更新文章列表
     articles.value = isRefresh ? data : [...articles.value, ...data]
     
-    // 6. 更新是否还有更多数据
+    // 更新是否还有更多数据
     hasMore.value = count ? from + data.length < count : false
+
+    // 只在完整刷新时更新缓存
+    if (isRefresh) {
+      await localforage.setItem('articles-cache', data)
+    }
 
   } catch (error) {
     console.error('获取文章列表时出错:', error)
@@ -577,7 +576,7 @@ const resetForm = () => {
     original_link: null
   }
 
-  // 提交成功后清除草稿
+  // 提交成功后清除��稿
   localStorage.removeItem('articleFormDraft')
 }
 
