@@ -114,7 +114,7 @@
     />
 
     <!-- 主要内容区域 -->
-    <pull-to-refresh class="pt-[72px]" :onRefresh="fetchArticles">
+    <pull-to-refresh class="pt-[72px]" :onRefresh="handleRefresh">
       <div class="px-8 py-6">
         <!-- 内容最大宽度限制容 -->
         <div class="max-w-screen-2xl mx-auto">
@@ -141,9 +141,8 @@
             <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.channelTitle') }}</h2>
             <!-- 渠道按钮容器 -->
             <div class="flex flex-wrap gap-2">
-              <!-- 渠道选择按钮 -->
               <button 
-                v-for="channel in ['微信', 'YouTube', '小宇宙', 'PDF', '网页']"
+                v-for="channel in ['YouTube', 'Apple Podcast', 'Spotify']"
                 :key="channel"
                 @click="toggleChannel(channel)"
                 class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200 flex items-center gap-2"
@@ -174,7 +173,7 @@
               </template>
 
               <template v-else>
-                <!-- 作者列表部分保持不变 -->
+                <!-- 作者列表部分 -->
                 <template v-for="(author, index) in displayedAuthors" :key="author.id">
                   <button
                     @click="toggleAuthor(author)"
@@ -195,7 +194,7 @@
                 </template>
               </template>
 
-              <!-- 展开/收起按钮保持不变 -->
+              <!-- 作者展开/收起按钮 -->
               <button 
                 v-if="authors.length > defaultDisplayCount"
                 @click="toggleExpand"
@@ -214,13 +213,29 @@
               </button>
             </div>
           </div>
-
+          <!-- 文章列表区域 -->
           <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             <article-card
               v-for="article in filteredArticles"
               :key="article.id"
               :article="article"
             />
+          </div>
+
+          <!-- 加载状态提示 -->
+          <div v-if="isLoading || hasMore" class="text-center py-4">
+            <div v-if="isLoading" class="flex justify-center items-center space-x-2">
+              <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-gray-500">{{ t('common.loading') }}</span>
+            </div>
+            <div v-else-if="hasMore" class="text-gray-500">
+              {{ t('common.scrollToLoadMore') }}
+            </div>
+          </div>
+          
+          <!-- 没有更多数据的提示 -->
+          <div v-if="!isLoading && !hasMore" class="text-center py-4 text-gray-500">
+            {{ t('common.noMoreData') }}
           </div>
         </div>
       </div>
@@ -301,7 +316,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted, onActivated } from 'vue'
 import ArticleCard from '../components/ArticleCard.vue'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
@@ -330,22 +345,51 @@ const selectedTag = ref('all')
 // 使用预定义的标签替代动态计算的标签
 const tags = computed(() => PREDEFINED_TAGS)
 
-// 修改文章获取函数
-const fetchArticles = async () => {
+// 分页相关的状态
+const pageSize = 9 // 每页加载的文章数量
+const currentPage = ref(1)
+const isLoading = ref(false) // 加载状态
+const hasMore = ref(true) // 否还有更多数据
+
+// 添加重置函数
+const resetPageState = () => {
+  currentPage.value = 1
+  articles.value = []
+  hasMore.value = true
+  fetchArticles(true) // 重新获取第一页数据
+}
+
+// 监听路由激活
+onActivated(() => {
+  resetPageState()
+})
+
+// 添加一个计算属性来判断是否有筛选条件
+const hasFilters = computed(() => {
+  return selectedTag.value !== 'all' || 
+         selectedChannels.value.length > 0 || 
+         selectedAuthors.value.length > 0
+})
+
+// 修改 fetchArticles 函数
+const fetchArticles = async (isRefresh = false) => {
   try {
-    // 1. 先尝试从 IndexedDB 获取缓存数据
-    const cachedArticles = await localforage.getItem('articles-cache')
-    if (cachedArticles) {
-      articles.value = cachedArticles as Article[]
+    if (isRefresh) {
+      currentPage.value = 1
+      articles.value = []
+      hasMore.value = true
     }
 
-    // 2. 如果离线且有缓存，直接返回
-    if (!navigator.onLine && cachedArticles) {
-      return
-    }
+    if (!hasMore.value || isLoading.value) return
 
-    // 3. 在线模式：从 API 获取最新数据
-    const { data, error } = await supabase
+    isLoading.value = true
+
+    // 如果有筛选条件，不使用分页
+    const from = hasFilters.value ? 0 : (currentPage.value - 1) * pageSize
+    const to = hasFilters.value ? 999 : from + pageSize - 1
+
+    // 从 API 获取数据
+    const { data, error, count } = await supabase
       .from('keep_articles')
       .select(`
         id,
@@ -356,18 +400,29 @@ const fetchArticles = async () => {
         publish_date,
         author_id,
         author:keep_authors(id, name, icon)
-      `)
+      `, { count: 'exact' })
       .order('created_at', { ascending: false })
+      .range(from, to)
 
     if (error) throw error
 
-    // 4. 更新 IndexedDB 缓存
-    await localforage.setItem('articles-cache', data)
-    articles.value = data
+    // 更新文章列表
+    articles.value = isRefresh || hasFilters.value ? data : [...articles.value, ...data]
+    
+    // 更新是否还有更多数据
+    // 如果有筛选条件，就不显示加载更多
+    hasMore.value = hasFilters.value ? false : (count ? from + data.length < count : false)
+
+    // 只在完整刷新时更新缓存
+    if (isRefresh) {
+      await localforage.setItem('articles-cache', data)
+    }
 
   } catch (error) {
     console.error('获取文章列表时出错:', error)
     ElMessage.error('获取文章列表失败，请稍后重试')
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -476,6 +531,9 @@ onMounted(async () => {
     preload.as = link.endsWith('.svg') ? 'image' : 'script'
     document.head.appendChild(preload)
   })
+
+  // 添加滚动监听
+  window.addEventListener('scroll', handleScroll)
 })
 
 const articleForm = ref<Partial<Article>>({
@@ -489,10 +547,8 @@ const articleForm = ref<Partial<Article>>({
 })
 
 const selectTag = (tag: string): void => {
-  if (tag === 'all' && (selectedTag.value !== 'all' || selectedChannels.value.length > 0)) {
-    selectedTag.value = 'all'
-    selectedChannels.value = []
-  }
+  selectedTag.value = tag
+  resetPageState() // 重置并重新获取数据
 }
 
 const handleUpload = () => {
@@ -525,7 +581,7 @@ const resetForm = () => {
     original_link: null
   }
 
-  // 提交成功后清除草稿
+  // 提交成功后清除稿
   localStorage.removeItem('articleFormDraft')
 }
 
@@ -591,7 +647,7 @@ const submitArticle = async () => {
   }
 }
 
-// 添作者相关��状态
+// 添作者相关状态
 interface Author {
   id: number;
   name: string;
@@ -610,6 +666,7 @@ const toggleChannel = (channel: string) => {
   } else {
     selectedChannels.value.splice(index, 1)
   }
+  resetPageState() // 重置并重新获取数据
 }
 
 // 切换作者选择
@@ -622,18 +679,17 @@ const toggleAuthor = async (author: Author) => {
   }
   // 保存选择状态
   await localforage.setItem('selected-authors', selectedAuthors.value)
+  resetPageState() // 重置并重新获取数据
 }
 
 const { t } = useI18n()
 
-// 添加个辅助函来获取channel的key
+// 修改 getChannelKey 函数
 const getChannelKey = (channel: string): string => {
   const keyMap: Record<string, string> = {
-    '微信': 'wechat',
     'YouTube': 'youtube',
-    '小宇宙': 'xiaoyuzhou',
-    'PDF': 'pdf',
-    '网页': 'web'
+    'Apple Podcast': 'applePodcast',
+    'Spotify': 'spotify'
   }
   return keyMap[channel] || channel.toLowerCase()
 }
@@ -759,6 +815,36 @@ onUnmounted(async () => {
 // 在数据更新时记录存时间
 const updateCacheTimestamp = async () => {
   await localforage.setItem('cache-timestamp', Date.now())
+}
+
+// 添加 getChannelIcon 函数
+const getChannelIcon = (channel: string): string => {
+  const iconMap: Record<string, string> = {
+    'YouTube': 'youtube.svg',
+    'Apple Podcast': 'apple-podcast.svg',
+    'Spotify': 'spotify.svg'
+  }
+  return iconMap[channel] || ''
+}
+
+// 添加滚动加载处理函数
+const handleScroll = () => {
+  // 获取滚��容器
+  const container = document.documentElement
+  
+  // 计算距离底部的距离
+  const bottomOfWindow = container.scrollHeight - container.scrollTop - container.clientHeight
+  
+  // 当距离底部100px时加载更多
+  if (bottomOfWindow < 100 && !isLoading.value && hasMore.value) {
+    currentPage.value++
+    fetchArticles()
+  }
+}
+
+// 修改 PullToRefresh 组件的刷新处理
+const handleRefresh = async () => {
+  await fetchArticles(true) // 传入 true 表示刷新
 }
 </script>
 

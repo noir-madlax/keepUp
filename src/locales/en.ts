@@ -19,7 +19,9 @@ export default {
       youtube: 'YouTube',
       xiaoyuzhou: 'XiaoYuZhou',
       pdf: 'PDF', 
-      web: 'Web'
+      web: 'Web',
+      applePodcast: 'Apple Podcast',
+      spotify: 'Spotify'
     },
     pullToRefresh: {
       pullDown: 'Pull to refresh',
@@ -90,6 +92,9 @@ export default {
     detailedLanguageTitle: 'Detailed Languages'
   },
   common: {
-    retry: 'Retry'
+    retry: 'Retry',
+    loading: 'Loading...',
+    scrollToLoadMore: 'Scroll to load more',
+    noMoreData: 'No more data'
   }
 } 

@@ -12,7 +12,10 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView
+      component: () => import('../views/HomeView.vue'),
+      meta: {
+        keepAlive: true
+      }
     },
     {
       path: '/article/:id',
