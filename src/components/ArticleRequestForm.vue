@@ -218,13 +218,21 @@ const validateUrl = (url: string): boolean => {
  * @returns boolean 检查结果
  */
 const checkDuplicate = async (url: string): Promise<boolean> => {
-  const { data, error } = await supabase
+  // 检查 url 字段
+  const { data: urlData, error: urlError } = await supabase
     .from('keep_article_requests')
     .select('id')
     .eq('url', url)
     .single()
     
-  if (data) {
+  // 检查 original_url 字段
+  const { data: originalUrlData, error: originalUrlError } = await supabase
+    .from('keep_article_requests')
+    .select('id')
+    .eq('original_url', url)
+    .single()
+    
+  if (urlData || originalUrlData) {
     ElMessage.error(t('summarize.messages.duplicateUrl'))
     return false
   }
@@ -244,14 +252,10 @@ const validateLanguageSelections = (): boolean => {
 
 /**
  * 提交文章处理请求
- * 1. 验证入
- * 2. 创建数据库记录
- * 3. 触发后端处理
  */
 const submitRequest = async () => {
   if (!validateUrl(requestUrl.value)) return
-  // 移除前端的重复检查，由后端统一处理
-  // if (!await checkDuplicate(requestUrl.value)) return
+  if (!await checkDuplicate(requestUrl.value)) return
 
   const totalSelections = summaryLanguages.value.length +
     subtitleLanguages.value.length +
@@ -267,20 +271,8 @@ const submitRequest = async () => {
   }
 
   try {
-    // 1. 创建请求记录，使用 original_url 字段
-    // const { data: requestData, error: requestError } = await supabase
-    //   .from('keep_article_requests')
-    //   .insert({
-    //     original_url: requestUrl.value,  // 使用 original_url 字段
-    //     platform: 'pending'              // 添加初始平台状态
-    //   })
-    //   .select()
-    //   .single()
-      
-    // if (requestError) throw requestError
-
-    // 2. 触发后端处理并等待响应
-    const response = await fetch('/api/workflow/process', {
+    // 发送请求到后端
+    fetch('/api/workflow/process', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -293,15 +285,7 @@ const submitRequest = async () => {
       })
     })
 
-    const result = await response.json()
-
-    if (!result.success) {
-      // 如果后台处理失败，显示错误信息
-      ElMessage.error(result.message || t('summarize.messages.submitFailed'))
-      return
-    }
-
-    // 处理成功
+    // 直接显示成功消息并关闭窗口
     ElMessage.success(t('summarize.messages.submitSuccess'))
     requestUrl.value = ''
     showUploadModal.value = false

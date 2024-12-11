@@ -136,7 +136,7 @@ class SupabaseService:
         section_type: str,
         language: str
     ) -> None:
-        """除指定文章的特定类型和语言的小节
+        """除指定文章的特定类型和语言的小���
         
         Args:
             article_id: 文章ID
