@@ -34,35 +34,7 @@
         <div class="flex items-center gap-2 sm:gap-4 mr-0">
           <!-- 语言切换组件 -->
           <language-switch />
-          
-          <!-- 文章请求表单组件的容器 -->
-          <div class="relative">
-            <!-- 三个渠道图标,绝对定位到上方 -->
-            <div class="absolute -top-5 right-0 flex items-center gap-2 mr-1">
-              <img 
-                src="/images/icons/youtube.svg" 
-                alt="YouTube" 
-                class="w-4 h-4" 
-                title="YouTube" 
-              />
-              <img 
-                src="/images/icons/apple-podcast.svg"
-                alt="Apple Podcast" 
-                class="w-4 h-4" 
-                title="Apple Podcast" 
-              />
-              <img 
-                src="/images/icons/spotify.svg"
-                alt="Spotify" 
-                class="w-4 h-4" 
-                title="Spotify" 
-              />
-            </div>
-            
-            <!-- 文章请求表单组件 -->
-            <article-request-form @refresh="fetchArticles" />
-          </div>
-          
+      
           <!-- 已登录用户信息区域 -->
           <template v-if="authStore.isAuthenticated">
             <!-- 用户信息容器 -->
@@ -118,23 +90,72 @@
       <div class="px-8 py-6">
         <!-- 内容最大宽度限制容 -->
         <div class="max-w-screen-2xl mx-auto">
+            <!-- 上传框-->
+            <!-- 标题和手工按钮的容器 -->
+            <div class="flex flex-wrap items-center gap-4 mb-2">
+              <!-- 标题和图标容器 - 设置固定宽度 -->
+              <div class="flex items-center gap-4 min-w-[160px]">
+                <!-- 标题 -->
+                <h3 class="text-lg font-medium whitespace-nowrap">{{ t('summarize.title') }}</h3>
+                
+                <!-- 3个支持的渠道图标 - 调整位置和大小 -->
+                <div class="flex items-center gap-3">
+                  <img 
+                    src="/images/icons/youtube.svg" 
+                    alt="YouTube" 
+                    class="w-6 h-6 text-gray-500" 
+                    title="YouTube" 
+                  />
+                  <img 
+                    src="/images/icons/apple-podcast.svg" 
+                    alt="Apple Podcast" 
+                    class="w-6 h-6" 
+                    title="Apple Podcast" 
+                  />
+                  <img 
+                    src="/images/icons/spotify.svg" 
+                    alt="Spotify" 
+                    class="w-6 h-6" 
+                    title="Spotify" 
+                  />
+                </div>
+              </div>
+
+              <!-- URL输入框和上传按钮容器 -->
+              <div class="flex flex-1 w-full items-center gap-4 min-w-[300px]">
+                <!-- 文章URL输入框 -->
+                <input
+                  type="text"
+                  v-model="requestUrl"
+                  :placeholder="t('summarize.urlPlaceholder')"
+                  class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  @keyup.enter="submitRequest"
+                />
+                
+                <!-- 上传按钮固定宽度 -->
+                <div class="w-[60px]">
+                  <article-request-form @refresh="fetchArticles" />
+                </div>
+              </div>
+            </div>
+        </div>
+          <!-- 主要上传按钮，点击显示模态框 -->
+          
+
+          <!-- 我的上传 标题 -->
+          <h2 class="text-xl mb-4">{{ t('home.filter.myUpload') }}</h2>
+          <!--upload-card 新增-->
+          <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <UploadCard
+              v-if="filteredArticles.length > 0"
+              :article="filteredArticles[0]"
+            />
+          </div>
           <!-- 发现区域 -->
           <div class="mb-8">
             <!-- 发现标题 -->
             <h2 class="text-xl mb-4">{{ t('home.filter.discover') }}</h2>
-            <!-- 标签按钮容器 -->
-            <div class="flex gap-2 flex-wrap">
-              <!-- 全部标签按钮 -->
-              <button 
-                class="px-4 py-2 rounded-full border transition-colors duration-200"
-                :class="selectedTag === 'all' ? 'bg-blue-500 text-white' : 'hover:bg-gray-50'"
-                @click="selectTag('all')"
-              >
-                {{ t('home.filter.all') }}
-              </button>
-            </div>
           </div>
-
           <!-- 渠道筛选区域 -->
           <div class="mb-8">
             <!-- 渠道标题 -->
@@ -238,7 +259,6 @@
             {{ t('common.noMoreData') }}
           </div>
         </div>
-      </div>
     </pull-to-refresh>
 
     <!-- 上传弹框 -->
@@ -318,6 +338,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onUnmounted, onActivated } from 'vue'
 import ArticleCard from '../components/ArticleCard.vue'
+import UploadCard from '../components/UploadCard.vue'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
@@ -359,7 +380,7 @@ const resetPageState = () => {
   fetchArticles(true) // 重新获取第一页数据
 }
 
-// 监听路由激活
+// 监路由激活
 onActivated(() => {
   resetPageState()
 })
@@ -409,7 +430,7 @@ const fetchArticles = async (isRefresh = false) => {
     // 更新文章列表
     articles.value = isRefresh || hasFilters.value ? data : [...articles.value, ...data]
     
-    // 更新是否还有更多数据
+    // 更新是否还有更多数���
     // 如果有筛选条件，就不显示加载更多
     hasMore.value = hasFilters.value ? false : (count ? from + data.length < count : false)
 
@@ -509,7 +530,7 @@ onMounted(async () => {
     isExpanded.value = savedExpanded as boolean
   }
 
-  // 并行获取数据
+  // 并��获取据
   await Promise.all([
     fetchArticles(),
     fetchAuthors(),
@@ -566,7 +587,7 @@ const handleLogout = async () => {
     ElMessage.success('已退出登录')
   } catch (error) {
     console.error('Logout error:', error)
-    ElMessage.error('退出失败，请重试')
+    ElMessage.error('退���失败，请重试')
   }
 }
 
@@ -585,7 +606,7 @@ const resetForm = () => {
   localStorage.removeItem('articleFormDraft')
 }
 
-// 在组件顶部定义 formRef
+// 在组顶部定义 formRef
 const formRef = ref<InstanceType<typeof ArticleForm> | null>(null)
 
 const submitArticle = async () => {
@@ -679,7 +700,7 @@ const toggleAuthor = async (author: Author) => {
   }
   // 保存选择状态
   await localforage.setItem('selected-authors', selectedAuthors.value)
-  resetPageState() // 重置并重新获取数据
+  resetPageState() // 重置并重新获取��据
 }
 
 const { t } = useI18n()
@@ -729,7 +750,7 @@ onMounted(() => {
 
   window.addEventListener('resize', handleResize)
   
-  // 组件卸载时移除事件监听
+  // 组件卸载时移事件监听
   onUnmounted(() => {
     window.removeEventListener('resize', handleResize)
   })
@@ -829,7 +850,7 @@ const getChannelIcon = (channel: string): string => {
 
 // 添加滚动加载处理函数
 const handleScroll = () => {
-  // 获取滚��容器
+  // 获取滚容器
   const container = document.documentElement
   
   // 计算距离底部的距离

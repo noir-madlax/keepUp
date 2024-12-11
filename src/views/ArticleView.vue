@@ -190,6 +190,7 @@ import { useI18n } from 'vue-i18n'
 import MindMap from '../components/MindMap.vue'
 import Mermaid from '../components/Mermaid.vue'
 
+
 // 将 i18n 相关初始化移到最前面
 const { t, locale } = useI18n()
 

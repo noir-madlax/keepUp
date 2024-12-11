@@ -8,6 +8,7 @@ export default {
     },
     filter: {
       discover: 'Discover Articles by Tag',
+      myUpload: 'My Upload',
       all: 'All',
       channelTitle: 'Select Channels (Multiple)',
       authorTitle: 'Select Authors (Multiple)',
