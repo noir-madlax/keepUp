@@ -1,6 +1,7 @@
 from typing import Optional, Dict
 from .base import ContentFetcher, VideoInfo
 from app.models.article import ArticleCreate
+from app.config import settings
 import assemblyai as aai
 import requests
 from bs4 import BeautifulSoup
@@ -15,8 +16,7 @@ class ApplePodcastFetcher(ContentFetcher):
     
     def __init__(self):
         """初始化 AssemblyAI API"""
-        self.aai_api_key = "54c1264aa9934e10920d9fb7fa0fdc64"  # 建议从配置文件读取
-        aai.settings.api_key = self.aai_api_key
+        aai.settings.api_key = settings.ASSEMBLYAI_API_KEY
         self.transcriber = aai.Transcriber()
         
         # 中文月份映射
@@ -52,7 +52,7 @@ class ApplePodcastFetcher(ContentFetcher):
                 return None
             
             # 解析日期
-            day = int(date_str.replace('日', '').strip())
+            day = int(date_str.replace('��', '').strip())
             
             # 创建datetime对象
             return datetime(year, month, day)
@@ -239,8 +239,8 @@ class ApplePodcastFetcher(ContentFetcher):
             article = ArticleCreate(
                 title=title,
                 content=description,
-                channel="Apple",
-                original_link=url,
+                source_url=url,
+                source_type="apple_podcast",
                 publish_date=publish_date
             )
             

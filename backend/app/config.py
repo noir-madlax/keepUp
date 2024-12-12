@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     COZE_DETAILED_WORKFLOW_ID_EN: str  # 英文分段详述工作流
     USE_MOCK_COZE: bool = False
     
+    # AssemblyAI 配置
+    ASSEMBLYAI_API_KEY: str
+    
     # 代理配置
     USE_PROXY: bool = False
     PROXY_URL: Optional[str] = None
