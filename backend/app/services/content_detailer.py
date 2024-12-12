@@ -36,17 +36,22 @@ class ContentDetailerService:
             article_request = await SupabaseService.get_article_request(request_id)
             
             # 3. 按章节拆分内容
-            batches = cls.split_captions_to_batches(article_request.get("content"), chapters)
+            batches = await cls.split_captions_to_batches(
+                content=article_request.get("content"),
+                chapters=chapters,
+                article_id=article_id,
+                language=language
+            )
             logger.info(f"内容已拆分为 {len(batches)} 个批次")
             
-            # 4. 调用 Coze 接口一次性处理所有批次
+            # 4. 调用 Coze 接口处理所有批次
             coze_result = await cls.process_content(
                 batches,
                 language,
                 workflow_id
             )
             
-            # 5. 保存 Coze 返回结果到请求表
+            # 6. 保存 Coze 返回结果到请求表
             await SupabaseService.update_detailed_content(
                 request_id=request_id,
                 detailed_content=coze_result,
@@ -54,12 +59,12 @@ class ContentDetailerService:
             )
             logger.info(f"已保存分段详述结果到请求表: request_id={request_id}")
             
-            # 6. 解析处理后的内容
+            # 7. 解析处理后的内容
             detailed_content = await cls.parse_detailed_content(
                 coze_result
             )
             
-            # 7. 保存处理后的内容到小节
+            # 8. 保存处理后的内容到小节
             await cls.save_detailed_content(
                 article_id,
                 detailed_content,
@@ -209,7 +214,7 @@ class ContentDetailerService:
                 language=language
             )
             
-            # 创建新的小节
+            # 创建新的节
             await SupabaseService.create_article_sections(article_id, [section_data])
             
             logger.info(f"分段详述内容保存完成: article_id={article_id}, language={language}")
@@ -281,27 +286,66 @@ class ContentDetailerService:
             raise
     
     @staticmethod
-    def split_captions_to_batches(content: str, chapters: str) -> List[str]:
+    async def split_captions_to_batches(
+        content: str,
+        chapters: str,
+        article_id: int,
+        language: str
+    ) -> List[str]:
         """将字幕内容按章节信息分段
         
         Args:
             content: 原始字幕内容
             chapters: 章节信息
+            article_id: 文章ID
+            language: 语言类型
             
         Returns:
             List[str]: 按段落分割的内容数组
         """
         try:
-            # 1. 提取段落信息
+            # 1. 如果chapters为空，从数据库获取分段提纲
+            if not chapters:
+                logger.info(f"chapters为空，尝试从数据库获取分段提纲: article_id={article_id}")
+                outline_section = await SupabaseService.get_article_section_by_type(
+                    article_id=article_id,
+                    section_type="分段提纲"
+                )
+                
+                if outline_section and len(outline_section) > 0:
+                    # 优先使用对应语言的提纲
+                    chapter_content = None
+                    for section in outline_section:
+                        if section.get("language") == language:
+                            chapter_content = section.get("content")
+                            break
+                    
+                    # 如果没有找到对应语言的提纲，使用第一个
+                    if not chapter_content:
+                        chapter_content = outline_section[0].get("content")
+                    
+                    if chapter_content:
+                        chapters = chapter_content
+                        logger.info(f"成功从数据库获取分段提纲")
+                    else:
+                        logger.warning(f"数据库中的分段提纲内容为空")
+                else:
+                    logger.warning(f"未找到分段提纲内容")
+            
+            # 如果仍然没有chapters，抛出异常
+            if not chapters:
+                raise ValueError("无法获取章节信息：chapters为空且数据库中没有分段提纲")
+
+            # 2. 提取段落信息
             segments = ContentDetailerService.extract_timestamps_and_titles(chapters)
             logger.info(f"提取到 {len(segments)} 个段落")
             
-            # 2. 使用正则表达式匹配对话内容
+            # 3. 使用正则表达式匹配对话内容
             content_pattern = r'\[(\d{1,2}:\d{2}:\d{2})\] (.*?)(?=\[\d{1,2}:\d{2}:\d{2}\]|$)'
             dialogues = re.findall(content_pattern, content, re.DOTALL)
             logger.info(f"提取到 {len(dialogues)} 条对话")
             
-            # 3. 为每个段落收集内容
+            # 4. 为每个段落收集内容
             segment_contents = []
             for segment in segments:
                 start_time = segment['start_time']
@@ -314,7 +358,7 @@ class ContentDetailerService:
                 segment_content.append("")  # 空行
                 
                 for time_stamp, content_text in dialogues:
-                    # 将时间戳转换为秒数进行比较
+                    # 将时间转换为秒数进行比较
                     dialogue_seconds = ContentDetailerService.parse_timestamp(time_stamp)
                     start_seconds = ContentDetailerService.parse_timestamp(start_time)
                     end_seconds = ContentDetailerService.parse_timestamp(end_time)

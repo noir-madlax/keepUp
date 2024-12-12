@@ -27,7 +27,7 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
         languages: 需要处理的语言列表
         
     Returns:
-        list[str]: 处���结果信息列表
+        list[str]: 处理结果信息列表
     """
     results = []
     logger.info(f"开始总结内容处理 - 请求ID: {request_id}, 语言列表: {languages}")
@@ -143,7 +143,7 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
         list[str]: 处理结果信息列表
     """
     results = []
-    logger.info(f"开始分段详述处理 - 请求ID: {request_id}, 语言列表: {languages}")
+    logger.info(f"开始分段详述���理 - 请求ID: {request_id}, 语言列表: {languages}")
     
     for lang in languages:
         
@@ -178,7 +178,7 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
 # 将原来的处理逻辑封装成一个独立的后台任务函数
 async def process_article_task(request: FetchRequest):
     try:
-        logger.info(f"开始后台处理: ID={request.id}, URL={request.url},"
+        logger.info(f"开始后���处理: ID={request.id}, URL={request.url},"
                     f"Languages={request.summary_languages},"
                     f"Subtitle={request.subtitle_languages},"
                     f"Detailed={request.detailed_languages}"
@@ -247,6 +247,10 @@ async def process_article_task(request: FetchRequest):
             )
         )
         
+        # 等待summary_task完成
+        summary_result = await summary_task
+        
+        # 创建并执行detailed_task
         detailed_task = asyncio.create_task(
             process_detailed_content(
                 request.id,
@@ -258,15 +262,15 @@ async def process_article_task(request: FetchRequest):
             )
         )
         
-        # 等待所有任务完成
-        results = await asyncio.gather(
-            summary_task,
+        # 等待其余任务完成
+        subtitle_result, detailed_result = await asyncio.gather(
             subtitle_task,
             detailed_task,
             return_exceptions=True
         )
         
         # 检查任务执行结果
+        results = [summary_result, subtitle_result, detailed_result]
         for result in results:
             if isinstance(result, Exception):
                 logger.error(f"任务执行出错: {str(result)}")
@@ -340,7 +344,7 @@ async def process_workflow(request: FetchRequest):
         # 6. 使用解析后的URL更新请求对象
         request.url = parsed_url
         
-        # 7. 异步启动处理任务，但不等待其完成
+        # 7. 异步启动处理任���，但不等待其完成
         asyncio.create_task(process_article_task(request))
         
         return {
