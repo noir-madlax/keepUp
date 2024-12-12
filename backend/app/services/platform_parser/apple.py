@@ -16,6 +16,8 @@ class ApplePodcastParser(PlatformParser):
         """
         if not self.can_handle(url):
             return None
+        
+        # return "apple", url, url
             
         logger.info(f"解析Apple Podcast URL: {url}")
         
@@ -28,7 +30,7 @@ class ApplePodcastParser(PlatformParser):
                 return "apple", youtube_url, url
             else:
                 logger.warning(f"未找到对应的YouTube URL: {url}")
-                return None
+                return "apple", url, url
                 
         except Exception as e:
             logger.error(f"解析Apple Podcast URL失败: {str(e)}")

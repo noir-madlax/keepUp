@@ -2,6 +2,7 @@ from typing import Optional, List
 from .youtube import YouTubeFetcher
 from .xiaoyuzhou import XiaoYuZhouFetcher
 from .base import VideoInfo
+from .apple import ApplePodcastFetcher
 from app.utils.logger import logger
 
 class ContentFetcherService:
@@ -9,7 +10,8 @@ class ContentFetcherService:
     def __init__(self):
         self.fetchers = [
             YouTubeFetcher(),
-            XiaoYuZhouFetcher()
+            XiaoYuZhouFetcher(),
+            ApplePodcastFetcher()
         ]
     
     async def fetch_content(self, url: str) -> Optional[str]:
