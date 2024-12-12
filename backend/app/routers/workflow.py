@@ -247,6 +247,9 @@ async def process_article_task(request: FetchRequest):
             )
         )
 
+        # 等待summary_task完成
+        summary_result = await summary_task
+
         detailed_task = asyncio.create_task(
             process_detailed_content(
                 request.id,
