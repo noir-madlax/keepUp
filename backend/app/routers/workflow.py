@@ -223,7 +223,7 @@ async def process_article_task(request: FetchRequest):
         
         # 等待确保数据已保存
         await asyncio.sleep(1)
-        
+
         # 创建异步任务
         summary_task = asyncio.create_task(
             process_summary_content(
@@ -235,7 +235,7 @@ async def process_article_task(request: FetchRequest):
                 request.summary_languages
             )
         )
-        
+
         subtitle_task = asyncio.create_task(
             process_subtitle_content(
                 request.id,
@@ -246,11 +246,7 @@ async def process_article_task(request: FetchRequest):
                 request.subtitle_languages
             )
         )
-        
-        # 等待summary_task完成
-        # summary_result = await summary_task
-        
-        # 创建并执行detailed_task
+
         detailed_task = asyncio.create_task(
             process_detailed_content(
                 request.id,
@@ -261,21 +257,14 @@ async def process_article_task(request: FetchRequest):
                 request.detailed_languages
             )
         )
-        
-        # 等待其余任务完成
-        subtitle_result, detailed_result = await asyncio.gather(
+
+        # 等待所有任务完成
+        results = await asyncio.gather(
             summary_task,
             subtitle_task,
             detailed_task,
             return_exceptions=True
         )
-        
-        # 检查任务执行结果
-        results = [summary_result, subtitle_result, detailed_result]
-        for result in results:
-            if isinstance(result, Exception):
-                logger.error(f"任务执行出错: {str(result)}")
-                raise result
         
         logger.info(f"后台处理完成: ID={request.id}")
         
