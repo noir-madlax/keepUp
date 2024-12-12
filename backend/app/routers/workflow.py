@@ -277,7 +277,7 @@ async def process_article_task(request: FetchRequest):
         )
 
 @router.post("/workflow/process")
-async def process_workflow(request: FetchRequest):
+async def process_workflow(request: FetchRequest,background_tasks: BackgroundTasks):
     """接收请求并立即返回"""
     try:
         logger.info(f"收到处理请求: URL={request.url}")
@@ -335,7 +335,8 @@ async def process_workflow(request: FetchRequest):
         request.url = parsed_url
         
         # 7. 异步启动处理任���，但不等待其完成
-        asyncio.create_task(process_article_task(request))
+        # 将任务添加到后台处理队列
+        background_tasks.add_task(process_article_task, request)
         
         return {
             "success": True,
