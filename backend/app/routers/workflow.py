@@ -248,7 +248,7 @@ async def process_article_task(request: FetchRequest):
         )
         
         # 等待summary_task完成
-        summary_result = await summary_task
+        # summary_result = await summary_task
         
         # 创建并执行detailed_task
         detailed_task = asyncio.create_task(
@@ -264,6 +264,7 @@ async def process_article_task(request: FetchRequest):
         
         # 等待其余任务完成
         subtitle_result, detailed_result = await asyncio.gather(
+            summary_task,
             subtitle_task,
             detailed_task,
             return_exceptions=True
