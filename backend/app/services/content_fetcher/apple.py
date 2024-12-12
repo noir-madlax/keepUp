@@ -260,7 +260,7 @@ class ApplePodcastFetcher(ContentFetcher):
             article = ArticleCreate(
                 title=title,
                 content=description,
-                channel="Apple",
+                channel="Apple Podcast",
                 tags=["播客"],
                 original_link=url,
                 publish_date=publish_date
