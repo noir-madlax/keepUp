@@ -194,23 +194,33 @@ class ApplePodcastFetcher(ContentFetcher):
             Optional[VideoInfo]: 播客信息
         """
         try:
+            logger.info(f"开始获取 Apple Podcast 信息: {url}")
+            
             session = requests.Session()
             response = session.get(url, verify=False, timeout=30)
             response.encoding = 'utf-8'
             
             soup = BeautifulSoup(response.text, 'html.parser')
+
+            logger.info(f"获取到页面内容: {soup}")
             
             # 获取标题
             title = ""
             title_element = soup.find('h1', {'class': 'headings__title', 'data-testid': 'non-editable-product-title'})
             if title_element and title_element.find('span', dir='auto'):
                 title = title_element.find('span', dir='auto').text.strip()
+                logger.info(f"获取到标题: {title}")
+            else:
+                logger.warning("未找到标题元素")
             
             # 获取播客节目名称（作者）
             author_name = ""
             podcast_link = soup.find('a', {'class': 'link-action', 'data-testid': 'click-action'})
             if podcast_link:
                 author_name = podcast_link.text.strip()
+                logger.info(f"获取到作者: {author_name}")
+            else:
+                logger.warning("未找到作者信息")
             
             # 获取发布日期并转换格式
             publish_date = None
@@ -222,27 +232,40 @@ class ApplePodcastFetcher(ContentFetcher):
                 date_str = f"{date_str} {current_year}"
                 # 转换为datetime对象
                 publish_date = self._parse_chinese_date(date_str)
+                if publish_date:
+                    logger.info(f"获取到发布日期: {publish_date}")
+                else:
+                    logger.warning(f"日期解析失败: {date_str}")
+            else:
+                logger.warning("未找到发布日期元素")
             
             # 获取描述内容
             description = ""
             paragraphs_div = soup.find('div', {'data-testid': 'paragraphs'})
             if paragraphs_div:
                 description = ' '.join(list(paragraphs_div.stripped_strings))
+                logger.info(f"从主要元素获取到描述，长度: {len(description)}")
             
             # 如果没找到描述，尝试其他选择器
             if not description:
+                logger.info("尝试使用备选方法获取描述")
                 paragraphs = soup.find_all('p')
                 if paragraphs:
                     description = ' '.join([p.get_text().strip() for p in paragraphs if p.get_text().strip()])
+                    logger.info(f"从备选元素获取到描述，长度: {len(description)}")
+                else:
+                    logger.warning("未找到任何描述内容")
             
             # 创建 ArticleCreate 对象
             article = ArticleCreate(
                 title=title,
                 content=description,
-                source_url=url,
-                source_type="apple_podcast",
+                channel="Apple",
+                tags=["播客"],
+                original_link=url,
                 publish_date=publish_date
             )
+            logger.info("成功创建 ArticleCreate 对象")
             
             # 创建作者信息
             author = {
