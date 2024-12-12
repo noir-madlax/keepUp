@@ -122,6 +122,11 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
                 "section_type": "彩蛋",
                 "content": article_content.key18_EasterEgg,
                 "language": language
+            },
+            {
+                "section_type": "典型案例",
+                "content": article_content.key20_case,
+                "language": language
             }
         ]
         

@@ -17,6 +17,7 @@ class CozeArticleContent(BaseModel):
     key19_Takeaways: str = Field(..., description="要点总结")
     key17_xmind: str = Field(..., description="思维导图")
     key18_EasterEgg: str = Field(..., description="彩蛋")
+    key20_case: str = Field(..., description="典型案例")
     video_author_name: Optional[str] = None
     video_date: Optional[str] = None
     video_link: Optional[str] = None

@@ -15,7 +15,8 @@ export type SectionType =
   | '翻译字幕（测试）'
   | '彩蛋（测试）'
   | '思维导图'
-  | '要点总结';
+  | '要点总结'
+  | '典型案例';
 
 export type Language = 'zh' | 'en';
 
@@ -46,14 +47,16 @@ export const ALL_SECTION_TYPES: SectionType[] = [
   '翻译字幕（测试）',
   '彩蛋（测试）',
   '思维导图',
-  '要点总结'
+  '要点总结',
+  '典型案例'
 ];
 
 // 默认选中的小节（确保总结在最前面）
 export const DEFAULT_SELECTED_SECTIONS: SectionType[] = [
   '思维导图',
   '结构图',
-  '要点总结'
+  '要点总结',
+  '典型案例'
 ];
 
 // 视角预设配置
