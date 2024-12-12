@@ -19,40 +19,38 @@
     <!-- 顶部导航栏 -->
     <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
       <!-- 导航栏内容容器 -->
-      <div class="px-4 sm:px-8 py-4 flex justify-between items-center">
+      <div class="flex justify-between items-center px-4 h-[80px] min-w-[378px] max-w-[1440px] mx-auto">
         <!-- 左侧Logo和标题容器 -->
         <div class="flex items-center gap-2">
           <!-- 网站Logo图片 -->
-          <img src="/images/icons/logo.svg" alt="Keep Up Logo" class="h-14 w-14 sm:h-14 sm:w-14" />
+          <img 
+            src="/images/icons/logo.svg" 
+            alt="Keep Up Logo" 
+            class="w-[48px] h-[48px] flex-shrink-0" 
+          />
           <!-- 网站标题文本 -->
-          <h1 class="text-[24px] sm:text-[24px] text-[#333333] font-[350] leading-6 font-['PingFang_SC'] whitespace-nowrap">
+          <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC']">
             {{ t('home.title') }}
           </h1>
         </div>
 
         <!-- 右侧导航元素容器 -->
-        <div class="flex items-center gap-2 sm:gap-4 mr-0">
+        <div class="flex items-center gap-2">
           <!-- 语言切换组件 -->
-          <language-switch />
+          <language-switch/>
       
           <!-- 已登录用户信息区域 -->
           <template v-if="authStore.isAuthenticated">
-            <!-- 用户信息容器 -->
-            <div class="flex items-center gap-2">
-              <!-- 用户头像图片 -->
-              <img 
-                :src="authStore.user?.user_metadata?.avatar_url" 
-                alt="User Avatar" 
-                class="w-8 h-8 rounded-full"
-              />
-              <!-- 用户名称不显示了 -->
-             
-            </div>
+            <!-- 用户头像 -->
+            <img 
+              :src="authStore.user?.user_metadata?.avatar_url" 
+              alt="User Avatar" 
+              class="w-[32px] h-[32px] rounded-full"
+            />
             <!-- 登出按钮 -->
             <button 
               @click="handleLogout" 
-              class="text-gray-600 hover:text-gray-800 text-sm px-0 mr-0"
-              style="width: 30px; word-break: break-all;"
+              class="text-gray-600 hover:text-gray-800 w-[32px] h-[32px]"
             >
               {{ t('home.nav.logout') }}
             </button>
@@ -60,22 +58,21 @@
 
           <!-- 未登录状态显示 -->
           <template v-else>
-            <!-- 登录按钮 -->
             <button 
               @click="showLoginModal = true"
-              class="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-800"
+              class="w-[32px] h-[32px] flex items-center justify-center"
             >
               <img 
                 src="/images/icons/login.svg" 
                 alt="Login"
-                class="w-8 h-8 rounded-full"
+                class="w-[32px] h-[32px]"
               />
             </button>
           </template>
         </div>
       </div>
       
-      <!-- 添加导航条分割线 -->
+      <!-- 分割线 -->
       <div class="h-[1px] bg-[#E5E5E5] w-full"></div>
     </header>
 
@@ -86,7 +83,7 @@
     />
 
     <!-- 主要内容区域 -->
-    <pull-to-refresh class="pt-[72px]" :onRefresh="handleRefresh">
+    <pull-to-refresh class="pt-[81px]" :onRefresh="handleRefresh">
       <div class="px-8 py-6">
         <!-- 内容最大宽度限制容 -->
         <div class="max-w-screen-2xl mx-auto">
@@ -128,13 +125,18 @@
                   type="text"
                   v-model="requestUrl"
                   :placeholder="t('summarize.urlPlaceholder')"
-                  class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                  @click="handlePaste"
                   @keyup.enter="submitRequest"
                 />
                 
                 <!-- 上传按钮固定宽度 -->
                 <div class="w-[60px]">
-                  <article-request-form @refresh="fetchArticles" />
+                  <article-request-form 
+                    ref="articleRequestFormRef"
+                    @refresh="fetchArticles"
+                    @click="submitRequest"
+                  />
                 </div>
               </div>
             </div>
@@ -144,12 +146,27 @@
 
           <!-- 我的上传 标题 -->
           <h2 class="text-xl mb-4">{{ t('home.filter.myUpload') }}</h2>
-          <!--upload-card 新增-->
-          <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <UploadCard
-              v-if="filteredArticles.length > 0"
-              :article="filteredArticles[0]"
-            />
+          <!-- 横向滚动容器 -->
+          <div class="relative">
+            <!-- 左侧渐变遮罩 -->
+            <div class="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10"
+                 v-show="canScrollLeft"></div>
+            
+            <!-- 右侧渐变遮罩 -->
+            <div class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10"
+                 v-show="canScrollRight"></div>
+            
+            <!-- 滚动容器 -->
+            <div class="overflow-x-auto scrollbar-hide flex gap-2 pb-4 mb-6" 
+                 ref="scrollContainer"
+                 @scroll="handleUploadCardsScroll">
+              <UploadCard
+                v-for="article in filteredArticles"
+                :key="article.id"
+                :article="article"
+                class="flex-shrink-0 w-[200px]"
+              />
+            </div>
           </div>
           <!-- 发现区域 -->
           <div class="mb-8">
@@ -261,44 +278,6 @@
         </div>
     </pull-to-refresh>
 
-    <!-- 上传弹框 -->
-    <div 
-      v-if="showUploadModal" 
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      @click="showUploadModal = false"
-    >
-      <div 
-        class="bg-white p-6 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto"
-        @click.stop
-      >
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold">上传文章</h2>
-          <button @click="showUploadModal = false" class="text-gray-500">
-            <i class="el-icon-close"></i>
-          </button>
-        </div>
-
-        <article-form 
-          v-model="articleForm" 
-          ref="formRef"
-        />
-
-        <div class="mt-6 flex justify-end space-x-3">
-          <button 
-            @click="showUploadModal = false" 
-            class="px-4 py-2 border rounded-md hover:bg-gray-50"
-          >
-            取消
-          </button>
-          <button 
-            @click="submitArticle" 
-            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            提交
-          </button>
-        </div>
-      </div>
-    </div>
 
     <!-- 网络状态提示 -->
     <div 
@@ -332,6 +311,15 @@
         </div>
       </div>
     </div>
+
+    <!-- 将 modal 移到 pull-to-refresh 外部 -->
+    <Teleport to="body">
+      <article-request-form-modal 
+        v-if="showUploadModal"
+        @close="showUploadModal = false"
+        @refresh="fetchArticles"
+      />
+    </Teleport>
   </div>
 </template>
 
@@ -430,7 +418,7 @@ const fetchArticles = async (isRefresh = false) => {
     // 更新文章列表
     articles.value = isRefresh || hasFilters.value ? data : [...articles.value, ...data]
     
-    // 更新是否还有更多数���
+    // 更新是否还有更多数据
     // 如果有筛选条件，就不显示加载更多
     hasMore.value = hasFilters.value ? false : (count ? from + data.length < count : false)
 
@@ -481,7 +469,7 @@ const isLoadingAuthors = ref(true)
 // 修改作者获取函数
 const fetchAuthors = async () => {
   try {
-    // 1. 先从 IndexedDB 获取缓存数据
+    // 1. 先从 IndexedDB 获取存数据
     const cachedAuthors = await localforage.getItem('authors-cache')
     if (cachedAuthors) {
       authors.value = cachedAuthors as Author[]
@@ -515,7 +503,7 @@ const fetchAuthors = async () => {
 
 // 修改 onMounted
 onMounted(async () => {
-  isLoadingAuthors.value = true // 初始化时设置loading
+  isLoadingAuthors.value = true // 始化时设置loading
 
   // 先恢复缓存的状态
   const [savedSelectedAuthors, savedExpanded] = await Promise.all([
@@ -530,7 +518,7 @@ onMounted(async () => {
     isExpanded.value = savedExpanded as boolean
   }
 
-  // 并��获取据
+  // 并获取据
   await Promise.all([
     fetchArticles(),
     fetchAuthors(),
@@ -587,7 +575,7 @@ const handleLogout = async () => {
     ElMessage.success('已退出登录')
   } catch (error) {
     console.error('Logout error:', error)
-    ElMessage.error('退���失败，请重试')
+    ElMessage.error('退出失败，请重试')
   }
 }
 
@@ -700,7 +688,7 @@ const toggleAuthor = async (author: Author) => {
   }
   // 保存选择状态
   await localforage.setItem('selected-authors', selectedAuthors.value)
-  resetPageState() // 重置并重新获取��据
+  resetPageState() // 重置并重新获取数据
 }
 
 const { t } = useI18n()
@@ -742,7 +730,7 @@ const toggleExpand = async () => {
 // 监听窗口大小变化
 onMounted(() => {
   const handleResize = () => {
-    // 如果当前显示的作者数量大于新的默认显示数量，则收起列表
+    // 果当前显示的作者数量大于新的默认显示数量，则收起列表
     if (!isExpanded.value && displayedAuthors.value.length > defaultDisplayCount.value) {
       isExpanded.value = false
     }
@@ -785,7 +773,7 @@ onMounted(() => {
 // 网络状态检测
 const isOnline = ref(navigator.onLine)
 
-// 检查网络连接
+// 查网络连接
 const checkConnection = async () => {
   try {
     await fetch('/api/health-check')
@@ -850,7 +838,7 @@ const getChannelIcon = (channel: string): string => {
 
 // 添加滚动加载处理函数
 const handleScroll = () => {
-  // 获取滚容器
+  // 获取滚容
   const container = document.documentElement
   
   // 计算距离底部的距离
@@ -867,6 +855,46 @@ const handleScroll = () => {
 const handleRefresh = async () => {
   await fetchArticles(true) // 传入 true 表示刷新
 }
+
+const requestUrl = ref('')
+const articleRequestFormRef = ref<InstanceType<typeof ArticleRequestForm> | null>(null)
+
+// 添加剪贴板处理函数
+const handlePaste = async () => {
+  try {
+    const text = await navigator.clipboard.readText()
+    requestUrl.value = text
+  } catch (err) {
+    console.error('Failed to read clipboard:', err)
+  }
+}
+
+// 添加提交处理函数
+const submitRequest = () => {
+  if (articleRequestFormRef.value) {
+    articleRequestFormRef.value.openModalWithUrl(requestUrl.value)
+  }
+}
+
+const scrollContainer = ref<HTMLElement | null>(null)
+const canScrollLeft = ref(false)
+const canScrollRight = ref(true)
+
+// 处理上传卡片横向滚动
+const handleUploadCardsScroll = () => {
+  if (!scrollContainer.value) return
+  
+  const { scrollLeft, scrollWidth, clientWidth } = scrollContainer.value
+  
+  // 更新左右渐变遮罩的显示状态
+  canScrollLeft.value = scrollLeft > 0
+  canScrollRight.value = scrollLeft < scrollWidth - clientWidth
+}
+
+// 在组件挂载时初始化横向滚动状态
+onMounted(() => {
+  handleUploadCardsScroll()
+})
 </script>
 
 <style scoped>
@@ -887,5 +915,21 @@ const handleRefresh = async () => {
 .overflow-y-auto::-webkit-scrollbar-thumb {
   background-color: #CBD5E0;
   border-radius: 4px;
+}
+
+/* 隐藏滚动条但保持可以滚动 */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* 添加平滑滚动效果 */
+.overflow-x-auto {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; /* 支持iOS惯性滚动 */
 }
 </style>

@@ -64,53 +64,57 @@
       How to use AI in Product Design? f...
     </div>
     
-    <!-- Author Info -->
-    <div class="author-container">
-      <img class="author-avatar" src="/images/covers/article-1.png" alt="Author">
-      <span class="author-name">Cutting Edge Sch...</span>
-    </div>
-    
-    <!-- Channel and Date -->
-    <div class="meta-container">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M8.456 12.7496V7.25046L13.1695 10.0095L8.456 12.7496ZM19.2657 6.20327C19.2657 6.20327 19.0811 4.89526 18.5163 4.31864C17.799 3.56211 16.9954 3.55897 16.6269 3.51498C13.9889 3.32251 10.0311 3.32251 10.0311 3.32251H10.0233C10.0233 3.32251 6.06545 3.32251 3.42744 3.51498C3.05821 3.55897 2.25534 3.56211 1.53731 4.31864C0.972467 4.89526 0.788639 6.20405 0.788639 6.20405C0.788639 6.20405 0.600098 7.7391 0.600098 9.27493V10.7165C0.600098 12.2531 0.788639 13.7897 0.788639 13.7897C0.788639 13.7897 0.972467 15.0977 1.53731 15.6743C2.25534 16.4309 3.19726 16.4065 3.61676 16.4859C5.1251 16.6328 10.0272 16.6775 10.0272 16.6775C10.0272 16.6775 13.9889 16.6713 16.6269 16.4796C16.9962 16.4348 17.799 16.4317 18.5163 15.6751C19.0819 15.0985 19.2657 13.7897 19.2657 13.7897C19.2657 13.7897 19.4543 12.2539 19.4543 10.7173V9.2765C19.4543 7.73988 19.2657 6.20327 19.2657 6.20327Z" fill="#FF0000"/>
-      </svg>
-      <span class="date-text">2024-1-08</span>
-    </div>
-  </div>
-
-  <div class="upload">
-    <!-- Image Placeholder -->
-    <div class="image-placeholder">
-      <svg xmlns="http://www.w3.org/2000/svg" width="176" height="98" viewBox="0 0 176 98" fill="none">
-        <g opacity="0.4">
-          <rect width="176" height="98" rx="8" fill="#D9D9D9"/>
-          <path d="M106.823 24.4775C111.723 24.4775 115.47 28.2029 115.47 33.0746V64.5969C115.47 69.4686 111.723 73.194 106.823 73.194H66.4748C61.5753 73.194 57.8286 69.4686 57.8286 64.5969V33.0746C57.8286 28.2029 61.5753 24.4775 66.4748 24.4775H106.823ZM106.823 28.776H66.4748C64.1691 28.776 62.4399 30.4954 62.1517 32.788V64.5969C62.1517 66.8895 63.8809 68.6089 66.1865 68.8955H106.823C109.129 68.8955 110.858 67.176 111.146 64.8835V33.0746C111.146 30.782 109.417 29.0626 107.112 28.776H106.823Z" fill="#595959"/>
-          <path d="M99.6184 33.0742C103.653 33.0742 106.823 36.2265 106.823 40.2384C106.823 44.2503 103.653 47.4026 99.6184 47.4026C95.5835 47.4026 92.4133 44.2503 92.4133 40.2384C92.4133 36.2265 95.5835 33.0742 99.6184 33.0742ZM99.6184 37.3727C97.8892 37.3727 96.7363 38.519 96.7363 40.2384C96.7363 41.9578 97.8892 43.1041 99.6184 43.1041C101.348 43.1041 102.5 41.9578 102.5 40.2384C102.5 38.519 101.348 37.3727 99.6184 37.3727ZM76.2738 48.8354C76.8502 47.9757 78.003 47.9757 79.1558 48.5488L79.444 48.8354L86.9374 55.1399L92.7015 51.7011C93.2779 51.4145 94.4307 51.4145 95.0071 51.7011L95.2953 51.9877L105.382 60.5847C106.247 61.4444 106.535 62.5906 105.671 63.7369C104.806 64.5966 103.653 64.8832 102.5 64.0235L93.5661 56.5727L87.802 60.0115C87.2256 60.2981 86.361 60.2981 85.4963 60.0115L85.2081 59.725L78.2912 53.9936L69.6451 63.7369C69.0687 64.5966 67.6277 64.5966 66.763 64.0235L66.4748 63.4503C65.6102 62.8772 65.6102 61.4444 66.1866 60.5847V60.2981L76.2738 48.8354Z" fill="#595959"/>
-        </g>
-      </svg>
-    </div>
-
-    <!-- Processing Status -->
-    <div class="processing-status">
-      <span class="processing-text">处理中</span>
-      <div class="progress-bar">
-        <div class="progress-fill"></div>
+    <!-- Info Container -->
+    <div class="info-container">
+      <!-- Author Info -->
+      <div class="author-container">
+        <img class="author-avatar" src="/images/covers/article-1.png" alt="Author">
+        <span class="author-name">Cutting Edge Sch...</span>
+      </div>
+      
+      <!-- Channel and Date -->
+      <div class="meta-container">
+        <div class="channel-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M8.456 12.7496V7.25046L13.1695 10.0095L8.456 12.7496ZM19.2657 6.20327C19.2657 6.20327 19.0811 4.89526 18.5163 4.31864C17.799 3.56211 16.9954 3.55897 16.6269 3.51498C13.9889 3.32251 10.0311 3.32251 10.0311 3.32251H10.0233C10.0233 3.32251 6.06545 3.32251 3.42744 3.51498C3.05821 3.55897 2.25534 3.56211 1.53731 4.31864C0.972467 4.89526 0.788639 6.20405 0.788639 6.20405C0.788639 6.20405 0.600098 7.7391 0.600098 9.27493V10.7165C0.600098 12.2531 0.788639 13.7897 0.788639 13.7897C0.788639 13.7897 0.972467 15.0977 1.53731 15.6743C2.25534 16.4309 3.19726 16.4065 3.61676 16.4859C5.1251 16.6328 10.0272 16.6775 10.0272 16.6775C10.0272 16.6775 13.9889 16.6713 16.6269 16.4796C16.9962 16.4348 17.799 16.4317 18.5163 15.6751C19.0819 15.0985 19.2657 13.7897 19.2657 13.7897C19.2657 13.7897 19.4543 12.2539 19.4543 10.7173V9.2765C19.4543 7.73988 19.2657 6.20327 19.2657 6.20327Z" fill="#FF0000"/>
+          </svg>
+        </div>
+        <span class="date-text">2024-1-08</span>
       </div>
     </div>
-
-    <!-- URL -->
-    <div class="url-text">
-      http://www.youtube.com/@anyscale
-    </div>
-
-    <!-- Channel Icon -->
-    <div class="channel-icon">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M8.45588 12.7496V7.25046L13.1694 10.0095L8.45588 12.7496ZM19.2656 6.20327C19.2656 6.20327 19.081 4.89526 18.5161 4.31864C17.7989 3.56211 16.9952 3.55897 16.6268 3.51498C13.9888 3.32251 10.031 3.32251 10.031 3.32251H10.0231C10.0231 3.32251 6.06533 3.32251 3.42731 3.51498C3.05809 3.55897 2.25521 3.56211 1.53718 4.31864C0.972345 4.89526 0.788517 6.20405 0.788517 6.20405C0.788517 6.20405 0.599976 7.7391 0.599976 9.27493V10.7165C0.599976 12.2531 0.788517 13.7897 0.788517 13.7897C0.788517 13.7897 0.972345 15.0977 1.53718 15.6743C2.25521 16.4309 3.19714 16.4065 3.61664 16.4859C5.12498 16.6328 10.0271 16.6775 10.0271 16.6775C10.0271 16.6775 13.9888 16.6713 16.6268 16.4796C16.996 16.4348 17.7989 16.4317 18.5161 15.6751C19.0818 15.0985 19.2656 13.7897 19.2656 13.7897C19.2656 13.7897 19.4541 12.2539 19.4541 10.7173V9.2765C19.4541 7.73988 19.2656 6.20327 19.2656 6.20327Z" fill="#FF0000"/>
-      </svg>
-    </div>
   </div>
+
+  <!-- 处理中卡片 -->
+  <div class="upload">
+      <!-- Image Placeholder -->
+      <div class="image-placeholder">
+        <svg xmlns="http://www.w3.org/2000/svg" width="176" height="98" viewBox="0 0 176 98" fill="none">
+          <g opacity="0.4">
+            <rect width="176" height="98" rx="8" fill="#D9D9D9"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Processing Status -->
+      <div class="processing-status">
+        <span class="processing-text">处理中</span>
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- URL -->
+      <div class="url-text">
+        http://www.youtube.com/@anyscale
+      </div>
+
+      <!-- Channel Icon -->
+      <div class="channel-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M8.45588 12.7496V7.25046L13.1694 10.0095L8.45588 12.7496ZM19.2656 6.20327C19.2656 6.20327 19.081 4.89526 18.5161 4.31864C17.7989 3.56211 16.9952 3.55897 16.6268 3.51498C13.9888 3.32251 10.031 3.32251 10.031 3.32251H10.0231C10.0231 3.32251 6.06533 3.32251 3.42731 3.51498C3.05809 3.55897 2.25521 3.56211 1.53718 4.31864C0.972345 4.89526 0.788517 6.20405 0.788517 6.20405C0.788517 6.20405 0.599976 7.7391 0.599976 9.27493V10.7165C0.599976 12.2531 0.788517 13.7897 0.788517 13.7897C0.788517 13.7897 0.972345 15.0977 1.53718 15.6743C2.25521 16.4309 3.19714 16.4065 3.61664 16.4859C5.12498 16.6328 10.0271 16.6775 10.0271 16.6775C10.0271 16.6775 13.9888 16.6713 16.6268 16.4796C16.996 16.4348 17.7989 16.4317 18.5161 15.6751C19.0818 15.0985 19.2656 13.7897 19.2656 13.7897C19.2656 13.7897 19.4541 12.2539 19.4541 10.7173V9.2765C19.4541 7.73988 19.2656 6.20327 19.2656 6.20327Z" fill="#FF0000"/>
+        </svg>
+      </div>
+    </div>
   
 </template>
 
@@ -157,7 +161,6 @@
   <style scoped>
 
 .upload {
-  display: flex;
   width: 200px;
   height: 238px;
   padding: 16px 12px;
@@ -220,7 +223,13 @@
   font-size: 14px;
   font-style: normal;
   font-weight: 400;
-  line-height: normal;
+  line-height: 22px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
 }
 
 .channel-icon {
@@ -234,9 +243,9 @@
 }
 
 .article-card {
-  display: flex;
   width: 200px;
   padding: 16px 12px;
+  display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
@@ -280,7 +289,7 @@
 .author-avatar {
   width: 20px;
   height: 20px;
-  border-radius: 20px;
+  border-radius: 50%;
   object-fit: cover;
 }
 
@@ -289,6 +298,10 @@
   font-family: "PingFang SC";
   font-size: 14px;
   font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
 }
 
 .meta-container {
@@ -301,7 +314,6 @@
   color: #666;
   font-family: "PingFang SC";
   font-size: 14px;
-  font-style: normal;
   font-weight: 400;
   line-height: normal;
 }
@@ -384,10 +396,10 @@
   }
 
   .upload-container {
-    display: flex;
     width: 200px;
     height: 238px;
     padding: 16px 12px;
+    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -395,6 +407,8 @@
     border-radius: 12px;
     background: #FFF;
     box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+    box-sizing: border-box;
   }
   
   .upload-icon {
@@ -466,5 +480,61 @@
   border-radius: 12px;
   background: #FFF;
   box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.15);
+}
+
+/* 修改作者和频道区域的容器样式 */
+.info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* 作者区域样式 */
+.author-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.author-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.author-name {
+  color: #333;
+  font-family: "PingFang SC";
+  font-size: 14px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+/* 频道和日期区域样式 */
+.meta-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.channel-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.date-text {
+  color: #666;
+  font-family: "PingFang SC";
+  font-size: 14px;
+  font-weight: 400;
+  line-height: normal;
 }
   </style>
