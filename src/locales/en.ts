@@ -55,7 +55,8 @@ export default {
         '翻译字幕（测试）': 'Translated Subtitles (Test)',
         '彩蛋（测试）': 'Easter Eggs (Test)',
         '思维导图': 'Mind Map',
-        '要点总结': 'Key Points'
+        '要点总结': 'Key Points',
+        '典型案例': 'Typical Cases'
       }
     },
     fallbackLanguage: {
