@@ -110,7 +110,7 @@
                   <template v-if="section.section_type === '思维导图'">
                     <mind-map :content="section.content" />
                   </template>
-                  <template v-if="section.section_type === '结构图'">
+                  <template v-else-if="section.section_type === '结构图'">
                     <mermaid :content="section.content" />
                   </template>
                   <template v-else>
