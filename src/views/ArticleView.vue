@@ -2,23 +2,101 @@
   <!-- 页面容器 -->
   <div class="min-h-screen bg-gray-50">
     <!-- 顶部导航栏 -->
-    <header class="bg-blue-50">
-      <!-- 导航栏内容 -->
-      <div class="px-8 py-4 flex justify-between items-center">
-        <!-- 网站Logo和标题 -->
-        <div class="flex items-center gap-3" @click="router.push('/')" style="cursor: pointer">
-          <img src="/images/logo.png" alt="Keep Up Logo" class="h-8 w-8" />
-          <h1 class="text-2xl font-bold text-gray-900">Keep Up</h1>
+    <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
+      <!-- 导航样式A - 默认显示，滚动时隐藏 -->
+      <div v-show="!showNavB" class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
+        <!-- 导航栏内容容器 -->
+        <div class="flex items-center gap-2">
+          <!-- 网站Logo图片 -->
+          <img 
+            src="/images/icons/logo.svg" 
+            alt="Keep Up Logo" 
+            class="w-[48px] h-[48px] flex-shrink-0" 
+          />
+          <!-- 网站标题文本 -->
+          <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC']">
+            {{ t('home.title') }}
+          </h1>
         </div>
-        <!-- 编辑按钮 -->
-        <button 
-          v-if="canEdit"
-          @click="showEditModal = true"
-          class="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          编辑文章
-        </button>
+        
+        
+        <!-- 右侧导航元素容器 - 增加右侧padding并调整gap -->
+        <div class="flex items-center gap-1 pr-2">
+          <!-- 语言切换组件 -->
+          <language-switch/>
+      
+          <!-- 已登录用户信息区域 -->
+          <template v-if="authStore.isAuthenticated">
+            <!-- 用户头像 -->
+            <img 
+              :src="authStore.user?.user_metadata?.avatar_url" 
+              alt="User Avatar" 
+              class="w-[32px] h-[32px] rounded-full"
+            />
+            <!-- 登出按钮 - 增加最小宽度确保文字完整显示 -->
+            <button 
+              class="text-gray-600 hover:text-gray-800 min-w-[64px] h-[32px] text-center"
+            >
+              {{ t('home.nav.logout') }}
+            </button>
+          </template>
+
+          <!-- 未登录状态显示 -->
+          <template v-else>
+            <button 
+              class="w-[32px] h-[32px] flex items-center justify-center"
+            >
+              <img 
+                src="/images/icons/login.svg" 
+                alt="Login"
+                class="w-[32px] h-[32px]"
+              />
+            </button>
+          </template>
+        </div>
       </div>
+      
+      <!-- 导航样式B - 滚动时显示 -->
+      <div v-show="showNavB" class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
+        <!-- 中间导航区域 - 使用与文章内容相同的最大宽度 -->
+        <div class="flex-1 max-w-4xl mx-auto px-4">
+          <div class="w-full h-[40px] flex items-center justify-between">
+            <!-- 上一节 -->
+            <div 
+              v-if="prevSection" 
+              @click="scrollToSection(prevSection.section_type)"
+              class="flex items-center cursor-pointer text-gray-500 hover:text-gray-700 transition-colors duration-200"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              <span class="text-sm">{{ getLocalizedSectionType(prevSection.section_type) }}</span>
+            </div>
+            <div v-else class="w-20"></div>
+
+            <!-- 当前section名称 - 居中显示 -->
+            <h2 class="text-base md:text-lg text-gray-900 font-medium">
+              {{ currentVisibleSection ? getLocalizedSectionType(currentVisibleSection) : '' }}
+            </h2>
+
+            <!-- 下一节 -->
+            <div 
+              v-if="nextSection" 
+              @click="scrollToSection(nextSection.section_type)"
+              class="flex items-center cursor-pointer text-gray-500 hover:text-gray-700 transition-colors duration-200"
+            >
+              <span class="text-sm">{{ getLocalizedSectionType(nextSection.section_type) }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            <div v-else class="w-20"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 分割线 -->
+      <div class="h-[1px] bg-[#E5E5E5] w-full"></div>
     </header>
 
     <template v-if="article">
@@ -104,6 +182,7 @@
                   v-for="section in displaySections" 
                   :key="section.id"
                   class="mb-8"
+                  :data-section-type="section.section_type"
                 >
                   <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
                   <!-- 根据不同的小节类型使用不同的渲染方式 -->
@@ -171,18 +250,34 @@
         </div>
       </div>
     </div>
+
+    <!-- 登录模态框 -->
+    <div 
+      v-if="showLoginModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click="showLoginModal = false"
+    >
+      <div @click.stop>
+        <login-modal 
+          v-model="showLoginModal"
+          @login-success="showLoginModal = false"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import LoginModal from '../components/LoginModal.vue'
 import { format } from 'date-fns'
 import { marked } from 'marked'
 import { supabase } from '../supabaseClient'
 import { useAuthStore } from '../stores/auth'
 import { ElMessage } from 'element-plus'
 import ArticleForm from '../components/ArticleForm.vue'
+import LanguageSwitch from '../components/LanguageSwitch.vue'
 import type { Article } from '../types/article'
 import type { ArticleSection, SectionType, ViewType } from '../types/section'
 import { ALL_SECTION_TYPES, DEFAULT_SELECTED_SECTIONS, getLocalizedSectionType } from '../types/section'
@@ -191,7 +286,7 @@ import MindMap from '../components/MindMap.vue'
 import Mermaid from '../components/Mermaid.vue'
 
 
-// 将 i18n 相关初始化移到最前面
+// 将 i18n 相关初始化移前面
 const { t, locale } = useI18n()
 
 const route = useRoute()
@@ -205,7 +300,7 @@ const editForm = ref<Partial<Article>>({})
 // 小节管理
 const selectedSections = ref<SectionType[]>(DEFAULT_SELECTED_SECTIONS)
 
-// 根据当前视角获取可用的小节类型
+// 根据当前角获取可用的小节类型
 const availableSectionTypes = computed(() => {
   // 始终返回所小节类型
   return ALL_SECTION_TYPES
@@ -237,7 +332,7 @@ const formatDate = (date: string | null) => {
   try {
     return format(new Date(date), 'yyyy-MM-dd')
   } catch (error) {
-    console.error('日期格式化错误:', error)
+    console.error('日期式化错误:', error)
     return ''
   }
 }
@@ -339,7 +434,7 @@ const submitEdit = async () => {
 
       if (deleteError) throw deleteError
 
-      // 添加新的小节
+      // 添加新的节
       const sectionsData = formRef.value.getSectionsData()
       if (sectionsData.length > 0) {
         const { error: insertError } = await supabase
@@ -370,9 +465,52 @@ watch(() => locale.value, () => {
   }
 })
 
+const showNavB = ref(false)
+
+// 添加一个变量记录上一次的滚动位置
+const lastScrollTop = ref(0)
+
+// 添加一个ref来存储当前可见的section
+const currentVisibleSection = ref<string>('')
+
+// 修改滚动监听函数
+const handleScroll = () => {
+  const currentScroll = window.scrollY
+  
+  // 判断滚动方向
+  if (currentScroll > lastScrollTop.value) {
+    // 向下滚动
+    if (currentScroll > 100) {
+      showNavB.value = true
+    }
+  } else {
+    // 向上滚动
+    showNavB.value = false
+  }
+  
+  // 更新上一次的滚动位置
+  lastScrollTop.value = currentScroll <= 0 ? 0 : currentScroll
+
+  // 测当前可见的section
+  const sectionElements = document.querySelectorAll('[data-section-type]')
+  sectionElements.forEach((element) => {
+    const rect = element.getBoundingClientRect()
+    // 当section的顶部进入视口的1/3位置时，认为是当前可见的section
+    if (rect.top <= window.innerHeight / 3 && rect.bottom >= window.innerHeight / 3) {
+      currentVisibleSection.value = element.getAttribute('data-section-type') || ''
+    }
+  })
+}
+
 onMounted(async () => {
+  window.addEventListener('scroll', handleScroll)
   await authStore.loadUser()
   await fetchArticle()
+})
+
+// 在 onUnmounted 中移除滚动监听
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 
 // 复制当前页面URL
@@ -402,6 +540,55 @@ const prefetchArticle = async (id: string) => {
     }
   } catch (error) {
     console.error('预取文章失败:', error)
+  }
+}
+
+const showLoginModal = ref(false)
+
+// 添加登出处理函数
+const handleLogout = async () => {
+  try {
+    await authStore.signOut()
+    ElMessage.success(t('auth.logoutSuccess'))
+    // 可选：后跳转到首页
+    router.push('/')
+  } catch (error) {
+    console.error('登出失败:', error)
+    ElMessage.error(t('auth.logoutError'))
+  }
+}
+
+// 添加计算属性来获取上一个和下一个section
+const prevSection = computed(() => {
+  if (!currentVisibleSection.value || !displaySections.value.length) return null
+  const currentIndex = displaySections.value.findIndex(
+    section => section.section_type === currentVisibleSection.value
+  )
+  return currentIndex > 0 ? displaySections.value[currentIndex - 1] : null
+})
+
+const nextSection = computed(() => {
+  if (!currentVisibleSection.value || !displaySections.value.length) return null
+  const currentIndex = displaySections.value.findIndex(
+    section => section.section_type === currentVisibleSection.value
+  )
+  return currentIndex < displaySections.value.length - 1 
+    ? displaySections.value[currentIndex + 1] 
+    : null
+})
+
+// 添加跳转到指定section的函数
+const scrollToSection = (sectionType: string) => {
+  const element = document.querySelector(`[data-section-type="${sectionType}"]`)
+  if (element) {
+    // 获取header的高度
+    const headerHeight = 71 // header高度70px + 1px边框
+    const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+    // 滚动到目标位置，减去header高度和一些额外空间
+    window.scrollTo({
+      top: elementPosition - headerHeight - 20,
+      behavior: 'smooth'
+    })
   }
 }
 </script>

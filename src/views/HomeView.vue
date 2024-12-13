@@ -19,7 +19,7 @@
     <!-- 顶部导航栏 -->
     <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
       <!-- 导航栏内容容器 -->
-      <div class="flex justify-between items-center px-4 h-[80px] min-w-[378px] max-w-[1440px] mx-auto">
+      <div class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
         <!-- 左侧Logo和标题容器 -->
         <div class="flex items-center gap-2">
           <!-- 网站Logo图片 -->
@@ -34,8 +34,8 @@
           </h1>
         </div>
 
-        <!-- 右侧导航元素容器 -->
-        <div class="flex items-center gap-2">
+        <!-- 右侧导航元素容器 - 增加右侧padding并调整gap -->
+        <div class="flex items-center gap-1 pr-2">
           <!-- 语言切换组件 -->
           <language-switch/>
       
@@ -47,10 +47,10 @@
               alt="User Avatar" 
               class="w-[32px] h-[32px] rounded-full"
             />
-            <!-- 登出按钮 -->
+            <!-- 登出按钮 - 增加最小宽度确保文字完整显示 -->
             <button 
               @click="handleLogout" 
-              class="text-gray-600 hover:text-gray-800 w-[32px] h-[32px]"
+              class="text-gray-600 hover:text-gray-800 min-w-[64px] h-[32px] text-center"
             >
               {{ t('home.nav.logout') }}
             </button>
@@ -87,51 +87,45 @@
       <div class="px-8 py-6">
         <!-- 内容最大宽度限制容 -->
         <div class="max-w-screen-2xl mx-auto">
-            <!-- 上传框-->
-            <!-- 标题和手工按钮的容器 -->
-            <div class="flex flex-wrap items-center gap-4 mb-2">
-              <!-- 标题和图标容器 - 设置固定宽度 -->
-              <div class="flex items-center gap-4 min-w-[160px]">
-                <!-- 标题 -->
-                <h3 class="text-lg font-medium whitespace-nowrap">{{ t('summarize.title') }}</h3>
+            <!-- 上传框 - 优化样式和响应式布局 -->
+            <div class="flex flex-wrap items-center gap-4 mb-6 p-6 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-pink-100 mx-4 sm:mx-0">
+              <!-- 标题和图标容器 -->
+              <div class="flex items-center gap-4 w-full sm:w-auto mb-2 sm:mb-0">
+                <!-- 标题 - 优化字体大小和响应式显示 -->
+                <h3 class="text-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                  </svg>
+                  {{ t('summarize.title') }}
+                </h3>
                 
-                <!-- 3个支持的渠道图标 - 调整位置和大小 -->
-                <div class="flex items-center gap-3">
+                <!-- 3个支持的渠道图标 - 优化响应式显示 -->
+                <div class="flex items-center gap-3 ml-auto sm:ml-4">
                   <img 
-                    src="/images/icons/youtube.svg" 
-                    alt="YouTube" 
-                    class="w-6 h-6 text-gray-500" 
-                    title="YouTube" 
-                  />
-                  <img 
-                    src="/images/icons/apple-podcast.svg" 
-                    alt="Apple Podcast" 
-                    class="w-6 h-6" 
-                    title="Apple Podcast" 
-                  />
-                  <img 
-                    src="/images/icons/spotify.svg" 
-                    alt="Spotify" 
-                    class="w-6 h-6" 
-                    title="Spotify" 
+                    v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify']"
+                    :key="channel"
+                    :src="`/images/icons/${channel}.svg`"
+                    :alt="channel"
+                    class="w-5 h-5 sm:w-6 sm:h-6"
+                    :title="t(`home.channels.${channel}`)"
                   />
                 </div>
               </div>
 
               <!-- URL输入框和上传按钮容器 -->
-              <div class="flex flex-1 w-full items-center gap-4 min-w-[300px]">
+              <div class="flex flex-col sm:flex-1 w-full sm:flex-row items-center gap-4">
                 <!-- 文章URL输入框 -->
                 <input
                   type="text"
                   v-model="requestUrl"
                   :placeholder="t('summarize.urlPlaceholder')"
-                  class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                  class="w-full sm:flex-grow px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent bg-white"
                   @click="handlePaste"
                   @keyup.enter="submitRequest"
                 />
                 
-                <!-- 上传按钮固定宽度 -->
-                <div class="w-[60px]">
+                <!-- 上传按钮 -->
+                <div class="w-[80px] sm:w-[100px] self-center sm:self-auto sm:flex-shrink-0 sm:mr-2 mt-2 sm:mt-0">
                   <article-request-form 
                     ref="articleRequestFormRef"
                     @refresh="fetchArticles"
@@ -157,14 +151,14 @@
                  v-show="canScrollRight"></div>
             
             <!-- 滚动容器 -->
-            <div class="overflow-x-auto scrollbar-hide flex gap-2 pb-4 mb-6" 
+            <div class="overflow-x-auto scrollbar-hide flex gap-2 pb-2 mb-4" 
                  ref="scrollContainer"
                  @scroll="handleUploadCardsScroll">
               <UploadCard
                 v-for="article in filteredArticles"
                 :key="article.id"
                 :article="article"
-                class="flex-shrink-0 w-[200px]"
+                class="flex-shrink-0 w-[200px] mb-2"
               />
             </div>
           </div>
@@ -346,7 +340,7 @@ const showLoginModal = ref(false)
 const showUploadModal = ref(false)
 
 // 预定义的签
-const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微信', '视频']
+const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微��', '视频']
 
 const articles = ref<Article[]>([])
 const selectedTag = ref('all')
@@ -373,7 +367,7 @@ onActivated(() => {
   resetPageState()
 })
 
-// 添加一个计算属性来判断是否有筛选条件
+// 添加一个属性来判断是否有筛选条件
 const hasFilters = computed(() => {
   return selectedTag.value !== 'all' || 
          selectedChannels.value.length > 0 || 
@@ -393,11 +387,11 @@ const fetchArticles = async (isRefresh = false) => {
 
     isLoading.value = true
 
-    // 如果有筛选条件，不使用分页
+    // 如果有筛选条件，不使用分��
     const from = hasFilters.value ? 0 : (currentPage.value - 1) * pageSize
     const to = hasFilters.value ? 999 : from + pageSize - 1
 
-    // 从 API 获取数据
+    // 从 API 获���数据
     const { data, error, count } = await supabase
       .from('keep_articles')
       .select(`
@@ -812,7 +806,7 @@ const clearCache = async () => {
   }
 }
 
-// 在组件卸载时清理过期缓存
+// 在组件卸载清理过期缓存
 onUnmounted(async () => {
   // 清理超过24小时的缓存
   const cacheTime = await localforage.getItem('cache-timestamp')
@@ -836,7 +830,7 @@ const getChannelIcon = (channel: string): string => {
   return iconMap[channel] || ''
 }
 
-// 添加滚动加载处理函数
+// 添加滚动加载处理函
 const handleScroll = () => {
   // 获取滚容
   const container = document.documentElement
