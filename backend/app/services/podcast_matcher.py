@@ -14,7 +14,8 @@ import socket
 from youtubesearchpython import VideosSearch
 import re
 from dateutil import parser
-from datetime import timedelta
+from datetime import timedelta, datetime
+from typing import Optional
 
 # 配置日志输出格式
 logging.basicConfig(
@@ -255,14 +256,8 @@ def search_apple_podcast(query, source_podcast_info, weights, similarity_thresho
             data = response.json()
             debug_info["process_log"].append(f"Apple Podcast API 返回 {data['resultCount']} 个结果")
             
-            output_dir = setup_output_directory()
-            
             # 保存原始搜索结果
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            raw_results_file = os.path.join(output_dir, f'apple_search_raw_results_{timestamp}.json')
-            with open(raw_results_file, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=4)
-            logging.info(f"Apple Podcast 搜索原始数据已保存到: {raw_results_file}")
             
             if data['resultCount'] > 0:
                 debug_info["process_log"].append(f"开始处理 {data['resultCount']} 个搜索结果")
@@ -342,13 +337,7 @@ def search_apple_podcast(query, source_podcast_info, weights, similarity_thresho
                 "total_results_analyzed": len(detailed_results),
                 "debug_information": debug_info  # 添加调试信息
             }
-            
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            similarity_results_file = os.path.join(output_dir, f'apple_similarity_results_{timestamp}.json')
-            
-            with open(similarity_results_file, 'w', encoding='utf-8') as f:
-                json.dump(result_data, f, ensure_ascii=False, indent=4)
-            
+
             return results
             
     except requests.exceptions.RequestException as e:
@@ -397,7 +386,7 @@ def calculate_similarity_scores(search_results, source_podcast_info, weights):
     return all_results
 
 def process_similarity_results(search_results, source_podcast_info, weights, similarity_threshold=None):
-    """处理搜索结果并计算相似度"""
+    """处理搜��结果并计算相似度"""
     if isinstance(search_results, dict):
         search_results = search_results.get('result', [])
     
@@ -462,7 +451,7 @@ def get_apple_podcast_episode(url):
     try:
         podcast_id, episode_id = extract_apple_podcast_ids(url)
         if not (podcast_id and episode_id):
-            raise ValueError("无法从 URL 中提取必要的 ID")
+            raise ValueError("���法从 URL 中提取必要的 ID")
 
         lookup_url = f"https://itunes.apple.com/lookup?id={podcast_id}&entity=podcastEpisode"
         podcast_response = requests.get(lookup_url)
@@ -509,26 +498,18 @@ class PodcastMatcher:
             'duration': 0.2
         }
 
-    def match_podcast_url(self, podcast_url: str) -> str:
-        """
-        根据输入的播客URL，返回相似度最高的YouTube URL
-        
-        Args:
-            podcast_url (str): Spotify或Apple播客的URL
-            
-        Returns:
-            str: 匹配到的YouTube URL，如果未找到匹配则返回空字符串
-        """
+    def match_podcast_url(self, spotify_url: str) -> Optional[str]:
+        """找对应的 YouTube URL"""
         try:
             source_data = None
             youtube_url = ""
 
             # 获取源平台信息
-            if 'spotify.com' in podcast_url:
-                source_data = get_spotify_episode(podcast_url)
+            if 'spotify.com' in spotify_url:
+                source_data = get_spotify_episode(spotify_url)
                 logging.info(f"获取到 Spotify 节目信息: {source_data.get('episode_title')}")
-            elif 'apple.com' in podcast_url:
-                source_data = get_apple_podcast_episode(podcast_url)
+            elif 'apple.com' in spotify_url:
+                source_data = get_apple_podcast_episode(spotify_url)
                 logging.info(f"获取到 Apple Podcast 节目信息: {source_data.get('episode_title')}")
             else:
                 logging.error("不支持的URL格式，仅支持Spotify和Apple Podcast URL")
@@ -560,10 +541,54 @@ class PodcastMatcher:
         except Exception as e:
             logging.error(f"匹配播客URL时发生错误: {str(e)}")
             return ""
+        
+    def match_apple_url(self, spotify_url: str) -> Optional[str]:
+        """查找对应的 Apple Podcast URL"""
+        try:
+            # 获取 Spotify 节目信息
+            spotify_data = get_spotify_episode(spotify_url)
+            if not spotify_data:
+                logging.error("无法获取 Spotify 节目信息")
+                return None
+            
+            logging.info(f"获取到 Spotify 节目信息: {spotify_data.get('episode_title')}")
+            
+            # 构建搜索查询
+            search_query = f"{spotify_data['episode_title']} {spotify_data['show_name']}"
+            
+            # 在 Apple Podcast 中搜索
+            apple_results = search_apple_podcast(
+                search_query,
+                spotify_data,
+                self.weights,
+                SPOTIFY_APPLE_THRESHOLD
+            )
+            
+            if apple_results:
+                # 获取相似度最高的结果
+                best_match = max(apple_results, key=lambda x: x.get('similarity', 0))
+                similarity = best_match.get('similarity', 0)
+                
+                if similarity >= SPOTIFY_APPLE_THRESHOLD:
+                    apple_url = best_match.get('url', '')
+                    logging.info(f"找到最佳匹配 Apple Podcast URL，相似度: {similarity:.4f}")
+                    logging.info(f"标题: {best_match.get('episode_title')}")
+                    logging.info(f"URL: {apple_url}")
+                    return apple_url
+                else:
+                    logging.info(f"最佳匹配相似度 {similarity:.4f} 低于阈值 {SPOTIFY_APPLE_THRESHOLD}")
+                    return None
+            
+            logging.info("未找到匹配的 Apple Podcast URL")
+            return None
+            
+        except Exception as e:
+            logging.error(f"查找 Apple URL 失败: {str(e)}")
+            return None
 
 # 使用示例：
 if __name__ == "__main__":
-    # 用于测试的示例代码
+    # 用于��试的示例代码
     matcher = PodcastMatcher()
     test_url = "https://open.spotify.com/episode/..."
     result_url = matcher.match_podcast_url(test_url)

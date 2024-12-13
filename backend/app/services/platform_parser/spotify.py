@@ -12,7 +12,7 @@ class SpotifyParser(PlatformParser):
     
     async def parse(self, url: str) -> Optional[Tuple[str, str, str]]:
         """
-        解析Spotify URL并查找对应的YouTube URL
+        解析Spotify URL并查找对应的YouTube或Apple URL
         """
         if not self.can_handle(url):
             return None
@@ -21,15 +21,22 @@ class SpotifyParser(PlatformParser):
         
         try:
             matcher = PodcastMatcher()
-            youtube_url = matcher.match_podcast_url(url)
             
+            # 首先尝试查找YouTube URL
+            youtube_url = matcher.match_podcast_url(url)
             if youtube_url:
                 logger.info(f"找到对应的YouTube URL: {youtube_url}")
                 return "spotify", youtube_url, url
-            else:
-                logger.warning(f"未找到对应的YouTube URL: {url}")
-                return None
-                
+            
+            # 如果找不到YouTube URL，尝试查找Apple URL
+            apple_url = matcher.match_apple_url(url)
+            if apple_url:
+                logger.info(f"找到对应的Apple URL: {apple_url}")
+                return "spotify", apple_url, url
+            
+            logger.warning(f"未找到对应的YouTube或Apple URL: {url}")
+            return None
+            
         except Exception as e:
             logger.error(f"解析Spotify URL失败: {str(e)}")
             return None 
