@@ -106,6 +106,11 @@ class YouTubeFetcher(ContentFetcher):
             author_name = author_meta['content'] if author_meta else "未知作者"
             logger.info(f"获取到作者: {author_name}")
 
+            # 提取缩略图
+            thumbnail_meta = soup.find('link', {'rel': 'image_src'})
+            thumbnail_url = thumbnail_meta['href'] if thumbnail_meta else "无缩略图"
+            logger.info(f"获取到缩略图: {thumbnail_url}")
+
             # 提取发布日期
             publish_date_meta = soup.find('meta', {'itemprop': 'datePublished'})
             publish_date = None
@@ -130,7 +135,8 @@ class YouTubeFetcher(ContentFetcher):
                 channel="YouTube",
                 tags=["视频"],
                 original_link=url,
-                publish_date=publish_date
+                publish_date=publish_date,
+                cover_image_url=thumbnail_url
             )
             logger.info(f"构建的文章信息: {article.dict()}")
 
