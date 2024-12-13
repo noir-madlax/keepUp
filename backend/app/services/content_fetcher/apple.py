@@ -9,7 +9,7 @@ import json
 import re
 import urllib.parse
 from app.utils.logger import logger
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class ApplePodcastFetcher(ContentFetcher):
     """Apple Podcast 内容获取器"""
@@ -28,19 +28,48 @@ class ApplePodcastFetcher(ContentFetcher):
     
     def _parse_chinese_date(self, date_str: str) -> Optional[datetime]:
         """
-        将中文日期转换为datetime对象
-        例如: "12月4日 2024" -> datetime(2024, 12, 4)
+        解析多种格式的日期字符串为datetime对象
+        支持的格式:
+        - 中文格式: "12月4日 2024"
+        - 英文相对格��: "1 DAY AGO 2024", "2 DAYS AGO 2024"
+        - 英文日期格式: "DEC 4 2024", "DECEMBER 4 2024"
         """
         try:
-            # 移除所有空格
-            date_str = date_str.strip()
+            # 移除所有多余的空格并转换为大写以统一处理
+            date_str = ' '.join(date_str.strip().split()).upper()
             
-            # 解析年份
+            # 处理相对日期格式 (例如: "1 DAY AGO 2024")
+            if "AGO" in date_str:
+                days_ago_match = re.match(r'(\d+)\s+DAY[S]?\s+AGO\s+(\d{4})', date_str)
+                if days_ago_match:
+                    days = int(days_ago_match.group(1))
+                    year = int(days_ago_match.group(2))
+                    return datetime.now().replace(year=year) - timedelta(days=days)
+            
+            # 处理英文月份格式
+            english_months = {
+                'JAN': 1, 'FEB': 2, 'MAR': 3, 'APR': 4, 'MAY': 5, 'JUN': 6,
+                'JUL': 7, 'AUG': 8, 'SEP': 9, 'OCT': 10, 'NOV': 11, 'DEC': 12,
+                'JANUARY': 1, 'FEBRUARY': 2, 'MARCH': 3, 'APRIL': 4, 'JUNE': 6,
+                'JULY': 7, 'AUGUST': 8, 'SEPTEMBER': 9, 'OCTOBER': 10,
+                'NOVEMBER': 11, 'DECEMBER': 12
+            }
+            
+            for month_name, month_num in english_months.items():
+                if month_name in date_str:
+                    # 匹配 "DEC 4 2024" 或 "DECEMBER 4 2024" 格式
+                    match = re.search(fr'{month_name}\s+(\d+)\s+(\d{{4}})', date_str)
+                    if match:
+                        day = int(match.group(1))
+                        year = int(match.group(2))
+                        return datetime(year, month_num, day)
+            
+            # 处理中文格式
             year = datetime.now().year
             if date_str.endswith(str(year)):
-                date_str = date_str[:-4].strip()  # 移除年份部分
+                date_str = date_str[:-4].strip()
             
-            # 解析月份
+            # 解析中文月份
             month = None
             for cn_month, num_month in self.month_map.items():
                 if cn_month in date_str:
@@ -48,14 +77,12 @@ class ApplePodcastFetcher(ContentFetcher):
                     date_str = date_str.replace(cn_month, '').strip()
                     break
             
-            if not month:
-                return None
+            if month:
+                # 解析日期
+                day = int(date_str.replace('日', '').strip())
+                return datetime(year, month, day)
             
-            # 解析日期
-            day = int(date_str.replace('��', '').strip())
-            
-            # 创建datetime对象
-            return datetime(year, month, day)
+            return None
             
         except (ValueError, AttributeError) as e:
             logger.error(f"日期解析失败: {str(e)}, 原始日期: {date_str}")
@@ -201,10 +228,8 @@ class ApplePodcastFetcher(ContentFetcher):
             response.encoding = 'utf-8'
             
             soup = BeautifulSoup(response.text, 'html.parser')
-
-            logger.info(f"获取到页面内容: {soup}")
             
-            # 获取标题
+            # 取标题
             title = ""
             title_element = soup.find('h1', {'class': 'headings__title', 'data-testid': 'non-editable-product-title'})
             if title_element and title_element.find('span', dir='auto'):
@@ -256,6 +281,9 @@ class ApplePodcastFetcher(ContentFetcher):
                 else:
                     logger.warning("未找到任何描述内容")
             
+            # 获取缩略图URL
+            thumbnail_url = self._get_thumbnail_url(soup)
+            
             # 创建 ArticleCreate 对象
             article = ArticleCreate(
                 title=title,
@@ -263,7 +291,8 @@ class ApplePodcastFetcher(ContentFetcher):
                 channel="Apple Podcast",
                 tags=["播客"],
                 original_link=url,
-                publish_date=publish_date
+                publish_date=publish_date,
+                cover_image_url=thumbnail_url  # 使用 cover_image_url 而不是 thumbnail
             )
             logger.info("成功创建 ArticleCreate 对象")
             
@@ -295,3 +324,42 @@ class ApplePodcastFetcher(ContentFetcher):
         """
         # TODO: 实现获取章节信息的逻辑
         pass 
+
+    def _get_thumbnail_url(self, soup: BeautifulSoup) -> Optional[str]:
+        """
+        从页面解析获取播客缩略图URL
+        Args:
+            soup: BeautifulSoup对象
+        Returns:
+            Optional[str]: 缩略图URL
+        """
+        try:
+            thumbnail_url = None
+            picture_element = soup.find('picture', {'class': 'svelte-3e3mdo'})
+            
+            if picture_element:
+                # 尝试获取最高质量的图片URL
+                source_elements = picture_element.find_all('source')
+                if source_elements:
+                    # 从srcset属性中提取最后一个URL（通常是最高质量的）
+                    for source in source_elements:
+                        srcset = source.get('srcset', '')
+                        if srcset:
+                            # 分割srcset并获取最后一个URL
+                            urls = [url.strip().split(' ')[0] for url in srcset.split(',')]
+                            if urls:
+                                thumbnail_url = urls[-1]
+                                break
+                
+                # 如果source标签中没找到，尝试从img标签获取
+                if not thumbnail_url:
+                    img_element = picture_element.find('img')
+                    if img_element:
+                        thumbnail_url = img_element.get('src')
+            
+            logger.info(f"获取到缩略图URL: {thumbnail_url}")
+            return thumbnail_url
+            
+        except Exception as e:
+            logger.error(f"获取缩略图URL失败: {str(e)}")
+            return None

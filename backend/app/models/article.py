@@ -11,6 +11,7 @@ class ArticleBase(BaseModel):
     tags: List[str] = ["视频"]  # 默认标签
     original_link: Optional[str] = None
     publish_date: Optional[datetime] = None
+    cover_image_url: Optional[str] = None  # 添加封面图片URL字段
 
     model_config = ConfigDict(
         json_encoders={
