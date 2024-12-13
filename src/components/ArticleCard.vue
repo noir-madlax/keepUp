@@ -1,28 +1,47 @@
 <template>
   <div 
-    class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+    class="card-container"
     @click="navigateToDetail(article.id)"
   >
-    <div class="p-4 flex gap-4">
-      <div class="flex-1">
-        <h3 class="text-lg font-medium text-gray-900 mb-2">{{ article.title }}</h3>
-      </div>
-      <img src="/public/images/covers/article-1.png" alt="Article cover" class="w-24 h-24 object-cover rounded" />
+    <!-- 上半部分 -->
+    <div class="card-top">
+      <!-- 左侧标题 -->
+      <h3 class="article-title">{{ article.title }}</h3>
+      
+      <!-- 右侧封面 -->
+      <img 
+        :src="getArticleImage()" 
+        :alt="article.title"
+        class="cover-image" 
+      />
     </div>
-    <div class="px-4 py-3 bg-gray-50 flex justify-between items-center text-sm text-gray-600">
-      <div class="flex items-center gap-2">
-        <img :src="`/images/icons/${getChannelIcon(article.channel)}`" :alt="article.channel" class="w-4 h-4" />
-        <span>{{ article.channel }}</span>
+
+    <!-- 分隔线 -->
+    <div class="divider"></div>
+
+    <!-- 下半部分 -->
+    <div class="card-bottom">
+      <!-- 左侧作者信息 -->
+      <div class="author-info">
+        <div class="author-icon-wrapper">
+          <img 
+            v-if="article.author?.icon" 
+            :src="article.author.icon" 
+            :alt="article.author.name" 
+            class="author-icon"
+          />
+        </div>
+        <span class="author-name">{{ article.author?.name }}</span>
       </div>
-      <div class="flex items-center gap-2">
+
+      <!-- 右侧渠道和日期 -->
+      <div class="channel-date">
         <img 
-          v-if="article.author?.icon" 
-          :src="article.author.icon" 
-          :alt="article.author.name" 
-          class="w-4 h-4 rounded-full"
+          :src="`/images/icons/${getChannelIcon(article.channel)}`" 
+          :alt="article.channel" 
+          class="channel-icon" 
         />
-        <span>{{ article.author?.name }}</span>
-        <span>{{ formatDate(article.publish_date) }}</span>
+        <span class="date">{{ formatDate(article.publish_date) }}</span>
       </div>
     </div>
   </div>
@@ -32,7 +51,6 @@
 import { format } from 'date-fns'
 import { useRouter } from 'vue-router'
 import type { Article } from '../types/article'
-import { getChannelIcon } from '../utils/channel'
 
 const router = useRouter()
 
@@ -40,7 +58,14 @@ interface Props {
   article: Article
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+const getArticleImage = () => {
+  if (props.article.cover_image) {
+    return props.article.cover_image
+  }
+  return '/images/covers/article-1.png'
+}
 
 const formatDate = (date: string | null) => {
   if (!date) return ''
@@ -55,4 +80,134 @@ const formatDate = (date: string | null) => {
 const navigateToDetail = (id: number) => {
   router.push(`/article/${id}`)
 }
+
+const getChannelIcon = (channel: string): string => {
+  const iconMap: Record<string, string> = {
+    'YouTube': 'youtube.svg',
+    'Apple Podcast': 'apple-podcast.svg',
+    'Spotify': 'spotify.svg'
+  }
+  return iconMap[channel] || ''
+}
 </script>
+
+<style scoped>
+.card-container {
+  display: flex;
+  min-width: 384px;
+  height: 198px;
+  padding: 16px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: 12px;
+  border: 1px solid #F2F2F2;
+  background: #FFF;
+  box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.10);
+  cursor: pointer;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.article-title {
+  height: 85px;
+  min-width: 218px;
+  max-width: 1200px;
+  flex: 1 0 0;
+  overflow: hidden;
+  color: #333;
+  font-family: "PingFang SC";
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  white-space: normal;
+  text-overflow: ellipsis;
+}
+
+.cover-image {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.divider {
+  width: 100%;
+  height: 0;
+  border-top: 1px solid #EEE;
+  margin: 0;
+}
+
+.card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 24px;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.author-icon-wrapper {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.author-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.author-name {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #666;
+  font-family: "PingFang SC";
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.channel-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.channel-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.date {
+  width: 83px;
+  color: #666;
+  font-family: "PingFang SC";
+  font-size: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+</style>

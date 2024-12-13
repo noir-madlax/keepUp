@@ -8,6 +8,7 @@ export default {
     },
     filter: {
       discover: 'Discover Articles by Tag',
+      myUpload: '我的上传',
       all: '全部',
       channelTitle: '频道选择（多选）',
       authorTitle: '作者选择（多选）',
