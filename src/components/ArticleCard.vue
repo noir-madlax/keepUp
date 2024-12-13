@@ -61,10 +61,10 @@ interface Props {
 const props = defineProps<Props>()
 
 const getArticleImage = () => {
-  if (props.article.cover_image) {
-    return props.article.cover_image
+  if (props.article.cover_image_url) {
+    return props.article.cover_image_url;
   }
-  return '/images/covers/article-1.png'
+  return '/images/covers/article-1.png';
 }
 
 const formatDate = (date: string | null) => {

@@ -1,7 +1,7 @@
 export interface Article {
   id: number;
   title: string;
-  content: string;
+  cover_image_url?: string;
   author_id: number;
   author?: {
     id: number;
