@@ -340,7 +340,7 @@ const showLoginModal = ref(false)
 const showUploadModal = ref(false)
 
 // 预定义的签
-const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微��', '视频']
+const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微', '视频']
 
 const articles = ref<Article[]>([])
 const selectedTag = ref('all')
@@ -387,16 +387,17 @@ const fetchArticles = async (isRefresh = false) => {
 
     isLoading.value = true
 
-    // 如果有筛选条件，不使用分��
+    // 如果有筛选条件，不使用分页
     const from = hasFilters.value ? 0 : (currentPage.value - 1) * pageSize
     const to = hasFilters.value ? 999 : from + pageSize - 1
 
-    // 从 API 获���数据
+    // 从 API 获取数据
     const { data, error, count } = await supabase
       .from('keep_articles')
       .select(`
         id,
         title,
+        cover_image_url,
         channel,
         created_at,
         tags,
@@ -880,7 +881,7 @@ const handleUploadCardsScroll = () => {
   
   const { scrollLeft, scrollWidth, clientWidth } = scrollContainer.value
   
-  // 更新左右渐变遮罩的显示状态
+  // 更新左右渐变���罩的显示状态
   canScrollLeft.value = scrollLeft > 0
   canScrollRight.value = scrollLeft < scrollWidth - clientWidth
 }
