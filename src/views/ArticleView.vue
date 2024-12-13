@@ -3,100 +3,122 @@
   <div class="min-h-screen bg-gray-50">
     <!-- 顶部导航栏 -->
     <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
-      <!-- 导航样式A - 默认显示，滚动时隐藏 -->
-      <div v-show="!showNavB" class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
-        <!-- 导航栏内容容器 - 添加点击事件和cursor-pointer样式 -->
-        <div 
-          class="flex items-center gap-2 cursor-pointer" 
-          @click="router.push('/')"
-        >
-          <!-- 网站Logo图片 -->
-          <img 
-            src="/images/icons/logo.svg" 
-            alt="Keep Up Logo" 
-            class="w-[48px] h-[48px] flex-shrink-0" 
-          />
-          <!-- 网站标题文本 -->
-          <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC']">
-            {{ t('home.title') }}
-          </h1>
-        </div>
-        
-        
-        <!-- 右侧导航元素容器 - 增加右侧padding并调整gap -->
-        <div class="flex items-center gap-1 pr-2">
-          <!-- 语言切换组件 -->
-          <language-switch/>
-      
-          <!-- 已登录用户信息区域 -->
-          <template v-if="authStore.isAuthenticated">
-            <!-- 用户头像 -->
+      <!-- 使用transition组件包裹两个导航样式 -->
+      <transition 
+        mode="out-in"
+        enter-active-class="transition ease-out duration-200"
+        enter-from-class="opacity-0 transform -translate-y-2"
+        enter-to-class="opacity-100 transform translate-y-0"
+        leave-active-class="transition ease-in duration-200"
+        leave-from-class="opacity-100 transform translate-y-0"
+        leave-to-class="opacity-0 transform translate-y-2"
+      >
+        <!-- 导航样式A -->
+        <div v-if="!showNavB" class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
+          <!-- 导航栏内容容器 - 添加点击事件和cursor-pointer样式 -->
+          <div 
+            class="flex items-center gap-2 cursor-pointer" 
+            @click="router.push('/')"
+          >
+            <!-- 网站Logo图片 -->
             <img 
-              :src="authStore.user?.user_metadata?.avatar_url" 
-              alt="User Avatar" 
-              class="w-[32px] h-[32px] rounded-full"
+              src="/images/icons/logo.svg" 
+              alt="Keep Up Logo" 
+              class="w-[48px] h-[48px] flex-shrink-0" 
             />
-            <!-- 登出按钮 - 增加最小宽度确保文字完整显示 -->
-            <button 
-              class="text-gray-600 hover:text-gray-800 min-w-[64px] h-[32px] text-center"
-            >
-              {{ t('home.nav.logout') }}
-            </button>
-          </template>
-
-          <!-- 未登录状态显示 -->
-          <template v-else>
-            <button 
-              class="w-[32px] h-[32px] flex items-center justify-center"
-            >
+            <!-- 网站标题文本 -->
+            <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC']">
+              {{ t('home.title') }}
+            </h1>
+          </div>
+          
+          
+          <!-- 右侧导航元素容器 - 增加右侧padding并调整gap -->
+          <div class="flex items-center gap-3 pr-2">
+            <!-- 语言切换组件 -->
+            <language-switch/>
+        
+            <!-- 已登录用户信息区域 -->
+            <template v-if="authStore.isAuthenticated">
+              <!-- 用户头像 -->
               <img 
-                src="/images/icons/login.svg" 
-                alt="Login"
-                class="w-[32px] h-[32px]"
+                :src="authStore.user?.user_metadata?.avatar_url" 
+                alt="User Avatar" 
+                class="w-[32px] h-[32px] rounded-full"
               />
-            </button>
-          </template>
-        </div>
-      </div>
-      
-      <!-- 导航样式B - 滚动时显示 -->
-      <div v-show="showNavB" class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
-        <!-- 中间导航区域 - 使用与文章内容相同的最大宽度 -->
-        <div class="flex-1 max-w-4xl mx-auto px-4">
-          <div class="w-full h-[40px] flex items-center justify-between">
-            <!-- 上一节 -->
-            <div 
-              v-if="prevSection" 
-              @click="scrollToSection(prevSection.section_type)"
-              class="flex items-center cursor-pointer text-gray-500 hover:text-gray-700 transition-colors duration-200"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-              <span class="text-sm">{{ getLocalizedSectionType(prevSection.section_type) }}</span>
-            </div>
-            <div v-else class="w-20"></div>
+              <!-- 登出按钮 - 增加最小宽度确保文字完整显示 -->
+              <button 
+                class="text-gray-600 hover:text-gray-800 min-w-[64px] h-[32px] text-center"
+              >
+                {{ t('home.nav.logout') }}
+              </button>
+            </template>
 
-            <!-- 当前section名称 - 居中显示 -->
-            <h2 class="text-base md:text-lg text-gray-900 font-medium">
-              {{ currentVisibleSection ? getLocalizedSectionType(currentVisibleSection) : '' }}
-            </h2>
-
-            <!-- 下一节 -->
-            <div 
-              v-if="nextSection" 
-              @click="scrollToSection(nextSection.section_type)"
-              class="flex items-center cursor-pointer text-gray-500 hover:text-gray-700 transition-colors duration-200"
-            >
-              <span class="text-sm">{{ getLocalizedSectionType(nextSection.section_type) }}</span>
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
-            <div v-else class="w-20"></div>
+            <!-- 未登录状态显示 -->
+            <template v-else>
+              <button 
+                class="w-[32px] h-[32px] flex items-center justify-center"
+              >
+                <img 
+                  src="/images/icons/login.svg" 
+                  alt="Login"
+                  class="w-[32px] h-[32px]"
+                />
+              </button>
+            </template>
           </div>
         </div>
-      </div>
+        
+        <!-- 导航样式B -->
+        <div v-else class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
+          <div class="flex-1 max-w-4xl mx-auto px-4">
+            <div class="w-full h-[40px] flex items-center justify-between">
+              <!-- 使用transition-group为section标题添加动画 -->
+              <transition-group 
+                :name="transitionName"
+                class="flex items-center justify-between w-full relative"
+                tag="div"
+              >
+                <!-- 上一节 -->
+                <div 
+                  v-if="prevSection" 
+                  :key="'prev-' + prevSection.section_type"
+                  @click="scrollToSection(prevSection.section_type)"
+                  class="flex items-center cursor-pointer text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span class="text-sm">{{ getLocalizedSectionType(prevSection.section_type) }}</span>
+                </div>
+                <div v-else :key="'prev-empty'" class="w-20"></div>
+
+                <!-- 当前section名称 -->
+                <h2 
+                  :key="currentVisibleSection || 'current'"
+                  class="text-base md:text-lg text-gray-900 font-medium"
+                >
+                  {{ currentVisibleSection ? getLocalizedSectionType(currentVisibleSection) : '' }}
+                </h2>
+
+                <!-- 下一节 -->
+                <div 
+                  v-if="nextSection" 
+                  :key="'next-' + nextSection.section_type"
+                  @click="scrollToSection(nextSection.section_type)"
+                  class="flex items-center cursor-pointer text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                >
+                  <span class="text-sm">{{ getLocalizedSectionType(nextSection.section_type) }}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+                <div v-else :key="'next-empty'" class="w-20"></div>
+              </transition-group>
+            </div>
+          </div>
+        </div>
+      </transition>
       
       <!-- 分割线 -->
       <div class="h-[1px] bg-[#E5E5E5] w-full"></div>
@@ -433,7 +455,7 @@ const submitEdit = async () => {
         .from('keep_article_sections')
         .delete()
         .eq('article_id', article.value?.id)
-        .eq('language', locale.value)  // 只删除当前语言的内容
+        .eq('language', locale.value)  // 只除当前语言的内容
 
       if (deleteError) throw deleteError
 
@@ -476,29 +498,33 @@ const lastScrollTop = ref(0)
 // 添加一个ref来存储当前可见的section
 const currentVisibleSection = ref<string>('')
 
+// 添加一个变量来控制是否允许导航切换
+const allowNavSwitch = ref(true)
+
 // 修改滚动监听函数
 const handleScroll = () => {
   const currentScroll = window.scrollY
   
-  // 判断滚动方向
-  if (currentScroll > lastScrollTop.value) {
-    // 向下滚动
-    if (currentScroll > 100) {
-      showNavB.value = true
+  // 只有在允许导航切换时才执行切换逻辑
+  if (allowNavSwitch.value) {
+    if (currentScroll > lastScrollTop.value) {
+      // 向下滚动
+      if (currentScroll > 100) {
+        showNavB.value = true
+      }
+    } else {
+      // 向上滚动
+      showNavB.value = false
     }
-  } else {
-    // 向上滚动
-    showNavB.value = false
   }
   
   // 更新上一次的滚动位置
   lastScrollTop.value = currentScroll <= 0 ? 0 : currentScroll
 
-  // 测当前可见的section
+  // 检测当前可见的section
   const sectionElements = document.querySelectorAll('[data-section-type]')
   sectionElements.forEach((element) => {
     const rect = element.getBoundingClientRect()
-    // 当section的顶部进入视口的1/3位置时，认为是当前可见的section
     if (rect.top <= window.innerHeight / 3 && rect.bottom >= window.innerHeight / 3) {
       currentVisibleSection.value = element.getAttribute('data-section-type') || ''
     }
@@ -580,23 +606,91 @@ const nextSection = computed(() => {
     : null
 })
 
-// 添加跳转到指定section的函数
+// 添加一个变量来跟踪滑动方向
+const transitionName = ref('slide-right')
+
+// 修改 scrollToSection 函数
 const scrollToSection = (sectionType: string) => {
   const element = document.querySelector(`[data-section-type="${sectionType}"]`)
   if (element) {
-    // 获取header的高度
-    const headerHeight = 71 // header高度70px + 1px边框
+    // 暂时禁用导航切换
+    allowNavSwitch.value = false
+    
+    // 判断滑动方向
+    const currentIndex = displaySections.value.findIndex(
+      section => section.section_type === currentVisibleSection.value
+    )
+    const targetIndex = displaySections.value.findIndex(
+      section => section.section_type === sectionType
+    )
+    
+    // 设置过渡方向
+    transitionName.value = targetIndex > currentIndex ? 'slide-left' : 'slide-right'
+    
+    // 滚动到目标位置
+    const headerHeight = 71
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-    // 滚动到目标位置，��去header高度和一些额外空间
     window.scrollTo({
       top: elementPosition - headerHeight - 20,
       behavior: 'smooth'
     })
+
+    // 动画完成后恢复导航切换功能
+    setTimeout(() => {
+      allowNavSwitch.value = true
+    }, 800) // 设置稍长于滚动动画的时间
   }
 }
 </script>
 
 <style>
+/* 替换原来的动画样式为新的横向滑动动画 */
+
+/* 向左滑动动画 */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  transition: all 0.8s;
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(80px);
+}
+
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-80px);
+}
+
+/* 向右滑动动画 */
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.8s ;
+}
+
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-100px);
+}
+
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(100px);
+}
+
+/* 确保动画期间元素不会重叠 */
+.slide-left-leave-active,
+.slide-right-leave-active {
+  position: absolute;
+}
+
+/* 移动过渡效果 */
+.slide-left-move,
+.slide-right-move {
+  transition: transform 0.2s ease-out;
+}
+
+/* 其他现有样式保持不变 */
 .prose img {
   margin: 0 auto;
   max-width: 100%;
@@ -624,5 +718,10 @@ const scrollToSection = (sectionType: string) => {
   .prose h3 {
     font-size: 1.125rem;
   }
+}
+
+/* 优化滚动行为 */
+html {
+  scroll-behavior: smooth;
 }
 </style>

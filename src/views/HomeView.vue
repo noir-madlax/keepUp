@@ -35,7 +35,7 @@
         </div>
 
         <!-- 右侧导航元素容器 - 增加右侧padding并调整gap -->
-        <div class="flex items-center gap-1 pr-2">
+        <div class="flex items-center gap-3 pr-2">
           <!-- 语言切换组件 -->
           <language-switch/>
       
