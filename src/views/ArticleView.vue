@@ -132,8 +132,8 @@
             <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
               <!-- 文章封面 -->
               <img 
-                src="/public/images/covers/article-1.png" 
-                alt="Article Banner" 
+                :src="article.cover_image_url || '/images/covers/article-1.png'"
+                :alt="article.title" 
                 class="w-full md:w-64 h-48 md:h-64 object-cover rounded-lg shadow-md" 
               />
               <div class="flex-1">
