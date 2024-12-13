@@ -5,8 +5,11 @@
     <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
       <!-- 导航样式A - 默认显示，滚动时隐藏 -->
       <div v-show="!showNavB" class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
-        <!-- 导航栏内容容器 -->
-        <div class="flex items-center gap-2">
+        <!-- 导航栏内容容器 - 添加点击事件和cursor-pointer样式 -->
+        <div 
+          class="flex items-center gap-2 cursor-pointer" 
+          @click="router.push('/')"
+        >
           <!-- 网站Logo图片 -->
           <img 
             src="/images/icons/logo.svg" 
@@ -584,7 +587,7 @@ const scrollToSection = (sectionType: string) => {
     // 获取header的高度
     const headerHeight = 71 // header高度70px + 1px边框
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-    // 滚动到目标位置，减去header高度和一些额外空间
+    // 滚动到目标位置，��去header高度和一些额外空间
     window.scrollTo({
       top: elementPosition - headerHeight - 20,
       behavior: 'smooth'
