@@ -43,18 +43,19 @@ export default {
       title: 'Section Types',
       types: {
         '总结': 'Summary',
+        '背景': 'Background',
         '人物介绍': 'Characters',
         '名词解释': 'Terms',
-        '分段提纲': 'Outline',
+        '分段提纲': 'Section Outline',
         'QA环节': 'Q&A',
         '金句': 'Quotes',
-        '分段详述': 'Details',
+        '分段详述': 'Section Details',
         '引用（测试）': 'References (Test)',
         '结构图': 'Structure',
         '案例（测试）': 'Cases (Test)',
         '原文字幕': 'Original Subtitles',
-        '翻译字幕（测试）': 'Translated Subtitles (Test)',
-        '彩蛋（测试）': 'Easter Eggs (Test)',
+        '翻译字幕（测试）': 'Translated Subtitles',
+        '彩蛋（测试）': 'Easter Eggs',
         '思维导图': 'Mind Map',
         '要点总结': 'Key Points',
         '典型案例': 'Typical Cases'
@@ -97,6 +98,7 @@ export default {
     retry: 'Retry',
     loading: 'Loading...',
     scrollToLoadMore: 'Scroll to load more',
-    noMoreData: 'No more data'
+    noMoreData: 'No more data',
+    pleaseLogin: 'Please login first'
   }
 } 
