@@ -44,7 +44,7 @@ export default {
       types: {
         '总结': '总结',
         '人物介绍': '人物介绍',
-        '名词解释': '名词解释',
+        '名���解释': '名词解释',
         '分段提纲': '分段提纲',
         'QA环节': 'QA环节',
         '金句': '金句',
@@ -97,6 +97,7 @@ export default {
     retry: '重试',
     loading: '加载中...',
     scrollToLoadMore: '滚动加载更多',
-    noMoreData: '没有更多数据了'
+    noMoreData: '没有更多数据了',
+    pleaseLogin: '请先登录后再操作'
   }
 } 

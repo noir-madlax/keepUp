@@ -97,6 +97,7 @@ export default {
     retry: 'Retry',
     loading: 'Loading...',
     scrollToLoadMore: 'Scroll to load more',
-    noMoreData: 'No more data'
+    noMoreData: 'No more data',
+    pleaseLogin: 'Please login first'
   }
 } 

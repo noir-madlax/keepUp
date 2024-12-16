@@ -27,7 +27,7 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
         languages: 需要处理的语言列表
         
     Returns:
-        list[str]: 处理结果信息列表
+        list[str]: 处���结果信息列表
     """
     results = []
     logger.info(f"开始总结内容处理 - 请求ID: {request_id}, 语言列表: {languages}")
@@ -143,7 +143,7 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
         list[str]: 处理结果信息列表
     """
     results = []
-    logger.info(f"开始分段详述���理 - 请求ID: {request_id}, 语言列表: {languages}")
+    logger.info(f"开始分段详述理 - 请求ID: {request_id}, 语言列表: {languages}")
     
     for lang in languages:
         
@@ -178,7 +178,7 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
 # 将原来的处理逻辑封装成一个独立的后台任务函数
 async def process_article_task(request: FetchRequest):
     try:
-        logger.info(f"开始后���处理: ID={request.id}, URL={request.url},"
+        logger.info(f"开始后台处理: ID={request.id}, URL={request.url},"
                     f"Languages={request.summary_languages},"
                     f"Subtitle={request.subtitle_languages},"
                     f"Detailed={request.detailed_languages}"
@@ -280,7 +280,7 @@ async def process_article_task(request: FetchRequest):
         )
 
 @router.post("/workflow/process")
-async def process_workflow(request: FetchRequest,background_tasks: BackgroundTasks):
+async def process_workflow(request: FetchRequest, background_tasks: BackgroundTasks):
     """接收请求并立即返回"""
     try:
         logger.info(f"收到处理请求: URL={request.url}")
@@ -297,7 +297,8 @@ async def process_workflow(request: FetchRequest,background_tasks: BackgroundTas
             request_data = await SupabaseService.create_article_request({
                 "original_url": request.url,
                 "platform": "pending",
-                "status": "pending"
+                "status": "pending",
+                "user_id": request.user_id
             })
             request.id = request_data["id"]
         except Exception as e:
@@ -337,7 +338,7 @@ async def process_workflow(request: FetchRequest,background_tasks: BackgroundTas
         # 6. 使用解析后的URL更新请求对象
         request.url = parsed_url
         
-        # 7. 异步启动处理任���，但不等待其完成
+        # 7. 异步启动处理任务，但不等待其完成
         # 将任务添加到后台处理队列
         background_tasks.add_task(process_article_task, request)
         

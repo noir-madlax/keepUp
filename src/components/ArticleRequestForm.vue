@@ -2,7 +2,7 @@
   <div>
     <!-- 主要上传按钮，点击显示模态框 -->
     <button 
-      @click="$emit('click')"
+      @click="handleClick"
       class="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white rounded hover:opacity-90 transition-opacity w-[85px]"
       style="background: linear-gradient(to right, #2272EB 0%, #00BEFF 100%)"
     >
@@ -150,6 +150,10 @@ import { ElMessage, ElLoading } from 'element-plus'
 import { supabase } from '../supabaseClient'
 import { useI18n } from 'vue-i18n'
 
+// 添加 auth store
+import { useAuthStore } from '../stores/auth'
+const authStore = useAuthStore()
+
 // 初始化国际化工具
 const { t } = useI18n()
 const requestUrl = ref('')
@@ -160,7 +164,10 @@ const subtitleLanguages = ref<string[]>([])
 const detailedLanguages = ref<string[]>([])
 
 // 定义组件事件
-const emit = defineEmits(['refresh', 'click'])
+const emit = defineEmits<{
+  (e: 'refresh'): void
+  (e: 'click'): void
+}>()
 
 /**
  * URL格式验证函数
@@ -224,6 +231,11 @@ const validateLanguageSelections = (): boolean => {
  * 提交文章处理请求
  */
 const submitRequest = async () => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning(t('common.pleaseLogin'))
+    return
+  }
+
   if (!validateUrl(requestUrl.value)) return
   if (!await checkDuplicate(requestUrl.value)) return
 
@@ -241,7 +253,7 @@ const submitRequest = async () => {
   }
 
   try {
-    // 发送请求到后端
+    // 发送请求到后端，添加 user_id
     fetch('/api/workflow/process', {
       method: 'POST',
       headers: {
@@ -251,11 +263,11 @@ const submitRequest = async () => {
         url: requestUrl.value,
         summary_languages: summaryLanguages.value,
         subtitle_languages: subtitleLanguages.value,
-        detailed_languages: detailedLanguages.value
+        detailed_languages: detailedLanguages.value,
+        user_id: authStore.user?.id  // 添加用户ID
       })
     })
 
-    // 直接显示成功消息并关闭窗口
     ElMessage.success(t('summarize.messages.submitSuccess'))
     requestUrl.value = ''
     showUploadModal.value = false
@@ -291,6 +303,10 @@ onUnmounted(() => {
 
 // 添加打开 modal 的方法
 const openModalWithUrl = (url: string) => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning(t('common.pleaseLogin'))
+    return
+  }
   requestUrl.value = url
   showUploadModal.value = true
 }
@@ -299,6 +315,24 @@ const openModalWithUrl = (url: string) => {
 defineExpose({
   openModalWithUrl
 })
+
+// 添加 handleManual 方法
+const handleManual = () => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning(t('common.pleaseLogin'))
+    return
+  }
+  // TODO: 处理手动上传逻辑
+}
+
+// 修改按钮点击处理
+const handleClick = () => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning(t('common.pleaseLogin'))
+    return
+  }
+  emit('click')
+}
 </script> 
 
 <style scoped>
