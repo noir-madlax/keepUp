@@ -49,13 +49,8 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
         # 准备小节数据 - 确保每个小节都有语言标识
         sections = [
             {
-                "section_type": "总结",
+                "section_type": "背景",
                 "content": article_content.key0_background,
-                "language": language
-            },
-            {
-                "section_type": "人物介绍",
-                "content": article_content.key1_people,
                 "language": language
             },
             {
@@ -63,6 +58,33 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
                 "content": article_content.key2_why,
                 "language": language
             },
+            {
+                "section_type": "分段提纲",
+                "content": article_content.key6_part_title,
+                "language": language
+            },
+            
+            {
+                "section_type": "结构图",
+                "content": article_content.key11_map,
+                "language": language
+            },
+            {
+                "section_type": "要点总结",
+                "content": article_content.key19_Takeaways,
+                "language": language
+            },
+            {
+                "section_type": "思维导图",
+                "content": article_content.key17_xmind,
+                "language": language
+            },
+            {
+                "section_type": "人物介绍",
+                "content": article_content.key1_people,
+                "language": language
+            },
+           #    coze中不返回了，其实这部分不要了
             {
                 "section_type": "核心观点",
                 "content": article_content.key3_core,
@@ -73,21 +95,13 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
                 "content": article_content.key4_word,
                 "language": language
             },
+            #    coze中不返回了，其实这部分不要了
             {
                 "section_type": "整体总结",
                 "content": article_content.key5_summary,
                 "language": language
             },
-            {
-                "section_type": "分段提纲",
-                "content": article_content.key6_part_title,
-                "language": language
-            },
-            {
-                "section_type": "分段详述",
-                "content": article_content.key7_part_detail,
-                "language": language
-            },
+            
             {
                 "section_type": "QA环节",
                 "content": article_content.key8_qa,
@@ -98,24 +112,10 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
                 "content": article_content.key9_golden,
                 "language": language
             },
+            #    coze中不返回了，其实这部分不要了
             {
                 "section_type": "未总结内容",
                 "content": article_content.key10_exclude,
-                "language": language
-            },
-            {
-                "section_type": "结构图",
-                "content": article_content.key11_map,
-                "language": language
-            },
-            {
-                "section_type": "思维导图",
-                "content": article_content.key17_xmind,
-                "language": language
-            },
-            {
-                "section_type": "要点总结",
-                "content": article_content.key19_Takeaways,
                 "language": language
             },
             {
@@ -123,6 +123,12 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
                 "content": article_content.key18_EasterEgg,
                 "language": language
             },
+            {
+                "section_type": "分段详述",
+                "content": article_content.key7_part_detail,
+                "language": language
+            },
+            #    coze中暂时不返回，token太长了
             {
                 "section_type": "典型案例",
                 "content": article_content.key20_case,
