@@ -210,6 +210,9 @@ async def process_article_task(request: FetchRequest):
         if not author:
             # 创建新作者
             author = await SupabaseService.create_author(video_info.author)
+        else:
+            # 更新作者信息
+            await SupabaseService.update_author(author["id"], video_info.author)
             
         # 5. 创建文章基础信息
         article_data = video_info.article
@@ -292,12 +295,14 @@ async def process_article_task(request: FetchRequest):
         )
         
     except Exception as e:
+        logger.error(f"后台处理失败: request_id={request.id}, error={str(e)}")
         await RequestLogger.error(
             request.id,
             Steps.PROCESS_ERROR,
             "后台处理失败",
             e
         )
+        
         await SupabaseService.update_status(
             request.id, 
             "failed", 
@@ -308,30 +313,30 @@ async def process_article_task(request: FetchRequest):
 async def process_workflow(request: FetchRequest, background_tasks: BackgroundTasks):
     """接收请求并立即返回"""
     try:
-        await RequestLogger.info(
-            request_id=0,  # 此时还没有request_id
-            step=Steps.PROCESS_START,
-            message=f"收到处理请求: URL={request.url}"
-        )
         
         # 1. 检查URL是否重复
-        async with RequestLogger.step_context(0, Steps.URL_CHECK):
-            if await SupabaseService.check_url_exists(request.url):
-                return {
-                    "success": False,
-                    "message": "URL已经存在"
-                }
+        if await SupabaseService.check_url_exists(request.url):
+            return {
+                "success": False,
+                "message": "URL已经存在"
+            }
         
         # 2. 创建请求记录
         try:
-            async with RequestLogger.step_context(0, Steps.REQUEST_CREATE):
-                request_data = await SupabaseService.create_article_request({
-                    "original_url": request.url,
-                    "platform": "pending",
-                    "status": "pending",
-                    "user_id": request.user_id
-                })
-                request.id = request_data["id"]
+            request_data = await SupabaseService.create_article_request({
+                "original_url": request.url,
+                "platform": "pending", 
+                "status": "pending",
+                "user_id": request.user_id
+            })
+            request.id = request_data["id"]
+            
+            await RequestLogger.info(
+                request.id,
+                Steps.REQUEST_CREATE,
+                "创建请求记录成功",
+                metadata={"request_id": request.id}
+            )
         except Exception as e:
             await RequestLogger.error(0, Steps.REQUEST_CREATE, "创建请求记录失败", e)
             return {

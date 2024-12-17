@@ -10,6 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 from pytubefix import YouTube
+from pytubefix import Channel
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
@@ -121,10 +122,26 @@ class YouTubeFetcher(ContentFetcher):
                 except ValueError:
                     logger.warning(f"无法解析发布日期: {publish_date_meta['content']}")
 
-            # 构建作者信息
+            # 在提取作者信息后，添加获取作者头像的代码
+            try:
+                if self.proxies:
+                    logger.info("使用代理获取作者头像")
+                    yt = YouTube(url, proxies=self.proxies)
+                else:
+                    logger.info("不使用代理获取作者头像")
+                    yt = YouTube(url)
+                channel = Channel(yt.channel_url)
+                author_icon = channel.initial_data.get('metadata', {}).get('channelMetadataRenderer', {}).get('avatar', {}).get('thumbnails', [{}])[0].get('url', '')
+                logger.info(f"获取到作者头像: {author_icon}")
+            except Exception as e:
+                logger.warning(f"获取作者头像失败: {str(e)}")
+                author_icon = ""
+
+            # 更新作者信息字典
             author = {
                 "name": author_name,
-                "platform": "YouTube"
+                "platform": "YouTube",
+                "icon": author_icon  # 添加作者头像
             }
             logger.info(f"构建的作者信息: {author}")
             

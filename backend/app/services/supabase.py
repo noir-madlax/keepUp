@@ -101,7 +101,7 @@ class SupabaseService:
             result = client.table("keep_authors").insert({
                 "name": author_data["name"],
                 # "platform": author_data.get("platform", "YouTube"),  # 添加平台信息
-                "icon": None  # 默认无头像
+                "icon": author_data.get("icon", None)  # 默认无头像
             }).execute()
             
             logger.info(f"作者创建成功: {author_data['name']}")
@@ -110,6 +110,28 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"创建作者失败: {str(e)}", exc_info=True)
             raise
+    
+    @classmethod
+    async def update_author(cls, author_id: int, author_data: dict):
+        """更新作者信息
+
+        Args:
+            author_id: 作者ID
+            author_data: 作者数据,包含以下字段:
+                - name: 作者名称
+                - icon: 作者头像URL
+                
+        Returns:
+            更新后的作者数据记录
+        """
+        client = cls.get_client()
+        update_data = {
+            "name": author_data["name"],
+            "icon": author_data.get("icon")
+        }
+        result = client.table("keep_authors").update(update_data).eq("id", author_id).execute()
+        logger.info(f"作者更新成功: ID={author_id}, name={update_data['name']}")
+        return result.data[0]
     
     @classmethod
     async def get_author_by_name(cls, name: str):
