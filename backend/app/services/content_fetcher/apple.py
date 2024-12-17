@@ -31,7 +31,7 @@ class ApplePodcastFetcher(ContentFetcher):
         解析多种格式的日期字符串为datetime对象
         支持的格式:
         - 中文格式: "12月4日 2024"
-        - 英文相对格式: "1 DAY AGO 2024", "2 DAYS AGO 2024"
+        - 英文相对格��: "1 DAY AGO 2024", "2 DAYS AGO 2024"
         - 英文日期格式: "DEC 4 2024", "DECEMBER 4 2024"
         """
         try:
@@ -369,17 +369,9 @@ class ApplePodcastFetcher(ContentFetcher):
             return None
 
     def _get_author_avatar_url(self, soup: BeautifulSoup) -> Optional[str]:
-        """
-        从页面解析获取作者头像URL
-        Args:
-            soup: BeautifulSoup对象
-        Returns:
-            Optional[str]: 作者头像URL
-        """
         try:
             logger.info("开始获取作者头像URL")
-
-            avatar_url = None
+            
             # 查找作者页面链接
             podcast_link = soup.find('a', {'class': 'link-action', 'data-testid': 'click-action'})
             
@@ -417,9 +409,12 @@ class ApplePodcastFetcher(ContentFetcher):
                             img_element = author_image.find('img')
                             if img_element:
                                 author_image_url = img_element.get('src')
+                    
+                    logger.info(f"获取到作者头像URL: {author_image_url}")
+                    return author_image_url
             
-            logger.info(f"获取到作者头像URL: {avatar_url}")
-            return avatar_url
+            logger.warning("未能获取到作者头像URL")
+            return None
             
         except Exception as e:
             logger.error(f"获取作者头像URL失败: {str(e)}")
