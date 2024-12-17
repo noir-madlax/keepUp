@@ -31,7 +31,7 @@ class ApplePodcastFetcher(ContentFetcher):
         解析多种格式的日期字符串为datetime对象
         支持的格式:
         - 中文格式: "12月4日 2024"
-        - 英文相对格��: "1 DAY AGO 2024", "2 DAYS AGO 2024"
+        - 英文相对格式: "1 DAY AGO 2024", "2 DAYS AGO 2024"
         - 英文日期格式: "DEC 4 2024", "DECEMBER 4 2024"
         """
         try:
@@ -284,6 +284,9 @@ class ApplePodcastFetcher(ContentFetcher):
             # 获取缩略图URL
             thumbnail_url = self._get_thumbnail_url(soup)
             
+            # 获取作者头像
+            author_avatar_url = self._get_author_avatar_url(soup)
+            
             # 创建 ArticleCreate 对象
             article = ArticleCreate(
                 title=title,
@@ -299,7 +302,8 @@ class ApplePodcastFetcher(ContentFetcher):
             # 创建作者信息
             author = {
                 "name": author_name,
-                "platform": "Apple Podcast"
+                "platform": "Apple Podcast",
+                "icon": author_avatar_url  # 添加作者头像URL
             }
             
             # 创建并返回 VideoInfo 对象
@@ -362,4 +366,61 @@ class ApplePodcastFetcher(ContentFetcher):
             
         except Exception as e:
             logger.error(f"获取缩略图URL失败: {str(e)}")
+            return None
+
+    def _get_author_avatar_url(self, soup: BeautifulSoup) -> Optional[str]:
+        """
+        从页面解析获取作者头像URL
+        Args:
+            soup: BeautifulSoup对象
+        Returns:
+            Optional[str]: 作者头像URL
+        """
+        try:
+            logger.info("开始获取作者头像URL")
+
+            avatar_url = None
+            # 查找作者页面链接
+            podcast_link = soup.find('a', {'class': 'link-action', 'data-testid': 'click-action'})
+            
+            if podcast_link:
+                author_page_url = podcast_link.get('href', '')
+                if author_page_url:
+                    if not author_page_url.startswith('http'):
+                        author_page_url = f"https://podcasts.apple.com{author_page_url}"
+                    
+                    logger.info(f"获取到作者页面URL: {author_page_url}")
+
+                    # 获取作者页面内容
+                    author_response = requests.get(author_page_url, verify=False, timeout=30)
+                    author_response.encoding = 'utf-8'
+                    author_soup = BeautifulSoup(author_response.text, 'html.parser')
+                    
+                    # 查找作者头像图片
+                    author_image = author_soup.find('picture', {'class': 'svelte-3e3mdo'})
+                    if author_image:
+                        # 尝试获取最高质量的图片URL
+                        source_elements = author_image.find_all('source')
+                        author_image_url = None
+                        if source_elements:
+                            for source in source_elements:
+                                srcset = source.get('srcset', '')
+                                if srcset:
+                                    # 分割srcset并获取最后一个URL（通常是最高质量的）
+                                    urls = [url.strip().split(' ')[0] for url in srcset.split(',')]
+                                    if urls:
+                                        author_image_url = urls[-1]
+                                        break
+                        
+                        # 如果source中没找到，尝试从img标签获取
+                        if not author_image_url:
+                            img_element = author_image.find('img')
+                            if img_element:
+                                author_image_url = img_element.get('src')
+            
+            logger.info(f"获取到作者头像URL: {avatar_url}")
+            return avatar_url
+            
+        except Exception as e:
+            logger.error(f"获取作者头像URL失败: {str(e)}")
             return None
