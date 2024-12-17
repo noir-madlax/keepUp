@@ -135,33 +135,10 @@
               </div>
             </div>
         </div>
-          <!-- 主要上传按钮，点击显示模态框 -->
-          
 
-          <!-- 我的上传 标题 -->
-          <h2 class="text-xl mb-4">{{ t('home.filter.myUpload') }}</h2>
-          <!-- 横向滚动容器 -->
-          <div class="relative">
-            <!-- 左侧渐变遮罩 -->
-            <div class="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10"
-                 v-show="canScrollLeft"></div>
-            
-            <!-- 右侧渐变遮罩 -->
-            <div class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10"
-                 v-show="canScrollRight"></div>
-            
-            <!-- 滚动容器 -->
-            <div class="overflow-x-auto scrollbar-hide flex gap-2 pb-2 mb-4" 
-                 ref="scrollContainer"
-                 @scroll="handleUploadCardsScroll">
-              <UploadCard
-                v-for="article in filteredArticles"
-                :key="article.id"
-                :article="article"
-                class="flex-shrink-0 w-[200px] mb-2"
-              />
-            </div>
-          </div>
+          <!-- 我的上传区域 -->
+          <my-uploads-section />
+
           <!-- 发现区域 -->
           <div class="mb-8">
             <!-- 发现标题 -->
@@ -334,6 +311,7 @@ import { useI18n } from 'vue-i18n'
 import LanguageSwitch from '../components/LanguageSwitch.vue'
 import PullToRefresh from '../components/PullToRefresh.vue'
 import localforage from 'localforage'
+import MyUploadsSection from '../components/MyUploadsSection.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -367,7 +345,7 @@ onActivated(() => {
   resetPageState()
 })
 
-// 添加一个属性来判断是否有筛选条件
+// 添加一个性来判断是否有筛选条件
 const hasFilters = computed(() => {
   return selectedTag.value !== 'all' || 
          selectedChannels.value.length > 0 || 
@@ -700,7 +678,7 @@ const getChannelKey = (channel: string): string => {
 
 // 使用计算属性来根据屏幕大小返回不同的显示数量
 const defaultDisplayCount = computed(() => {
-  // 使用 window.innerWidth 获取当前视口宽度
+  // 使用 window.innerWidth 获取当前视口度
   const width = window.innerWidth
   
   // >= 1280px (xl): 显示16个 (4行)
@@ -870,26 +848,6 @@ const submitRequest = () => {
     articleRequestFormRef.value.openModalWithUrl(requestUrl.value)
   }
 }
-
-const scrollContainer = ref<HTMLElement | null>(null)
-const canScrollLeft = ref(false)
-const canScrollRight = ref(true)
-
-// 处理上传卡片横向滚动
-const handleUploadCardsScroll = () => {
-  if (!scrollContainer.value) return
-  
-  const { scrollLeft, scrollWidth, clientWidth } = scrollContainer.value
-  
-  // 更新左右渐变���罩的显示状态
-  canScrollLeft.value = scrollLeft > 0
-  canScrollRight.value = scrollLeft < scrollWidth - clientWidth
-}
-
-// 在组件挂载时初始化横向滚动状态
-onMounted(() => {
-  handleUploadCardsScroll()
-})
 </script>
 
 <style scoped>
@@ -912,19 +870,8 @@ onMounted(() => {
   border-radius: 4px;
 }
 
-/* 隐藏滚动条但保持可以滚动 */
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
-}
-
-/* 添加平滑滚动效果 */
-.overflow-x-auto {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch; /* 支持iOS惯性滚动 */
+/* 添加容器过渡动画 */
+.my-uploads-section {
+  transition: all 0.3s ease;
 }
 </style>
