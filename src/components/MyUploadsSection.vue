@@ -105,7 +105,6 @@ import { ref, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import UploadCard from './UploadCard.vue'
 import type { ArticleRequest } from '../types/article'
-import { loadRegisteredDiagrams } from 'mermaid/dist/diagram-api/loadDiagram.js';
 import { useAuthStore } from '../stores/auth'
 import { supabase } from '../supabaseClient'
 

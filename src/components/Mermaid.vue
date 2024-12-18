@@ -1,19 +1,34 @@
 <template>
-  <div class="mermaid-container flex">
-    <div ref="svgContainerRef" class="flex-1"></div>
+  <div class="mermaid-container" :style="{ width: containerWidth, height: containerHeight }">
+    <div ref="svgContainerRef" class="flex-1">
+      <div v-if="renderError" class="error-container">
+        <span class="error-text">结构图加载失败</span>
+        <el-button type="primary" size="small" @click="retryRender">
+          重试
+        </el-button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import mermaid from 'mermaid'
+import { debounce } from 'lodash-es' // 需要安装 lodash-es
 
 const props = defineProps<{
   content: string
 }>()
 
 const svgContainerRef = ref<HTMLElement | null>(null)
+const renderError = ref(false)
 let currentId = `mermaid-${Math.random().toString(36).substring(2)}`
+let retryCount = 0
+const MAX_RETRIES = 3
+
+// 添加新的响应式变量
+const containerHeight = ref('auto')
+const containerWidth = ref('100%')
 
 // 初始化mermaid配置
 mermaid.initialize({
@@ -78,12 +93,16 @@ const transformer = {
   }
 }
 
-// 更新函数
-const update = async () => {
+// 使用防抖包装update函数
+const debouncedUpdate = debounce(async () => {
   if (!svgContainerRef.value) return
   
   try {
+    renderError.value = false
     const processedContent = transformer.transform(props.content)
+    
+    // 清空容器内容
+    svgContainerRef.value.innerHTML = ''
     
     // 使用 mermaid.render 获取 SVG
     const { svg } = await mermaid.render(currentId, processedContent)
@@ -94,44 +113,95 @@ const update = async () => {
     // 获取生成的SVG元素并设置样式
     const svgElement = svgContainerRef.value.querySelector('svg')
     if (svgElement) {
+      // 获取SVG的原始尺寸
+      const bbox = svgElement.getBBox()
+      const viewBox = svgElement.viewBox.baseVal
+      
+      // 计算宽高比
+      const ratio = bbox.width / bbox.height
+      
+      // 获取可用空间 - 调整桌面端的计算逻辑
+      const isMobile = window.innerWidth <= 768
+      const availableWidth = isMobile 
+        ? window.innerWidth * 0.9 
+        : Math.min(window.innerWidth * 0.6, 800) // 降低最大宽度限制
+      const availableHeight = isMobile
+        ? window.innerHeight * 0.8
+        : window.innerHeight * 0.6 // 桌面端高度占比调整
+      
+      // 根��宽高比和可用空间计算合适的容器尺寸
+      if (ratio > 1) { // 宽大于高
+        containerWidth.value = `${Math.min(availableWidth, bbox.width)}px`
+        containerHeight.value = `${Math.min(availableWidth / ratio, availableHeight)}px`
+      } else { // 高大于宽
+        const calculatedHeight = Math.min(availableHeight, bbox.height)
+        containerHeight.value = `${calculatedHeight}px`
+        containerWidth.value = `${Math.min(calculatedHeight * ratio, availableWidth)}px`
+      }
+      
+      // 设置SVG样式
       svgElement.style.width = '100%'
       svgElement.style.height = '100%'
-      // 确保SVG响应式
       svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet')
     }
+    
+    retryCount = 0
+    
   } catch (error) {
     console.error('Mermaid 渲染错误:', error)
-    if (svgContainerRef.value) {
-      svgContainerRef.value.innerHTML = `<pre style="color: red;">图表渲染失败: ${error}</pre>`
+    renderError.value = true
+    
+    if (retryCount < MAX_RETRIES) {
+      retryCount++
+      setTimeout(() => debouncedUpdate(), 1000 * retryCount)
     }
   }
+}, 300)
+
+// 手动重试方法
+const retryRender = () => {
+  retryCount = 0 // 重置重试计数
+  debouncedUpdate()
 }
 
 onMounted(async () => {
-  await update()
-  window.addEventListener('resize', update)
+  await debouncedUpdate()
+  window.addEventListener('resize', debouncedUpdate)
 })
 
 watch(() => props.content, async () => {
-  // 每次更新时生成新的ID，避免缓存问题
   currentId = `mermaid-${Math.random().toString(36).substring(2)}`
-  await update()
+  await debouncedUpdate()
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', update)
+  window.removeEventListener('resize', debouncedUpdate)
+  debouncedUpdate.cancel() // 取消未执行的防抖函数
 })
 </script>
 
 <style scoped>
 .mermaid-container {
-  width: 100%;
-  height: 720px;
+  min-width: unset;
+  min-height: 200px;
+  max-width: 100%;
+  max-height: 80vh;
   background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 10px;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+/* 添加响应式样式 */
+@media screen and (max-width: 768px) {
+  .mermaid-container {
+    min-width: unset;
+    min-height: 200px;
+    padding: 5px;
+  }
 }
 
 .flex-1 {
@@ -196,7 +266,7 @@ onBeforeUnmount(() => {
   opacity: 0 !important;
   fill: none !important;
   stroke: none !important;
-  display: none !important;  /* 完全隐藏背景矩形 */
+  display: none !important;  /* 完全���背景矩形 */
 }
 
 :deep(.node:hover rect) {
@@ -221,5 +291,19 @@ onBeforeUnmount(() => {
 
 :deep(svg *[fill="#fff"]) {
   fill: transparent !important;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+}
+
+.error-text {
+  color: #666;
+  font-size: 14px;
 }
 </style>

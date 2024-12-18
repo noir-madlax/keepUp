@@ -1,8 +1,8 @@
 <template>
   <!-- 页面容器 -->
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 overflow-x-hidden">
     <!-- 顶部导航栏 -->
-    <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
+    <header class="fixed top-0 left-0 right-0 bg-white z-[999] w-full">
       <!-- 使用transition组件包裹两个导航样式 -->
       <transition 
         mode="out-in"
@@ -14,7 +14,7 @@
         leave-to-class="opacity-0 transform translate-y-2"
       >
         <!-- 导航样式A -->
-        <div v-if="!showNavB" class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
+        <div v-if="!showNavB" class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto relative" style="max-width: min(100%, 1440px);">
           <!-- 导航栏内容容器 - 添加点击事件和cursor-pointer样式 -->
           <div 
             class="flex items-center gap-2 cursor-pointer" 
@@ -46,7 +46,7 @@
                 alt="User Avatar" 
                 class="w-[32px] h-[32px] rounded-full"
               />
-              <!-- 登出按钮 - 增加最小宽度确保文字完整显示 -->
+              <!-- 登出按钮 - 增加最小宽度确保字完整显示 -->
               <button 
                 class="text-gray-600 hover:text-gray-800 min-w-[64px] h-[32px] text-center"
               >
@@ -70,7 +70,7 @@
         </div>
         
         <!-- 导航样式B -->
-        <div v-else class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
+        <div v-else class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto" style="max-width: min(100%, 1440px);">
           <div class="flex-1 max-w-4xl mx-auto px-4">
             <div class="w-full h-[40px] flex items-center justify-between">
               <!-- 使用transition-group为section标题添加动画 -->
@@ -127,7 +127,7 @@
     <template v-if="article">
       <!-- 文章标题和作者信息 -->
       <div class="bg-white">
-        <div class="max-w-4xl mx-auto">
+        <div class="w-full mx-auto" style="max-width: min(100%, 1024px);">
           <div class="relative px-4 py-8">
             <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
               <!-- 文章封面 -->
@@ -184,15 +184,15 @@
       <!-- 小节标签 -->
       <div class="max-w-4xl mx-auto px-4 mt-6">
         <!-- 小节标签 -->
-        <div class="flex flex-wrap gap-3 pb-4 border-b border-gray-200">
+        <div class="flex flex-wrap gap-3 pb-4 border-b bg-white rounded-lg p-4 shadow-sm">
           <button
             v-for="sectionType in ALL_SECTION_TYPES"
             :key="sectionType"
             @click="toggleSection(sectionType)"
             class="px-4 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
             :class="selectedSections.includes(sectionType) ? 
-              'bg-blue-50 border-blue-400 text-blue-400' : 
-              'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
+              'bg-white border-blue-400 text-blue-400' : 
+              'bg-white border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
           >
             {{ getLocalizedSectionType(sectionType) }}
           </button>
@@ -587,7 +587,7 @@ const handleLogout = async () => {
   }
 }
 
-// 添加计算属性来获取上一个和下一个section
+// 添加计算属性来获取一个和下一个section
 const prevSection = computed(() => {
   if (!currentVisibleSection.value || !displaySections.value.length) return null
   const currentIndex = displaySections.value.findIndex(
@@ -723,5 +723,53 @@ const scrollToSection = (sectionType: string) => {
 /* 优化滚动行为 */
 html {
   scroll-behavior: smooth;
+}
+
+/* 在 style 标签中添加以下全局样式 */
+body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* 确保所有图片不会导致容器溢出 */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 确保 prose 内容不会导致溢出 */
+.prose {
+  max-width: 100% !important;
+  overflow-wrap: break-word;
+}
+
+/* 确保代码块不会导致溢出 */
+.prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* 确保导航栏始终在最上层 */
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  z-index: 999;
+}
+
+/* 为内容添加顶部内边距，防止被导航栏遮挡 */
+.min-h-screen {
+  padding-top: 71px; /* 导航栏高度 + 1px 边框 */
+}
+
+/* 确保所有弹出层和模态框的 z-index 大于导航栏 */
+.el-message {
+  z-index: 1000 !important;
+}
+
+.el-dialog__wrapper {
+  z-index: 1000 !important;
 }
 </style>

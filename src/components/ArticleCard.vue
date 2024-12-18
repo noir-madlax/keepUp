@@ -94,9 +94,9 @@ const getChannelIcon = (channel: string): string => {
 <style scoped>
 .card-container {
   display: flex;
-  min-width: 384px;
-  height: 198px;
-  padding: 16px;
+  width: 369px;
+  height: 190px;
+  padding: 12px;
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
@@ -105,6 +105,12 @@ const getChannelIcon = (channel: string): string => {
   background: #FFF;
   box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.10);
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.card-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .card-top {
@@ -115,17 +121,16 @@ const getChannelIcon = (channel: string): string => {
 }
 
 .article-title {
-  height: 85px;
-  min-width: 218px;
-  max-width: 1200px;
-  flex: 1 0 0;
+  height: 72px;
+  min-width: 200px;
+  max-width: 100%;
+  flex: 1;
   overflow: hidden;
   color: #333;
   font-family: "PingFang SC";
-  font-size: 20px;
-  font-style: normal;
+  font-size: 16px;
   font-weight: 600;
-  line-height: normal;
+  line-height: 24px;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -134,8 +139,8 @@ const getChannelIcon = (channel: string): string => {
 }
 
 .cover-image {
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   flex-shrink: 0;
   border-radius: 12px;
   object-fit: cover;

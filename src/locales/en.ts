@@ -33,6 +33,9 @@ export default {
     network: {
       offline: 'Currently offline',
       weak: 'Weak network connection'
+    },
+    articles: {
+      title: 'Articles'
     }
   },
   article: {

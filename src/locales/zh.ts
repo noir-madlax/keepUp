@@ -33,6 +33,9 @@ export default {
     network: {
       offline: '当前处于离线状态',
       weak: '网络信号较弱'
+    },
+    articles: {
+      title: '文章'
     }
   },
   article: {

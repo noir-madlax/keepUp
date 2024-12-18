@@ -83,57 +83,57 @@
     />
 
     <!-- 主要内容区域 -->
-    <pull-to-refresh class="pt-[81px]" :onRefresh="handleRefresh">
-      <div class="px-8 py-6">
-        <!-- 内容最大宽度限制容 -->
-        <div class="max-w-screen-2xl mx-auto">
-            <!-- 上传框 - 优化样式和响应式布局 -->
-            <div class="flex flex-wrap items-center gap-4 mb-6 p-6 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-pink-100 mx-4 sm:mx-0">
-              <!-- 标题和图标容器 -->
-              <div class="flex items-center gap-4 w-full sm:w-auto mb-2 sm:mb-0">
-                <!-- 标题 - 优化字体大小和响应式显示 -->
-                <h3 class="text-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                  </svg>
-                  {{ t('summarize.title') }}
-                </h3>
-                
-                <!-- 3个支持的渠道图标 - 优化响应式显示 -->
-                <div class="flex items-center gap-3 ml-auto sm:ml-4">
-                  <img 
-                    v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify']"
-                    :key="channel"
-                    :src="`/images/icons/${channel}.svg`"
-                    :alt="channel"
-                    class="w-5 h-5 sm:w-6 sm:h-6"
-                    :title="t(`home.channels.${channel}`)"
-                  />
-                </div>
-              </div>
-
-              <!-- URL输入框和上传按钮容器 -->
-              <div class="flex flex-col sm:flex-1 w-full sm:flex-row items-center gap-4">
-                <!-- 文章URL输入框 -->
-                <input
-                  type="text"
-                  v-model="requestUrl"
-                  :placeholder="t('summarize.urlPlaceholder')"
-                  class="w-full sm:flex-grow px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent bg-white"
-                  @click="handlePaste"
-                  @keyup.enter="submitRequest"
+    <pull-to-refresh class="pt-[71px]" :onRefresh="handleRefresh">
+      <div class="px-4 sm:px-8 py-6 overflow-x-hidden">
+        <!-- 修改容器最大宽度并确保居中 -->
+        <div class="max-w-screen-2xl mx-auto w-full">
+          <!-- 修改上传框的外边距 -->
+          <div class="flex flex-wrap items-center gap-4 mb-6 p-4 sm:p-6 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-pink-100">
+            <!-- 标题和图标容器 -->
+            <div class="flex items-center gap-4 w-full sm:w-auto mb-2 sm:mb-0">
+              <!-- 标题 - 优化字体大小和响应式显示 -->
+              <h3 class="text-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
+                {{ t('summarize.title') }}
+              </h3>
+              
+              <!-- 3个支持的渠道图标 - 优化响应式显示 -->
+              <div class="flex items-center gap-3 ml-auto sm:ml-4">
+                <img 
+                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify']"
+                  :key="channel"
+                  :src="`/images/icons/${channel}.svg`"
+                  :alt="channel"
+                  class="w-5 h-5 sm:w-6 sm:h-6"
+                  :title="t(`home.channels.${channel}`)"
                 />
-                
-                <!-- 上传按钮 -->
-                <div class="w-[80px] sm:w-[100px] self-center sm:self-auto sm:flex-shrink-0 sm:mr-2 mt-2 sm:mt-0">
-                  <article-request-form 
-                    ref="articleRequestFormRef"
-                    @refresh="fetchArticles"
-                    @click="submitRequest"
-                  />
-                </div>
               </div>
             </div>
+
+            <!-- URL输入框和上传按钮容器 -->
+            <div class="flex flex-col sm:flex-1 w-full sm:flex-row items-center gap-4">
+              <!-- 文章URL输入框 -->
+              <input
+                type="text"
+                v-model="requestUrl"
+                :placeholder="t('summarize.urlPlaceholder')"
+                class="w-full sm:flex-grow px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent bg-white"
+                @click="handlePaste"
+                @keyup.enter="submitRequest"
+              />
+              
+              <!-- 上传按钮 -->
+              <div class="w-[80px] sm:w-[100px] self-center sm:self-auto sm:flex-shrink-0 sm:mr-2 mt-2 sm:mt-0">
+                <article-request-form 
+                  ref="articleRequestFormRef"
+                  @refresh="fetchArticles"
+                  @click="submitRequest"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
           <!-- 我的上传区域 -->
@@ -222,13 +222,23 @@
               </button>
             </div>
           </div>
-          <!-- 文章列表区域 -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <article-card
-              v-for="article in filteredArticles"
-              :key="article.id"
-              :article="article"
-            />
+          <!-- 修改文章列表区域的容器结构 -->
+          <div class="articles-section w-[1176px] mx-auto">
+            <!-- 文章标题 - 根据 Figma 调整字体样式 -->
+            <div class="h-[28px] mb-[10px]">
+              <h2 class="font-['PingFang_SC'] text-[20px] font-semibold leading-[28px] text-[#000000]">
+                {{ t('home.articles.title') }}
+              </h2>
+            </div>
+            
+            <!-- 文章卡片网格容器 -->
+            <div class="articles-grid grid grid-cols-3 gap-[28px]">
+              <ArticleCard
+                v-for="article in articles"
+                :key="article.id"
+                :article="article"
+              />
+            </div>
           </div>
 
           <!-- 加载状态提示 -->
@@ -323,7 +333,7 @@ const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微', '视频']
 const articles = ref<Article[]>([])
 const selectedTag = ref('all')
 
-// 使用预定义的标签替代动态计算的标签
+// 用预定义的标签替代动态计算的标签
 const tags = computed(() => PREDEFINED_TAGS)
 
 // 分页相关的状态
@@ -392,7 +402,7 @@ const fetchArticles = async (isRefresh = false) => {
     articles.value = isRefresh || hasFilters.value ? data : [...articles.value, ...data]
     
     // 更新是否还有更多数据
-    // 如果有筛选条件，就不显示加载更多
+    // 如���有筛选条件��就不显示加载更多
     hasMore.value = hasFilters.value ? false : (count ? from + data.length < count : false)
 
     // 只在完整刷新时更新缓存
@@ -474,7 +484,7 @@ const fetchAuthors = async () => {
   }
 }
 
-// 修改 onMounted
+// 改 onMounted
 onMounted(async () => {
   isLoadingAuthors.value = true // 始化时设置loading
 
@@ -530,7 +540,7 @@ const articleForm = ref<Partial<Article>>({
 
 const selectTag = (tag: string): void => {
   selectedTag.value = tag
-  resetPageState() // 重置并重新获取数据
+  resetPageState() // 重置并新获取数据
 }
 
 const handleUpload = () => {
@@ -640,7 +650,7 @@ const authors = ref<Author[]>([])
 const selectedChannels = ref<string[]>([])
 const selectedAuthors = ref<number[]>([])
 
-// 切换渠道选择
+// 切换道选择
 const toggleChannel = (channel: string) => {
   const index = selectedChannels.value.indexOf(channel)
   if (index === -1) {
