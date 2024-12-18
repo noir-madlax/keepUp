@@ -174,7 +174,7 @@ const fetchUserArticles = async () => {
     const processedRequests = await Promise.all(
       requestsData.map(async (request) => {
         // 如果不是已处理状态，直接返回请求信息
-        if (request.status !== 'processed' || !request.original_url) {
+        if (request.status !== 'processed' || !request.url) {
           return request
         }
 
@@ -194,7 +194,7 @@ const fetchUserArticles = async () => {
               icon
             )
           `)
-          .eq('original_link', request.original_url)
+          .eq('original_link', request.url)
           .single()
 
         if (articleError) {
@@ -206,7 +206,7 @@ const fetchUserArticles = async () => {
           title: articleData.title,
           author: articleData.author,
           publish_date: articleData.publish_date,
-          channel: articleData.channel,
+          channel: request.platform,
           cover_image_url: articleData.cover_image_url
         }
       })
