@@ -30,15 +30,27 @@ onMounted(() => {
   updateSW = registerSW({
     onNeedRefresh() {
       needRefresh.value = true
+    },
+    immediate: true,
+    onRegisteredSW(swUrl, r) {
+      r?.update()
+      
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        window.location.reload()
+      })
     }
   })
 })
 
 const updateServiceWorker = async () => {
   if (updateSW) {
+    await caches.keys().then(keys => {
+      return Promise.all(
+        keys.map(key => caches.delete(key))
+      )
+    })
+    
     await updateSW()
-    needRefresh.value = false
-    window.location.reload()
   }
 }
 

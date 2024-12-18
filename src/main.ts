@@ -23,4 +23,31 @@ router.beforeEach((to, from) => {
   return true
 })
 
+// 添加缓存控制
+if (import.meta.env.PROD) {
+  // 在生产环境下设置适当的缓存控制头
+  const meta = document.createElement('meta')
+  meta.httpEquiv = 'Cache-Control'
+  meta.content = 'no-cache, no-store, must-revalidate'
+  document.head.appendChild(meta)
+  
+  // 处理 cookie 和本地存储
+  const clearBrowserData = async () => {
+    // 清理不需要持久化的数据
+    const preserveKeys = ['auth-token', 'user-preferences']  // 需要保留的关键数据
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && !preserveKeys.includes(key)) {
+        localStorage.removeItem(key)
+      }
+    }
+    
+    // 清理过期的 sessionStorage
+    sessionStorage.clear()
+  }
+  
+  // 在页面加载时执行清理
+  window.addEventListener('load', clearBrowserData)
+}
+
 app.mount('#app')
