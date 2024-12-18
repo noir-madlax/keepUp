@@ -83,7 +83,7 @@
     />
 
     <!-- 主要内容区域 -->
-    <pull-to-refresh class="pt-[71px]" :onRefresh="handleRefresh">
+    <pull-to-refresh class="pt-[0px]" :onRefresh="handleRefresh">
       <div class="px-4 sm:px-8 py-6 overflow-x-hidden">
         <!-- 修改容器最大宽度并确保居中 -->
         <div class="max-w-screen-2xl mx-auto w-full">
@@ -137,7 +137,10 @@
         </div>
 
           <!-- 我的上传区域 -->
-          <my-uploads-section />
+          <my-uploads-section 
+            ref="myUploadsRef"
+            @upload="submitRequest"
+          />
 
           <!-- 发现区域 -->
           <div class="mb-8">
@@ -402,7 +405,7 @@ const fetchArticles = async (isRefresh = false) => {
     articles.value = isRefresh || hasFilters.value ? data : [...articles.value, ...data]
     
     // 更新是否还有更多数据
-    // 如���有筛选条件��就不显示加载更多
+    // 如有筛选条件就不显示加载更多
     hasMore.value = hasFilters.value ? false : (count ? from + data.length < count : false)
 
     // 只在完整刷新时更新缓存
@@ -452,7 +455,7 @@ const isLoadingAuthors = ref(true)
 // 修改作者获取函数
 const fetchAuthors = async () => {
   try {
-    // 1. 先从 IndexedDB 获取存数据
+    // 1. 先 IndexedDB 获取存数据
     const cachedAuthors = await localforage.getItem('authors-cache')
     if (cachedAuthors) {
       authors.value = cachedAuthors as Author[]
@@ -558,7 +561,7 @@ const handleLogout = async () => {
     ElMessage.success('已退出登录')
   } catch (error) {
     console.error('Logout error:', error)
-    ElMessage.error('退出失败，请重试')
+    ElMessage.error('退出���败，请重试')
   }
 }
 
@@ -856,6 +859,16 @@ const handlePaste = async () => {
 const submitRequest = () => {
   if (articleRequestFormRef.value) {
     articleRequestFormRef.value.openModalWithUrl(requestUrl.value)
+  }
+}
+
+// 添加对 MyUploadsSection 的引用
+const myUploadsRef = ref<InstanceType<typeof MyUploadsSection> | null>(null)
+
+// 添加刷新处理函数
+const handleUploadRefresh = () => {
+  if (myUploadsRef.value) {
+    myUploadsRef.value.fetchUserArticles()
   }
 }
 </script>

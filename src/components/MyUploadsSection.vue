@@ -24,7 +24,7 @@
         @scroll="handleScroll"
       >
         <!-- NewUploadCard 固定在第一个位置 -->
-        <div class="upload-container flex-shrink-0">
+        <div class="upload-container flex-shrink-0" @click="handleNewUploadClick">
           <!-- Upload Icon -->
           <div class="upload-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="66" height="66" viewBox="0 0 66 66" fill="none">
@@ -178,7 +178,7 @@ const fetchUserArticles = async () => {
           return request
         }
 
-        // 通过 original_url 查找对应的文章
+        // 通��� original_url 查找对应的文章
         const { data: articleData, error: articleError } = await supabase
           .from('keep_articles')
           .select(`
@@ -203,6 +203,7 @@ const fetchUserArticles = async () => {
 
         return {
           ...request,
+          id: articleData.id,
           title: articleData.title,
           author: articleData.author,
           publish_date: articleData.publish_date,
@@ -231,6 +232,15 @@ watch(() => authStore.user?.id, (newId) => {
   }
 })
 
+// 添加 emit
+const emit = defineEmits(['upload'])
+
+// 修改点击处理函数
+const handleNewUploadClick = () => {
+  // 触发与首页相同的上传事件
+  emit('upload')
+}
+
 // Lifecycle
 onMounted(async () => {
   // 等待用户信息加载完成
@@ -250,6 +260,11 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleScroll)
+})
+
+// 添加暴露给父组件的刷新方法
+defineExpose({
+  fetchUserArticles
 })
 </script>
 

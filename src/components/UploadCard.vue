@@ -1,9 +1,10 @@
 <template>
   <!-- 根据状态显示不同的卡片 -->
-  <div v-if="article.status === 'processed'" class="article-card">
+  <div v-if="article.status === 'processed'" class="article-card cursor-pointer hover:shadow-lg transition-shadow" @click="navigateToDetail(article.id)">
     <!-- 已完成的文章卡片内容 -->
     <div class="article-image">
       <img :src="getArticleImage()" :alt="article.title || '文章封面'">
+      <div class="upload-time">{{ getUploadTimeText(article.created_at) }}上传</div>
     </div>
     
     <div class="title-text">
@@ -21,12 +22,14 @@
             class="author-avatar"
           />
         </div>
-        <span class="author-name">{{ article.author?.name || '未知作者' }}</span>
+        <span class="author-name">
+          {{ article.author?.name || '未知作者' }}
+        </span>
       </div>
       
       <!-- Channel and Date -->
       <div class="meta-container">
-        <div class="channel-icon">
+        <div class="finish-channel-icon">
           <img 
             v-if="article.channel"
             :src="`/images/icons/${getChannelIcon(article.channel)}`" 
@@ -46,6 +49,7 @@
           <rect width="176" height="98" rx="8" fill="#D9D9D9"/>
         </g>
       </svg>
+      <div class="upload-time">{{ getUploadTimeText(article.created_at) }}上传</div>
     </div>
 
     <div class="processing-status">
@@ -70,12 +74,22 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { format } from 'date-fns'
+import { format, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns'
 import type { ArticleRequest } from '@/types/article'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   article: ArticleRequest
 }>()
+
+const router = useRouter()
+
+// 添加跳转方法
+const navigateToDetail = (articleId?: string) => {
+  if (articleId) {
+    router.push(`/article/${articleId}`)
+  }
+}
 
 // 获取状态显示文本
 const getStatusText = computed(() => {
@@ -150,10 +164,36 @@ const getPlatformIcon = (platform: string | undefined) => {
   
   return 'default-channel.svg'
 }
+
+// 添加计算上传时间的函数
+const getUploadTimeText = (uploadTime?: string) => {
+  if (!uploadTime) return '未知时间'
+  
+  const now = new Date()
+  const uploadDate = new Date(uploadTime)
+  const diffInMinutes = differenceInMinutes(now, uploadDate)
+  const diffInHours = differenceInHours(now, uploadDate)
+  const diffInDays = differenceInDays(now, uploadDate)
+
+  if (diffInMinutes < 1) {
+    return '刚刚'
+  }
+  
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes}分钟前`
+  }
+  
+  if (diffInDays < 1) {
+    return `${diffInHours}小时前`
+  }
+  
+  return `${diffInDays}天前`
+}
 </script>
 
 <style scoped>
 .article-card {
+  position: relative;
   width: 200px;
   padding: 16px 12px;
   display: flex;
@@ -163,11 +203,19 @@ const getPlatformIcon = (platform: string | undefined) => {
   border-radius: 12px;
   background: #FFF;
   box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease-in-out;
+}
+
+.article-card:hover {
+  transform: translateY(-2px);
 }
 
 .article-image {
   width: 176px;
   height: 98px;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .article-image img {
@@ -180,61 +228,73 @@ const getPlatformIcon = (platform: string | undefined) => {
 .title-text {
   width: 158px;
   height: 44px;
-  overflow: hidden;
-  color: #333;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: #333333;
   font-family: "PingFang SC";
   font-size: 16px;
-  font-style: normal;
   font-weight: 600;
-  line-height: normal;
+  line-height: 22px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
 }
 
 .author-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  width: 100%;
 }
 
 .author-avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
 .author-name {
-  color: #333;
+  color: #666666;
   font-family: "PingFang SC";
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 250;
+  line-height: 20px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
+  word-break: break-all;
+  max-width: 100px;
 }
 
 .meta-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  width: 100%;
 }
 
 .date-text {
-  color: #666;
+  color: #666666;
   font-family: "PingFang SC";
   font-size: 14px;
-  font-weight: 400;
-  line-height: normal;
+  font-weight: 250;
+  line-height: 20px;
 }
 
-.channel-icon {
+.finish-channel-icon {
   width: 20px;
   height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.channel-icon img {
+  width: 100%;
+  height: 100%;
 }
 
 /* 处理中卡基础样式 */
@@ -260,6 +320,7 @@ const getPlatformIcon = (platform: string | undefined) => {
   flex-shrink: 0;
   border-radius: 8px;
   overflow: hidden;
+  position: relative;  /* 添加相对定位 */
 }
 
 .image-placeholder svg {
@@ -327,15 +388,73 @@ const getPlatformIcon = (platform: string | undefined) => {
   width: 20px;
   height: 20px;
   display: flex;
-  justify-content: flex-end;
   align-items: center;
+  justify-content: center;
   opacity: 0.4;
-  align-self: flex-end;  /* 添加右对齐 */
-  margin-top: auto;      /* 添加自动边距使其置底 */
 }
 
 .channel-icon svg {
   width: 20px;
   height: 20px;
+}
+
+/* 修改 info-container 样式 */
+.info-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;  /* 控制作者区域和channel区域的垂直间距 */
+  width: 100%;
+}
+
+/* 修改 author-container 样式 */
+.author-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+/* 添加 author-avatar-wrapper 样式 */
+.author-avatar-wrapper {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #F5F5F5;  /* 添加背景色 */
+  flex-shrink: 0;  /* 防止被压缩 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 修改 meta-container 样式 */
+.meta-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+/* 修改 author-avatar 样式 */
+.author-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 修改上传时间样式 */
+.upload-time {
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  color: #FFFFFF;  /* 白色文字 #FFFFFF 100% */
+  font-family: "PingFang SC";
+  font-size: 11px;
+  font-weight: Medium;
+  line-height: 15px;
+  background: rgba(0, 0, 0, 0.8);  /* 黑色背景 #000000 80% */
+  padding: 2px 4px;
+  border-radius: 4px;
+  z-index: 1;
 }
 </style>

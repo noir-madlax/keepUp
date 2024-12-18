@@ -253,8 +253,8 @@ const submitRequest = async () => {
   }
 
   try {
-    // 发送请求到后端，添加 user_id
-    fetch('/api/workflow/process', {
+    // 发送请求到后端
+    await fetch('/api/workflow/process', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -264,13 +264,15 @@ const submitRequest = async () => {
         summary_languages: summaryLanguages.value,
         subtitle_languages: subtitleLanguages.value,
         detailed_languages: detailedLanguages.value,
-        user_id: authStore.user?.id  // 添加用户ID
+        user_id: authStore.user?.id
       })
     })
 
     ElMessage.success(t('summarize.messages.submitSuccess'))
     requestUrl.value = ''
     showUploadModal.value = false
+    
+    // 触发刷新事件
     emit('refresh')
     
   } catch (error) {
