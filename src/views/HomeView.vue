@@ -225,9 +225,9 @@
               </button>
             </div>
           </div>
-          <!-- 修改文章列表区域的容器结构 -->
-          <div class="articles-section w-[1176px] mx-auto">
-            <!-- 文章标题 - 根据 Figma 调整字体样式 -->
+          <!-- 文章列表区域的容器结构 -->
+          <div class="articles-section">
+            <!-- 文章标题 -->
             <div class="h-[28px] mb-[10px]">
               <h2 class="font-['PingFang_SC'] text-[20px] font-semibold leading-[28px] text-[#000000]">
                 {{ t('home.articles.title') }}
@@ -235,7 +235,7 @@
             </div>
             
             <!-- 文章卡片网格容器 -->
-            <div class="articles-grid grid grid-cols-3 gap-[28px]">
+            <div class="articles-grid">
               <ArticleCard
                 v-for="article in articles"
                 :key="article.id"
@@ -336,7 +336,7 @@ const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微', '视频']
 const articles = ref<Article[]>([])
 const selectedTag = ref('all')
 
-// 用预定义的标签替代动态计算的标签
+// 用预定义��标签替代动态计算的标签
 const tags = computed(() => PREDEFINED_TAGS)
 
 // 分页相关的状态
@@ -378,7 +378,7 @@ const fetchArticles = async (isRefresh = false) => {
 
     isLoading.value = true
 
-    // 如果有筛选条件，不使用分页
+    // 如果有筛选条件，不使用分
     const from = hasFilters.value ? 0 : (currentPage.value - 1) * pageSize
     const to = hasFilters.value ? 999 : from + pageSize - 1
 
@@ -452,7 +452,7 @@ const filteredArticles = computed(() => {
 // 添加 loading 状态
 const isLoadingAuthors = ref(true)
 
-// 修改作者获取函数
+// 改作者获取函数
 const fetchAuthors = async () => {
   try {
     // 1. 先 IndexedDB 获取存数据
@@ -561,7 +561,7 @@ const handleLogout = async () => {
     ElMessage.success('已退出登录')
   } catch (error) {
     console.error('Logout error:', error)
-    ElMessage.error('退出���败，请重试')
+    ElMessage.error('退出失败，请重试')
   }
 }
 
@@ -744,7 +744,7 @@ const isSlowConnection = computed(() => {
   return false
 })
 
-// 监听络状态变化
+// 监听网络状态变化
 onMounted(() => {
   if ('connection' in navigator) {
     (navigator as any).connection.addEventListener('change', () => {
@@ -845,7 +845,7 @@ const handleRefresh = async () => {
 const requestUrl = ref('')
 const articleRequestFormRef = ref<InstanceType<typeof ArticleRequestForm> | null>(null)
 
-// 添加剪贴板处理函数
+// 添加贴板处理函数
 const handlePaste = async () => {
   try {
     const text = await navigator.clipboard.readText()
@@ -896,5 +896,39 @@ const handleUploadRefresh = () => {
 /* 添加容器过渡动画 */
 .my-uploads-section {
   transition: all 0.3s ease;
+}
+
+.articles-section {
+  width: 100% !important;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.articles-grid {
+  display: grid;
+  gap: 28px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* 在桌面端时强制显示3列，并设置合适的列宽 */
+@media (min-width: 1199px) {
+  .articles-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 在中等屏幕上显示2列 */
+@media (min-width: 900px) and (max-width: 1200px) {
+  .articles-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 在移动端显示1列 */
+@media (max-width: 450px) {
+  .articles-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

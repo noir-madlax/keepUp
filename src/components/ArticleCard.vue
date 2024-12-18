@@ -94,7 +94,9 @@ const getChannelIcon = (channel: string): string => {
 <style scoped>
 .card-container {
   display: flex;
-  width: 369px;
+  width: 100%;
+  min-width: 340px;
+  max-width: 450px;
   height: 190px;
   padding: 12px;
   flex-direction: column;
@@ -118,12 +120,13 @@ const getChannelIcon = (channel: string): string => {
   justify-content: space-between;
   gap: 12px;
   width: 100%;
+  overflow: hidden;
 }
 
 .article-title {
   height: 72px;
-  min-width: 200px;
-  max-width: 100%;
+  min-width: 140px;
+  max-width: calc(100% - 140px);
   flex: 1;
   overflow: hidden;
   color: #333;
@@ -139,11 +142,24 @@ const getChannelIcon = (channel: string): string => {
 }
 
 .cover-image {
-  width: 100px;
-  height: 100px;
+  width: auto;
+  height: 120px;
   flex-shrink: 0;
   border-radius: 12px;
+  max-width: 120px;
   object-fit: cover;
+  object-position: center;
+}
+
+@media (min-width: 400px) {
+  .cover-image {
+    max-width: 190px;
+    object-fit: contain;
+  }
+  
+  .article-title {
+    max-width: calc(100% - 202px);
+  }
 }
 
 .divider {
