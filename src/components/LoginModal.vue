@@ -39,9 +39,12 @@ import { ElMessage } from 'element-plus'
 
 const authStore = useAuthStore()
 
+const emit = defineEmits(['close', 'success'])
+
 const handleGithubLogin = async () => {
   try {
     await authStore.signInWithGithub()
+    emit('success')
   } catch (error) {
     console.error('GitHub login error:', error)
     ElMessage.error('登录失败，请重试')
@@ -51,11 +54,10 @@ const handleGithubLogin = async () => {
 const handleGoogleLogin = async () => {
   try {
     await authStore.signInWithGoogle()
+    emit('success')
   } catch (error) {
     console.error('Google login error:', error)
     ElMessage.error('登录失败，请重试')
   }
 }
-
-defineEmits(['close'])
 </script> 

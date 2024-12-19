@@ -178,7 +178,7 @@ const fetchUserArticles = async () => {
           return request
         }
 
-        // 通��� original_url 查找对应的文章
+        // 通过 original_url 查找对应的文章
         const { data: articleData, error: articleError } = await supabase
           .from('keep_articles')
           .select(`
@@ -236,9 +236,32 @@ watch(() => authStore.user?.id, (newId) => {
 const emit = defineEmits(['upload'])
 
 // 修改点击处理函数
-const handleNewUploadClick = () => {
-  // 触发与首页相同的上传事件
-  emit('upload')
+const handleNewUploadClick = async () => {
+  try {
+    // 读取剪贴板内容
+    const clipboardText = await navigator.clipboard.readText()
+    // 验证是否是有效的URL
+    const isValidUrl = clipboardText.startsWith('http://') || clipboardText.startsWith('https://')
+    
+    // 使用剪贴板内容或默认标记URL
+    const uploadUrl = isValidUrl ? clipboardText : 'https://'
+    
+    if (!authStore.isAuthenticated) {
+      // 存储到 localStorage，复用现有逻辑
+      localStorage.setItem('pendingUploadUrl', uploadUrl)
+    }
+    
+    // 触发上传事件，并传递 URL
+    emit('upload', uploadUrl)
+  } catch (err) {
+    console.error('Failed to read clipboard:', err)
+    // 读取失败时使用默认标记URL
+    const defaultUrl = 'https://'
+    if (!authStore.isAuthenticated) {
+      localStorage.setItem('pendingUploadUrl', defaultUrl)
+    }
+    emit('upload', defaultUrl)
+  }
 }
 
 // Lifecycle

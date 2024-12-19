@@ -303,12 +303,9 @@ onUnmounted(() => {
   document.body.style.overflow = ''
 })
 
-// 添加打开 modal 的方法
+// 修改 openModalWithUrl 方法
 const openModalWithUrl = (url: string) => {
-  if (!authStore.isAuthenticated) {
-    ElMessage.warning(t('common.pleaseLogin'))
-    return
-  }
+  // 移除登录检查，由父组件统一处理
   requestUrl.value = url
   showUploadModal.value = true
 }
@@ -318,21 +315,15 @@ defineExpose({
   openModalWithUrl
 })
 
-// 添加 handleManual 方法
+// 修改 handleManual 方法
 const handleManual = () => {
-  if (!authStore.isAuthenticated) {
-    ElMessage.warning(t('common.pleaseLogin'))
-    return
-  }
+  // 移除登录检查，由父组件统一处理
   // TODO: 处理手动上传逻辑
 }
 
 // 修改按钮点击处理
 const handleClick = () => {
-  if (!authStore.isAuthenticated) {
-    ElMessage.warning(t('common.pleaseLogin'))
-    return
-  }
+  // 移除登录检查，由父组件统一处理
   emit('click')
 }
 </script> 
