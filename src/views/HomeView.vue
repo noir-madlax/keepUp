@@ -236,11 +236,65 @@
             
             <!-- 文章卡片网格容器 -->
             <div class="articles-grid">
+              <!-- 实际文章列表 -->
               <ArticleCard
-                v-for="article in articles"
+                v-for="article in filteredArticles"
                 :key="article.id"
                 :article="article"
               />
+
+              <!-- 加载状态显示骨架图 - 调整为3个且只在加载更多时显示 -->
+              <template v-if="isLoading && currentPage > 1">
+                <div v-for="n in 3" :key="n" 
+                  class="article-card bg-white rounded-lg shadow-md animate-pulse"
+                >
+                  <!-- 封面图骨架 - 保持16:9比例 -->
+                  <div class="aspect-video bg-gray-200 rounded-t-lg"></div>
+                  
+                  <!-- 内容区域 -->
+                  <div class="p-4 space-y-4">
+                    <!-- 标题骨架 - 两行 -->
+                    <div class="space-y-2">
+                      <div class="h-5 bg-gray-200 rounded w-full"></div>
+                      <div class="h-5 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                    
+                    <!-- 底部信息骨架 -->
+                    <div class="flex items-center justify-between">
+                      <!-- 作者信息 -->
+                      <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
+                        <div class="h-4 bg-gray-200 rounded w-20"></div>
+                      </div>
+                      <!-- 日期 -->
+                      <div class="h-4 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <!-- 初始加载时的骨架图 -->
+              <template v-if="isLoading && currentPage === 1">
+                <div v-for="n in pageSize" :key="n" 
+                  class="article-card bg-white rounded-lg shadow-md animate-pulse"
+                >
+                  <!-- 与上面相同的骨架结构 -->
+                  <div class="aspect-video bg-gray-200 rounded-t-lg"></div>
+                  <div class="p-4 space-y-4">
+                    <div class="space-y-2">
+                      <div class="h-5 bg-gray-200 rounded w-full"></div>
+                      <div class="h-5 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
+                        <div class="h-4 bg-gray-200 rounded w-20"></div>
+                      </div>
+                      <div class="h-4 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
 
@@ -336,7 +390,7 @@ const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微', '视频']
 const articles = ref<Article[]>([])
 const selectedTag = ref('all')
 
-// 用预定义��标签替代动态计算的标签
+// 用预定义的标签替代动态计算的标签
 const tags = computed(() => PREDEFINED_TAGS)
 
 // 分页相关的状态
@@ -358,7 +412,7 @@ onActivated(() => {
   resetPageState()
 })
 
-// 添加一个性来判断是否有筛选条件
+// 添加��个性来判断是否有筛选条件
 const hasFilters = computed(() => {
   return selectedTag.value !== 'all' || 
          selectedChannels.value.length > 0 || 
@@ -930,5 +984,20 @@ const handleUploadRefresh = () => {
   .articles-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 确保骨架图卡片与实际文章卡片样式一致 */
+.article-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 保持原有的网格布局样式 */
+.articles-grid {
+  display: grid;
+  gap: 28px;
+  width: 100%;
+  margin: 0 auto;
 }
 </style>
