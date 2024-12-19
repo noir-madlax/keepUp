@@ -80,6 +80,7 @@
     <login-modal 
       v-if="showLoginModal" 
       @close="showLoginModal = false"
+      @success="handleLoginSuccess"
     />
 
     <!-- 主要内容区域 -->
@@ -99,7 +100,7 @@
                 {{ t('summarize.title') }}
               </h3>
               
-              <!-- 3个支持的渠道图标 - 优化响应式显示 -->
+              <!-- 3个持的渠道图标 - 优化响应式显示 -->
               <div class="flex items-center gap-3 ml-auto sm:ml-4">
                 <img 
                   v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify']"
@@ -129,7 +130,7 @@
                 <article-request-form 
                   ref="articleRequestFormRef"
                   @refresh="fetchArticles"
-                  @click="submitRequest"
+                  @click="() => submitRequest(requestUrl.value)"
                 />
               </div>
             </div>
@@ -362,7 +363,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted, onActivated } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted, onActivated, nextTick } from 'vue'
 import ArticleCard from '../components/ArticleCard.vue'
 import UploadCard from '../components/UploadCard.vue'
 import { supabase } from '../supabaseClient'
@@ -394,7 +395,7 @@ const selectedTag = ref('all')
 const tags = computed(() => PREDEFINED_TAGS)
 
 // 分页相关的状态
-const pageSize = 9 // 每页加载的文章数量
+const pageSize = 9 // 每加载的文章数量
 const currentPage = ref(1)
 const isLoading = ref(false) // 加载状态
 const hasMore = ref(true) // 否还有更多数据
@@ -404,7 +405,7 @@ const resetPageState = () => {
   currentPage.value = 1
   articles.value = []
   hasMore.value = true
-  fetchArticles(true) // 重新获取第一页数据
+  fetchArticles(true) // 重新获取第页数据
 }
 
 // 监路由激活
@@ -412,7 +413,7 @@ onActivated(() => {
   resetPageState()
 })
 
-// 添加��个性来判断是否有筛选条件
+// 添加个性来判断是否有筛选条件
 const hasFilters = computed(() => {
   return selectedTag.value !== 'all' || 
          selectedChannels.value.length > 0 || 
@@ -459,7 +460,7 @@ const fetchArticles = async (isRefresh = false) => {
     articles.value = isRefresh || hasFilters.value ? data : [...articles.value, ...data]
     
     // 更新是否还有更多数据
-    // 如有筛选条件就不显示加载更多
+    // 如有筛选件就不显示加载更多
     hasMore.value = hasFilters.value ? false : (count ? from + data.length < count : false)
 
     // 只在完整刷新时更新缓存
@@ -545,7 +546,7 @@ const fetchAuthors = async () => {
 onMounted(async () => {
   isLoadingAuthors.value = true // 始化时设置loading
 
-  // 先恢复缓存的状态
+  // 先恢���缓存的状态
   const [savedSelectedAuthors, savedExpanded] = await Promise.all([
     localforage.getItem('selected-authors'),
     localforage.getItem('authors-expanded')
@@ -583,6 +584,24 @@ onMounted(async () => {
 
   // 添加滚动监听
   window.addEventListener('scroll', handleScroll)
+
+  // 检查是否有待处理的URL
+  const pendingUrl = localStorage.getItem('pendingUploadUrl')
+  if (pendingUrl && authStore.isAuthenticated) {
+    // 确保用户信息已加载
+    if (!authStore.user) {
+      await authStore.loadUser()
+    }
+    
+    // 等待组件完全挂载
+    await nextTick()
+    
+    // 如果用户已登录且组件已挂载，则打开上传modal
+    if (articleRequestFormRef.value && authStore.isAuthenticated) {
+      articleRequestFormRef.value.openModalWithUrl(pendingUrl)
+      localStorage.removeItem('pendingUploadUrl')
+    }
+  }
 })
 
 const articleForm = ref<Partial<Article>>({
@@ -646,7 +665,7 @@ const submitArticle = async () => {
     }
 
     if (!articleForm.value.title || !articleForm.value.content || !articleForm.value.author_id) {
-      ElMessage.error('题、内容和作者为必填项')
+      ElMessage.error('、内容和作者为必填项')
       return
     }
     
@@ -685,7 +704,7 @@ const submitArticle = async () => {
       }
     }
 
-    ElMessage.success('文章添加成功')
+    ElMessage.success('文章���加成功')
 
     showUploadModal.value = false
     resetForm()
@@ -861,7 +880,7 @@ onUnmounted(async () => {
   }
 })
 
-// 在数据更新时记录存时间
+// 在数据更新时记存时间
 const updateCacheTimestamp = async () => {
   await localforage.setItem('cache-timestamp', Date.now())
 }
@@ -876,7 +895,7 @@ const getChannelIcon = (channel: string): string => {
   return iconMap[channel] || ''
 }
 
-// 添加滚动加载处理函
+// 添加滚动加载处理函数
 const handleScroll = () => {
   // 获取滚容
   const container = document.documentElement
@@ -909,10 +928,48 @@ const handlePaste = async () => {
   }
 }
 
-// 添加提交处理函数
-const submitRequest = () => {
+// 添加临时存储url的变量
+const pendingUrl = ref('')
+
+// 修改 submitRequest 函数
+const submitRequest = async (url?: string) => {
+  // 如果没有传入url，则尝试获取输入框的值
+  let uploadUrl = url || requestUrl.value
+  
+  // 如果输入框也没有值，使用默认标记URL
+  if (!uploadUrl) {
+    uploadUrl = 'https://'
+  }
+  
+  if (!authStore.isAuthenticated) {
+    // 保存URL到localStorage
+    localStorage.setItem('pendingUploadUrl', uploadUrl)
+    showLoginModal.value = true
+    return
+  }
+  
+  // 确保用户已完全登录
+  if (!authStore.user) {
+    await authStore.loadUser()
+  }
+  
+  // 已登录则正常打开上传modal
   if (articleRequestFormRef.value) {
-    articleRequestFormRef.value.openModalWithUrl(requestUrl.value)
+    articleRequestFormRef.value.openModalWithUrl(uploadUrl)
+  }
+}
+
+// 2. 修改登录成功的处理函数
+const handleLoginSuccess = async () => {
+  showLoginModal.value = false
+  // 等待用户信息完全加载
+  await authStore.loadUser()
+  
+  // 如果有待处理的url，则打开上传modal
+  const pendingUrl = localStorage.getItem('pendingUploadUrl')
+  if (pendingUrl && articleRequestFormRef.value && authStore.isAuthenticated) {
+    articleRequestFormRef.value.openModalWithUrl(pendingUrl)
+    localStorage.removeItem('pendingUploadUrl')
   }
 }
 
@@ -965,7 +1022,7 @@ const handleUploadRefresh = () => {
   margin: 0 auto;
 }
 
-/* 在桌面端时强制显示3列，并设置合适的列宽 */
+/* 在桌面端时强制显示3列，并设置合适的列 */
 @media (min-width: 1199px) {
   .articles-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -986,7 +1043,7 @@ const handleUploadRefresh = () => {
   }
 }
 
-/* 确保骨架图卡片与实际文章卡片样式一致 */
+/* 确保架图卡片与实际文章卡片样式一致 */
 .article-card {
   height: 100%;
   display: flex;
