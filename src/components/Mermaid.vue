@@ -67,8 +67,8 @@ const transformer = {
 
     }
 
-    // 查找所有节点ID
-    const nodePattern = /\b([A-Za-z][A-Za-z0-9]*)\b\s*[\[\("\{]/g
+    // 修改节点识别的正则表达式，只匹配完整的节点ID（A、B、C、D、E、F等）
+    const nodePattern = /\b([A-F])\b(?=\[)/g
     const nodes = new Set<string>()
     let match
     
@@ -129,7 +129,7 @@ const debouncedUpdate = debounce(async () => {
         ? window.innerHeight * 0.8
         : window.innerHeight * 0.6 // 桌面端高度占比调整
       
-      // 根��宽高比和可用空间计算合适的容器尺寸
+      // 根据宽高比和可用空间计算合适的容器尺寸
       if (ratio > 1) { // 宽大于高
         containerWidth.value = `${Math.min(availableWidth, bbox.width)}px`
         containerHeight.value = `${Math.min(availableWidth / ratio, availableHeight)}px`
@@ -266,7 +266,7 @@ onBeforeUnmount(() => {
   opacity: 0 !important;
   fill: none !important;
   stroke: none !important;
-  display: none !important;  /* 完全���背景矩形 */
+  display: none !important;  /* 完全隐藏背景矩形 */
 }
 
 :deep(.node:hover rect) {
