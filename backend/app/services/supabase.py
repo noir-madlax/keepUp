@@ -53,7 +53,7 @@ class SupabaseService:
                 "article_id": article_id,
                 "section_type": section["section_type"],
                 "content": section["content"],
-                "sort_order": idx,
+                "sort_order": section.get("sort_order", idx),
                 "language": section["language"]
             }
             for idx, section in enumerate(sections)
@@ -158,7 +158,7 @@ class SupabaseService:
         section_type: str,
         language: str
     ) -> None:
-        """除指定文章的特定类型和语言的小���
+        """除指定文章的特定类型和��言的小节
         
         Args:
             article_id: 文章ID
@@ -231,7 +231,7 @@ class SupabaseService:
         """更新请求的润色内容
         
         Args:
-            request_id: 请求ID
+            request_id: ���求ID
             polished_content: Coze返回的润色结果
             language: 语言类型
         """
@@ -344,7 +344,7 @@ class SupabaseService:
             }).order("created_at").execute()
             
             if result.data:
-                logger.info(f"找到文章小节: article_id={article_id}, type={section_type}, count={len(result.data)}")
+                logger.info(f"找到文章小��: article_id={article_id}, type={section_type}, count={len(result.data)}")
                 return result.data
             
             logger.info(f"未找到文章小节: article_id={article_id}, type={section_type}")
@@ -424,7 +424,7 @@ class SupabaseService:
             }).eq('id', request_id).execute()
             
             if not result.data:
-                raise Exception(f"未找到 ID 为 {request_id} 的请求记录")
+                raise Exception(f"未找到 ID 为 {request_id} 的请求记���")
             
             logger.info(f"平台信息更新成功: ID={request_id}, Platform={platform}")
             
