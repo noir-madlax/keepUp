@@ -1,6 +1,6 @@
 <template>
   <!-- 页面容器 -->
-  <div class="min-h-screen bg-gray-50 overflow-x-hidden">
+  <div class="min-h-screen bg-white overflow-x-hidden">
     <!-- 顶部导航栏 -->
     <header class="fixed top-0 left-0 right-0 bg-white z-[999] w-full">
       <!-- 使用transition组件包裹两个导航样式 -->
@@ -182,9 +182,9 @@
       </div>
 
       <!-- 小节标签 -->
-      <div class="max-w-4xl mx-auto px-4 mt-6">
+      <div class="w-full mx-auto bg-white" style="max-width: min(100%, 1024px);">
         <!-- 小节标签 -->
-        <div class="flex flex-wrap gap-3 pb-4 border-b bg-white rounded-lg p-4 shadow-sm">
+        <div class="flex flex-wrap gap-3 p-4">
           <button
             v-for="sectionType in ALL_SECTION_TYPES"
             :key="sectionType"
@@ -198,35 +198,36 @@
           </button>
         </div>
 
+        <!-- 分割线 -->
+        <div class="h-[1px] bg-gray-200"></div>
+
         <!-- 文章内容部分 -->
-        <div class="mt-6">
-          <div class="bg-white rounded-lg shadow-sm p-4 md:p-8">
-            <article class="prose prose-sm md:prose-lg max-w-none">
-              <template v-if="sections.length">
-                <div 
-                  v-for="section in displaySections" 
-                  :key="section.id"
-                  class="mb-8"
-                  :data-section-type="section.section_type"
-                >
-                  <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
-                  <!-- 根据不同的小节类型使用不同的渲染方式 -->
-                  <template v-if="section.section_type === '思维导图'">
-                    <mind-map :content="section.content" />
-                  </template>
-                  <template v-else-if="section.section_type === '结构图'">
-                    <mermaid :content="section.content" />
-                  </template>
-                  <template v-else>
-                    <div v-html="marked(section.content)"></div>
-                  </template>
-                </div>
-              </template>
-              <div v-else>
-                <div v-html="markdownContent"></div>
+        <div class="p-4 md:p-8">
+          <article class="prose prose-sm md:prose-lg max-w-none">
+            <template v-if="sections.length">
+              <div 
+                v-for="section in displaySections" 
+                :key="section.id"
+                class="mb-8"
+                :data-section-type="section.section_type"
+              >
+                <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
+                <!-- 根据不同的小节类型使用不同的渲染方式 -->
+                <template v-if="section.section_type === '思维导图'">
+                  <mind-map :content="section.content" />
+                </template>
+                <template v-else-if="section.section_type === '结构图'">
+                  <mermaid :content="section.content" />
+                </template>
+                <template v-else>
+                  <div v-html="marked(section.content)"></div>
+                </template>
               </div>
-            </article>
-          </div>
+            </template>
+            <div v-else>
+              <div v-html="markdownContent"></div>
+            </div>
+          </article>
         </div>
       </div>
     </template>
@@ -325,9 +326,9 @@ const editForm = ref<Partial<Article>>({})
 // 小节管理
 const selectedSections = ref<SectionType[]>(DEFAULT_SELECTED_SECTIONS)
 
-// 根据当前角获取可用的小节类型
+// 根据当前语言获取可用的小节类型
 const availableSectionTypes = computed(() => {
-  // 始终返回所小节类型
+  // 始终返回所有小节类型
   return ALL_SECTION_TYPES
 })
 
@@ -340,11 +341,13 @@ const displaySections = computed(() => {
 
 // 切换小节显示状态
 const toggleSection = (sectionType: SectionType) => {
-  const index = selectedSections.value.indexOf(sectionType)
-  if (index === -1) {
-    selectedSections.value.push(sectionType)
+  // 创建新数组来更新
+  if (selectedSections.value.includes(sectionType)) {
+    // 如果已选中，则移除
+    selectedSections.value = selectedSections.value.filter(type => type !== sectionType)
   } else {
-    selectedSections.value.splice(index, 1)
+    // 如果未选中，则添加
+    selectedSections.value = [...selectedSections.value, sectionType]
   }
 }
 
@@ -357,7 +360,7 @@ const formatDate = (date: string | null) => {
   try {
     return format(new Date(date), 'yyyy-MM-dd')
   } catch (error) {
-    console.error('日期式化错误:', error)
+    console.error('日期格式化错误:', error)
     return ''
   }
 }
@@ -393,7 +396,7 @@ const fetchArticle = async () => {
 
     if (sectionsError) throw sectionsError
 
-    // 如果当前语言没有内容,尝试获取另一种语言的内容
+    // 如果当前语言没有内容,尝试获取另一种语���的内容
     if (!sectionsData?.length) {
       const fallbackLanguage = locale.value === 'zh' ? 'en' : 'zh'
       const { data: fallbackData, error: fallbackError } = await supabase
@@ -455,7 +458,7 @@ const submitEdit = async () => {
         .from('keep_article_sections')
         .delete()
         .eq('article_id', article.value?.id)
-        .eq('language', locale.value)  // 只除当前语言的内容
+        .eq('language', locale.value)  // 只删除当前语言的内容
 
       if (deleteError) throw deleteError
 
@@ -507,18 +510,31 @@ const handleScroll = () => {
   
   // 只有在允许导航切换时才执行切换逻辑
   if (allowNavSwitch.value) {
+    // 获取第一个section元素
+    const firstSection = document.querySelector('[data-section-type]')
+    if (!firstSection) return
+    
+    // 获取第一个section距离视口顶部的距离
+    const firstSectionRect = firstSection.getBoundingClientRect()
+    // 设置一个阈值，比如当第一个section进入视口顶部200px范围内时
+    const threshold = 200
+    
     if (currentScroll > lastScrollTop.value) {
       // 向下滚动
-      if (currentScroll > 100) {
+      // 只有当第一个section开始进入视口，且滚动超过100px时才显示新导航
+      if (currentScroll > 100 && firstSectionRect.top < threshold) {
         showNavB.value = true
       }
     } else {
       // 向上滚动
-      showNavB.value = false
+      // 只有当向上滚动超过50px时，才切换回原来的导航
+      if (lastScrollTop.value - currentScroll > 50) {
+        showNavB.value = false
+      }
     }
   }
   
-  // 更新上一次的滚动位置
+  // 更新上次的滚动位置
   lastScrollTop.value = currentScroll <= 0 ? 0 : currentScroll
 
   // 检测当前可见的section
@@ -606,7 +622,7 @@ const nextSection = computed(() => {
     : null
 })
 
-// 添加一个变量来跟踪滑动方向
+// 添加��个变量来跟踪滑动方向
 const transitionName = ref('slide-right')
 
 // 修改 scrollToSection 函数
