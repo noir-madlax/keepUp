@@ -1,19 +1,20 @@
 <template>
-  <div>
+  <!-- 添加 flex 和居中样式到父容器 -->
+  <div class="justify-center">
     <!-- 主要上传按钮，点击显示模态框 -->
     <button 
       @click="handleClick"
-      class="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white rounded hover:opacity-90 transition-opacity w-[85px]"
+      class="flex items-center justify-center gap-2 px-4 py-2 text-sm text-white rounded hover:opacity-90 transition-opacity w-[110px] h-[36px]"
       style="background: linear-gradient(to right, #2272EB 0%, #00BEFF 100%)"
     >
-      <!-- 按钮图标 -->
+      <!-- 调整图标尺寸和对齐方式 -->
       <img
         src="/images/icons/upload_button.png"
         alt="upload icon"
-        class="w-4 h-4"
+        class="w-4 h-4 object-contain"
       />
-      <!-- 按钮文字 -->
-      <span>{{ t('summarize.title') }}</span>
+      <!-- 添加行高确保文字垂直居中 -->
+      <span class="leading-none">{{ t('summarize.title') }}</span>
     </button>
 
     <!-- 使用 Teleport 将 modal 传送到 body，并添加滚动锁定 -->
