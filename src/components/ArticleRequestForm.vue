@@ -258,7 +258,7 @@ const submitRequest = async () => {
     }
     
     // 发送请求到后端
-    await fetch('/api/workflow/process', {
+    fetch('/api/workflow/process', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
