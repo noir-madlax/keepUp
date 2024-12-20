@@ -82,7 +82,8 @@ export default {
     buttons: {
       cancel: 'Cancel',
       confirm: 'Confirm',
-      processing: 'Processing...'
+      processing: 'Processing...',
+      submitting: 'Submitting...'
     },
     messages: {
       urlRequired: 'Please enter URL',

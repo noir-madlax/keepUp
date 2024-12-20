@@ -130,9 +130,9 @@
                 <button 
                   @click="submitRequest"
                   class="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-                  :disabled="isProcessing || !validateLanguageSelections()"
+                  :disabled="isProcessing || !validateLanguageSelections() || isSubmitting"
                 >
-                  {{ isProcessing ? t('summarize.buttons.processing') : t('summarize.buttons.confirm') }}
+                  {{ isSubmitting ? t('summarize.buttons.submitting') : (isProcessing ? t('summarize.buttons.processing') : t('summarize.buttons.confirm')) }}
                 </button>
               </div>
             </div>
@@ -162,6 +162,7 @@ const showUploadModal = ref(false)
 const summaryLanguages = ref<string[]>(['en'])
 const subtitleLanguages = ref<string[]>([])
 const detailedLanguages = ref<string[]>([])
+const isSubmitting = ref(false)
 
 // 定义组件事件
 const emit = defineEmits<{
@@ -231,6 +232,8 @@ const validateLanguageSelections = (): boolean => {
  * 提交文章处理请求
  */
 const submitRequest = async () => {
+  if (isSubmitting.value) return // 防止重复提交
+  
   if (!authStore.isAuthenticated) {
     ElMessage.warning(t('common.pleaseLogin'))
     return
@@ -251,6 +254,8 @@ const submitRequest = async () => {
     ElMessage.warning(t('summarize.messages.maxSelectionsExceeded'))
     return
   }
+
+  isSubmitting.value = true // 开始提交时禁用按钮
 
   try {
     // 发送请求到后端
@@ -278,10 +283,12 @@ const submitRequest = async () => {
   } catch (error) {
     console.error('提交失败:', error)
     ElMessage.error(t('summarize.messages.submitFailed'))
+  } finally {
+    isSubmitting.value = false // 无论成功失败都恢复按钮状态
   }
 }
 
-// 监听 modal 状态变化，控制 body 滚动
+// 监听 modal 状���变化，控制 body 滚动
 watch(showUploadModal, (newVal) => {
   if (newVal) {
     // Modal 打开时禁用 body 滚动

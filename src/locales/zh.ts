@@ -82,7 +82,8 @@ export default {
     buttons: {
       cancel: '取消',
       confirm: '确定',
-      processing: '处理中...'
+      processing: '处理中...',
+      submitting: '提交中...'
     },
     messages: {
       urlRequired: '请输入URL',
