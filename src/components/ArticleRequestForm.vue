@@ -232,32 +232,31 @@ const validateLanguageSelections = (): boolean => {
  * 提交文章处理请求
  */
 const submitRequest = async () => {
-  if (isSubmitting.value) return // 防止重复提交
-  
-  if (!authStore.isAuthenticated) {
-    ElMessage.warning(t('common.pleaseLogin'))
-    return
-  }
-
-  if (!validateUrl(requestUrl.value)) return
-  if (!await checkDuplicate(requestUrl.value)) return
-
-  const totalSelections = summaryLanguages.value.length +
-    subtitleLanguages.value.length +
-    detailedLanguages.value.length
-
-  if (totalSelections === 0) {
-    ElMessage.warning(t('summarize.messages.languageRequired'))
-    return
-  }
-  if (totalSelections > MAX_SELECTIONS) {
-    ElMessage.warning(t('summarize.messages.maxSelectionsExceeded'))
-    return
-  }
-
-  isSubmitting.value = true // 开始提交时禁用按钮
+  if (isSubmitting.value) return // 立即检查是否正在提交
+  isSubmitting.value = true // 立即禁用按钮
 
   try {
+    if (!authStore.isAuthenticated) {
+      ElMessage.warning(t('common.pleaseLogin'))
+      return
+    }
+
+    if (!validateUrl(requestUrl.value)) return
+    if (!await checkDuplicate(requestUrl.value)) return
+
+    const totalSelections = summaryLanguages.value.length +
+      subtitleLanguages.value.length +
+      detailedLanguages.value.length
+
+    if (totalSelections === 0) {
+      ElMessage.warning(t('summarize.messages.languageRequired'))
+      return
+    }
+    if (totalSelections > MAX_SELECTIONS) {
+      ElMessage.warning(t('summarize.messages.maxSelectionsExceeded'))
+      return
+    }
+    
     // 发送请求到后端
     await fetch('/api/workflow/process', {
       method: 'POST',
@@ -288,7 +287,7 @@ const submitRequest = async () => {
   }
 }
 
-// 监听 modal 状���变化，控制 body 滚动
+// 监听 modal 状态变化，控制 body 滚动
 watch(showUploadModal, (newVal) => {
   if (newVal) {
     // Modal 打开时禁用 body 滚动
