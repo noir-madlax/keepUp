@@ -71,9 +71,9 @@ export default {
     }
   },
   summarize: {
-    title: 'Upload',
+    title: 'Summarize',
     manualupload:'Manual',
-    urlPlaceholder: 'Enter article or video content URL',
+    urlPlaceholder: 'Enter article or video content URL to summarize',
     languageTitle: 'Select Output Languages',
     languages: {
       zh: 'Chinese',
@@ -104,5 +104,13 @@ export default {
     scrollToLoadMore: 'Scroll to load more',
     noMoreData: 'No more data',
     pleaseLogin: 'Please login first'
+  },
+  upload: {
+    card: {
+      uploadFile: 'Click to Upload Link',
+      uploadWeb: 'Click to Summarize Web',
+      supportedPlatforms: 'Podcast, video and other content links',
+      webLink: 'Any web page URL',
+    }
   }
 } 

@@ -27,13 +27,10 @@
         <div class="upload-container flex-shrink-0" @click="handleNewUploadClick">
           <!-- Upload Icon -->
           <div class="upload-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="66" height="66" viewBox="0 0 66 66" fill="none">
-              <rect width="66" height="66" rx="33" fill="#EBEBEB"/>
-              <path d="M22.9995 47.9869C21.4082 47.9869 19.8821 47.2969 18.7569 46.0686C17.6317 44.8403 16.9995 43.1744 16.9995 41.4373V37.0943C16.9995 36.5153 17.2102 35.96 17.5853 35.5506C17.9604 35.1411 18.4691 34.9111 18.9995 34.9111C19.5299 34.9111 20.0387 35.1411 20.4137 35.5506C20.7888 35.96 20.9995 36.5153 20.9995 37.0943V41.4504C20.9995 42.0294 21.2102 42.5847 21.5853 42.9942C21.771 43.1969 21.9915 43.3577 22.2341 43.4674C22.4768 43.5771 22.7369 43.6336 22.9995 43.6336H42.9995C43.5299 43.6336 44.0387 43.4036 44.4137 42.9942C44.7888 42.5847 44.9995 42.0294 44.9995 41.4504V37.1074C44.9995 36.5284 45.2102 35.9731 45.5853 35.5637C45.9604 35.1542 46.4691 34.9242 46.9995 34.9242C47.5299 34.9242 48.0387 35.1542 48.4137 35.5637C48.7888 35.9731 48.9995 36.5284 48.9995 37.1074V41.4504C48.9995 43.1875 48.3674 44.8534 47.2422 46.0817C46.1169 47.31 44.5908 48 42.9995 48L22.9995 47.9869ZM30.9995 37.813V25.4519L28.4135 28.2726C28.034 28.6544 27.534 28.8613 27.018 28.85C26.502 28.8388 26.01 28.6102 25.6448 28.2121C25.2796 27.814 25.0696 27.2773 25.0585 26.714C25.0474 26.1508 25.2363 25.6047 25.5855 25.1899L31.5855 18.6403C31.7713 18.4373 31.9918 18.2763 32.2346 18.1664C32.4774 18.0566 32.7377 18 33.0005 18C33.2633 18 33.5236 18.0566 33.7664 18.1664C34.0092 18.2763 34.2298 18.4373 34.4155 18.6403L39.9495 24.6747C40.1501 24.8735 40.3116 25.1147 40.4242 25.3837C40.5367 25.6527 40.5981 25.9439 40.6045 26.2395C40.6108 26.5352 40.5621 26.8292 40.4613 27.1037C40.3604 27.3782 40.2095 27.6274 40.0177 27.8364C39.826 28.0453 39.5973 28.2094 39.3456 28.319C39.0939 28.4285 38.8245 28.481 38.5537 28.4734C38.2828 28.4658 38.0162 28.3983 37.77 28.2748C37.5239 28.1513 37.3032 27.9745 37.1215 27.7552L34.9995 25.4563V37.813C34.9995 38.0997 34.9478 38.3836 34.8473 38.6485C34.7468 38.9133 34.5994 39.154 34.4137 39.3567C34.228 39.5595 34.0075 39.7203 33.7649 39.83C33.5222 39.9397 33.2622 39.9962 32.9995 39.9962C32.7369 39.9962 32.4768 39.9397 32.2341 39.83C31.9915 39.7203 31.771 39.5595 31.5853 39.3567C31.3996 39.154 31.2523 38.9133 31.1518 38.6485C31.0512 38.3836 30.9995 38.0997 30.9995 37.813Z" fill="#31394C"/>
-            </svg>
+            <img src="/images/icons/upload.svg" alt="Upload" class="w-full h-full">
           </div>
           <!-- Upload Text -->
-          <div class="upload-text">点击上传文件</div>
+          <div class="upload-text">{{ t('upload.card.uploadFile') }}</div>
           <!-- Icon Container -->
           <div class="icon-container">
             <!-- Youtube Icon -->
@@ -56,9 +53,29 @@
             </div>
           </div>
           <!-- Link Text -->
-          <div class="link-text">播客、视频等内容的链接</div>
+          <div class="link-text">{{ t('upload.card.supportedPlatforms') }}</div>
         </div>
 
+         <!-- NewUploadCard2 固定文章上传的卡片在第二个位置 -->
+         <div class="upload-container flex-shrink-0" @click="handleNewUploadClick">
+          <!-- Upload Icon -->
+          <div class="upload-icon">
+            <img src="/images/icons/upload.svg" alt="Upload" class="w-full h-full">
+          </div>
+          <!-- Upload Text -->
+          <div class="upload-text">{{ t('upload.card.uploadWeb') }}</div>
+          <!-- Icon Container -->
+          <div class="icon-container">
+            <!-- Youtube Icon -->
+            <div class="icon">
+              <div class="icon-background">
+                <img src="/images/icons/webpage.svg" alt="webpage" class="webpage-icon">
+              </div>
+            </div>
+          </div>
+          <!-- Link Text -->
+          <div class="link-text">{{ t('upload.card.webLink') }}</div>
+        </div>
         <!-- 加载状态显示骨架屏 -->
         <template v-if="localLoading">
           <div 
@@ -327,50 +344,59 @@ defineExpose({
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* NewUploadCard 相关样式 */
+/* 卡片容器基础样式 */
 .upload-container {
   width: 200px;
   height: 238px;
-  padding: 16px 12px;
+  padding: 24px 12px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
   border-radius: 12px;
   background: #FFF;
   box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
-  box-sizing: border-box;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
+.upload-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* 上传图标容器 */
 .upload-icon {
   width: 66px;
   height: 66px;
-  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 4px;
 }
 
+/* 上传文字样式 */
 .upload-text {
   color: #3FA6FC;
   text-align: center;
-  font-family: "PingFang SC";
   font-size: 14px;
-  font-style: normal;
   font-weight: 600;
-  line-height: normal;
+  line-height: 20px;
+  margin-bottom: 0px;
 }
 
+/* 图标容器样式 */
 .icon-container {
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-bottom: 0px;
+  height: 28px; /* 固定高度 */
 }
 
+/* 单个图标样式 */
 .icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 28px;
   height: 28px;
 }
@@ -385,26 +411,32 @@ defineExpose({
   align-items: center;
 }
 
+/* 图标尺寸 */
 .youtube-icon {
   width: 18px;
   height: 14px;
-  object-fit: contain;
 }
 
 .podcast-icon {
   width: 14px;
   height: 14px;
-  object-fit: contain;
 }
 
+
+.webpage-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* 链接文字样式 */
 .link-text {
   color: #999;
   text-align: center;
-  font-family: "PingFang SC";
   font-size: 14px;
-  font-style: normal;
   font-weight: 400;
-  line-height: normal;
+  line-height: 20px;
+  margin-top: 0; /* 将文字推到底部 */
+  padding-bottom: 8px;
 }
 
 /* 处理中卡片样式 */

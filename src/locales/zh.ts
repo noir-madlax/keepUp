@@ -71,9 +71,9 @@ export default {
     }
   },
   summarize: {
-    title: '上传',
+    title: '总结',
     manualupload:'手工',
-    urlPlaceholder: '输入视频、播客内容的链接',
+    urlPlaceholder: '输入要总结的视频、播客内容链接',
     languageTitle: '选择输出语言',
     languages: {
       zh: '中文',
@@ -90,7 +90,7 @@ export default {
       invalidUrl: '请输入有效的URL地址',
       duplicateUrl: '该链接已经提交过了',
       languageRequired: '请至少选择一种输出语言',
-      submitSuccess: '提交成功，内容正在处理中',
+      submitSuccess: '提交成功���内容正在处理中',
       submitFailed: '提交失败，请重试',
       maxSelectionsExceeded: '最多只能选择3个语言选项'
     },
@@ -104,5 +104,13 @@ export default {
     scrollToLoadMore: '滚动加载更多',
     noMoreData: '没有更多数据了',
     pleaseLogin: '请先登录后再操作'
+  },
+  upload: {
+    card: {
+      uploadFile: '点击上传链接',
+      uploadWeb: '点击总结网页',
+      supportedPlatforms: '播客、视频等内容的链接',
+      webLink: '任何网页的URL链接',
+    }
   }
 } 
