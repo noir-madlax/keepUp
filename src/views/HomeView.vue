@@ -122,14 +122,14 @@
                 :placeholder="t('summarize.urlPlaceholder')"
                 class="w-full sm:flex-grow px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent bg-white"
                 @click="handlePaste"
-                @keyup.enter="submitRequest"
+                @keyup.enter="() => submitRequest(requestUrl)"
               />
               
               <!-- 上传按钮 -->
               <div class="w-[80px] sm:w-[100px] self-center sm:self-auto sm:flex-shrink-0 sm:mr-2 mt-2 sm:mt-0">
-                <article-request-form 
+                <ArticleRequestForm 
                   ref="articleRequestFormRef"
-                  @refresh="fetchArticles"
+                  @refresh="handleArticleRefresh"
                   @click="() => submitRequest(requestUrl.value)"
                 />
               </div>
@@ -385,7 +385,7 @@ const authStore = useAuthStore()
 const showLoginModal = ref(false)
 const showUploadModal = ref(false)
 
-// 预定义的签
+// 预定义的标签
 const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微', '视频']
 
 const articles = ref<Article[]>([])
@@ -459,7 +459,7 @@ const fetchArticles = async (isRefresh = false) => {
     // 更新文章列表
     articles.value = isRefresh || hasFilters.value ? data : [...articles.value, ...data]
     
-    // 更新是否还有更多数据
+    // 更新否还有更多数据
     // 如有筛选件就不显示加载更多
     hasMore.value = hasFilters.value ? false : (count ? from + data.length < count : false)
 
@@ -510,14 +510,14 @@ const isLoadingAuthors = ref(true)
 // 改作者获取函数
 const fetchAuthors = async () => {
   try {
-    // 1. 先 IndexedDB 获取存数据
+    // 1. 先 IndexedDB 获存数据
     const cachedAuthors = await localforage.getItem('authors-cache')
     if (cachedAuthors) {
       authors.value = cachedAuthors as Author[]
       isLoadingAuthors.value = false // 有缓存数据就关闭loading
     }
 
-    // 2. 如果离线且有缓存，直接返回
+    // 2. 如果离线且有缓存，直接回
     if (!navigator.onLine && cachedAuthors) {
       return
     }
@@ -546,7 +546,7 @@ const fetchAuthors = async () => {
 onMounted(async () => {
   isLoadingAuthors.value = true // 始化时设置loading
 
-  // 先恢���缓存的状态
+  // 先复缓存的状态
   const [savedSelectedAuthors, savedExpanded] = await Promise.all([
     localforage.getItem('selected-authors'),
     localforage.getItem('authors-expanded')
@@ -680,7 +680,7 @@ const submitArticle = async () => {
       user_id: authStore.user?.id
     }
 
-    // 提交文章基本信息
+    // 提交文章基��信息
     const { data, error } = await supabase
       .from('keep_articles')
       .insert([submitData])
@@ -704,7 +704,7 @@ const submitArticle = async () => {
       }
     }
 
-    ElMessage.success('文章���加成功')
+    ElMessage.success('文章添加成功')
 
     showUploadModal.value = false
     resetForm()
@@ -933,7 +933,7 @@ const pendingUrl = ref('')
 
 // 修改 submitRequest 函数
 const submitRequest = async (url?: string) => {
-  // 如果没有传入url，则尝试获取输入框的值
+  // 如果没有传入url，则使用输入框的值
   let uploadUrl = url || requestUrl.value
   
   // 如果输入框也没有值，使用默认标记URL
@@ -981,6 +981,19 @@ const handleUploadRefresh = () => {
   if (myUploadsRef.value) {
     myUploadsRef.value.fetchUserArticles()
   }
+}
+
+// 添加新的处理函数
+const handleArticleRefresh = async (event?: { type: string }) => {
+  // 如果是上传成功触发的刷新
+  if (event?.type === 'upload') {
+    // 刷新我的上传区域
+    if (myUploadsRef.value) {
+      await myUploadsRef.value.fetchUserArticles()
+    }
+  }
+  // 刷新文章列表
+  await fetchArticles()
 }
 </script>
 
