@@ -75,6 +75,9 @@ const status = ref<'pulling'|'canRelease'|'refreshing'|'success'>('pulling')
 const distance = ref(0)
 const isDragging = ref(false)
 const startY = ref(0)
+const startX = ref(0)
+const isVerticalMove = ref(false)
+const minDirectionDelta = 30 // 判断方向的最小位移差值
 
 const statusConfig = {
   pulling: {
@@ -103,6 +106,8 @@ const handleTouchStart = (e: TouchEvent) => {
   if (isScrolledToTop() && status.value !== 'refreshing') {
     isDragging.value = true
     startY.value = e.touches[0].clientY
+    startX.value = e.touches[0].clientX
+    isVerticalMove.value = false // 重置方向判断
   }
 }
 
@@ -110,11 +115,20 @@ const handleTouchMove = (e: TouchEvent) => {
   if (!isDragging.value || status.value === 'refreshing') return
   
   const touchY = e.touches[0].clientY
-  const diff = touchY - startY.value
+  const touchX = e.touches[0].clientX
+  const diffY = touchY - startY.value
+  const diffX = Math.abs(touchX - startX.value)
   
-  if (diff > 0 && isScrolledToTop()) {
+  // 如果还没有确定方向，且移动距离足够判断方向
+  if (!isVerticalMove.value && (Math.abs(diffY) > minDirectionDelta || diffX > minDirectionDelta)) {
+    // 判断是否为垂直移动（垂直位移大于水平位移）
+    isVerticalMove.value = Math.abs(diffY) > diffX
+  }
+  
+  // 只有在确认为垂直移动时才处理下拉刷新
+  if (isVerticalMove.value && diffY > 0 && isScrolledToTop()) {
     e.preventDefault() // 只在下拉时阻止默认行为
-    distance.value = Math.min(damping(diff), maxDistance)
+    distance.value = Math.min(damping(diffY), maxDistance)
     
     if (distance.value >= threshold && status.value !== 'canRelease') {
       status.value = 'canRelease'
