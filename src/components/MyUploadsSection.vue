@@ -21,6 +21,9 @@
       <div 
         class="overflow-x-auto scrollbar-hide flex gap-2 pb-2 mb-4" 
         ref="scrollContainer"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
+        @touchend="handleTouchEnd"
         @scroll="handleScroll"
       >
         <!-- NewUploadCard 固定在第一个位置 -->
@@ -83,7 +86,7 @@
             :key="n"
             class="flex-shrink-0 w-[200px] h-[238px] bg-gray-100 rounded-xl animate-pulse"
           >
-            <!-- 骨架屏内部结构 -->
+            <!-- 骨架屏内部��构 -->
             <div class="p-4 space-y-4">
               <!-- 图片占位 -->
               <div class="w-full h-[98px] bg-gray-200 rounded-lg"></div>
@@ -145,6 +148,12 @@ const canScrollLeft = ref(false)
 const canScrollRight = ref(true)
 const articles = ref<ArticleRequest[]>([])
 const localLoading = ref(true)
+
+// 添加手势相关的状态
+const touchStartX = ref(0)
+const touchStartY = ref(0)
+const isHorizontalMove = ref(false)
+const minDirectionDelta = 20 // 判断方向的最小位移差值
 
 // Methods
 const handleScroll = () => {
@@ -279,6 +288,36 @@ const handleNewUploadClick = async () => {
     }
     emit('upload', defaultUrl)
   }
+}
+
+// 处理触摸开始
+const handleTouchStart = (e: TouchEvent) => {
+  touchStartX.value = e.touches[0].clientX
+  touchStartY.value = e.touches[0].clientY
+  isHorizontalMove.value = false // 重置方向判断
+}
+
+// 处理触摸移动
+const handleTouchMove = (e: TouchEvent) => {
+  const touchX = e.touches[0].clientX
+  const touchY = e.touches[0].clientY
+  const diffX = Math.abs(touchX - touchStartX.value)
+  const diffY = Math.abs(touchY - touchStartY.value)
+  
+  // 如果移动距离足够判断方向
+  if (diffX > minDirectionDelta || diffY > minDirectionDelta) {
+    // 如果是水平移动
+    if (diffX > diffY) {
+      isHorizontalMove.value = true
+      e.stopPropagation() // 阻止事件冒泡，防止触发下拉刷新
+    }
+  }
+}
+
+// 处理触摸结束
+const handleTouchEnd = () => {
+  // 重置状态
+  isHorizontalMove.value = false
 }
 
 // Lifecycle
@@ -428,7 +467,7 @@ defineExpose({
   height: 14px;
 }
 
-/* 链接文字样式 */
+/* 链接文字���式 */
 .link-text {
   color: #999;
   text-align: center;
