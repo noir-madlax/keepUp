@@ -25,7 +25,7 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
         content: 视频内容
         chapters: 章节信息
         article: 文章信息
-        languages: 需要处理��语言列表
+        languages: 需要处理的语言列表
         
     Returns:
         list[str]: 处理结果信息列表
@@ -37,11 +37,22 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
         f"开始总结内容处理，语言列表: {languages}"
     )
     
+    # 判断是否是网页内容
+    is_webpage = article.get('channel') == '网页'
+    
     for lang in languages:
-        workflow_id = (
-            settings.COZE_WORKFLOW_ID_ZH if lang == 'zh' 
-            else settings.COZE_WORKFLOW_ID_EN
-        )
+        # 根据内容类型和语言选择工作流ID
+        if is_webpage:
+            workflow_id = (
+                settings.COZE_WEB_SUMMARY_ID_ZH if lang == 'zh'
+                else settings.COZE_WEB_SUMMARY_ID_EN
+            )
+        else:
+            workflow_id = (
+                settings.COZE_WORKFLOW_ID_ZH if lang == 'zh'
+                else settings.COZE_WORKFLOW_ID_EN
+            )
+            
         await RequestLogger.info(
             request_id,
             Steps.SUMMARY_PROCESS,
@@ -236,7 +247,7 @@ async def process_article_task(request: FetchRequest):
             # 保存字幕内容
             await SupabaseService.update_content(request.id, content)
         
-        # 等待确保数��已保存
+        # 等待确保数据已保存
         await asyncio.sleep(1)
 
         # 创建异步任务

@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
 from app.utils.logger import logger
+import os
 
 class Settings(BaseSettings):
 
@@ -19,6 +20,8 @@ class Settings(BaseSettings):
     COZE_POLISH_WORKFLOW_ID_EN: str  # 英文润色工作流
     COZE_DETAILED_WORKFLOW_ID_ZH: str  # 中文分段详述工作流
     COZE_DETAILED_WORKFLOW_ID_EN: str  # 英文分段详述工作流
+    COZE_WEB_SUMMARY_ID_ZH: str  # 中文网页工作流
+    COZE_WEB_SUMMARY_ID_EN: str  # 英文网页工作流
     USE_MOCK_COZE: bool = False
     
     # AssemblyAI 配置

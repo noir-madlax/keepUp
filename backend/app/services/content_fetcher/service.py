@@ -3,6 +3,7 @@ from .youtube import YouTubeFetcher
 from .xiaoyuzhou import XiaoYuZhouFetcher
 from .base import VideoInfo
 from .apple import ApplePodcastFetcher
+from .webpage import WebPageFetcher
 from app.utils.logger import logger
 
 class ContentFetcherService:
@@ -11,7 +12,8 @@ class ContentFetcherService:
         self.fetchers = [
             YouTubeFetcher(),
             XiaoYuZhouFetcher(),
-            ApplePodcastFetcher()
+            ApplePodcastFetcher(),
+            WebPageFetcher()
         ]
     
     async def fetch_content(self, url: str) -> Optional[str]:

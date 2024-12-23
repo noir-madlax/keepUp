@@ -4,6 +4,7 @@ from .platform_parser.base import PlatformParser
 from .platform_parser.youtube import YouTubeParser
 from .platform_parser.apple import ApplePodcastParser
 from .platform_parser.spotify import SpotifyParser
+from .platform_parser.webpage import WebPageParser
 
 class ContentResolver:
     """内容解析服务"""
@@ -12,7 +13,8 @@ class ContentResolver:
         self.parsers: list[PlatformParser] = [
             YouTubeParser(),
             ApplePodcastParser(),
-            SpotifyParser()
+            SpotifyParser(),
+            WebPageParser()
         ]
     
     async def resolve(self, url: str) -> Optional[Tuple[str, str, str]]:
@@ -33,5 +35,5 @@ class ContentResolver:
                 if result:
                     return result
                     
-        logger.warning(f"没有找到合适的���析器处理URL: {url}")
+        logger.warning(f"没有找到合适的析器处理URL: {url}")
         return None 
