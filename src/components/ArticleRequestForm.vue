@@ -277,8 +277,8 @@ const submitRequest = async () => {
     requestUrl.value = ''
     showUploadModal.value = false
     
-    // 触发刷新事件
-    emit('refresh')
+    // 触发刷新事件,并传递一个标识表明是上传成功
+    emit('refresh', { type: 'upload' })
     
   } catch (error) {
     console.error('提交失败:', error)
