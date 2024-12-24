@@ -322,40 +322,67 @@
       @click="showMindmapPreview = false"
     >
       <div 
-        class="bg-white p-6 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto"
+        class="bg-white p-6 rounded-lg shadow-lg relative overflow-hidden flex flex-col"
+        :class="[
+          isMobile 
+            ? 'w-[100vw] h-[70vh]' // 移动端尺寸
+            : 'w-[100vw] h-[70vh]'  // 桌面端尺寸
+        ]"
         @click.stop
       >
-        <div class="flex justify-between items-center mb-4">
+        <!-- 标题栏 -->
+        <div class="flex justify-between items-center mb-4 flex-shrink-0">
           <h2 class="text-xl font-bold">预览思维导图</h2>
-          <button @click="showMindmapPreview = false" class="text-gray-500">
-            <i class="el-icon-close"></i>
+          <button 
+            @click="showMindmapPreview = false" 
+            class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              class="h-6 w-6 text-gray-500 hover:text-gray-700" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                stroke-linecap="round" 
+                stroke-linejoin="round" 
+                stroke-width="2" 
+                d="M6 18L18 6M6 6l12 12" 
+              />
+            </svg>
           </button>
         </div>
 
-        <div class="mt-6 flex justify-center">
-          <img 
-            :src="previewImageUrl"
-            alt="Mindmap Preview"
-            class="max-w-full max-h-[80vh] object-contain"
-          >
+        <div 
+          ref="containerRef"
+          class="relative flex-1 overflow-hidden"
+          @mousedown="startDrag"
+          @mousemove="onDrag"
+          @mouseup="stopDrag"
+          @mouseleave="stopDrag"
+          @wheel="handleWheel"
+          @touchstart="startTouch"
+          @touchmove="onTouch"
+          @touchend="stopTouch"
+        >
+          <div class="absolute inset-0 flex items-center justify-center">
+            <img 
+              :src="previewImageUrl"
+              alt="Mindmap Preview"
+              class="transition-transform duration-200 origin-center"
+              :style="{
+                transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                maxWidth: 'none',
+                maxHeight: 'none'
+              }"
+              @dragstart.prevent
+              @load="initializeImage"
+            >
+          </div>
         </div>
       </div>
     </div>
-
-    <el-dialog
-      v-model="showMindmapPreview"
-      :fullscreen="true"
-      :show-close="true"
-      class="mindmap-preview-dialog"
-    >
-      <div class="flex justify-center items-center h-full">
-        <img 
-          :src="previewImageUrl" 
-          v-if="previewImageUrl"
-          class="max-w-full max-h-full object-contain" 
-        />
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -392,7 +419,7 @@ const editForm = ref<Partial<Article>>({})
 // 小节理
 const selectedSections = ref<SectionType[]>(DEFAULT_SELECTED_SECTIONS)
 
-// 根据当前语言获取可用的��节类型
+// 根据当前语言获取可用的节类型
 const availableSectionTypes = computed(() => {
   // 始终返回所有小节类型
   return ALL_SECTION_TYPES
@@ -439,7 +466,7 @@ const canEdit = computed(() => {
 // 获取文章和小节内容
 const fetchArticle = async () => {
   try {
-    // 获取文��基本信息
+    // 获取文章基本信息
     const { data: articleData, error: articleError } = await supabase
       .from('keep_articles')
       .select(`
@@ -528,7 +555,7 @@ const submitEdit = async () => {
 
       if (deleteError) throw deleteError
 
-      // 添加新的节
+      // 添加新节
       const sectionsData = formRef.value.getSectionsData()
       if (sectionsData.length > 0) {
         const { error: insertError } = await supabase
@@ -574,7 +601,7 @@ const allowNavSwitch = ref(true)
 const handleScroll = () => {
   const currentScroll = window.scrollY
   
-  // 只有在允许���航切换时才执行切换逻辑
+  // 只有在允许导航切换时才执行切换逻辑
   if (allowNavSwitch.value) {
     // 获取第一个section元素
     const firstSection = document.querySelector('[data-section-type]')
@@ -587,7 +614,7 @@ const handleScroll = () => {
     
     if (currentScroll > lastScrollTop.value) {
       // 向下滚动
-      // 只有当第一个section开始进入视口，且滚动超过100px时才显示导航
+      // 只有当第一个section开始进入视口，且滚动超过100px时显示导航
       if (currentScroll > 100 && firstSectionRect.top < threshold) {
         showNavB.value = true
       }
@@ -669,7 +696,7 @@ const handleLogout = async () => {
   }
 }
 
-// 添加计算属性来获取一个和下一个section
+// 添加计算性来获取一个和下一个section
 const prevSection = computed(() => {
   if (!currentVisibleSection.value || !displaySections.value.length) return null
   const currentIndex = displaySections.value.findIndex(
@@ -709,7 +736,7 @@ const scrollToSection = (sectionType: string) => {
     // 设置过渡方向
     transitionName.value = targetIndex > currentIndex ? 'slide-left' : 'slide-right'
     
-    // 滚动到目标位置
+    // 动到目标位置
     const headerHeight = 71
     const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
     window.scrollTo({
@@ -717,7 +744,7 @@ const scrollToSection = (sectionType: string) => {
       behavior: 'smooth'
     })
 
-    // 动画完成后恢复导航切换功能
+    // 画完成后恢复导航切换功能
     setTimeout(() => {
       allowNavSwitch.value = true
     }, 800) // 设置稍长于滚动动画的时间
@@ -731,6 +758,215 @@ const previewImageUrl = ref('')
 const handlePreviewMindmap = () => {
   showMindmapPreview.value = true
 }
+
+// 图片缩放和拖动相关的状态
+const scale = ref(1)
+const position = ref({ x: 0, y: 0 })
+const isDragging = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
+
+// 缩放控制
+const zoomIn = () => {
+  const newScale = scale.value * 1.2
+  if (newScale <= 5) {
+    scale.value = newScale
+    adjustPosition()
+  }
+}
+
+const zoomOut = () => {
+  const newScale = scale.value / 1.2
+  if (newScale >= 0.1) {
+    scale.value = newScale
+    adjustPosition()
+  }
+}
+
+const resetZoom = () => {
+  scale.value = 1
+  position.value = { x: 0, y: 0 }
+}
+
+// 拖动控制
+const startDrag = (e: MouseEvent) => {
+  isDragging.value = true
+  dragStart.value = {
+    x: e.clientX - position.value.x,
+    y: e.clientY - position.value.y
+  }
+}
+
+const onDrag = (e: MouseEvent) => {
+  if (!isDragging.value) return
+  position.value = {
+    x: e.clientX - dragStart.value.x,
+    y: e.clientY - dragStart.value.y
+  }
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+}
+
+// 鼠标滚轮缩放
+const handleWheel = (e: WheelEvent) => {
+  e.preventDefault()
+  const delta = e.deltaY > 0 ? 0.9 : 1.1
+  const newScale = scale.value * delta
+  if (newScale >= 0.1 && newScale <= 5) {
+    scale.value = newScale
+  }
+}
+
+// 添加触摸相关的状态
+const lastTouchDistance = ref(0)
+const containerRef = ref<HTMLDivElement | null>(null)
+
+// 修改初始化图片大小和位置的函数
+const initializeImage = (e: Event) => {
+  const img = e.target as HTMLImageElement
+  const container = (e.currentTarget as HTMLElement).parentElement
+  if (!container) return
+
+  // 等待下一个渲染周期，确保容器尺寸已更新
+  setTimeout(() => {
+    // 获取容器的实际尺寸
+    const containerWidth = container.clientWidth
+    const containerHeight = container.clientHeight
+    const containerRatio = containerWidth / containerHeight
+    const imageRatio = img.naturalWidth / img.naturalHeight
+
+    // 设置最小缩放比例
+    const MIN_SCALE = 0.5
+    
+    let initialScale
+    if (containerRatio > imageRatio) {
+      // 图片较窄，以高度为准，但留出一些边距
+      initialScale = (containerHeight * 0.9) / img.naturalHeight
+    } else {
+      // 图片较宽，以宽度为准，但留出一些边距
+      initialScale = (containerWidth * 0.9) / img.naturalWidth
+    }
+
+    // 设置缩放比例
+    scale.value = Math.max(initialScale, MIN_SCALE)
+
+    // 计算图片缩放后的实际尺寸
+    const scaledWidth = img.naturalWidth * scale.value
+    const scaledHeight = img.naturalHeight * scale.value
+
+    // 计算居中位置
+    position.value = {
+      x: Math.round(-(containerWidth - scaledWidth * 2 ) / 10),
+      y: Math.round((containerHeight - scaledHeight) / 2)
+    }
+  }, 0)
+}
+
+// 触摸事件处理
+const startTouch = (e: TouchEvent) => {
+  e.preventDefault()
+  if (e.touches.length === 2) {
+    // 双指触摸，记录初始距离
+    const touch1 = e.touches[0]
+    const touch2 = e.touches[1]
+    lastTouchDistance.value = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    )
+  } else if (e.touches.length === 1) {
+    // 单指触摸，开始拖动
+    const touch = e.touches[0]
+    isDragging.value = true
+    dragStart.value = {
+      x: touch.clientX - position.value.x,
+      y: touch.clientY - position.value.y
+    }
+  }
+}
+
+const onTouch = (e: TouchEvent) => {
+  e.preventDefault()
+  if (e.touches.length === 2) {
+    // 双指缩放
+    const touch1 = e.touches[0]
+    const touch2 = e.touches[1]
+    const currentDistance = Math.hypot(
+      touch2.clientX - touch1.clientX,
+      touch2.clientY - touch1.clientY
+    )
+
+    if (lastTouchDistance.value) {
+      const delta = currentDistance / lastTouchDistance.value
+      const newScale = scale.value * delta
+      if (newScale >= 0.1 && newScale <= 5) {
+        scale.value = newScale
+      }
+    }
+    lastTouchDistance.value = currentDistance
+  } else if (e.touches.length === 1 && isDragging.value) {
+    // 单指拖动
+    const touch = e.touches[0]
+    position.value = {
+      x: touch.clientX - dragStart.value.x,
+      y: touch.clientY - dragStart.value.y
+    }
+  }
+}
+
+const stopTouch = (e: TouchEvent) => {
+  e.preventDefault()
+  isDragging.value = false
+  lastTouchDistance.value = 0
+}
+
+// 添加位置调整函数
+const adjustPosition = () => {
+  const container = containerRef.value
+  const img = container?.querySelector('img')
+  if (!container || !img) return
+
+  // 获取容器的实际尺寸
+  const containerWidth = container.clientWidth
+  const containerHeight = container.clientHeight
+  
+  // 计算图片缩放后的实际尺寸
+  const scaledWidth = img.naturalWidth * scale.value
+  const scaledHeight = img.naturalHeight * scale.value
+
+  // 如果图片尺寸小于容器，则居中显示
+  if (scaledWidth < containerWidth) {
+    position.value.x = Math.round((containerWidth - scaledWidth) / 2)
+  } else {
+    // 否则限制拖动范围
+    const minX = Math.min(0, containerWidth - scaledWidth)
+    position.value.x = Math.max(minX, Math.min(0, position.value.x))
+  }
+
+  if (scaledHeight < containerHeight) {
+    position.value.y = Math.round((containerHeight - scaledHeight) / 2)
+  } else {
+    // 否则限制拖动范围
+    const minY = Math.min(0, containerHeight - scaledHeight)
+    position.value.y = Math.max(minY, Math.min(0, position.value.y))
+  }
+}
+
+// 添加移动端检测
+const isMobile = ref(window.innerWidth <= 768)
+
+// 监听窗口大小变化
+onMounted(() => {
+  window.addEventListener('resize', () => {
+    isMobile.value = window.innerWidth <= 768
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', () => {
+    isMobile.value = window.innerWidth <= 768
+  })
+})
 </script>
 
 <style>
@@ -752,7 +988,7 @@ const handlePreviewMindmap = () => {
   transform: translateX(-80px);
 }
 
-/* 向右滑动动画 */
+/* 向右滑动��画 */
 .slide-right-enter-active,
 .slide-right-leave-active {
   transition: all 0.8s ;
@@ -815,13 +1051,13 @@ html {
   scroll-behavior: smooth;
 }
 
-/* 在 style 标签中加以下全局样式 */
+/*  style 标签中加下全局样式 */
 body {
   overflow-x: hidden;
   width: 100%;
 }
 
-/* 确保所有图片不会导致容器溢出 */
+/* 确保所有图片不会导容器溢出 */
 img {
   max-width: 100%;
   height: auto;
@@ -854,7 +1090,7 @@ header {
   padding-top: 71px; /* 导航栏高度 + 1px 边框 */
 }
 
-/* 确保所有弹出层和模态框的 z-index 大于导航栏 */
+/* 确保所有弹出层和态框的 z-index 大于导航栏 */
 .el-message {
   z-index: 1000 !important;
 }
@@ -869,5 +1105,19 @@ header {
     padding: 20px;
     background: #f5f5f5;
   }
+}
+
+/* 禁用图片拖动的默认行为 */
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+}
+
+/* 确保预览容器不会滚动 */
+.overflow-hidden {
+  overflow: hidden !important;
 }
 </style>

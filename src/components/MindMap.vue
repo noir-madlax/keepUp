@@ -70,7 +70,7 @@ const debouncedUpdate = debounce(async () => {
         ? viewportHeight * 0.8
         : viewportHeight * 0.6 // 调整桌面端高度占比
       
-      // 根据宽高比和可���空间计算合适的容器尺寸
+      // 根据宽高比和可用空间计算合适的容器尺寸
       if (ratio > 1.2) { // 横向内容较多
         containerWidth.value = `${Math.min(availableWidth, bbox.width)}px`
         containerHeight.value = `${Math.min(availableWidth / ratio, availableHeight)}px`
@@ -127,7 +127,7 @@ const retryRender = () => {
   }
 }
 
-const exportAsPng = () => {
+const exportAsPng = (needDownload = false) => {
   if (!svgRef.value || !isRendered.value) return
   
   // 获取当前SVG的克隆副本，以确保获取完整内容
@@ -175,18 +175,21 @@ const exportAsPng = () => {
     // 发送预览URL给父组件
     emit('preview', pngUrl)
     
-    const link = document.createElement('a')
-    link.download = 'mindmap.png'
-    link.href = pngUrl
-    link.click()
+    // 只有在需要下载时才创建下载链接
+    if (needDownload) {
+      const link = document.createElement('a')
+      link.download = 'mindmap.png'
+      link.href = pngUrl
+      link.click()
+    }
   }
   img.src = svgUrl
 }
 
 watch(isRendered, (newValue) => {
   if (newValue) {
-    // 当渲染完成时，自动触发导出
-    exportAsPng()
+    // 当渲染完成时，只生成预览URL，不下载文件
+    exportAsPng(false)
   }
 })
 
