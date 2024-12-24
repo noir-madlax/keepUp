@@ -10,9 +10,17 @@ export const useAuthStore = defineStore('auth', () => {
 
   const loadUser = async () => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      console.log('Loaded user:', currentUser)
-      user.value = currentUser
+      // 1. 先获取 session
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (session?.user) {
+        // 2. 如果 session 中有用户信息，直接使用
+        user.value = session.user
+      } else {
+        // 3. 没有 session 才调用 getUser
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+        user.value = currentUser
+      }
     } catch (error) {
       console.error('Error loading user:', error)
       user.value = null
