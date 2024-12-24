@@ -85,7 +85,7 @@ const debouncedUpdate = debounce(async () => {
       svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet')
       
       // 最后再次fit确保内容正确显示
-      setTimeout(() => mm.fit(), 50)
+      setTimeout(() => mm.fit(), 1000)
     }
     
     retryCount = 0
