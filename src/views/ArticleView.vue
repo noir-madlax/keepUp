@@ -325,7 +325,7 @@
         class="bg-white p-6 rounded-lg shadow-lg relative overflow-hidden flex flex-col"
         :class="[
           isMobile 
-            ? 'w-[100vw] h-[70vh]' // 移动端尺寸
+            ? 'w-[100vw] h-[60vh]' // 移动端尺寸
             : 'w-[100vw] h-[70vh]'  // 桌面端尺寸
         ]"
         @click.stop
