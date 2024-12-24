@@ -203,28 +203,36 @@
 
         <!-- 文章内容部分 -->
         <div class="p-4 md:p-8">
+          <!-- 文章内容 -->
           <article class="prose prose-sm md:prose-lg max-w-none">
+            <!-- 如果sections存在，则渲染sections -->
             <template v-if="sections.length">
+              <!-- 遍历sections，渲染每个section -->
               <div 
                 v-for="section in displaySections" 
                 :key="section.id"
                 class="mb-8"
                 :data-section-type="section.section_type"
               >
+
                 <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
                 <!-- 根据不同的小节类型使用不同的渲染方式 -->
                 <template v-if="section.section_type === '思维导图'">
+                  <!-- 思维导图组件 --> 
                   <mind-map :content="section.content" />
                 </template>
                 <template v-else-if="section.section_type === '结构图'">
+                  <!-- 结构图组件 --> 
                   <mermaid :content="section.content" />
                 </template>
                 <template v-else>
+                  <!-- 其他小节类型使用markdown渲染 -->
                   <div v-html="marked(section.content)"></div>
                 </template>
               </div>
             </template>
-            <div v-else>
+            <div v-else>  
+              <!-- 如果sections不存在，则渲染markdown内容 -->
               <div v-html="markdownContent"></div>
             </div>
           </article>
