@@ -325,7 +325,7 @@
         class="bg-white p-6 rounded-lg shadow-lg relative overflow-hidden flex flex-col"
         :class="[
           isMobile 
-            ? 'w-[100vw] h-[60vh]' // 移动端尺寸
+            ? 'w-[100vw] h-[60vh]' // 移动端尺寸 ！！这里会影响放大后的窗口大小
             : 'w-[100vw] h-[70vh]'  // 桌面端尺寸
         ]"
         @click.stop
@@ -855,7 +855,7 @@ const initializeImage = (e: Event) => {
     const scaledWidth = img.naturalWidth * scale.value
     const scaledHeight = img.naturalHeight * scale.value
 
-    // 计算居中位置
+    // 计算居中位置！！！！这个居中效果横向的，是目测出来的写法，很奇怪，暂时先这样
     position.value = {
       x: Math.round(-(containerWidth - scaledWidth * 2 ) / 10),
       y: Math.round((containerHeight - scaledHeight) / 2)
