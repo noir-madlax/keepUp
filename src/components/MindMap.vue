@@ -22,6 +22,10 @@ const props = defineProps<{
   content: string
 }>()
 
+const emit = defineEmits<{
+  (e: 'preview', url: string): void
+}>()
+
 const svgRef = ref<SVGElement | null>(null)
 const svgContainerRef = ref<HTMLElement | null>(null)
 const renderError = ref(false)
@@ -31,6 +35,7 @@ let mm: any = null
 const transformer = new Transformer()
 let retryCount = 0
 const MAX_RETRIES = 3
+const isRendered = ref(false)
 
 const debouncedUpdate = debounce(async () => {
   if (!svgRef.value || !mm) return
@@ -65,7 +70,7 @@ const debouncedUpdate = debounce(async () => {
         ? viewportHeight * 0.8
         : viewportHeight * 0.6 // 调整桌面端高度占比
       
-      // 根据宽高比和可用空间计算合适的容器尺寸
+      // 根据宽高比和可���空间计算合适的容器尺寸
       if (ratio > 1.2) { // 横向内容较多
         containerWidth.value = `${Math.min(availableWidth, bbox.width)}px`
         containerHeight.value = `${Math.min(availableWidth / ratio, availableHeight)}px`
@@ -85,7 +90,11 @@ const debouncedUpdate = debounce(async () => {
       svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet')
       
       // 最后再次fit确保内容正确显示
-      setTimeout(() => mm.fit(), 1000)
+      setTimeout(() => {
+        mm.fit()
+        // 在这里设置渲染完成标志
+        isRendered.value = true
+      }, 1000)
     }
     
     retryCount = 0
@@ -118,6 +127,69 @@ const retryRender = () => {
   }
 }
 
+const exportAsPng = () => {
+  if (!svgRef.value || !isRendered.value) return
+  
+  // 获取当前SVG的克隆副本，以确保获取完整内容
+  const clonedSvg = svgRef.value.cloneNode(true) as SVGElement
+  
+  // 获取SVG的实际尺寸
+  const bbox = svgRef.value.getBBox()
+  
+  // 设置明确的宽高和viewBox以确保完整捕获
+  clonedSvg.setAttribute('width', bbox.width.toString())
+  clonedSvg.setAttribute('height', bbox.height.toString())
+  clonedSvg.setAttribute('viewBox', `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`)
+  
+  // 获取完整的SVG字符串
+  const svgString = new XMLSerializer().serializeToString(clonedSvg)
+  const svgUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`
+  
+  // 创建Image对象
+  const img = new Image()
+  img.onload = () => {
+    // 创建canvas，使用8倍缩放比例
+    const canvas = document.createElement('canvas')
+    const scale = 8 // 增加到8倍分辨率
+    canvas.width = bbox.width * scale
+    canvas.height = bbox.height * scale
+    
+    // 绘制到canvas
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    
+    // 设置更好的图像质量
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    
+    // 设置白色背景
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    
+    // 缩放并绘制
+    ctx.scale(scale, scale)
+    ctx.drawImage(img, 0, 0)
+    
+    // 使用最高质量导出PNG
+    const pngUrl = canvas.toDataURL('image/png', 1.0)
+    // 发送预览URL给父组件
+    emit('preview', pngUrl)
+    
+    const link = document.createElement('a')
+    link.download = 'mindmap.png'
+    link.href = pngUrl
+    link.click()
+  }
+  img.src = svgUrl
+}
+
+watch(isRendered, (newValue) => {
+  if (newValue) {
+    // 当渲染完成时，自动触发导出
+    exportAsPng()
+  }
+})
+
 onMounted(() => {
   if (!svgRef.value) return
   
@@ -144,6 +216,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', debouncedUpdate)
   debouncedUpdate.cancel()
   mm = null
+  isRendered.value = false
 })
 </script>
 

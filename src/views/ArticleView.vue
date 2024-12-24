@@ -218,8 +218,24 @@
                 <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
                 <!-- 根据不同的小节类型使用不同的渲染方式 -->
                 <template v-if="section.section_type === '思维导图'">
-                  <!-- 思维导图组件 --> 
-                  <mind-map :content="section.content" />
+                  <div class="relative">
+                    <div class="flex items-center gap-2 mb-4">
+                      <h2 class="text-xl font-bold">{{ getLocalizedSectionType(section.section_type) }}</h2>
+                      <div class="flex items-center gap-2">
+                        <span 
+                          @click="handlePreviewMindmap" 
+                          class="text-blue-500 hover:text-blue-600 cursor-pointer text-sm flex items-center"
+                        >
+                          <i class="el-icon-zoom-in mr-1"></i>
+                          放大显示
+                        </span>
+                      </div>
+                    </div>
+                    <mind-map 
+                      :content="section.content" 
+                      @preview="url => previewImageUrl = url"
+                    />
+                  </div>
                 </template>
                 <template v-else-if="section.section_type === '结构图'">
                   <!-- 结构图组件 --> 
@@ -298,6 +314,48 @@
         />
       </div>
     </div>
+
+    <!-- 预览模态框 -->
+    <div 
+      v-if="showMindmapPreview"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click="showMindmapPreview = false"
+    >
+      <div 
+        class="bg-white p-6 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto"
+        @click.stop
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">预览思维导图</h2>
+          <button @click="showMindmapPreview = false" class="text-gray-500">
+            <i class="el-icon-close"></i>
+          </button>
+        </div>
+
+        <div class="mt-6 flex justify-center">
+          <img 
+            :src="previewImageUrl"
+            alt="Mindmap Preview"
+            class="max-w-full max-h-[80vh] object-contain"
+          >
+        </div>
+      </div>
+    </div>
+
+    <el-dialog
+      v-model="showMindmapPreview"
+      :fullscreen="true"
+      :show-close="true"
+      class="mindmap-preview-dialog"
+    >
+      <div class="flex justify-center items-center h-full">
+        <img 
+          :src="previewImageUrl" 
+          v-if="previewImageUrl"
+          class="max-w-full max-h-full object-contain" 
+        />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -331,10 +389,10 @@ const sections = ref<ArticleSection[]>([])
 const showEditModal = ref(false)
 const editForm = ref<Partial<Article>>({})
 
-// 小节管理
+// 小节理
 const selectedSections = ref<SectionType[]>(DEFAULT_SELECTED_SECTIONS)
 
-// 根据当前语言获取可用的小节类型
+// 根据当前语言获取可用的��节类型
 const availableSectionTypes = computed(() => {
   // 始终返回所有小节类型
   return ALL_SECTION_TYPES
@@ -381,7 +439,7 @@ const canEdit = computed(() => {
 // 获取文章和小节内容
 const fetchArticle = async () => {
   try {
-    // 获取文章基本信息
+    // 获取文��基本信息
     const { data: articleData, error: articleError } = await supabase
       .from('keep_articles')
       .select(`
@@ -404,7 +462,7 @@ const fetchArticle = async () => {
 
     if (sectionsError) throw sectionsError
 
-    // 如果当前语言没有内容,尝试获取另一种语���的内容
+    // 如果当前语言没有内容,尝试获取另一种语言的内容
     if (!sectionsData?.length) {
       const fallbackLanguage = locale.value === 'zh' ? 'en' : 'zh'
       const { data: fallbackData, error: fallbackError } = await supabase
@@ -516,7 +574,7 @@ const allowNavSwitch = ref(true)
 const handleScroll = () => {
   const currentScroll = window.scrollY
   
-  // 只有在允许导航切换时才执行切换逻辑
+  // 只有在允许���航切换时才执行切换逻辑
   if (allowNavSwitch.value) {
     // 获取第一个section元素
     const firstSection = document.querySelector('[data-section-type]')
@@ -529,7 +587,7 @@ const handleScroll = () => {
     
     if (currentScroll > lastScrollTop.value) {
       // 向下滚动
-      // 只有当第一个section开始进入视口，且滚动超过100px时才显示新导航
+      // 只有当第一个section开始进入视口，且滚动超过100px时才显示导航
       if (currentScroll > 100 && firstSectionRect.top < threshold) {
         showNavB.value = true
       }
@@ -630,7 +688,7 @@ const nextSection = computed(() => {
     : null
 })
 
-// 添加��个变量来跟踪滑动方向
+// 添加一个变量来跟踪滑动方向
 const transitionName = ref('slide-right')
 
 // 修改 scrollToSection 函数
@@ -664,6 +722,14 @@ const scrollToSection = (sectionType: string) => {
       allowNavSwitch.value = true
     }, 800) // 设置稍长于滚动动画的时间
   }
+}
+
+const showMindmapPreview = ref(false)
+const previewImageUrl = ref('')
+
+// 添加处理预览的方法
+const handlePreviewMindmap = () => {
+  showMindmapPreview.value = true
 }
 </script>
 
@@ -749,7 +815,7 @@ html {
   scroll-behavior: smooth;
 }
 
-/* 在 style 标签中添加以下全局样式 */
+/* 在 style 标签中加以下全局样式 */
 body {
   overflow-x: hidden;
   width: 100%;
@@ -795,5 +861,13 @@ header {
 
 .el-dialog__wrapper {
   z-index: 1000 !important;
+}
+
+.mindmap-preview-dialog {
+  :deep(.el-dialog__body) {
+    height: calc(100vh - 100px);
+    padding: 20px;
+    background: #f5f5f5;
+  }
 }
 </style>
