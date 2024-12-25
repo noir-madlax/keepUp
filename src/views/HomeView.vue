@@ -940,10 +940,6 @@ const submitRequest = async (url?: string) => {
   // 如果没有传入url，则使用输入框的值
   let uploadUrl = url || requestUrl.value
   
-  // 如果输入框也没有值，使用默认标记URL
-  if (!uploadUrl) {
-    uploadUrl = 'https://'
-  }
   
   if (!authStore.isAuthenticated) {
     // 保存URL到localStorage

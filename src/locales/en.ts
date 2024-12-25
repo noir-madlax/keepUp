@@ -76,11 +76,12 @@ export default {
   summarize: {
     title: 'Summarize',
     manualupload:'Manual',
-    urlPlaceholder: 'Enter article or video content URL to summarize',
+    urlPlaceholder: 'Enter Video, Podcast, WebPage URL to summarize',
     languageTitle: 'Select Output Languages',
     languages: {
       zh: 'Chinese',
-      en: 'English'
+      en: 'English',
+      na: 'Not Now'
     },
     buttons: {
       cancel: 'Cancel',
@@ -95,11 +96,15 @@ export default {
       languageRequired: 'Please select at least one output language',
       submitSuccess: 'Submitted successfully, content is being processed',
       submitFailed: 'Submission failed, please try again',
-      maxSelectionsExceeded: 'You can select up to 3 language options'
+      maxSelectionsExceeded: 'You can select up to 3 language options',
+      onlyForMedia: 'Only available for video and podcast content'
     },
-    summaryLanguageTitle: 'Summary Languages',
-    subtitleLanguageTitle: 'Subtitle Languages',
-    detailedLanguageTitle: 'Detailed Languages'
+    summaryLanguageTitle: 'Select the language of the Summary Text:',
+    subtitleLanguageTitle: 'Select the language of the Full Transcript:',
+    summaryLanguageTitleNote: '(Summarize the most core points)',
+    subtitleLanguageTitleNote: '(Extract the full text subtitles)',
+    detailedLanguageTitleNote: '(Detail the content of each section)',
+    detailedLanguageTitle: 'Select the language of the Section Details:'
   },
   common: {
     retry: 'Retry',
