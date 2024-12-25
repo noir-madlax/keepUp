@@ -102,8 +102,9 @@
               
               <!-- 4个渠道图标 - 优化响应式显示 -->
               <div class="flex items-center gap-3 ml-auto sm:ml-4">
+                <!-- 修改渠道图标icon的命名要和svg的文件一样-->  
                 <img 
-                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'webpage']"
+                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'web']"
                   :key="channel"
                   :src="`/images/icons/${channel}.svg`"
                   :alt="channel"
