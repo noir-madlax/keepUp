@@ -76,11 +76,12 @@ export default {
   summarize: {
     title: '总结',
     manualupload:'手工',
-    urlPlaceholder: '输入要总结的视频、播客内容链接',
+    urlPlaceholder: '输入要总结的视频、播客、网页链接',
     languageTitle: '选择输出语言',
     languages: {
       zh: '中文',
-      en: '英文'
+      en: '英文',
+      na: '暂不需要'
     },
     buttons: {
       cancel: '取消',
@@ -91,14 +92,18 @@ export default {
       urlRequired: '请输入URL',
       invalidUrl: '请输入有效的URL地址',
       duplicateUrl: '该链接已经提交过了',
-      languageRequired: '请���少选择一种输出语言',
-      submitSuccess: '提交成功���内容正在处理中',
+      languageRequired: '请选择一种输出语言',
+      submitSuccess: '提交成功，内容正在处理中',
       submitFailed: '提交失败，请重试',
-      maxSelectionsExceeded: '最多只能选择3个语言选项'
+      maxSelectionsExceeded: '最多只能选择3个语言选项',
+      onlyForMedia: '只支持视频和播客类型的内容'
     },
-    summaryLanguageTitle: '总结语言',
-    subtitleLanguageTitle: '全文字幕',
-    detailedLanguageTitle: '分段详述'
+    summaryLanguageTitle: '选择总结语言',
+    summaryLanguageTitleNote: '(根据原文总结出最核心的要点)',
+    subtitleLanguageTitle: '选择字幕语言',
+    subtitleLanguageTitleNote: '(从原始内容中提取全文字幕)',
+    detailedLanguageTitle: '选择分段详述语言',
+    detailedLanguageTitleNote: '(详细叙述原文每个分段的内容)'
   },
   common: {
     retry: '重试',

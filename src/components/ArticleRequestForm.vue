@@ -39,15 +39,9 @@
                     <img src="/images/icons/youtube.svg" alt="YouTube" class="w-6 h-6" />
                     <img src="/images/icons/apple-podcast.svg" alt="Apple Podcast" class="w-6 h-6" />
                     <img src="/images/icons/spotify.svg" alt="Spotify" class="w-6 h-6" />
+                    <img src="/images/icons/web.svg" alt="Web Page" class="w-6 h-6" />
                   </div>
 
-                  <!-- 手工按钮 -->
-                  <button 
-                    class="px-4 py-2 text-sm bg-gray-100 text-gray-900 rounded border border-gray-300 hover:bg-gray-200 shadow-sm ml-auto"
-                    @click="handleManual"
-                  >
-                    {{ t('summarize.manualupload') }}
-                  </button>
                 </div>
 
                 <!-- URL输入框 -->
@@ -62,15 +56,20 @@
 
               <!-- 语言选择区域使用 grid 布局 -->
               <div class="grid gap-6">
-                <!-- 摘要语言选择 -->
+                <!-- 总结语言的选择 -->
                 <div>
-                  <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.summaryLanguageTitle') }}</h3>
+                  <div class="flex items-center gap-2 mb-2" :class="locale === 'en' ? 'max-[450px]:flex-col max-[450px]:items-start' : ''">
+                    <h3 class="text-sm font-semibold text-gray-700">{{ t('summarize.summaryLanguageTitle') }}</h3>
+                    <p class="text-xs text-gray-400">{{ t('summarize.summaryLanguageTitleNote') }}</p>
+                  </div>
                   <div class="flex flex-wrap gap-2">
                     <label
                       v-for="lang in ['en', 'zh']"
                       :key="`summary-${lang}`"
-                      class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
-                      :class="summaryLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+                      class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer transition-all duration-200"
+                      :class="summaryLanguages.includes(lang) 
+                        ? 'border-blue-600 bg-blue-100 font-medium' 
+                        : 'border-gray-300 text-gray-500'"
                     >
                       <input type="checkbox" :value="lang" v-model="summaryLanguages" class="hidden" />
                       <span>{{ t(`summarize.languages.${lang}`) }}</span>
@@ -79,17 +78,26 @@
                       </svg>
                     </label>
                   </div>
+                    <!-- 添加警告提示占位 -->
+                    <div class="h-0 mt-1"
+                  </div>
                 </div>
+                
 
-                <!-- 副标题语言选择 -->
+                <!-- 全文字幕的语言选择 -->
                 <div>
-                  <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.subtitleLanguageTitle') }}</h3>
+                  <div class="flex items-center gap-2 mb-2" :class="locale === 'en' ? 'max-[450px]:flex-col max-[450px]:items-start' : ''">
+                    <h3 class="text-sm font-semibold text-gray-700">{{ t('summarize.subtitleLanguageTitle') }}</h3>
+                    <p class="text-xs text-gray-400">{{ t('summarize.subtitleLanguageTitleNote') }}</p>
+                  </div>
                   <div class="flex flex-wrap gap-2">
                     <label
-                      v-for="lang in ['en', 'zh']"
+                      v-for="lang in ['en', 'zh', 'na']"
                       :key="`subtitle-${lang}`"
-                      class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
-                      :class="subtitleLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+                      class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer transition-all duration-200"
+                      :class="subtitleLanguages.includes(lang) 
+                        ? 'border-blue-600 bg-blue-100 font-medium' 
+                        : 'border-gray-300 text-gray-500'"
                     >
                       <input type="checkbox" :value="lang" v-model="subtitleLanguages" class="hidden" />
                       <span>{{ t(`summarize.languages.${lang}`) }}</span>
@@ -98,17 +106,28 @@
                       </svg>
                     </label>
                   </div>
+                  <!-- 添加警告提示占位 -->
+                  <div class="h-0 mt-1">
+                    <p v-if="subtitleWarningVisible" class="text-xs text-red-500 transition-opacity duration-200">
+                      {{ t('summarize.messages.onlyForMedia') }}
+                    </p>
+                  </div>
                 </div>
 
-                <!-- 详细摘要语言选择 -->
+                <!-- 分段详述的语言选择 -->
                 <div>
-                  <h3 class="text-sm text-gray-600 mb-2">{{ t('summarize.detailedLanguageTitle') }}</h3>
+                  <div class="flex items-center gap-2 mb-2" :class="locale === 'en' ? 'max-[450px]:flex-col max-[450px]:items-start' : ''">
+                    <h3 class="text-sm font-semibold text-gray-700">{{ t('summarize.detailedLanguageTitle') }}</h3>
+                    <p class="text-xs text-gray-400">{{ t('summarize.detailedLanguageTitleNote') }}</p>
+                  </div>
                   <div class="flex flex-wrap gap-2">
                     <label
-                      v-for="lang in ['en', 'zh']"
+                      v-for="lang in ['en', 'zh', 'na']"
                       :key="`detailed-${lang}`"
-                      class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer"
-                      :class="detailedLanguages.includes(lang) ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+                      class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer transition-all duration-200"
+                      :class="detailedLanguages.includes(lang) 
+                        ? 'border-blue-600 bg-blue-100 font-medium' 
+                        : 'border-gray-300 text-gray-500'"
                     >
                       <input type="checkbox" :value="lang" v-model="detailedLanguages" class="hidden" />
                       <span>{{ t(`summarize.languages.${lang}`) }}</span>
@@ -116,6 +135,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                       </svg>
                     </label>
+                  </div>
+                  <!-- 添加警告提示占位 -->
+                  <div class="h-0 mt-1">
+                    <p v-if="detailedWarningVisible" class="text-xs text-red-500 transition-opacity duration-200">
+                      {{ t('summarize.messages.onlyForMedia') }}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -146,7 +171,7 @@
 
 <script setup lang="ts">
 // 导入必要的依赖
-import { ref, watch, onUnmounted } from 'vue'
+import { ref, watch, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElLoading } from 'element-plus'
 import { supabase } from '../supabaseClient'
 import { useI18n } from 'vue-i18n'
@@ -156,17 +181,104 @@ import { useAuthStore } from '../stores/auth'
 const authStore = useAuthStore()
 
 // 初始化国际化工具
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+// 获取当前语言并设置默认值
+const getCurrentLang = () => {
+  // locale 通常是 'zh' 或 'en'
+  return locale.value === 'zh' ? 'zh' : 'en'
+}
+
 const requestUrl = ref('')
 const isProcessing = ref(false)
 const showUploadModal = ref(false)
-const summaryLanguages = ref<string[]>(['en'])
-const subtitleLanguages = ref<string[]>([])
-const detailedLanguages = ref<string[]>([])
+// 修改默���值为当前语言
+const summaryLanguages = ref<string[]>([getCurrentLang()])
+const subtitleLanguages = ref<string[]>(['na'])
+const detailedLanguages = ref<string[]>(['na'])
 
-// 定义组件事件
+// 在 script setup 中添加新的响应式变量
+const subtitleWarningVisible = ref(false)
+const detailedWarningVisible = ref(false)
+
+// 监听语言变化，动态更新 summaryLanguages
+watch(locale, (newLocale) => {
+  if (!summaryLanguages.value.includes('na')) {  // 如果不是 na，则更新为当前语言
+    summaryLanguages.value = [getCurrentLang()]
+  }
+})
+
+// 监听字幕语言选择变化
+watch(subtitleLanguages, async (newVal, oldVal) => {
+  if (!isSupportedMediaUrl(requestUrl.value) && newVal.some(lang => lang !== 'na')) {
+    showWarning('subtitle')
+    subtitleLanguages.value = ['na']
+    return
+  }
+  // 如果之前只有 na，现在选择了其他语言
+  if (oldVal.includes('na') && oldVal.length === 1 && newVal.length > 1) {
+    // 移除 na，保留新选择的语言
+    subtitleLanguages.value = newVal.filter(lang => lang !== 'na')
+    await nextTick()
+    return
+  }
+  
+  // 其他情况保持原有逻辑
+  if (newVal.includes('na')) {
+    if (newVal.length > 1) {
+      subtitleLanguages.value = ['na']
+      await nextTick()
+    }
+  } else if (newVal.length >= 1) {
+    const filtered = newVal.filter(lang => lang !== 'na')
+    if (filtered.length !== newVal.length) {
+      subtitleLanguages.value = filtered
+      await nextTick()
+    }
+  } else {
+    // 如果没有选择任何语言，自动选择 na
+    subtitleLanguages.value = ['na']
+    await nextTick()
+  }
+}, { flush: 'post' })
+
+// 监听详细语言选择变化
+watch(detailedLanguages, async (newVal, oldVal) => {
+  if (!isSupportedMediaUrl(requestUrl.value) && newVal.some(lang => lang !== 'na')) {
+    showWarning('detailed')
+    detailedLanguages.value = ['na']
+    return
+  }
+  // 如果之前只有 na，现在选择了其他语言
+  if (oldVal.includes('na') && oldVal.length === 1 && newVal.length > 1) {
+    // 移除 na，保留新选择的语言
+    detailedLanguages.value = newVal.filter(lang => lang !== 'na')
+    await nextTick()
+    return
+  }
+  
+  // 其他情况保持原有逻辑
+  if (newVal.includes('na')) {
+    if (newVal.length > 1) {
+      detailedLanguages.value = ['na']
+      await nextTick()
+    }
+  } else if (newVal.length >= 1) {
+    const filtered = newVal.filter(lang => lang !== 'na')
+    if (filtered.length !== newVal.length) {
+      detailedLanguages.value = filtered
+      await nextTick()
+    }
+  } else {
+    // 如果没有选择任何语言，自动选择 na
+    detailedLanguages.value = ['na']
+    await nextTick()
+  }
+}, { flush: 'post' })
+
+// ��义组件事件
 const emit = defineEmits<{
-  (e: 'refresh'): void
+  (e: 'refresh', payload: { type: string }): void
   (e: 'click'): void
 }>()
 
@@ -221,11 +333,18 @@ const checkDuplicate = async (url: string): Promise<boolean> => {
 const MAX_SELECTIONS = 3
 
 const validateLanguageSelections = (): boolean => {
-  const totalSelections = summaryLanguages.value.length +
-    subtitleLanguages.value.length +
-    detailedLanguages.value.length
+  // 过滤掉 'na' 后再计算总数
+  const totalSelections = 
+    summaryLanguages.value.filter(lang => lang !== 'na').length +
+    subtitleLanguages.value.filter(lang => lang !== 'na').length +
+    detailedLanguages.value.filter(lang => lang !== 'na').length
 
-  return totalSelections > 0 && totalSelections <= MAX_SELECTIONS
+  // 确保总结语言至少选择了一个
+  const hasSummaryLanguage = summaryLanguages.value.length > 0 && 
+    !summaryLanguages.value.includes('na')
+
+  // 总选择数不超过3，且必须有总结语言
+  return totalSelections <= MAX_SELECTIONS && hasSummaryLanguage
 }
 
 /**
@@ -240,9 +359,16 @@ const submitRequest = async () => {
   if (!validateUrl(requestUrl.value)) return
   if (!await checkDuplicate(requestUrl.value)) return
 
-  const totalSelections = summaryLanguages.value.length +
-    subtitleLanguages.value.length +
-    detailedLanguages.value.length
+  // 验证总结语言是否已选择
+  if (!summaryLanguages.value.length || summaryLanguages.value.includes('na')) {
+    ElMessage.warning(t('summarize.messages.summaryLanguageRequired'))
+    return
+  }
+
+  const totalSelections = 
+    summaryLanguages.value.filter(lang => lang !== 'na').length +
+    subtitleLanguages.value.filter(lang => lang !== 'na').length +
+    detailedLanguages.value.filter(lang => lang !== 'na').length
 
   if (totalSelections === 0) {
     ElMessage.warning(t('summarize.messages.languageRequired'))
@@ -326,6 +452,36 @@ const handleManual = () => {
 const handleClick = () => {
   // 移除登录检查，由父组件统一处理
   emit('click')
+}
+
+/**
+ * 判断URL是否为支持的媒体类型
+ * @param url 待检查的URL
+ * @returns boolean 是否支持
+ */
+const isSupportedMediaUrl = (url: string): boolean => {
+  const lowercaseUrl = url.toLowerCase()
+  return lowercaseUrl.includes('youtube.com') || 
+         lowercaseUrl.includes('youtu.be') ||
+         lowercaseUrl.includes('spotify.com') ||
+         lowercaseUrl.includes('apple.com/podcast')
+}
+
+// 添加警告显示逻辑
+const showWarning = (type: 'subtitle' | 'detailed') => {
+  if (!isSupportedMediaUrl(requestUrl.value)) {
+    if (type === 'subtitle') {
+      subtitleWarningVisible.value = true
+      setTimeout(() => {
+        subtitleWarningVisible.value = false
+      }, 2000)
+    } else {
+      detailedWarningVisible.value = true
+      setTimeout(() => {
+        detailedWarningVisible.value = false
+      }, 2000)
+    }
+  }
 }
 </script> 
 
