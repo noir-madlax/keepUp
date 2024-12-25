@@ -103,7 +103,7 @@
               <!-- 4个渠道图标 - 优化响应式显示 -->
               <div class="flex items-center gap-3 ml-auto sm:ml-4">
                 <img 
-                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'web']"
+                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'webpage']"
                   :key="channel"
                   :src="`/images/icons/${channel}.svg`"
                   :alt="channel"
@@ -154,8 +154,9 @@
             <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.channelTitle') }}</h2>
             <!-- 渠道按钮容器 -->
             <div class="flex flex-wrap gap-2">
+            <!-- 修改渠道按钮 这里的YouTube', 'Apple Podcast', 'Spotify', 'webpage'是和articels表中的channel字段数据一致-->
               <button 
-                v-for="channel in ['YouTube', 'Apple Podcast', 'Spotify', 'Web']"
+                v-for="channel in ['YouTube', 'Apple Podcast', 'Spotify', 'webpage']"
                 :key="channel"
                 @click="toggleChannel(channel)"
                 class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200 flex items-center gap-2"
@@ -758,7 +759,7 @@ const getChannelKey = (channel: string): string => {
     'YouTube': 'youtube',
     'Apple Podcast': 'applePodcast',
     'Spotify': 'spotify',
-    'Web': 'web'
+    'webpage': 'webpage'
   }
   return keyMap[channel] || channel.toLowerCase()
 }
@@ -892,7 +893,7 @@ const getChannelIcon = (channel: string): string => {
     'YouTube': 'youtube.svg',
     'Apple Podcast': 'apple-podcast.svg',
     'Spotify': 'spotify.svg',
-    'Web': 'web.svg'
+    'webpage': 'web.svg'
   }
   return iconMap[channel] || ''
 }

@@ -22,7 +22,7 @@ export default {
       spotify: 'Spotify',
       xiaoyuzhou: '小宇宙',
       pdf: 'PDF',
-      web: '网页'
+      webpage: '网页'
     },
     pullToRefresh: {
       pullDown: '下拉刷新',

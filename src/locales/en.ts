@@ -20,7 +20,7 @@ export default {
       youtube: 'YouTube',
       xiaoyuzhou: 'XiaoYuZhou',
       pdf: 'PDF', 
-      web: 'Web',
+      webpage: 'Web Page',
       applePodcast: 'Apple Podcast',
       spotify: 'Spotify'
     },
