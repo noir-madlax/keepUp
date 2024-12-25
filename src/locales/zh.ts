@@ -91,7 +91,7 @@ export default {
       urlRequired: '请输入URL',
       invalidUrl: '请输入有效的URL地址',
       duplicateUrl: '该链接已经提交过了',
-      languageRequired: '请至少选择一种输出语言',
+      languageRequired: '请���少选择一种输出语言',
       submitSuccess: '提交成功���内容正在处理中',
       submitFailed: '提交失败，请重试',
       maxSelectionsExceeded: '最多只能选择3个语言选项'
@@ -113,6 +113,24 @@ export default {
       uploadWeb: '点击总结网页',
       supportedPlatforms: '播客、视频等内容的链接',
       webLink: '任何网页的URL链接',
+      fallback: {
+        noTitle: '无标题',
+        unknownAuthor: '未知作者',
+        unknownDate: '未知日期',
+        unknownChannel: '未知频道',
+        unknownTime: '未知时间',
+        noLink: '无链接',
+        justNow: '刚刚',
+        minutesAgo: '{count}分钟前',
+        hoursAgo: '{count}小时前',
+        daysAgo: '{count}天前',
+        uploaded: '上传于 ',
+        processing: '处理中...',
+        failed: '处理失败',
+        rejected: '已拒绝',
+        pending: '等待处理',
+        unknownStatus: '未知状态'
+      }
     }
   }
 } 
