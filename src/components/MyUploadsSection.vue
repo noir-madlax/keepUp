@@ -72,7 +72,7 @@
             <!-- Youtube Icon -->
             <div class="icon">
               <div class="icon-background">
-                <img src="/images/icons/webpage.svg" alt="webpage" class="webpage-icon">
+                <img src="/images/icons/web_icon.svg" alt="webpage" class="webpage-icon">
               </div>
             </div>
           </div>

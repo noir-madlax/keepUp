@@ -100,10 +100,10 @@
                 {{ t('summarize.title') }}
               </h3>
               
-              <!-- 3个持的渠道图标 - 优化响应式显示 -->
+              <!-- 4个渠道图标 - 优化响应式显示 -->
               <div class="flex items-center gap-3 ml-auto sm:ml-4">
                 <img 
-                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify']"
+                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'web']"
                   :key="channel"
                   :src="`/images/icons/${channel}.svg`"
                   :alt="channel"
@@ -155,7 +155,7 @@
             <!-- 渠道按钮容器 -->
             <div class="flex flex-wrap gap-2">
               <button 
-                v-for="channel in ['YouTube', 'Apple Podcast', 'Spotify']"
+                v-for="channel in ['YouTube', 'Apple Podcast', 'Spotify', 'Web']"
                 :key="channel"
                 @click="toggleChannel(channel)"
                 class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200 flex items-center gap-2"
@@ -757,7 +757,8 @@ const getChannelKey = (channel: string): string => {
   const keyMap: Record<string, string> = {
     'YouTube': 'youtube',
     'Apple Podcast': 'applePodcast',
-    'Spotify': 'spotify'
+    'Spotify': 'spotify',
+    'Web': 'web'
   }
   return keyMap[channel] || channel.toLowerCase()
 }
@@ -890,7 +891,8 @@ const getChannelIcon = (channel: string): string => {
   const iconMap: Record<string, string> = {
     'YouTube': 'youtube.svg',
     'Apple Podcast': 'apple-podcast.svg',
-    'Spotify': 'spotify.svg'
+    'Spotify': 'spotify.svg',
+    'Web': 'web.svg'
   }
   return iconMap[channel] || ''
 }
