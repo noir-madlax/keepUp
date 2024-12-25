@@ -132,23 +132,22 @@
             <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
               <!-- 文章封面 -->
               <img 
-                :src="article.cover_image_url || '/images/covers/article-1.png'"
-                :alt="article.title" 
+                :src="getArticleImage(article.cover_image_url)"
+                :alt="getArticleTitle()" 
                 class="w-full md:w-64 h-48 md:h-64 object-cover rounded-lg shadow-md" 
               />
               <div class="flex-1">
                 <!-- 文章标题 --> 
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{{ article.title }}</h1>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{{ getArticleTitle() }}</h1>
                 <!-- 作者信息 -->
                 <div class="flex items-center gap-4 text-gray-600 text-sm md:text-base">
                   <div class="flex items-center gap-2">
                     <img 
-                      v-if="article.author?.icon" 
-                      :src="article.author.icon" 
-                      :alt="article.author.name" 
+                      :src="article.author?.icon || '/images/icons/author_default.svg'" 
+                      :alt="article.author?.name || t('upload.card.fallback.unknownAuthor')" 
                       class="w-5 h-5 rounded-full"
                     />
-                    <span>{{ article.author?.name }}</span>
+                    <span>{{ getAuthorName() }}</span>
                   </div>
                   <span>{{ formatDate(article.publish_date) }}</span>
                 </div>
@@ -244,7 +243,7 @@
               </div>
             </template>
             <div v-else>  
-              <!-- 如果sections不存在，则渲染markdown内容 -->
+              <!-- 如��sections不存在，则渲染markdown内容 -->
               <div v-html="markdownContent"></div>
             </div>
           </article>
@@ -610,7 +609,7 @@ const handleScroll = () => {
     
     if (currentScroll > lastScrollTop.value) {
       // 向下滚动
-      // 只有当第一个section开始���入视口，且滚动超过100px时显示导航
+      // 只有当第一个section开始入视口，且滚动超过100px时显示导航
       if (currentScroll > 100 && firstSectionRect.top < threshold) {
         showNavB.value = true
       }
@@ -653,7 +652,7 @@ const copyCurrentUrl = async () => {
     await navigator.clipboard.writeText(window.location.href)
     ElMessage.success(t('article.copySuccess'))
   } catch (err) {
-    console.error('复制��败:', err)
+    console.error('复制失败:', err)
     ElMessage.error(t('article.copyError'))
   }
 }
@@ -740,7 +739,7 @@ const scrollToSection = (sectionType: string) => {
       behavior: 'smooth'
     })
 
-    // 画完成后恢复导航��换功能
+    // 画完成后恢复导航换功能
     setTimeout(() => {
       allowNavSwitch.value = true
     }, 800) // 设置稍长于滚动动画的时间
@@ -934,7 +933,7 @@ const adjustPosition = () => {
   if (scaledWidth < containerWidth) {
     position.value.x = Math.round((containerWidth - scaledWidth) / 2)
   } else {
-    // 否则限制拖动范围
+    // 则限制拖动范围
     const minX = Math.min(0, containerWidth - scaledWidth)
     position.value.x = Math.max(minX, Math.min(0, position.value.x))
   }
@@ -963,6 +962,35 @@ onUnmounted(() => {
     isMobile.value = window.innerWidth <= 768
   })
 })
+
+const getArticleImage = (imageUrl: string | null) => {
+  // 使用与ArticleCard相同的判断逻辑
+  if (imageUrl && 
+      imageUrl.trim() !== '' && 
+      !imageUrl.includes('qpic.cn') &&
+      imageUrl !== '无缩略图') {
+    return imageUrl;
+  }
+  return '/images/covers/article_default.png';
+}
+
+// 添加获取作者名称的方法
+const getAuthorName = () => {
+  if (!article.value?.author?.name || 
+      article.value?.author?.name === t('upload.card.fallback.unknownAuthor') || 
+      article.value?.author?.name === 'Unknown') {
+    return t('upload.card.fallback.unknownAuthor')
+  }
+  return article.value.author.name
+}
+
+// 添加获取标题的方法
+const getArticleTitle = () => {
+  if (!article.value?.title || article.value.title.trim() === '') {
+    return t('upload.card.fallback.noTitle')
+  }
+  return article.value.title
+}
 </script>
 
 <style>
@@ -1047,7 +1075,7 @@ html {
   scroll-behavior: smooth;
 }
 
-/*  style 标签中加下全局样式 */
+/*  style 标签中加下全样式 */
 body {
   overflow-x: hidden;
   width: 100%;
