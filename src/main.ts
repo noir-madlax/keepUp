@@ -34,13 +34,13 @@ if (import.meta.env.PROD) {
   // 处理 cookie 和本地存储
   const clearBrowserData = async () => {
     // 清理不需要持久化的数据
-    const preserveKeys = ['auth-token', 'user-preferences']  // 需要保留的关键数据
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key && !preserveKeys.includes(key)) {
-        localStorage.removeItem(key)
-      }
-    }
+    // const preserveKeys = ['auth-token', 'user-preferences']  // 需要保留的关键数据
+    // for (let i = 0; i < localStorage.length; i++) {
+    //   const key = localStorage.key(i)
+    //   if (key && !preserveKeys.includes(key)) {
+    //     localStorage.removeItem(key)
+    //   }
+    // }
     
     // 清理过期的 sessionStorage
     sessionStorage.clear()
