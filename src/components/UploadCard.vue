@@ -65,7 +65,7 @@
 
     <div class="channel-icon">
       <img 
-        :src="`/images/icons/${getPlatformIcon()}`"
+        :src="`/images/icons/${getPlatformIcon(article.platform)}`"
         :alt="article.platform || '未知平台'"
       />
     </div>
@@ -121,6 +121,8 @@ const getChannelIcon = (channel: string) => {
       return 'spotify.svg'
     case 'apple':
       return 'apple-podcast.svg'
+    case 'webpage':
+      return 'web.svg'
     default:
       return 'default-channel.svg'
   }
@@ -143,6 +145,8 @@ const getPlatformIcon = (platform: string | undefined) => {
         return 'spotify.svg'
       case 'applet':
         return 'apple-podcast.svg'
+      case 'webpage':
+        return 'web.svg'
       default:
         return 'default.svg'
     }

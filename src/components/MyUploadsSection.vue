@@ -69,10 +69,10 @@
           <div class="upload-text">{{ t('upload.card.uploadWeb') }}</div>
           <!-- Icon Container -->
           <div class="icon-container">
-            <!-- Youtube Icon -->
+            <!-- web Icon -->
             <div class="icon">
               <div class="icon-background">
-                <img src="/images/icons/web_icon.svg" alt="webpage" class="webpage-icon">
+                <img src="/images/icons/web.svg" alt="webpage" class="webpage-icon">
               </div>
             </div>
           </div>

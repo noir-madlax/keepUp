@@ -85,7 +85,8 @@ const getChannelIcon = (channel: string): string => {
   const iconMap: Record<string, string> = {
     'YouTube': 'youtube.svg',
     'Apple Podcast': 'apple-podcast.svg',
-    'Spotify': 'spotify.svg'
+    'Spotify': 'spotify.svg',
+    'webpage': 'web.svg'
   }
   return iconMap[channel] || ''
 }
