@@ -68,6 +68,9 @@ export default {
       zh: 'Chinese',
       en: 'English',
       message: 'Currently displaying {language} content'
+    },
+    preview: {
+      enlarge: 'Enlarge View'
     }
   },
   summarize: {

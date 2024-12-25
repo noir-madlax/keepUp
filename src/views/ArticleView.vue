@@ -218,24 +218,20 @@
                 <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
                 <!-- 根据不同的小节类型使用不同的渲染方式 -->
                 <template v-if="section.section_type === '思维导图'">
-                  <div class="relative">
-                    <div class="flex items-center gap-2 mb-4">
-                      <h2 class="text-xl font-bold">{{ getLocalizedSectionType(section.section_type) }}</h2>
-                      <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2">
                         <span 
                           @click="handlePreviewMindmap" 
                           class="text-blue-500 hover:text-blue-600 cursor-pointer text-sm flex items-center"
                         >
                           <i class="el-icon-zoom-in mr-1"></i>
-                          放大显示
+                          {{ t('article.preview.enlarge') }}
                         </span>
                       </div>
-                    </div>
                     <mind-map 
                       :content="section.content" 
                       @preview="url => previewImageUrl = url"
                     />
-                  </div>
+
                 </template>
                 <template v-else-if="section.section_type === '结构图'">
                   <!-- 结构图组件 --> 
@@ -614,7 +610,7 @@ const handleScroll = () => {
     
     if (currentScroll > lastScrollTop.value) {
       // 向下滚动
-      // 只有当第一个section开始进入视口，且滚动超过100px时显示导航
+      // 只有当第一个section开始���入视口，且滚动超过100px时显示导航
       if (currentScroll > 100 && firstSectionRect.top < threshold) {
         showNavB.value = true
       }
@@ -657,7 +653,7 @@ const copyCurrentUrl = async () => {
     await navigator.clipboard.writeText(window.location.href)
     ElMessage.success(t('article.copySuccess'))
   } catch (err) {
-    console.error('复制失败:', err)
+    console.error('复制��败:', err)
     ElMessage.error(t('article.copyError'))
   }
 }
@@ -744,7 +740,7 @@ const scrollToSection = (sectionType: string) => {
       behavior: 'smooth'
     })
 
-    // 画完成后恢复导航切换功能
+    // 画完成后恢复导航��换功能
     setTimeout(() => {
       allowNavSwitch.value = true
     }, 800) // 设置稍长于滚动动画的时间
@@ -988,7 +984,7 @@ onUnmounted(() => {
   transform: translateX(-80px);
 }
 
-/* 向右滑动��画 */
+/* 向右滑动动画 */
 .slide-right-enter-active,
 .slide-right-leave-active {
   transition: all 0.8s ;
