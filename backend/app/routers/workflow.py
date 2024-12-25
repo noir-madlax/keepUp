@@ -25,7 +25,7 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
         content: 视频内容
         chapters: 章节信息
         article: 文章信息
-        languages: 需要处理的语言列表
+        languages: 需要处理��语言列表
         
     Returns:
         list[str]: 处理结果信息列表
@@ -226,9 +226,20 @@ async def process_article_task(request: FetchRequest):
             await SupabaseService.update_author(author["id"], video_info.author)
             
         # 5. 创建文章基础信息
-        article_data = video_info.article
-        article_data.author_id = author["id"]
-        article = await SupabaseService.create_article(article_data)
+        try:
+            article_data = video_info.article
+            article_data.author_id = author["id"]
+            article = await SupabaseService.create_article(article_data)
+        except ValueError as e:
+            error_msg = str(e)
+            await RequestLogger.error(
+                request.id,
+                Steps.PROCESS_ERROR,
+                error_msg,
+                e
+            )
+            await SupabaseService.update_status(request.id, "failed", error_msg)
+            return
         
         # 6. 获取视频字幕
         async with RequestLogger.step_context(request.id, Steps.CONTENT_FETCH):

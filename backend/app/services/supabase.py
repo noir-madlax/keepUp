@@ -39,6 +39,11 @@ class SupabaseService:
     @classmethod
     async def create_article(cls, article_data: 'ArticleCreate'):
         """创建新文章"""
+        # 检查标题是否为空
+        if not article_data.title or not article_data.title.strip():
+            logger.warning("文章标题为空，取消创建")
+            raise ValueError("文章标题不能为空")
+        
         client = cls.get_client()
         result = client.table("keep_articles").insert(article_data.dict()).execute()
         logger.info(f"文章创建成功")
@@ -158,7 +163,7 @@ class SupabaseService:
         section_type: str,
         language: str
     ) -> None:
-        """除指定文章的特定类型和��言的小节
+        """除指定文章的特定类型和语言的小节
         
         Args:
             article_id: 文章ID
@@ -231,7 +236,7 @@ class SupabaseService:
         """更新请求的润色内容
         
         Args:
-            request_id: ���求ID
+            request_id: 请求ID
             polished_content: Coze返回的润色结果
             language: 语言类型
         """
@@ -344,7 +349,7 @@ class SupabaseService:
             }).order("created_at").execute()
             
             if result.data:
-                logger.info(f"找到文章小��: article_id={article_id}, type={section_type}, count={len(result.data)}")
+                logger.info(f"找到文章小节: article_id={article_id}, type={section_type}, count={len(result.data)}")
                 return result.data
             
             logger.info(f"未找到文章小节: article_id={article_id}, type={section_type}")
@@ -424,7 +429,7 @@ class SupabaseService:
             }).eq('id', request_id).execute()
             
             if not result.data:
-                raise Exception(f"未找到 ID 为 {request_id} 的请求记���")
+                raise Exception(f"未找到 ID 为 {request_id} 的请求记录")
             
             logger.info(f"平台信息更新成功: ID={request_id}, Platform={platform}")
             
