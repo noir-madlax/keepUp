@@ -38,7 +38,7 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
     )
     
     # 判断是否是网页内容
-    is_webpage = article.get('channel') == '网页'
+    is_webpage = article.get('channel') == 'webpage'
     
     for lang in languages:
         # 根据内容类型和语言选择工作流ID
