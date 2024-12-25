@@ -110,7 +110,13 @@ const getStatusText = computed(() => {
 
 // 获取文章封面图片
 const getArticleImage = () => {
-  return props.article.cover_image_url || 'public/images/covers/article_default.png'
+  // 如果图片 URL 为空，或者等于"无缩略图"，或者包含 qpic.cn，则返回默认图片
+  if (!props.article.cover_image_url || 
+      props.article.cover_image_url === '无缩略图' ||
+      props.article.cover_image_url.includes('qpic.cn')) {
+    return 'public/images/covers/article_default.png'
+  }
+  return props.article.cover_image_url
 }
 
 // 获取频道图标
