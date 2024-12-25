@@ -2,10 +2,7 @@
   <div class="mermaid-container" :style="{ width: containerWidth, height: containerHeight }">
     <div ref="svgContainerRef" class="flex-1">
       <div v-if="renderError" class="error-container">
-        <span class="error-text">结构图加载失败</span>
-        <el-button type="primary" size="small" @click="retryRender">
-          重试
-        </el-button>
+        <span class="error-text">Mermaid Syntax Error</span>
       </div>
     </div>
   </div>
@@ -44,6 +41,12 @@ mermaid.initialize({
     padding: 10,
     useMaxWidth: false,
     diagramPadding: 10
+  },
+  // 添加错误回调
+  parseError: (err, hash) => {
+    console.error('Mermaid parse error:', err)
+    renderError.value = true
+    return false // 阻止默认的错误处理
   }
 })
 
@@ -101,13 +104,31 @@ const debouncedUpdate = debounce(async () => {
     renderError.value = false
     const processedContent = transformer.transform(props.content)
     
+    // 先进行语法解析检查
+    try {
+      await mermaid.parse(processedContent)
+    } catch (parseError) {
+      console.error('Mermaid 语法解析错误:', parseError)
+      renderError.value = true
+      return // 如果解析失败，直接返回不继续渲染
+    }
+    
     // 清空容器内容
     svgContainerRef.value.innerHTML = ''
     
-    // 使用 mermaid.render 获取 SVG
+    // 解析成功后进行渲染
     const { svg } = await mermaid.render(currentId, processedContent)
     
-    // 更新容器内容
+    // 检查返回的 SVG 是否包含错误标记
+    if (svg.includes('syntax error') || 
+        svg.includes('Parse error') || 
+        svg.includes('mermaid-error')) {
+      console.error('Mermaid 渲染结果包含错误')
+      renderError.value = true
+      return // 如果SVG包含错误标记，不进行渲染
+    }
+    
+    // 确认无误后再更新容器内容
     svgContainerRef.value.innerHTML = svg
     
     // 获取生成的SVG元素并设置样式
