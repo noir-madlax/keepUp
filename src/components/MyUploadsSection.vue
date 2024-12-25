@@ -63,18 +63,13 @@
          <div class="upload-container flex-shrink-0" @click="handleNewUploadClick">
           <!-- Upload Icon -->
           <div class="upload-icon">
-            <img src="/images/icons/upload.svg" alt="Upload" class="w-full h-full">
+            <img src="/images/icons/web.svg" alt="Upload" class="w-full h-full">
           </div>
           <!-- Upload Text -->
           <div class="upload-text">{{ t('upload.card.uploadWeb') }}</div>
           <!-- Icon Container -->
           <div class="icon-container">
-            <!-- web Icon -->
-            <div class="icon">
-              <div class="icon-background">
-                <img src="/images/icons/web.svg" alt="webpage" class="webpage-icon">
-              </div>
-            </div>
+            
           </div>
           <!-- Link Text -->
           <div class="link-text">{{ t('upload.card.webLink') }}</div>
