@@ -68,6 +68,9 @@ export default {
       zh: '中文',
       en: '英文',
       message: '当前显示 {language} 内容'
+    },
+    preview: {
+      enlarge: '放大显示'
     }
   },
   summarize: {
