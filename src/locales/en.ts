@@ -20,7 +20,7 @@ export default {
       youtube: 'YouTube',
       xiaoyuzhou: 'XiaoYuZhou',
       pdf: 'PDF', 
-      web: 'Web',
+      webpage: 'Web Page',
       applePodcast: 'Apple Podcast',
       spotify: 'Spotify'
     },
@@ -114,6 +114,25 @@ export default {
       uploadWeb: 'Click to Summarize Web',
       supportedPlatforms: 'Podcast, video and other content links',
       webLink: 'Any web page URL',
+      fallback: {
+        noTitle: 'No Title',
+        unknownAuthor: 'Unknown Author',
+        unknownDate: 'Unknown Date',
+        unknownChannel: 'Unknown Channel',
+        unknownTime: 'Unknown Time',
+        noLink: 'No Link',
+        justNow: 'Just now',
+        minutesAgo: '{count} minutes ago',
+        hoursAgo: '{count} hours ago',
+        daysAgo: '{count} days ago',
+        uploaded: 'Uploaded ',
+        processing: 'Processing...',
+        failed: 'Processing Failed',
+        rejected: 'Rejected',
+        pending: 'Pending',
+        unknownStatus: 'Unknown Status',
+        unknownPlatform: 'Unknown Platform'
+      }
     }
   }
 } 

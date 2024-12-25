@@ -6,7 +6,7 @@
     <!-- 上半部分 -->
     <div class="card-top">
       <!-- 左侧标题 -->
-      <h3 class="article-title">{{ article.title }}</h3>
+      <h3 class="article-title">{{ getTitle() }}</h3>
       
       <!-- 右侧封面 -->
       <img 
@@ -25,13 +25,12 @@
       <div class="author-info">
         <div class="author-icon-wrapper">
           <img 
-            v-if="article.author?.icon" 
-            :src="article.author.icon" 
-            :alt="article.author.name" 
+            :src="getAuthorIcon()"
+            :alt="article.author?.name" 
             class="author-icon"
           />
         </div>
-        <span class="author-name">{{ article.author?.name }}</span>
+        <span class="author-name">{{ getAuthorName() }}</span>
       </div>
 
       <!-- 右侧渠道和日期 -->
@@ -51,8 +50,10 @@
 import { format } from 'date-fns'
 import { useRouter } from 'vue-router'
 import type { Article } from '../types/article'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 
 interface Props {
   article: Article
@@ -61,19 +62,22 @@ interface Props {
 const props = defineProps<Props>()
 
 const getArticleImage = () => {
-  if (props.article.cover_image_url) {
+  if (props.article.cover_image_url && 
+      props.article.cover_image_url.trim() !== '' && 
+      !props.article.cover_image_url.includes('qpic.cn') &&
+      props.article.cover_image_url !== '无缩略图') {
     return props.article.cover_image_url;
   }
-  return '/images/covers/article-1.png';
+  return 'public/images/covers/article_default.png';
 }
 
 const formatDate = (date: string | null) => {
-  if (!date) return ''
+  if (!date) return t('upload.card.fallback.unknownDate')
   try {
     return format(new Date(date), 'yyyy-MM-dd')
   } catch (error) {
     console.error('日期格式化错误:', error)
-    return ''
+    return t('upload.card.fallback.unknownDate')
   }
 }
 
@@ -85,9 +89,31 @@ const getChannelIcon = (channel: string): string => {
   const iconMap: Record<string, string> = {
     'YouTube': 'youtube.svg',
     'Apple Podcast': 'apple-podcast.svg',
-    'Spotify': 'spotify.svg'
+    'Spotify': 'spotify.svg',
+    'webpage': 'web.svg'
   }
-  return iconMap[channel] || ''
+  return iconMap[channel] || 'channel_default.png'
+}
+
+const getAuthorIcon = () => {
+  if (props.article.author?.icon) {
+    return props.article.author.icon
+  }
+  return '/images/icons/author_default.svg'
+}
+
+const getAuthorName = () => {
+  if (!props.article.author?.name || props.article.author.name === t('upload.card.fallback.unknownAuthor') || props.article.author.name === 'Unknown') {
+    return t('upload.card.fallback.unknownAuthor')
+  }
+  return props.article.author.name
+}
+
+const getTitle = () => {
+  if (!props.article.title || props.article.title.trim() === '') {
+    return t('upload.card.fallback.noTitle')
+  }
+  return props.article.title
 }
 </script>
 

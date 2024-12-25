@@ -4,7 +4,7 @@ export const getChannelIcon = (channel: string): string => {
     'YouTube': 'youtube.svg',
     '小宇宙': 'xiaoyuzhou.svg',
     'PDF': 'pdf.svg',
-    '网页': 'web.svg',
+    '网页': 'web_icon.svg',
     'Apple Podcast': 'apple-podcast.svg',
     'Spotify': 'spotify.svg'
   }

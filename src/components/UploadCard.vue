@@ -3,12 +3,12 @@
   <div v-if="article.status === 'processed'" class="article-card cursor-pointer hover:shadow-lg transition-shadow" @click="navigateToDetail(article.id)">
     <!-- 已完成的文章卡片内容 -->
     <div class="article-image">
-      <img :src="getArticleImage()" :alt="article.title || '文章封面'">
-      <div class="upload-time">{{ getUploadTimeText(article.created_at) }}上传</div>
+      <img :src="getArticleImage()" :alt="article.title || t('upload.card.fallback.noTitle')">
+      <div class="upload-time">{{ t('upload.card.fallback.uploaded') }}{{ getUploadTimeText(article.created_at) }}</div>
     </div>
     
     <div class="title-text">
-      {{ article.title || '无标题' }}
+      {{ article.title || t('upload.card.fallback.noTitle') }}
     </div>
     
     <div class="info-container">
@@ -16,14 +16,13 @@
       <div class="author-container">
         <div class="author-avatar-wrapper">
           <img 
-            v-if="article.author?.icon" 
-            :src="article.author.icon" 
-            :alt="article.author.name" 
+            :src="article.author?.icon || '/images/icons/author_default.svg'" 
+            :alt="article.author?.name || t('upload.card.fallback.unknownAuthor')" 
             class="author-avatar"
           />
         </div>
         <span class="author-name">
-          {{ article.author?.name || '未知作者' }}
+          {{ article.author?.name || t('upload.card.fallback.unknownAuthor') }}
         </span>
       </div>
       
@@ -31,12 +30,11 @@
       <div class="meta-container">
         <div class="finish-channel-icon">
           <img 
-            v-if="article.channel"
-            :src="`/images/icons/${getChannelIcon(article.channel)}`" 
-            :alt="article.channel" 
+            :src="`/images/icons/${getChannelIcon(article.channel || '')}`" 
+            :alt="article.channel || t('upload.card.fallback.unknownChannel')" 
           />
         </div>
-        <span class="date-text">{{ formatDate(article.publish_date) }}</span>
+        <span class="date-text">{{ formatDate(article.publish_date) || t('upload.card.fallback.unknownDate') }}</span>
       </div>
     </div>
   </div>
@@ -44,12 +42,12 @@
   <!-- 处理中/失败/等待处理的卡片 -->
   <div v-else class="upload">
     <div class="image-placeholder">
-      <svg xmlns="http://www.w3.org/2000/svg" width="176" height="98" viewBox="0 0 176 98" fill="none">
-        <g opacity="0.4">
-          <rect width="176" height="98" rx="8" fill="#D9D9D9"/>
-        </g>
-      </svg>
-      <div class="upload-time">{{ getUploadTimeText(article.created_at) }}上传</div>
+      <img 
+        src="/images/covers/article_default.png" 
+        alt="Article placeholder"
+        class="placeholder-image"
+      >
+      <div class="upload-time">{{ t('upload.card.fallback.uploaded') }}{{ getUploadTimeText(article.created_at) }}</div>
     </div>
 
     <div class="processing-status">
@@ -60,13 +58,13 @@
     </div>
 
     <div class="url-text">
-      {{ article.url || article.original_url || '无链接' }}
+      {{ article.url || article.original_url || t('upload.card.fallback.noLink') }}
     </div>
 
     <div class="channel-icon">
       <img 
-        :src="`/images/icons/${getPlatformIcon()}`"
-        :alt="article.platform || '未知平台'"
+        :src="`/images/icons/${getPlatformIcon(article.platform)}`"
+        :alt="article.platform || t('upload.card.fallback.unknownPlatform')"
       />
     </div>
   </div>
@@ -77,6 +75,9 @@ import { computed } from 'vue'
 import { format, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns'
 import type { ArticleRequest } from '@/types/article'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   article: ArticleRequest
@@ -95,21 +96,21 @@ const navigateToDetail = (articleId?: string) => {
 const getStatusText = computed(() => {
   switch (props.article.status) {
     case 'processing':
-      return '处理中...'
+      return t('upload.card.fallback.processing')
     case 'failed':
-      return '处理失败'
+      return t('upload.card.fallback.failed')
     case 'rejected':
-      return '已拒绝'
+      return t('upload.card.fallback.rejected')
     case 'pending':
-      return '等待处理'
+      return t('upload.card.fallback.pending')
     default:
-      return '未知状态'
+      return t('upload.card.fallback.unknownStatus')
   }
 })
 
 // 获取文章封面图片
 const getArticleImage = () => {
-  return props.article.cover_image_url || '/images/default-cover.png'
+  return props.article.cover_image_url || 'public/images/covers/article_default.png'
 }
 
 // 获取频道图标
@@ -121,8 +122,10 @@ const getChannelIcon = (channel: string) => {
       return 'spotify.svg'
     case 'apple':
       return 'apple-podcast.svg'
+    case 'webpage':
+      return 'web.svg'
     default:
-      return 'default-channel.svg'
+      return 'channel_default.png'
   }
 }
 
@@ -143,6 +146,8 @@ const getPlatformIcon = (platform: string | undefined) => {
         return 'spotify.svg'
       case 'applet':
         return 'apple-podcast.svg'
+      case 'webpage':
+        return 'web.svg'
       default:
         return 'default.svg'
     }
@@ -167,7 +172,7 @@ const getPlatformIcon = (platform: string | undefined) => {
 
 // 添加计算上传时间的函数
 const getUploadTimeText = (uploadTime?: string) => {
-  if (!uploadTime) return '未知时间'
+  if (!uploadTime) return t('upload.card.fallback.unknownTime')
   
   const now = new Date()
   const uploadDate = new Date(uploadTime)
@@ -176,18 +181,18 @@ const getUploadTimeText = (uploadTime?: string) => {
   const diffInDays = differenceInDays(now, uploadDate)
 
   if (diffInMinutes < 1) {
-    return '刚刚'
+    return t('upload.card.fallback.justNow')
   }
   
   if (diffInMinutes < 60) {
-    return `${diffInMinutes}分钟前`
+    return t('upload.card.fallback.minutesAgo', { count: diffInMinutes })
   }
   
   if (diffInDays < 1) {
-    return `${diffInHours}小时前`
+    return t('upload.card.fallback.hoursAgo', { count: diffInHours })
   }
   
-  return `${diffInDays}天前`
+  return t('upload.card.fallback.daysAgo', { count: diffInDays })
 }
 </script>
 
@@ -320,15 +325,17 @@ const getUploadTimeText = (uploadTime?: string) => {
   flex-shrink: 0;
   border-radius: 8px;
   overflow: hidden;
-  position: relative;  /* 添加相对定位 */
+  position: relative;
 }
 
-.image-placeholder svg {
+.placeholder-image {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
 }
 
-/* 处理状态区域样式 */
+/* 处理状态区样式 */
 .processing-status {
   display: flex;
   flex-direction: column;
