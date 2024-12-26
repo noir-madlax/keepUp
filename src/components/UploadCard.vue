@@ -114,7 +114,7 @@ const getArticleImage = () => {
   if (!props.article.cover_image_url || 
       props.article.cover_image_url === '无缩略图' ||
       props.article.cover_image_url.includes('qpic.cn')) {
-    return 'public/images/covers/article_default.png'
+    return 'images/covers/article_default.png'
   }
   return props.article.cover_image_url
 }

@@ -68,7 +68,7 @@ const getArticleImage = () => {
       props.article.cover_image_url !== '无缩略图') {
     return props.article.cover_image_url;
   }
-  return 'public/images/covers/article_default.png';
+  return 'images/covers/article_default.png';
 }
 
 const formatDate = (date: string | null) => {
