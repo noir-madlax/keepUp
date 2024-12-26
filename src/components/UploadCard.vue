@@ -124,8 +124,12 @@ const getChannelIcon = (channel: string) => {
   switch (channel?.toLowerCase()) {
     case 'youtube':
       return 'youtube.svg'
+    case 'Youtube':
+      return 'youtube.svg'
     case 'spotify':
       return 'spotify.svg'
+    case 'Spotify':
+      return 'spotify.svg' 
     case 'apple':
       return 'apple-podcast.svg'
     case 'webpage':
