@@ -76,7 +76,7 @@ export default {
   summarize: {
     title: '总结',
     manualupload:'手工',
-    urlPlaceholder: '输入要总结的视频、播客、网页链接',
+    urlPlaceholder: '输入要总结的视频、播客、网页链接或者文档',
     languageTitle: '选择输出语言',
     languages: {
       zh: '中文',
@@ -103,7 +103,19 @@ export default {
     subtitleLanguageTitle: '选择字幕语言',
     subtitleLanguageTitleNote: '(从原始内容中提取全文字幕)',
     detailedLanguageTitle: '选择分段详述语言',
-    detailedLanguageTitleNote: '(详细叙述原文每个分段的内容)'
+    detailedLanguageTitleNote: '(详细叙述原文每个分段的内容)',
+    switchToUrl: '上传链接',
+    switchToFile: '上传文件',
+    dragAndDrop: '拖拽文件到这里',
+    or: '或',
+    browseFiles: '浏览文件',
+    supportedFormats: '支持的格式',
+    maxSize: '最大大小',
+    removeFile: '移除文件',
+    fileRequired: '请选择文件',
+    fileTooLarge: '文件大小不能超过10MB',
+    invalidFileType: '不支持的文件类型，请上传DOC、PDF或TXT文件',
+    filePlaceholder: '选择或拖拽文件上传'
   },
   common: {
     retry: '重试',
@@ -115,9 +127,11 @@ export default {
   upload: {
     card: {
       uploadFile: '点击上传链接',
+      supportedPlatforms: '支持播客、油管视频的内容',
       uploadWeb: '点击总结网页',
-      supportedPlatforms: '播客、视频等内容的链接',
       webLink: '任何网页的URL链接',
+      uploadDoc: '点击总结文档',
+      supportedFiles: '支持10mb内的Doc、PDF、Txt文档',
       fallback: {
         noTitle: '无标题',
         unknownAuthor: '未知作者',

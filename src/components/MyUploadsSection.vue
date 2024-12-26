@@ -74,6 +74,39 @@
           <!-- Link Text -->
           <div class="link-text">{{ t('upload.card.webLink') }}</div>
         </div>
+
+         <!-- NewUploadCard3 pdf/doc/txt的上传-->
+         <div class="upload-container flex-shrink-0" @click="handleNewUploadClick">
+          <!-- Upload Icon -->
+          <div class="upload-icon">
+            <img src="/images/icons/file.svg" alt="Upload" class="w-full h-full">
+          </div>
+          <!-- Upload Text -->
+          <div class="upload-text">{{ t('upload.card.uploadDoc') }}</div>
+          <!-- Icon Container -->
+          <div class="icon-container">
+            <!-- doc Icon -->
+            <div class="icon">
+              <div class="icon-background">
+                <img src="/images/icons/doc.svg" alt="doc" class="youtube-icon">
+              </div>
+            </div>
+            <!-- pdf Icon -->
+            <div class="icon">
+              <div class="icon-background">
+                <img src="/images/icons/pdf.svg" alt="pdf" class="podcast-icon">
+              </div>
+            </div>
+            <!-- txt Icon -->
+            <div class="icon">
+              <div class="icon-background">
+                <img src="/images/icons/txt.svg" alt="txt" class="podcast-icon">
+              </div>
+            </div>
+          </div>
+          <!-- Link Text -->
+          <div class="link-text">{{ t('upload.card.supportedFiles') }}</div>
+        </div>
         <!-- 加载状态显示骨架屏 -->
         <template v-if="localLoading">
           <div 
@@ -265,19 +298,18 @@ const handleNewUploadClick = async () => {
     const isValidUrl = clipboardText.startsWith('http://') || clipboardText.startsWith('https://')
     
     // 使用剪贴板内容或默认标记URL
-    const uploadUrl = isValidUrl ? clipboardText : 'https://'
+    const uploadUrl = isValidUrl ? clipboardText : ''
     
     if (!authStore.isAuthenticated) {
       // 存储到 localStorage，复用现有逻辑
       localStorage.setItem('pendingUploadUrl', uploadUrl)
     }
-    
     // 触发上传事件，并传递 URL
     emit('upload', uploadUrl)
   } catch (err) {
     console.error('Failed to read clipboard:', err)
     // 读取失败时使用默认标记URL
-    const defaultUrl = 'https://'
+    const defaultUrl = ''
     if (!authStore.isAuthenticated) {
       localStorage.setItem('pendingUploadUrl', defaultUrl)
     }

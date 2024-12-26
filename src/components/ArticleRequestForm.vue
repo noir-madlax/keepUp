@@ -25,30 +25,54 @@
         <!-- 调整 modal 容器的样式，移除固定宽度，使用最大宽度 -->
         <div class="bg-white rounded-lg shadow-lg w-[90%] max-w-[600px] max-h-[90vh] relative"
              @click.stop>
+          <!-- 添加切换按钮 -->
+          <div class="absolute right-2 top-2 flex gap-2">
+            <!-- 切换按钮 -->
+            <button 
+              @click="toggleModalType"
+              class="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors flex items-center gap-2"
+            >
+              <img 
+                :src="'/images/icons/doc.svg'" 
+                class="w-4 h-4"
+                :alt="'File mode'"
+              />
+              {{t('summarize.switchToFile') }}
+            </button>
+            <!-- 关闭按钮 -->
+            <button 
+              @click="handleModalClose"
+              class="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
+            >
+              <span class="sr-only">Close</span>
+              <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+
           <!-- Modal 内容区域 -->
           <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 2rem);">
-            <!-- 移除内部容器的固定宽度 -->
             <div class="bg-white rounded-lg">
               <!-- URL输入区域 -->
               <div class="mb-6">
                 <div class="flex items-center gap-4 mb-2 flex-wrap">
                   <h3 class="text-lg font-medium">{{ t('summarize.title') }}</h3>
                   
-                  <!-- 图标容器 -->
+                  <!-- 根据模式显示不同的图标 -->
                   <div class="flex items-center gap-3 flex-wrap">
-                    <img src="/images/icons/youtube.svg" alt="YouTube" class="w-6 h-6" />
-                    <img src="/images/icons/apple-podcast.svg" alt="Apple Podcast" class="w-6 h-6" />
-                    <img src="/images/icons/spotify.svg" alt="Spotify" class="w-6 h-6" />
-                    <img src="/images/icons/web.svg" alt="Web Page" class="w-6 h-6" />
+                      <img src="/images/icons/youtube.svg" alt="YouTube" class="w-6 h-6" />
+                      <img src="/images/icons/apple-podcast.svg" alt="Apple Podcast" class="w-6 h-6" />
+                      <img src="/images/icons/spotify.svg" alt="Spotify" class="w-6 h-6" />
+                      <img src="/images/icons/web.svg" alt="Web Page" class="w-6 h-6" />
                   </div>
-
                 </div>
 
                 <!-- URL输入框 -->
                 <input
                   type="text"
                   v-model="requestUrl"
-                  :placeholder="t('summarize.urlPlaceholder')"
+                  :placeholder="t(isFileMode ? 'summarize.filePlaceholder' : 'summarize.urlPlaceholder')"
                   class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                   @keyup.enter="submitRequest"
                 />
@@ -78,8 +102,8 @@
                       </svg>
                     </label>
                   </div>
-                    <!-- 添加警告提示占位 -->
-                    <div class="h-0 mt-1"
+                  <!-- 添加警告提示占位 -->
+                  <div class="h-0 mt-1">
                   </div>
                 </div>
                 
@@ -166,6 +190,153 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- 文件上传 Modal -->
+    <Teleport to="body">
+      <div v-if="showFileUploadModal" 
+           class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+           @click="handleModalClose">
+        <div class="bg-white rounded-lg shadow-lg w-[90%] max-w-[600px] max-h-[90vh] relative"
+             @click.stop>
+          <!-- 添加切换按钮 -->
+          <div class="absolute right-2 top-2 flex gap-2">
+           <!-- 切换按钮 -->
+           <button 
+              @click="toggleModalType"
+              class="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors flex items-center gap-2"
+            >
+              <img 
+                :src="'/images/icons/upload.svg'" 
+                class="w-4 h-4"
+                :alt="'Upload mode'"
+              />
+              {{ t('summarize.switchToUrl') }}
+            </button>
+            <!-- 关闭按钮 -->
+            <button 
+              @click="handleModalClose"
+              class="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
+            >
+              <span class="sr-only">Close</span>
+              <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Modal 内容区域 -->
+          <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 2rem);">
+            <div class="bg-white rounded-lg">
+              <!-- 文件上传区域 -->
+              <div class="mb-6">
+                <div class="flex items-center gap-4 mb-2 flex-wrap">
+                  <h3 class="text-lg font-medium">{{ t('summarize.title') }}</h3>
+                  
+                  <!-- 文件类型图标 -->
+                  <div class="flex items-center gap-3 flex-wrap">
+                    <img src="/images/icons/doc.svg" alt="Doc" class="w-6 h-6" />
+                    <img src="/images/icons/pdf.svg" alt="Pdf" class="w-6 h-6" />
+                    <img src="/images/icons/txt.svg" alt="Txt" class="w-6 h-6" />
+                  </div>
+                </div>
+
+                <!-- 文件上传区域 -->
+                <div 
+                  class="w-full border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors"
+                  :class="{'border-blue-500 bg-blue-50': isDragging}"
+                  @dragenter.prevent="isDragging = true"
+                  @dragleave.prevent="isDragging = false"
+                  @dragover.prevent
+                  @drop.prevent="handleFileDrop"
+                  @click="triggerFileInput"
+                >
+                  <input
+                    type="file"
+                    ref="fileInput"
+                    class="hidden"
+                    @change="handleFileSelect"
+                    accept=".doc,.docx,.pdf,.txt"
+                  />
+                  
+                  <div v-if="!selectedFile" class="space-y-2">
+                    <img src="/images/icons/file.svg" class="w-12 h-12 mx-auto mb-2" alt="Upload" />
+                    <p class="text-gray-600">{{ t('summarize.dragAndDrop') }}</p>
+                    <p class="text-sm text-gray-500">{{ t('summarize.or') }}</p>
+                    <button class="text-blue-500 font-medium hover:text-blue-600">
+                      {{ t('summarize.browseFiles') }}
+                    </button>
+                    <p class="text-xs text-gray-400 mt-2">
+                      {{ t('summarize.supportedFormats') }}: DOC, PDF, TXT ({{ t('summarize.maxSize') }}: 10MB)
+                    </p>
+                  </div>
+                  
+                  <div v-else class="space-y-2">
+                    <div class="flex items-center justify-center gap-2">
+                      <img 
+                        :src="`/images/icons/${getFileIcon(selectedFile.name)}`" 
+                        class="w-8 h-8" 
+                        :alt="selectedFile.name"
+                      />
+                      <span class="text-gray-700">{{ selectedFile.name }}</span>
+                    </div>
+                    <button 
+                      @click.stop="removeFile"
+                      class="text-red-500 text-sm hover:text-red-600"
+                    >
+                      {{ t('summarize.removeFile') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 语言选择区域 -->
+              <div class="grid gap-6">
+                <!-- 总结语言的选择 -->
+                <div>
+                  <div class="flex items-center gap-2 mb-2" :class="locale === 'en' ? 'max-[450px]:flex-col max-[450px]:items-start' : ''">
+                    <h3 class="text-sm font-semibold text-gray-700">{{ t('summarize.summaryLanguageTitle') }}</h3>
+                    <p class="text-xs text-gray-400">{{ t('summarize.summaryLanguageTitleNote') }}</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    <label
+                      v-for="lang in ['en', 'zh']"
+                      :key="`file-summary-${lang}`"
+                      class="flex items-center gap-2 px-3 py-2 border rounded cursor-pointer transition-all duration-200"
+                      :class="fileSummaryLanguages.includes(lang) 
+                        ? 'border-blue-600 bg-blue-100 font-medium' 
+                        : 'border-gray-300 text-gray-500'"
+                    >
+                      <input type="checkbox" :value="lang" v-model="fileSummaryLanguages" class="hidden" />
+                      <span>{{ t(`summarize.languages.${lang}`) }}</span>
+                      <svg v-if="fileSummaryLanguages.includes(lang)" class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 按钮区域 -->
+              <div class="flex justify-end gap-2 mt-6">
+                <button 
+                  @click="showFileUploadModal = false"
+                  class="px-4 py-2 text-sm border rounded hover:bg-gray-50"
+                >
+                  {{ t('summarize.buttons.cancel') }}
+                </button>
+                <button 
+                  @click="submitFileRequest"
+                  class="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
+                  :disabled="isFileProcessing || !validateFileLanguageSelections()"
+                >
+                  {{ isFileProcessing ? t('summarize.buttons.processing') : t('summarize.buttons.confirm') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -192,7 +363,7 @@ const getCurrentLang = () => {
 const requestUrl = ref('')
 const isProcessing = ref(false)
 const showUploadModal = ref(false)
-// 修改默���值为当前语言
+// 修改默值为当前语言
 const summaryLanguages = ref<string[]>([getCurrentLang()])
 const subtitleLanguages = ref<string[]>(['na'])
 const detailedLanguages = ref<string[]>(['na'])
@@ -201,6 +372,27 @@ const detailedLanguages = ref<string[]>(['na'])
 const subtitleWarningVisible = ref(false)
 const detailedWarningVisible = ref(false)
 
+// 修改 isFileMode 的定义，使用 ref 来跟踪状态
+const isFileMode = ref(false)
+
+// 修改 toggleModalType 方法
+const toggleModalType = () => {
+  // 切换 isFileMode 的值
+  isFileMode.value = !isFileMode.value
+  
+  if (isFileMode.value) {
+    // 切换到文件模式
+    showUploadModal.value = false
+    showFileUploadModal.value = true
+    requestUrl.value = ''
+  } else {
+    // 切换到 URL 模式
+    showUploadModal.value = true
+    showFileUploadModal.value = false
+    selectedFile.value = null
+  }
+}
+
 // 监听语言变化，动态更新 summaryLanguages
 watch(locale, (newLocale) => {
   if (!summaryLanguages.value.includes('na')) {  // 如果不是 na，则更新为当前语言
@@ -208,7 +400,7 @@ watch(locale, (newLocale) => {
   }
 })
 
-// 监听字幕语言选择变化
+// 监听字语言选择变化
 watch(subtitleLanguages, async (newVal, oldVal) => {
   if (!isSupportedMediaUrl(requestUrl.value) && newVal.some(lang => lang !== 'na')) {
     showWarning('subtitle')
@@ -276,7 +468,7 @@ watch(detailedLanguages, async (newVal, oldVal) => {
   }
 }, { flush: 'post' })
 
-// ��义组件事件
+// 定义组件事件
 const emit = defineEmits<{
   (e: 'refresh', payload: { type: string }): void
   (e: 'click'): void
@@ -348,7 +540,7 @@ const validateLanguageSelections = (): boolean => {
 }
 
 /**
- * 提交文章处理请求
+ * 提交文章处理求
  */
 const submitRequest = async () => {
   if (!authStore.isAuthenticated) {
@@ -408,21 +600,15 @@ const submitRequest = async () => {
   }
 }
 
-// 监听 modal 状态变化，控制 body 滚动
-watch(showUploadModal, (newVal) => {
-  if (newVal) {
-    // Modal 打开时禁用 body 滚动
-    document.body.style.overflow = 'hidden'
-  } else {
-    // Modal 关闭时恢复 body 滚动
-    document.body.style.overflow = ''
-  }
-})
 
 // Modal 关闭处理
 const handleModalClose = () => {
   showUploadModal.value = false
+  showFileUploadModal.value = false
   requestUrl.value = ''
+  selectedFile.value = null
+  // 重置 isFileMode 为默认值
+  isFileMode.value = false
 }
 
 // 组件卸载时确保清理
@@ -481,6 +667,158 @@ const showWarning = (type: 'subtitle' | 'detailed') => {
         detailedWarningVisible.value = false
       }, 2000)
     }
+  }
+}
+
+// 文件上传相关的响应式变量
+const showFileUploadModal = ref(false)
+const fileUrl = ref('')
+const isFileProcessing = ref(false)
+const fileSummaryLanguages = ref<string[]>([getCurrentLang()])
+
+// 文件上传的验证函数
+const validateFileLanguageSelections = (): boolean => {
+  const hasSummaryLanguage = fileSummaryLanguages.value.length > 0 && 
+    !fileSummaryLanguages.value.includes('na')
+  return hasSummaryLanguage
+}
+
+// 文件上传相关的响应式变量
+const fileInput = ref<HTMLInputElement | null>(null)
+const selectedFile = ref<File | null>(null)
+const isDragging = ref(false)
+
+// 文件大小限制（10MB）
+const MAX_FILE_SIZE = 10 * 1024 * 1024
+
+// 获取文件图标
+const getFileIcon = (filename: string): string => {
+  const ext = filename.split('.').pop()?.toLowerCase()
+  switch (ext) {
+    case 'doc':
+    case 'docx':
+      return 'doc.svg'
+    case 'pdf':
+      return 'pdf.svg'
+    case 'txt':
+      return 'txt.svg'
+    default:
+      return 'file.svg'
+  }
+}
+
+// 验证文件
+const validateFile = (file: File): boolean => {
+  // 检查文件大小
+  if (file.size > MAX_FILE_SIZE) {
+    ElMessage.error(t('summarize.messages.fileTooLarge'))
+    return false
+  }
+
+  // 检查文件类型
+  const ext = file.name.split('.').pop()?.toLowerCase()
+  const allowedTypes = ['doc', 'docx', 'pdf', 'txt']
+  if (!ext || !allowedTypes.includes(ext)) {
+    ElMessage.error(t('summarize.messages.invalidFileType'))
+    return false
+  }
+
+  return true
+}
+
+// 触发文件选择
+const triggerFileInput = () => {
+  fileInput.value?.click()
+}
+
+// 处理文件选择
+const handleFileSelect = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (input.files && input.files[0]) {
+    const file = input.files[0]
+    if (validateFile(file)) {
+      selectedFile.value = file
+    }
+    // 重置input值，允许选择相同文件
+    input.value = ''
+  }
+}
+
+// 处理文件拖放
+const handleFileDrop = (event: DragEvent) => {
+  isDragging.value = false
+  const file = event.dataTransfer?.files[0]
+  if (file && validateFile(file)) {
+    selectedFile.value = file
+  }
+}
+
+// 移除已选文件
+const removeFile = () => {
+  selectedFile.value = null
+}
+
+// 监听 modal 状态变化，控制 body 滚动
+// 修改为统一的 watch
+watch([showUploadModal, showFileUploadModal], ([uploadVal, fileVal]) => {
+  // 只要有任意一个 modal 打开，就禁用动
+  if (uploadVal || fileVal) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    // 两个 modal 都关闭时，恢复滚动
+    document.body.style.overflow = ''
+  }
+})
+
+// 修改文件上传请求处理
+const submitFileRequest = async () => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning(t('common.pleaseLogin'))
+    return
+  }
+
+  if (!selectedFile.value) {
+    ElMessage.error(t('summarize.messages.fileRequired'))
+    return
+  }
+
+  // 验证总结语言是否已选择
+  if (!fileSummaryLanguages.value.length || fileSummaryLanguages.value.includes('na')) {
+    ElMessage.warning(t('summarize.messages.summaryLanguageRequired'))
+    return
+  }
+
+  try {
+    isFileProcessing.value = true
+    
+    // 创建 FormData 对象
+    const formData = new FormData()
+    formData.append('file', selectedFile.value)
+    formData.append('summary_languages', JSON.stringify(fileSummaryLanguages.value))
+    formData.append('user_id', authStore.user?.id || '')
+    
+    // 发送文件上传请求
+    const response = await fetch('/api/workflow/upload', {
+      method: 'POST',
+      body: formData
+    })
+    
+    if (!response.ok) {
+      throw new Error('Upload failed')
+    }
+    
+    ElMessage.success(t('summarize.messages.submitSuccess'))
+    selectedFile.value = null
+    showFileUploadModal.value = false
+    
+    // 触发刷新事件
+    emit('refresh', { type: 'fileUpload' })
+    
+  } catch (error) {
+    console.error('文件上传失败:', error)
+    ElMessage.error(t('summarize.messages.submitFailed'))
+  } finally {
+    isFileProcessing.value = false
   }
 }
 </script> 

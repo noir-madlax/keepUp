@@ -103,7 +103,19 @@ export default {
     summaryLanguageTitleNote: '(Summarize the most core points)',
     subtitleLanguageTitleNote: '(Extract the full text subtitles)',
     detailedLanguageTitleNote: '(Detail the content of each section)',
-    detailedLanguageTitle: 'Select the language of the Section Details:'
+    detailedLanguageTitle: 'Select the language of the Section Details:',
+    switchToUrl: 'Upload URL',
+    switchToFile: 'Upload File',
+    dragAndDrop: 'Drag and drop file here',
+    or: 'or',
+    browseFiles: 'Browse Files',
+    supportedFormats: 'Supported formats',
+    maxSize: 'Max size',
+    removeFile: 'Remove file',
+    fileRequired: 'Please select a file',
+    fileTooLarge: 'File size cannot exceed 10MB',
+    invalidFileType: 'Invalid file type. Please upload DOC, PDF, or TXT files',
+    filePlaceholder: 'Select or drag a file to upload'
   },
   common: {
     retry: 'Retry',
@@ -116,8 +128,10 @@ export default {
     card: {
       uploadFile: 'Click to Upload Link',
       uploadWeb: 'Click to Summarize Web',
-      supportedPlatforms: 'Podcast, video and other content links',
+      supportedPlatforms: 'Support Podcast and Youtube links',
       webLink: 'Any web page URL',
+      uploadDoc: 'Click to Summarize Files',
+      supportedFiles: 'Support Doc/PDF/Txt files up to 10MB',
       fallback: {
         noTitle: 'No Title',
         unknownAuthor: 'Unknown Author',
