@@ -170,10 +170,10 @@ const getPlatformIcon = (platform: string | undefined) => {
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
     return 'youtube.svg'
   }
-  if (url.includes('spotify.com')) {
+  if (url.includes('open.spotify.com')) {
     return 'spotify.svg'
   }
-  if (url.includes('apple.com') || url.includes('podcasts.apple')) {
+  if (url.includes('podcasts.apple.com')) {
     return 'apple-podcast.svg'
   }
   
