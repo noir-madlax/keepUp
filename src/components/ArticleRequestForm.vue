@@ -391,7 +391,7 @@ const submitRequest = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        url: requestUrl.value,
+        original_url: requestUrl.value,
         summary_languages: summaryLanguages.value,
         subtitle_languages: subtitleLanguages.value,
         detailed_languages: detailedLanguages.value,

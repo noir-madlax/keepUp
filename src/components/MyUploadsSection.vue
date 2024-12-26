@@ -215,7 +215,7 @@ const fetchUserArticles = async () => {
               icon
             )
           `)
-          .eq('original_link', request.url)
+          .eq('original_link', request.original_url)
           .single()
 
         if (articleError) {
