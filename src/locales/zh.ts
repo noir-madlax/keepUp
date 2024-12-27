@@ -123,7 +123,7 @@ export default {
     loading: '加载中...',
     scrollToLoadMore: '滚动加载更多',
     noMoreData: '没有更多数据了',
-    pleaseLogin: '请先登录后再操作'
+    pleaseLogin: '请先登���后再操作'
   },
   upload: {
     card: {
@@ -150,6 +150,14 @@ export default {
         rejected: '已拒绝',
         pending: '等待处理',
         unknownStatus: '未知状态'
+      },
+      error: {
+        videoInfo: '无法获取视频信息',
+        subtitle: '无法获取字幕内容',
+        unknown: '其他原因'
+      },
+      action: {
+        delete: '删除'
       }
     }
   }

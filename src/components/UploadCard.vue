@@ -55,17 +55,31 @@
       <div v-if="article.status === 'processing'" class="progress-bar">
         <div class="progress-fill"></div>
       </div>
+      <div v-if="article.status === 'failed'" class="error-text">
+        {{ getErrorMessage }}
+      </div>
+      <div class="url-text single-line">
+        {{ article.url || article.original_url || t('upload.card.fallback.noLink') }}
+      </div>
     </div>
 
-    <div class="url-text">
-      {{ article.url || article.original_url || t('upload.card.fallback.noLink') }}
-    </div>
 
-    <div class="channel-icon">
-      <img 
-        :src="`/images/icons/${getPlatformIcon(article.platform)}`"
-        :alt="article.platform || t('upload.card.fallback.unknownPlatform')"
-      />
+    <div class="bottom-container">
+      <div class="channel-icon">
+        <img 
+          :src="`/images/icons/${getPlatformIcon(article.platform)}`"
+          :alt="article.platform || t('upload.card.fallback.unknownPlatform')"
+          class="platform-icon"
+        />
+      </div>
+      <div class="delete-icon-container">
+        <img 
+          v-if="article.status === 'failed'"
+          src="/images/icons/delete.svg"
+          :alt="t('upload.card.action.delete')"
+          class="delete-icon"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -204,6 +218,24 @@ const getUploadTimeText = (uploadTime?: string) => {
   
   return t('upload.card.fallback.daysAgo', { count: diffInDays })
 }
+
+// 在 script setup 部分添加错误信息处理函数
+const getErrorMessage = computed(() => {
+  if (!props.article.error_message) return t('upload.card.error.unknown')
+  
+  // 根据error_message判断错误类型
+  if (props.article.error_message.includes('video') || 
+      props.article.error_message.includes('视频')) {
+    return t('upload.card.error.videoInfo')
+  }
+  
+  if (props.article.error_message.includes('subtitle') || 
+      props.article.error_message.includes('字幕')) {
+    return t('upload.card.error.subtitle')
+  }
+  
+  return t('upload.card.error.unknown')
+})
 </script>
 
 <style scoped>
@@ -317,11 +349,10 @@ const getUploadTimeText = (uploadTime?: string) => {
   width: 200px;
   height: 238px;
   padding: 16px 12px;
-  display: flex;  /* 添加 display: flex */
+  display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 8px;  /* 调整整体间距 */
   align-items: flex-start;
-  gap: 8px;
   border-radius: 12px;
   background: #FFF;
   box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.15);
@@ -350,7 +381,7 @@ const getUploadTimeText = (uploadTime?: string) => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 0px;  /* 减小处理状态内部间距 */
   width: 100%;
 }
 
@@ -473,5 +504,77 @@ const getUploadTimeText = (uploadTime?: string) => {
   padding: 2px 4px;
   border-radius: 4px;
   z-index: 1;
+}
+
+/* 修改 URL 文本样式为单行 */
+.url-text.single-line {
+  width: 176px;
+  height: 22px;
+  color: rgba(153, 153, 153, 0.40);
+  font-family: "PingFang SC";
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 添加错误文本样式 */
+.error-text {
+  width: 176px;
+  height: 22px;
+  color: #D81E06;  /* 修改颜色为设计规范的红色 */
+  font-family: "PingFang SC";
+  font-size: 12px;  /* 修改字体大小为16px */
+  font-weight: 400;  /* 修改字重为Semibold */
+  line-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 状态容器样式 */
+.status-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;  /* 进一步减小URL和错误信息的间距 */
+}
+
+/* 底部容器样式 */
+.bottom-container {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.channel-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.4;
+}
+
+.delete-icon-container {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.delete-icon:hover {
+  opacity: 1;
 }
 </style>
