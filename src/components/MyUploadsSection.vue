@@ -30,7 +30,7 @@
         <div class="upload-container flex-shrink-0" @click="handleNewUploadClick">
           <!-- Upload Icon -->
           <div class="upload-icon">
-            <img src="/images/icons/upload.svg" alt="Upload" class="w-full h-full">
+            <img src="/images/icons/upload.svg" alt="Upload" class="w-[43px] h-[43px]">
           </div>
           <!-- Upload Text -->
           <div class="upload-text">{{ t('upload.card.uploadFile') }}</div>
@@ -60,10 +60,10 @@
         </div>
 
          <!-- NewUploadCard2 固定文章上传的卡片在第二个位置 -->
-         <div class="upload-container flex-shrink-0" @click="handleNewUploadClick">
+         <div class="web-content-container flex-shrink-0" @click="handleNewUploadClick">
           <!-- Upload Icon -->
           <div class="upload-icon">
-            <img src="/images/icons/web.svg" alt="Upload" class="w-full h-full">
+            <img src="/images/icons/web.svg" alt="Upload" class="w-[45px] h-[45px] object-contain">
           </div>
           <!-- Upload Text -->
           <div class="upload-text">{{ t('upload.card.uploadWeb') }}</div>
@@ -79,7 +79,7 @@
          <div class="upload-container flex-shrink-0" @click="handleNewUploadClick">
           <!-- Upload Icon -->
           <div class="upload-icon">
-            <img src="/images/icons/file.svg" alt="Upload" class="w-full h-full">
+            <img src="/images/icons/file.svg" alt="Upload" class="w-[43px] h-[43px]">
           </div>
           <!-- Upload Text -->
           <div class="upload-text">{{ t('upload.card.uploadDoc') }}</div>
@@ -459,6 +459,35 @@ defineExpose({
   transform: translateY(-2px);
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
 }
+
+.web-content-container {
+  width: 200px;
+  height: 238px;
+  padding: 24px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;  /* 减小整体间距 */
+  border-radius: 12px;
+  background: #FFF;
+  box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.web-content-container .upload-icon {
+  margin-top: -10px;  /* 减小图标底部间距 */
+}
+
+.web-content-container .upload-text {
+  margin-top: -6px;  /* 微调文字位置 */
+}
+
+.web-content-container .link-text {
+  margin-top: +18px;  /* 微调文字位置 */
+}
+
 
 /* 上传图标容器 */
 .upload-icon {
