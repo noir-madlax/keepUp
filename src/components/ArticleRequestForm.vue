@@ -56,6 +56,8 @@
             <div class="bg-white rounded-lg">
               <!-- URL输入区域 -->
               <div class="mb-6">
+                 <!-- 添加上方空间，以免和右上角的按钮展示重叠冲突   -->
+                 <div class="h-8"></div>
                 <div class="flex items-center gap-4 mb-2 flex-wrap">
                   <h3 class="text-lg font-medium">{{ t('summarize.title') }}</h3>
                   
@@ -229,6 +231,8 @@
             <div class="bg-white rounded-lg">
               <!-- 文件上传区域 -->
               <div class="mb-6">
+                <!-- 添加上方空间，以免和右上角的按钮展示重叠冲突   -->
+                <div class="h-8"></div>
                 <div class="flex items-center gap-4 mb-2 flex-wrap">
                   <h3 class="text-lg font-medium">{{ t('summarize.title') }}</h3>
 
