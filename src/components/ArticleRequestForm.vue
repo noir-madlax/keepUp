@@ -20,7 +20,7 @@
     <!-- 使用 Teleport 将 modal 传送到 body，并添加滚动锁定 -->
     <Teleport to="body">
       <div v-if="showUploadModal" 
-           class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+           class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999]"
            @click="handleModalClose">
         <!-- 调整 modal 容器的样式，移除固定宽度，使用最大宽度 -->
         <div class="bg-white rounded-lg shadow-lg w-[90%] max-w-[600px] max-h-[90vh] relative"
@@ -193,8 +193,8 @@
 
     <!-- 文件上传 Modal -->
     <Teleport to="body">
-      <div v-if="showFileUploadModal"
-           class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]"
+      <div v-if="showFileUploadModal" 
+           class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[999]"
            @click="handleModalClose">
         <div class="bg-white rounded-lg shadow-lg w-[90%] max-w-[600px] max-h-[90vh] relative"
              @click.stop>
