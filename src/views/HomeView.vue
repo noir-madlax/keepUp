@@ -104,7 +104,7 @@
               <div class="flex items-center gap-3 ml-auto sm:ml-4">
                 <!-- 修改渠道图标icon的命名要和svg的文件一样-->  
                 <img 
-                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'web']"
+                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'web', 'file']"
                   :key="channel"
                   :src="`/images/icons/${channel}.svg`"
                   :alt="channel"
@@ -892,8 +892,10 @@ const updateCacheTimestamp = async () => {
 const getChannelIcon = (channel: string): string => {
   const iconMap: Record<string, string> = {
     'YouTube': 'youtube.svg',
+    'youtube': 'youtube.svg',
     'Apple Podcast': 'apple-podcast.svg',
     'Spotify': 'spotify.svg',
+    'spotify': 'spotify.svg',
     'webpage': 'web.svg'
   }
   return iconMap[channel] || ''

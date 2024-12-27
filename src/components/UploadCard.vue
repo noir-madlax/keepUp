@@ -114,7 +114,7 @@ const getArticleImage = () => {
   if (!props.article.cover_image_url || 
       props.article.cover_image_url === '无缩略图' ||
       props.article.cover_image_url.includes('qpic.cn')) {
-    return 'public/images/covers/article_default.png'
+    return 'images/covers/article_default.png'
   }
   return props.article.cover_image_url
 }
@@ -124,8 +124,12 @@ const getChannelIcon = (channel: string) => {
   switch (channel?.toLowerCase()) {
     case 'youtube':
       return 'youtube.svg'
+    case 'Youtube':
+      return 'youtube.svg'
     case 'spotify':
       return 'spotify.svg'
+    case 'Spotify':
+      return 'spotify.svg' 
     case 'apple':
       return 'apple-podcast.svg'
     case 'webpage':
@@ -166,10 +170,10 @@ const getPlatformIcon = (platform: string | undefined) => {
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
     return 'youtube.svg'
   }
-  if (url.includes('spotify.com')) {
+  if (url.includes('open.spotify.com')) {
     return 'spotify.svg'
   }
-  if (url.includes('apple.com') || url.includes('podcasts.apple')) {
+  if (url.includes('podcasts.apple.com')) {
     return 'apple-podcast.svg'
   }
   

@@ -68,7 +68,7 @@ const getArticleImage = () => {
       props.article.cover_image_url !== '无缩略图') {
     return props.article.cover_image_url;
   }
-  return 'public/images/covers/article_default.png';
+  return 'images/covers/article_default.png';
 }
 
 const formatDate = (date: string | null) => {
@@ -88,8 +88,10 @@ const navigateToDetail = (id: number) => {
 const getChannelIcon = (channel: string): string => {
   const iconMap: Record<string, string> = {
     'YouTube': 'youtube.svg',
+    'youtube': 'youtube.svg',
     'Apple Podcast': 'apple-podcast.svg',
     'Spotify': 'spotify.svg',
+    'spotify': 'spotify.svg',
     'webpage': 'web.svg'
   }
   return iconMap[channel] || 'channel_default.png'
