@@ -527,7 +527,7 @@ const getErrorMessage = computed(() => {
   color: #D81E06;  /* 修改颜色为设计规范的红色 */
   font-family: "PingFang SC";
   font-size: 12px;  /* 修改字体大小为16px */
-  font-weight: 600;  /* 修改字重为Semibold */
+  font-weight: 400;  /* 修改字重为Semibold */
   line-height: 22px;
   white-space: nowrap;
   overflow: hidden;
