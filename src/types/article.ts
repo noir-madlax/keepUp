@@ -8,7 +8,8 @@ export interface Author {
 export type ArticleStatus = 'processed' | 'processing' | 'failed' | 'rejected' | 'pending';
 
 export interface ArticleRequest {
-  id: number
+  id: string
+  requestId: string
   url: string
   status: ArticleStatus
   created_at: string

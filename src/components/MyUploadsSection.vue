@@ -114,7 +114,7 @@
             :key="n"
             class="flex-shrink-0 w-[200px] h-[238px] bg-gray-100 rounded-xl animate-pulse"
           >
-            <!-- 骨架屏内部��构 -->
+            <!-- 骨架屏内部构 -->
             <div class="p-4 space-y-4">
               <!-- 图片占位 -->
               <div class="w-full h-[98px] bg-gray-200 rounded-lg"></div>
@@ -138,9 +138,10 @@
         <template v-else-if="articles.length">
           <UploadCard
             v-for="article in articles"
-            :key="article.id"
+            :key="article.requestId"
             :article="article"
             class="flex-shrink-0 w-[200px] mb-2"
+            @delete="deleteRequest"
           />
         </template>
       </div>
@@ -151,6 +152,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { ElMessage } from 'element-plus'
 import UploadCard from './UploadCard.vue'
 import type { ArticleRequest } from '../types/article'
 import { useAuthStore } from '../stores/auth'
@@ -229,7 +231,10 @@ const fetchUserArticles = async () => {
       requestsData.map(async (request) => {
         // 如果不是已处理状态，直接返回请求信息
         if (request.status !== 'processed' || !request.url) {
-          return request
+          return {
+            ...request,
+            requestId: request.id // 保存原始请求ID
+          }
         }
 
         // 通过 original_url 查找对应的文章
@@ -252,11 +257,15 @@ const fetchUserArticles = async () => {
           .single()
 
         if (articleError) {
-          return request
+          return {
+            ...request,
+            requestId: request.id // 保存原始请求ID
+          }
         }
 
         return {
           ...request,
+          requestId: request.id, // 保存原始请求ID
           id: articleData.id,
           title: articleData.title,
           author: articleData.author,
@@ -352,7 +361,7 @@ onMounted(async () => {
   // 等待用户信息加载完成
   await authStore.loadUser()
   
-  // 只有在登录状态下才获取文章
+  // 只在登录状态下才获取文章
   if (authStore.user?.id) {
     localLoading.value = true
     await fetchUserArticles()
@@ -367,6 +376,25 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('resize', handleScroll)
 })
+
+// 添加删除请求的方法
+const deleteRequest = async (requestId: string) => {
+  try {
+    const { error } = await supabase
+      .from('keep_article_requests')
+      .delete()
+      .eq('id', requestId)
+
+    if (error) throw error
+
+    // 删除成功后从列表中移除该项
+    articles.value = articles.value.filter(article => article.requestId !== requestId)
+    ElMessage.success(t('upload.message.deleteSuccess'))
+  } catch (error) {
+    console.error('删除请求失败:', error)
+    ElMessage.error(t('upload.message.deleteFailed'))
+  }
+}
 
 // 添加暴露给父组件的刷新方法
 defineExpose({
@@ -494,7 +522,7 @@ defineExpose({
   height: 14px;
 }
 
-/* 链接文字���式 */
+/* 链接文字样式 */
 .link-text {
   color: #999;
   text-align: center;

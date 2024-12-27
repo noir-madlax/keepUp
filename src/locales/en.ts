@@ -160,6 +160,10 @@ export default {
       action: {
         delete: 'Delete'
       }
+    },
+    message: {
+      deleteSuccess: 'Deleted successfully',
+      deleteFailed: 'Failed to delete'
     }
   }
 } 

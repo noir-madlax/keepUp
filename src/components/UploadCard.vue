@@ -78,6 +78,7 @@
           src="/images/icons/delete.svg"
           :alt="t('upload.card.action.delete')"
           class="delete-icon"
+          @click="handleDelete"
         />
       </div>
     </div>
@@ -236,6 +237,17 @@ const getErrorMessage = computed(() => {
   
   return t('upload.card.error.unknown')
 })
+
+// 在 props 中添加 emit 定义
+const emit = defineEmits(['delete'])
+
+// 添加删除处理函数
+const handleDelete = (event: Event) => {
+  event.stopPropagation() // 阻止事件冒泡，防止触发卡片点击
+  if (props.article.requestId) {
+    emit('delete', props.article.requestId)
+  }
+}
 </script>
 
 <style scoped>

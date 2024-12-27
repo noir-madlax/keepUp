@@ -123,7 +123,7 @@ export default {
     loading: '加载中...',
     scrollToLoadMore: '滚动加载更多',
     noMoreData: '没有更多数据了',
-    pleaseLogin: '请先登���后再操作'
+    pleaseLogin: '请先登录后再操作'
   },
   upload: {
     card: {
@@ -159,6 +159,10 @@ export default {
       action: {
         delete: '删除'
       }
+    },
+    message: {
+      deleteSuccess: '删除成功',
+      deleteFailed: '删除失败'
     }
   }
 } 
