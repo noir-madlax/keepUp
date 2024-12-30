@@ -477,6 +477,7 @@ watch(detailedLanguages, async (newVal, oldVal) => {
 const emit = defineEmits<{
   (e: 'refresh', payload: { type: string }): void
   (e: 'click'): void
+  (e: 'uploadSuccess', url: string): void
 }>()
 
 /**
@@ -548,8 +549,8 @@ const validateLanguageSelections = (): boolean => {
  * 提交文章处理求
  */
 const submitRequest = async () => {
-  if (isSubmitting.value) return // 立即检查是否正在提交
-  isSubmitting.value = true // 立即禁用按钮
+  if (isSubmitting.value) return
+  isSubmitting.value = true
 
   try {
     if (!authStore.isAuthenticated) {
@@ -560,27 +561,12 @@ const submitRequest = async () => {
     if (!validateUrl(requestUrl.value)) return
     if (!await checkDuplicate(requestUrl.value)) return
 
-  // 验证总结语言是否已选择
-  if (!summaryLanguages.value.length || summaryLanguages.value.includes('na')) {
-    ElMessage.warning(t('summarize.messages.summaryLanguageRequired'))
-    return
-  }
+    // 验证语言选择...
 
-  const totalSelections =
-    summaryLanguages.value.filter(lang => lang !== 'na').length +
-    subtitleLanguages.value.filter(lang => lang !== 'na').length +
-    detailedLanguages.value.filter(lang => lang !== 'na').length
+    // 先触发乐观更新
+    emit('uploadSuccess', requestUrl.value)
 
-    if (totalSelections === 0) {
-      ElMessage.warning(t('summarize.messages.languageRequired'))
-      return
-    }
-    if (totalSelections > MAX_SELECTIONS) {
-      ElMessage.warning(t('summarize.messages.maxSelectionsExceeded'))
-      return
-    }
-
-    // 发送请求到后端
+    // 再发送请求
     fetch('/api/workflow/process', {
       method: 'POST',
       headers: {
@@ -599,14 +585,13 @@ const submitRequest = async () => {
     requestUrl.value = ''
     showUploadModal.value = false
     
-    // 触发刷新事件,并传递一个标识表明是上传成功
     emit('refresh', { type: 'upload' })
     
   } catch (error) {
     console.error('提交失败:', error)
     ElMessage.error(t('summarize.messages.submitFailed'))
   } finally {
-    isSubmitting.value = false // 无论成功失败都恢复按钮状态
+    isSubmitting.value = false
   }
 }
 
