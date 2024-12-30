@@ -238,18 +238,18 @@ const fetchUserArticles = async () => {
       throw requestsError
     }
 
-    // 2. 只对已处理的请求获取详细信息
+    // 2. 只对已处理成功的请求获取文章详情，其他状态直接使用请求数据
     const processedRequests = await Promise.all(
       requestsData.map(async (request) => {
-        // 如果不是已处理状态，直接返回请求信息
-        if (request.status !== 'processed' || !request.url) {
+        // 如果不是已处理成功状态，直接返回请求信息
+        if (request.status !== 'processed') {
           return {
             ...request,
-            requestId: request.id // 保存原始请求ID
+            requestId: request.id
           }
         }
 
-        // 通过 original_url 查找对应的文章
+        // 只有处理成功的才去查询文章详情
         const { data: articleData, error: articleError } = await supabase
           .from('keep_articles')
           .select(`
@@ -268,16 +268,19 @@ const fetchUserArticles = async () => {
           .eq('original_link', request.original_url)
           .single()
 
+        // 如果查询文章详情失败，也返回基本请求信息
         if (articleError) {
+          console.error('获取文章详情失败:', articleError)
           return {
             ...request,
-            requestId: request.id // 保存原始请求ID
+            requestId: request.id
           }
         }
 
+        // 返回完整的文章信息
         return {
           ...request,
-          requestId: request.id, // 保存原始请求ID
+          requestId: request.id,
           id: articleData.id,
           title: articleData.title,
           author: articleData.author,
@@ -291,6 +294,7 @@ const fetchUserArticles = async () => {
     articles.value = processedRequests || []
     
   } catch (error) {
+    console.error('获取上传文章失败:', error)
     ElMessage.error('获取上传文章失败')
   } finally {
     localLoading.value = false

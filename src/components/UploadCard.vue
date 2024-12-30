@@ -59,7 +59,7 @@
         {{ getErrorMessage }}
       </div>
       <div class="url-text single-line">
-        {{ article.url || article.original_url || t('upload.card.fallback.noLink') }}
+        {{ article.original_url || t('upload.card.fallback.noLink') }}
       </div>
     </div>
 
