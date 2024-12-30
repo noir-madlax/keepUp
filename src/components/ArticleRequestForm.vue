@@ -330,11 +330,24 @@
                 </button>
                 <button
                   @click="submitFileRequest"
-                  class="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-                  :disabled="isFileProcessing || !validateFileLanguageSelections()"
+                  class="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  :disabled="isFileProcessing || !validateFileLanguageSelections() || !selectedFile"
                 >
-                  {{ isFileProcessing ? t('summarize.buttons.processing') : t('summarize.buttons.confirm') }}
+                  {{ isFileProcessing 
+                      ? `${t('summarize.buttons.processing')} (${uploadProgress}%)` 
+                      : t('summarize.buttons.confirm') 
+                  }}
                 </button>
+              </div>
+
+              <!-- 在文件上传区域添加进度条 -->
+              <div v-if="isFileProcessing" class="mt-2">
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                  <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                       :style="{ width: `${uploadProgress}%` }">
+                  </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-1">{{ uploadProgress }}%</p>
               </div>
             </div>
           </div>
@@ -473,9 +486,16 @@ watch(detailedLanguages, async (newVal, oldVal) => {
   }
 }, { flush: 'post' })
 
-// 定义组件事件
+// 添加类型定义
+interface UploadResponse {
+  success: boolean
+  message: string
+  request_id?: string
+}
+
+// 修改 emit 类型定义
 const emit = defineEmits<{
-  (e: 'refresh', payload: { type: string }): void
+  (e: 'refresh', payload: { type: string, requestId?: string }): void
   (e: 'click'): void
 }>()
 
@@ -780,6 +800,9 @@ watch([showUploadModal, showFileUploadModal], ([uploadVal, fileVal]) => {
   }
 })
 
+// 添加上传进度状态
+const uploadProgress = ref(0)
+
 // 修改文件上传请求处理
 const submitFileRequest = async () => {
   if (!authStore.isAuthenticated) {
@@ -800,36 +823,69 @@ const submitFileRequest = async () => {
 
   try {
     isFileProcessing.value = true
+    uploadProgress.value = 0
 
-    // 创建 FormData 对象
     const formData = new FormData()
     formData.append('file', selectedFile.value)
     formData.append('summary_languages', JSON.stringify(fileSummaryLanguages.value))
     formData.append('user_id', authStore.user?.id || '')
 
-    // 发送文件上传请求
-    const response = await fetch('/api/workflow/upload', {
-      method: 'POST',
-      body: formData
+    // 使用 XMLHttpRequest 来获取上传进度
+    const response = await new Promise<UploadResponse>((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          uploadProgress.value = Math.round((e.loaded * 100) / e.total)
+        }
+      }
+      
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          resolve(JSON.parse(xhr.response))
+        } else {
+          reject(new Error(xhr.statusText))
+        }
+      }
+      
+      xhr.onerror = () => reject(new Error('Network Error'))
+      
+      xhr.open('POST', '/api/workflow/upload')
+      xhr.send(formData)
     })
 
-    if (!response.ok) {
-      throw new Error('Upload failed')
+    if (!response.success) {
+      throw new Error(response.message || t('summarize.messages.submitFailed'))
     }
 
     ElMessage.success(t('summarize.messages.submitSuccess'))
     selectedFile.value = null
     showFileUploadModal.value = false
 
-    // 触发刷新事件
-    emit('refresh', { type: 'fileUpload' })
+    // 重置表单状态
+    resetForm()
+
+    // 触发刷新事件,传递请求ID
+    emit('refresh', { 
+      type: 'fileUpload',
+      requestId: response.request_id 
+    })
 
   } catch (error) {
     console.error('文件上传失败:', error)
-    ElMessage.error(t('summarize.messages.submitFailed'))
+    ElMessage.error(error instanceof Error ? error.message : t('summarize.messages.submitFailed'))
   } finally {
     isFileProcessing.value = false
+    uploadProgress.value = 0
   }
+}
+
+// 添加重置表单方法
+const resetForm = () => {
+  selectedFile.value = null
+  fileSummaryLanguages.value = [getCurrentLang()]
+  isDragging.value = false
+  isFileProcessing.value = false
 }
 </script>
 

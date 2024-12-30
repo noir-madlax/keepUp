@@ -4,12 +4,16 @@ from .xiaoyuzhou import XiaoYuZhouFetcher
 from .base import VideoInfo
 from .apple import ApplePodcastFetcher
 from .webpage import WebPageFetcher
+from .file import FileFetcher
 from app.utils.logger import logger
+from app.models.request import FetchRequest
 
 class ContentFetcherService:
     """内容获取服务"""
-    def __init__(self):
+    def __init__(self, request: Optional[FetchRequest] = None):
+        self.request = request
         self.fetchers = [
+            FileFetcher(),
             YouTubeFetcher(),
             XiaoYuZhouFetcher(),
             ApplePodcastFetcher(),
@@ -21,6 +25,8 @@ class ContentFetcherService:
         try:
             for fetcher in self.fetchers:
                 if fetcher.can_handle(url):
+                    if isinstance(fetcher, FileFetcher) and self.request and self.request.content:
+                        return await fetcher.fetch(url, self.request)
                     return await fetcher.fetch(url)
             return None
         except Exception as e:

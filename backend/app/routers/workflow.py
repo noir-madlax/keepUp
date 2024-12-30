@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, Form
 from app.models.request import FetchRequest, ParseRequest
 from app.services.content_fetcher.service import ContentFetcherService
 from app.services.supabase import SupabaseService
@@ -11,8 +11,10 @@ from app.services.podcast_matcher import PodcastMatcher
 from app.services.content_fetcher.youtube import YouTubeFetcher
 from app.services.content_resolver import ContentResolver
 from app.services.request_logger import RequestLogger, Steps
+from app.utils.file_processor import process_file_content
 
 import asyncio
+import json
 
 router = APIRouter()
 
@@ -216,7 +218,7 @@ async def process_article_task(request: FetchRequest):
         
         # 2. 获取视频基础信息
         async with RequestLogger.step_context(request.id, Steps.VIDEO_INFO_FETCH):
-            service = ContentFetcherService()
+            service = ContentFetcherService(request)
             video_info = await service.get_video_info(request.parsed_url)
             
             if not video_info:
@@ -464,3 +466,79 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
                 error_message=str(e)
             )
         raise HTTPException(status_code=500, detail=str(e)) 
+
+@router.post("/workflow/upload")
+async def upload_workflow(
+    file: UploadFile,
+    summary_languages: str = Form(...),
+    user_id: str = Form(...),
+    background_tasks: BackgroundTasks = BackgroundTasks()
+):
+    """处理文件上传请求"""
+    try:
+        # 1. 验证文件类型
+        file_extension = file.filename.split('.')[-1].lower()
+        if file_extension not in ['pdf', 'doc', 'docx', 'txt']:
+            return {
+                "success": False,
+                "message": "不支持的文件类型"
+            }
+            
+        # 2. 验证文件大小（10MB限制）
+        MAX_SIZE = 10 * 1024 * 1024  # 10MB
+        content = await file.read()
+        if len(content) > MAX_SIZE:
+            return {
+                "success": False,
+                "message": "文件大小超过限制"
+            }
+                
+        # 3. 创建请求记录
+        request_data = await SupabaseService.create_article_request({
+            "original_url": f"file://{file.filename}",  # 添加file://前缀
+            "platform": "file", 
+            "status": "pending",
+            "user_id": user_id
+        })
+        request_id = request_data["id"]
+        
+        # 4. 处理文件内容
+        text_content = await process_file_content(content, file_extension)
+        
+        if not text_content:
+            await SupabaseService.update_status(request_id, "failed", "文件内容提取失败")
+            return {
+                "success": False,
+                "message": "文件内容提取失败"
+            }
+        
+        logger.info(f"文件内容提取成功: {len(text_content)} 字符")
+            
+        # 5. 创建处理请求对象
+        file_request = FetchRequest(
+            id=request_id,
+            original_url=f"file://{file.filename}",
+            parsed_url=f"file://{file.filename}",
+            platform="file",
+            content=text_content,  # 添加解析后的文本内容
+            summary_languages=json.loads(summary_languages),
+            subtitle_languages=["na"],
+            detailed_languages=["na"],
+            user_id=user_id
+        )
+        
+        # 6. 异步启动处理任务
+        background_tasks.add_task(process_article_task, file_request)
+        
+        return {
+            "success": True,
+            "message": "文件已接收，开始处理",
+            "request_id": request_id
+        }
+        
+    except Exception as e:
+        logger.error(f"文件上传处理失败: {str(e)}")
+        return {
+            "success": False,
+            "message": str(e)
+        } 
