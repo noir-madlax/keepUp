@@ -128,10 +128,10 @@ export default {
   upload: {
     card: {
       uploadFile: 'Click to Upload Link',
-      uploadWeb: 'Click to Summarize Web',
+      uploadWeb: 'Click to input Web Url',
       supportedPlatforms: 'Support Podcast and Youtube links',
       webLink: 'Any web page URL',
-      uploadDoc: 'Click to Summarize Files',
+      uploadDoc: 'Click to Upload Files',
       supportedFiles: 'Support Doc/PDF/Txt files up to 10MB',
       fallback: {
         noTitle: 'No Title',

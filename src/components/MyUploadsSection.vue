@@ -27,85 +27,97 @@
         @scroll="handleScroll"
       >
         <!-- NewUploadCard 固定在第一个位置 -->
-        <div class="upload-container flex-shrink-0" @click="handleNewUploadClick">
-          <!-- Upload Icon -->
-          <div class="upload-icon">
-            <img src="/images/icons/upload.svg" alt="Upload" class="w-[43px] h-[43px]">
+        <div class="upload-container flex-shrink-0">
+          <!-- 新增可点击区域容器 -->
+          <div class="clickable-area" @click="handleNewUploadClick">
+            <!-- Upload Icon -->
+            <div class="upload-icon">
+              <img src="/images/icons/upload.svg" alt="Upload" class="w-[43px] h-[43px]">
+            </div>
+            <!-- Upload Text -->
+            <div class="upload-text">{{ t('upload.card.uploadFile') }}</div>
           </div>
-          <!-- Upload Text -->
-          <div class="upload-text">{{ t('upload.card.uploadFile') }}</div>
-          <!-- Icon Container -->
-          <div class="icon-container">
-            <!-- Youtube Icon -->
-            <div class="icon">
-              <div class="icon-background">
-                <img src="/images/icons/youtube.svg" alt="Youtube" class="youtube-icon">
+          
+          <!-- 不可点击的渠道图标和说明区域 -->
+          <div class="non-clickable-area">
+            <div class="icon-container">
+              <!-- Youtube Icon -->
+              <div class="icon">
+                <div class="icon-background">
+                  <img src="/images/icons/youtube.svg" alt="Youtube" class="youtube-icon">
+                </div>
+              </div>
+              <!-- Apple Icon -->
+              <div class="icon">
+                <div class="icon-background">
+                  <img src="/images/icons/apple-podcast.svg" alt="Apple" class="podcast-icon">
+                </div>
+              </div>
+              <!-- Spotify Icon -->
+              <div class="icon">
+                <div class="icon-background">
+                  <img src="/images/icons/spotify.svg" alt="Spotify" class="podcast-icon">
+                </div>
               </div>
             </div>
-            <!-- Apple Icon -->
-            <div class="icon">
-              <div class="icon-background">
-                <img src="/images/icons/apple-podcast.svg" alt="Apple" class="podcast-icon">
-              </div>
-            </div>
-            <!-- Spotify Icon -->
-            <div class="icon">
-              <div class="icon-background">
-                <img src="/images/icons/spotify.svg" alt="Spotify" class="podcast-icon">
-              </div>
-            </div>
+            <div class="link-text">{{ t('upload.card.supportedPlatforms') }}</div>
           </div>
-          <!-- Link Text -->
-          <div class="link-text">{{ t('upload.card.supportedPlatforms') }}</div>
         </div>
 
          <!-- NewUploadCard2 固定文章上传的卡片在第二个位置 -->
-         <div class="web-content-container flex-shrink-0" @click="handleNewUploadClick">
-          <!-- Upload Icon -->
-          <div class="upload-icon">
-            <img src="/images/icons/web.svg" alt="Upload" class="w-[45px] h-[45px] object-contain">
+         <div class="web-content-container flex-shrink-0">
+          <!-- 新增可点击区域容器 -->
+          <div class="clickable-area" @click="handleNewUploadClick">
+            <!-- Upload Icon -->
+            <div class="upload-icon">
+              <img src="/images/icons/web.svg" alt="Upload" class="w-[45px] h-[45px] object-contain">
+            </div>
+            <!-- Upload Text -->
+            <div class="upload-text">{{ t('upload.card.uploadWeb') }}</div>
           </div>
-          <!-- Upload Text -->
-          <div class="upload-text">{{ t('upload.card.uploadWeb') }}</div>
-          <!-- Icon Container -->
-          <div class="icon-container">
-            
+          
+          <!-- 不可点击的说明区域 -->
+          <div class="non-clickable-area">
+            <div class="link-text">{{ t('upload.card.webLink') }}</div>
           </div>
-          <!-- Link Text -->
-          <div class="link-text">{{ t('upload.card.webLink') }}</div>
         </div>
 
          <!-- NewUploadCard3 pdf/doc/txt的上传-->
-         <div class="upload-container flex-shrink-0" @click="handleNewUploadClick">
-          <!-- Upload Icon -->
-          <div class="upload-icon">
-            <img src="/images/icons/file.svg" alt="Upload" class="w-[43px] h-[43px]">
+         <div class="upload-container flex-shrink-0">
+          <!-- 新增可点击区域容器 -->
+          <div class="clickable-area" @click="handleNewUploadClick">
+            <!-- Upload Icon -->
+            <div class="upload-icon">
+              <img src="/images/icons/file.svg" alt="Upload" class="w-[43px] h-[43px]">
+            </div>
+            <!-- Upload Text -->
+            <div class="upload-text">{{ t('upload.card.uploadDoc') }}</div>
           </div>
-          <!-- Upload Text -->
-          <div class="upload-text">{{ t('upload.card.uploadDoc') }}</div>
-          <!-- Icon Container -->
-          <div class="icon-container">
-            <!-- doc Icon -->
-            <div class="icon">
-              <div class="icon-background">
-                <img src="/images/icons/doc.svg" alt="doc" class="youtube-icon">
+          
+          <!-- 不可点击的渠道图标和说明区域 -->
+          <div class="non-clickable-area">
+            <div class="icon-container">
+              <!-- doc Icon -->
+              <div class="icon">
+                <div class="icon-background">
+                  <img src="/images/icons/doc.svg" alt="doc" class="youtube-icon">
+                </div>
+              </div>
+              <!-- pdf Icon -->
+              <div class="icon">
+                <div class="icon-background">
+                  <img src="/images/icons/pdf.svg" alt="pdf" class="podcast-icon">
+                </div>
+              </div>
+              <!-- txt Icon -->
+              <div class="icon">
+                <div class="icon-background">
+                  <img src="/images/icons/txt.svg" alt="txt" class="podcast-icon">
+                </div>
               </div>
             </div>
-            <!-- pdf Icon -->
-            <div class="icon">
-              <div class="icon-background">
-                <img src="/images/icons/pdf.svg" alt="pdf" class="podcast-icon">
-              </div>
-            </div>
-            <!-- txt Icon -->
-            <div class="icon">
-              <div class="icon-background">
-                <img src="/images/icons/txt.svg" alt="txt" class="podcast-icon">
-              </div>
-            </div>
+            <div class="link-text">{{ t('upload.card.supportedFiles') }}</div>
           </div>
-          <!-- Link Text -->
-          <div class="link-text">{{ t('upload.card.supportedFiles') }}</div>
         </div>
         <!-- 加载状态显示骨架屏 -->
         <template v-if="localLoading">
@@ -451,26 +463,24 @@ defineExpose({
   background: #FFF;
   box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
-  cursor: pointer;
   transition: all 0.3s ease;
-}
-
-.upload-container:hover {
-  transform: translateY(-2px);
-  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
+  position: relative;
 }
 
 
 .upload-container .upload-icon {
-  margin-top: 4px;  /* 减小图标底部间距 */
+  margin-top: -16px;  /* 减小图标底部间距 */
 }
 
-.upload-container .upload-text {
-  margin-top: -6px;  /* 微调文字位置 */
+.upload-container .icon {
+  margin-top: -60px;  /* 图标位置 */
+}
+.upload-container .link-text {
+  margin-top: -30px;  /* 微调文字位置 */
 }
 
 .upload-container .link-text {
-  margin-top: +6px;  /* 微调文字位置 */
+  margin-top: -30px;  /* 微调文字位置 */
 }
 
 
@@ -486,8 +496,8 @@ defineExpose({
   background: #FFF;
   box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
-  cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .web-content-container .upload-icon {
@@ -499,7 +509,7 @@ defineExpose({
 }
 
 .web-content-container .link-text {
-  margin-top: +18px;  /* 微调文字位置 */
+  margin-top: +20px;  /* 微调文字位置 */
 }
 
 
@@ -647,5 +657,56 @@ defineExpose({
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-all;
+}
+
+/* 可点击区域样式 */
+.clickable-area {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 12px 8px;
+}
+
+/* 鼠标悬停效果只应用于可点击区域 */
+.clickable-area:hover {
+  opacity: 0.8;
+}
+
+/* 不可点击区域样式 */
+.non-clickable-area {
+  pointer-events: none; /* 禁用鼠标事件 */
+  opacity: 0.8;
+  padding: 8px 12px 24px;
+}
+
+/* 调整图标和文字间距 */
+.upload-icon {
+  margin-bottom: 8px;
+}
+
+.upload-text {
+  color: #3FA6FC;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+/* 渠道图标容器样式 */
+.icon-container {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+/* 底部说明文字样式 */
+.link-text {
+  color: #999;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
 }
 </style> 

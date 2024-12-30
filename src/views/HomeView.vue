@@ -2,22 +2,22 @@
   <!-- 根容器 -->
   <div class="min-h-screen">
     
-    <!-- 网络状态提示 - 保留原有的离线提示，添加弱网提示 -->
-    <div v-if="!isOnline" 
+  <!-- 网络状态提示 - 保留原有的离线提示，添加弱网提示 -->
+  <div v-if="!isOnline" 
       class="bg-yellow-50 p-4">
       <div class="flex items-center justify-center text-yellow-700">
         <span>{{ t('home.network.offline') }}</span>
       </div>
-    </div>
-    <div v-else-if="isSlowConnection" 
+  </div>
+  <div v-else-if="isSlowConnection" 
       class="bg-blue-50 p-4">
       <div class="flex items-center justify-center text-blue-700">
         <span>{{ t('home.network.weak') }}</span>
       </div>
-    </div>
+   </div>
 
     <!-- 顶部导航栏 -->
-    <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
+  <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
       <!-- 导航栏内容容器 -->
       <div class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
         <!-- 左侧Logo和标题容器 -->
@@ -74,7 +74,7 @@
       
       <!-- 分割线 -->
       <div class="h-[1px] bg-[#E5E5E5] w-full"></div>
-    </header>
+</header>
 
     <!-- 登录模态框 -->
     <login-modal 
@@ -363,7 +363,6 @@
     </Teleport>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onUnmounted, onActivated, nextTick } from 'vue'
 import ArticleCard from '../components/ArticleCard.vue'
@@ -1073,3 +1072,4 @@ const handleArticleRefresh = async (event?: { type: string }) => {
   margin: 0 auto;
 }
 </style>
+
