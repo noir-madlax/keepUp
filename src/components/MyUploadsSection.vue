@@ -709,4 +709,19 @@ defineExpose({
   font-weight: 400;
   line-height: 20px;
 }
+
+/* 添加最小高度确保容器尺寸稳定 */
+.my-uploads-section {
+  min-height: 310px; /* 根据实际内容调整这个值 */
+  transition: all 0.3s ease;
+  will-change: height; /* 优化高度变化的性能 */
+}
+
+/* 确保滚动容器也具有最小高度 */
+.overflow-x-auto {
+  min-height: 238px; /* 这个高度应该和卡片的高度一致 */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  transition: height 0.3s ease;
+}
 </style> 
