@@ -60,7 +60,7 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
             ("人物介绍", article_content.key1_people),
             ("核心观点", article_content.key3_core),
             ("名词解释", article_content.key4_word),
-            ("整体总结", article_content.key5_summary),
+            ("总结", article_content.key5_summary),
             ("QA环节", article_content.key8_qa),
             ("金句", article_content.key9_golden),
             ("未总结内容", article_content.key10_exclude),
