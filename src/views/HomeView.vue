@@ -132,6 +132,7 @@
                   ref="articleRequestFormRef"
                   @refresh="handleArticleRefresh"
                   @click="() => submitRequest(requestUrl.value)"
+                  @uploadSuccess="handleUploadSuccess"
                 />
               </div>
             </div>
@@ -681,7 +682,7 @@ const submitArticle = async () => {
       user_id: authStore.user?.id
     }
 
-    // 提交文章基��信息
+    // 提交文章基本信息
     const { data, error } = await supabase
       .from('keep_articles')
       .insert([submitData])
@@ -995,6 +996,14 @@ const handleArticleRefresh = async (event?: { type: string }) => {
   }
   // 刷新文章列表
   await fetchArticles()
+}
+
+// 添加处理上传成功的方法
+const handleUploadSuccess = (url: string) => {
+  // 添加乐观更新卡片
+  if (myUploadsRef.value) {
+    myUploadsRef.value.addOptimisticCard(url)
+  }
 }
 </script>
 

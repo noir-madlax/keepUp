@@ -147,10 +147,10 @@
         </template>
        
         <!-- 根据用户id获取这个用户的文章列表 -->
-        <template v-else-if="articles.length">
+        <template v-else-if="displayCards.length">
           <UploadCard
-            v-for="article in articles"
-            :key="article.requestId"
+            v-for="article in displayCards"
+            :key="article.requestId || article.original_url"
             :article="article"
             class="flex-shrink-0 w-[200px] mb-2"
             @delete="deleteRequest"
@@ -162,7 +162,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import UploadCard from './UploadCard.vue'
@@ -196,6 +196,52 @@ const touchStartX = ref(0)
 const touchStartY = ref(0)
 const isHorizontalMove = ref(false)
 const minDirectionDelta = 20 // 判断方向的最小位移差值
+
+// 添加乐观更新卡片的类型定义
+interface OptimisticCard {
+  requestId?: string
+  original_url: string
+  created_at: string
+  status: 'processing'
+  platform?: string
+}
+
+// 在 setup 中添加
+const optimisticCards = ref<OptimisticCard[]>([])
+
+// 修改展示逻辑
+const displayCards = computed(() => {
+  // 过滤掉已经存在于数据库记录中的乐观更新卡片
+  const filteredOptimisticCards = optimisticCards.value.filter(opt => 
+    !articles.value.some(article => article.original_url === opt.original_url)
+  )
+  // 把乐观更新卡片放在最前面
+  return [...filteredOptimisticCards, ...articles.value]
+})
+
+// 添加处理乐观更新的方法
+const addOptimisticCard = (url: string) => {
+  optimisticCards.value.push({
+    original_url: url,
+    created_at: new Date().toISOString(),
+    status: 'processing',
+    platform: getPlatformFromUrl(url)
+  })
+}
+
+// 从URL判断平台
+const getPlatformFromUrl = (url: string) => {
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    return 'youtube'
+  }
+  if (url.includes('open.spotify.com')) {
+    return 'spotify'
+  }
+  if (url.includes('podcasts.apple.com')) {
+    return 'apple'
+  }
+  return 'webpage'
+}
 
 // Methods
 const handleScroll = () => {
@@ -414,7 +460,8 @@ const deleteRequest = async (requestId: string) => {
 
 // 添加暴露给父组件的刷新方法
 defineExpose({
-  fetchUserArticles
+  fetchUserArticles,
+  addOptimisticCard
 })
 </script>
 
