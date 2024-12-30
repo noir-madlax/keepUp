@@ -215,7 +215,8 @@ const displayCards = computed(() => {
   const filteredOptimisticCards = optimisticCards.value.filter(opt => 
     !articles.value.some(article => article.original_url === opt.original_url)
   )
-  return [...articles.value, ...filteredOptimisticCards]
+  // 把乐观更新卡片放在最前面
+  return [...filteredOptimisticCards, ...articles.value]
 })
 
 // 添加处理乐观更新的方法
