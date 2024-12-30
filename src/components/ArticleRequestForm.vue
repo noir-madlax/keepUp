@@ -477,6 +477,7 @@ watch(detailedLanguages, async (newVal, oldVal) => {
 const emit = defineEmits<{
   (e: 'refresh', payload: { type: string }): void
   (e: 'click'): void
+  (e: 'uploadSuccess', url: string): void
 }>()
 
 /**
@@ -594,6 +595,9 @@ const submitRequest = async () => {
         user_id: authStore.user?.id
       })
     })
+
+    // 触发乐观更新事件
+    emit('uploadSuccess', requestUrl.value)
 
     ElMessage.success(t('summarize.messages.submitSuccess'))
     requestUrl.value = ''
