@@ -460,6 +460,20 @@ defineExpose({
   box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.2);
 }
 
+
+.upload-container .upload-icon {
+  margin-top: 4px;  /* 减小图标底部间距 */
+}
+
+.upload-container .upload-text {
+  margin-top: -6px;  /* 微调文字位置 */
+}
+
+.upload-container .link-text {
+  margin-top: +6px;  /* 微调文字位置 */
+}
+
+
 .web-content-container {
   width: 200px;
   height: 238px;

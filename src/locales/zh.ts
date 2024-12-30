@@ -128,7 +128,7 @@ export default {
   upload: {
     card: {
       uploadFile: '点击上传链接',
-      supportedPlatforms: '支持播客、油管视频的内容',
+      supportedPlatforms: '支持Youtube视频、Apple和Spotify的播客内容',
       uploadWeb: '点击总结网页',
       webLink: '任何网页的URL链接',
       uploadDoc: '点击总结文档',
