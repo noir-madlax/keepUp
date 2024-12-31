@@ -125,6 +125,42 @@
     </header>
 
     <template v-if="article">
+      <!-- 添加语言提示横幅 -->
+      <div 
+        v-if="showLanguageAlert"
+        class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 mx-4 md:mx-8"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex-1 flex items-center">
+            <svg class="h-5 w-5 text-blue-400 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+              <p class="text-sm text-blue-700">
+                {{ t('article.fallbackLanguage.message', {
+                  language: t(`article.fallbackLanguage.${contentLanguage}`)
+                }) }}
+              </p>
+              <!-- 添加获取其他语言内容的按钮 -->
+              <button 
+                @click="handleMoreContent"
+                class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                {{ t('article.fallbackLanguage.getOtherLanguage') }}
+              </button>
+            </div>
+          </div>
+          <button 
+            @click="showLanguageAlert = false"
+            class="text-blue-400 hover:text-blue-600 ml-4 flex-shrink-0"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <!-- 文章标题和作者信息 -->
       <div class="bg-white">
         <div class="w-full mx-auto" style="max-width: min(100%, 1024px);">
@@ -152,23 +188,38 @@
                   <span>{{ formatDate(article.publish_date) }}</span>
                 </div>
                 <!-- 操作按钮组 -->
-                <div class="flex gap-3 mt-4">
+                <div class="flex gap-2 mt-4">
+                  <!-- 更多内容按钮 -->
+                  <button 
+                    v-if="isMediaArticle"
+                    @click="handleMoreContent" 
+                    class="inline-flex items-center px-4 py-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    {{ t('summarize.moreContent') }}
+                  </button>
+
+                  <!-- 查看原文按钮 -->
                   <a 
                     v-if="article.original_link"
                     :href="article.original_link" 
                     target="_blank" 
-                    class="inline-flex items-center px-6 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200"
+                    class="inline-flex items-center px-4 py-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                     {{ t('article.viewOriginal') }}
                   </a>
+
+                  <!-- 分享按钮 -->
                   <button 
                     @click="copyCurrentUrl" 
-                    class="inline-flex items-center px-6 py-2 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200"
+                    class="inline-flex items-center px-4 py-1.5 text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                     </svg>
                     {{ t('article.share') }}
@@ -243,7 +294,7 @@
               </div>
             </template>
             <div v-else>  
-              <!-- 如��sections不存在，则渲染markdown内容 -->
+              <!-- 如果sections不存在，则渲染markdown内容 -->
               <div v-html="markdownContent"></div>
             </div>
           </article>
@@ -378,6 +429,14 @@
         </div>
       </div>
     </div>
+
+    <!-- 更多内容 Modal -->
+    <more-content-modal
+      v-model="showMoreContentModal"
+      :article-id="article?.id"
+      :original-url="article?.original_link"
+      :section-status="sectionStatus"
+    />
   </div>
 </template>
 
@@ -398,6 +457,8 @@ import { ALL_SECTION_TYPES, DEFAULT_SELECTED_SECTIONS, getLocalizedSectionType }
 import { useI18n } from 'vue-i18n'
 import MindMap from '../components/MindMap.vue'
 import Mermaid from '../components/Mermaid.vue'
+import { isSupportedMediaUrl } from '../utils/mediaUtils'
+import MoreContentModal from '../components/MoreContentModal.vue'
 
 
 // 将 i18n 相关初始化移前面
@@ -496,11 +557,13 @@ const fetchArticle = async () => {
 
       if (!fallbackError && fallbackData?.length) {
         sectionsData = fallbackData
-        // 使用翻译的示信息
-        ElMessage.info(t('article.fallbackLanguage.message', {
-          language: t(`article.fallbackLanguage.${fallbackLanguage}`)
-        }))
+        // 设置提示相关变量
+        showLanguageAlert.value = true
+        contentLanguage.value = fallbackLanguage
       }
+    } else {
+      // 如果获取到当前语言的内容，确保提示不显示
+      showLanguageAlert.value = false
     }
 
     article.value = articleData
@@ -991,6 +1054,41 @@ const getArticleTitle = () => {
   }
   return article.value.title
 }
+
+// 判断是否为媒体类型文章
+const isMediaArticle = computed(() => {
+  return article.value && isSupportedMediaUrl(article.value.original_link || '')
+})
+
+// 获取文章各部分内容的状态
+const sectionStatus = computed(() => {
+  if (!sections.value) return null
+  
+  return {
+    summaryZh: sections.value.some(s => s.section_type === '总结' && s.language === 'zh'),
+    summaryEn: sections.value.some(s => s.section_type === '总结' && s.language === 'en'),
+    detailedZh: sections.value.some(s => s.section_type === '分段详述' && s.language === 'zh'),
+    detailedEn: sections.value.some(s => s.section_type === '分段详述' && s.language === 'en'),
+    subtitleZh: sections.value.some(s => s.section_type === '原文字幕' && s.language === 'zh'),
+    subtitleEn: sections.value.some(s => s.section_type === '原文字幕' && s.language === 'en')
+  }
+})
+
+// 控制更多内容 modal 的显示
+const showMoreContentModal = ref(false)
+
+// 处理更多内容按钮点击
+const handleMoreContent = () => {
+  if (!authStore.isAuthenticated) {
+    showLoginModal.value = true
+    return
+  }
+  showMoreContentModal.value = true
+}
+
+// 添加控制提示显示的变量
+const showLanguageAlert = ref(false)
+const contentLanguage = ref('')
 </script>
 
 <style>
