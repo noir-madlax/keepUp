@@ -18,15 +18,11 @@ import json
 
 router = APIRouter()
 
-async def process_summary_content(request_id: int, url: str, content: str, chapters: str, article, languages: list[str]) -> list[str]:
+async def process_summary_content(request_id: int, languages: list[str]) -> list[str]:
     """处理总结内容解析
     
     Args:
         request_id: 请求ID
-        url: 视频URL
-        content: 视频内容
-        chapters: 章节信息
-        article: 文章信息
         languages: 需要处理的语言列表
         
     Returns:
@@ -38,6 +34,20 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
         Steps.SUMMARY_PROCESS,
         f"开始总结内容处理，语言列表: {languages}"
     )
+    
+    # 获取请求信息
+    request = await SupabaseService.get_article_request(request_id)
+    if not request:
+        error_msg = "找不到请求记录"
+        await RequestLogger.error(request_id, Steps.SUMMARY_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
+        
+    # 获取文章信息
+    article = await SupabaseService.get_article_by_request_id(request_id)
+    if not article:
+        error_msg = "找不到文章记录"
+        await RequestLogger.error(request_id, Steps.SUMMARY_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
     
     # 判断是否是网页内容
     is_webpage = article.get('channel') == 'webpage'
@@ -64,9 +74,9 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
         try:
             parse_request = ParseRequest(
                 id=request_id, 
-                url=url, 
-                content=content, 
-                chapters=chapters
+                url=request.get('url'),
+                content=request.get('content'),
+                chapters=request.get('chapters')
             )
             
             coze_response = await call_coze_and_parse(
@@ -79,7 +89,7 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
             await process_coze_result(
                 coze_response, 
                 request_id, 
-                url,
+                request.get('parsed_url'),
                 article,
                 lang
             )
@@ -92,12 +102,13 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
             error_msg = f"{lang} 语言处理失败"
             await RequestLogger.error(request_id, Steps.SUMMARY_PROCESS, error_msg, e)
             results.append(error_msg)
+            logger.error(f"处理失败: {error_msg}, {e}")
             continue
     
     return results
 
 
-async def process_subtitle_content(request_id: int, url: str, content: str, chapters: str, article, languages: list[str]) -> list[str]:
+async def process_subtitle_content(request_id: int, languages: list[str]) -> list[str]:
     """处理多语言字幕内容解析"""
     results = []
     
@@ -109,6 +120,20 @@ async def process_subtitle_content(request_id: int, url: str, content: str, chap
             "字幕处理已跳过"
         )
         return ["字幕处理已跳过"]
+    
+    # 获取请求信息
+    request = await SupabaseService.get_article_request(request_id)
+    if not request:
+        error_msg = "找不到请求记录"
+        await RequestLogger.error(request_id, Steps.SUBTITLE_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
+        
+    # 获取文章信息
+    article = await SupabaseService.get_article_by_request_id(request_id)
+    if not article:
+        error_msg = "找不到文章记录"
+        await RequestLogger.error(request_id, Steps.SUBTITLE_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
     
     await RequestLogger.info(
         request_id,
@@ -135,7 +160,7 @@ async def process_subtitle_content(request_id: int, url: str, content: str, chap
             # 添加内容润色处理
             await ContentPolisherService.process_article_content(
                 article_id=article['id'],
-                original_content=content,
+                original_content=request.get('content'),
                 language=lang,
                 workflow_id=polish_workflow_id
             )
@@ -152,8 +177,8 @@ async def process_subtitle_content(request_id: int, url: str, content: str, chap
     
     return results
 
-async def process_detailed_content(request_id: int, url: str, content: str, chapters: str, article, languages: list[str]) -> list[str]:
-    """处理分段详述内容"""
+async def process_detailed_content(request_id: int, languages: list[str]) -> list[str]:
+    """处理分段详述内容解析"""
     results = []
     
     # 如果只有 'na'，直接返回空结果
@@ -165,6 +190,20 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
         )
         return ["分段详述处理已跳过"]
     
+    # 获取请求信息
+    request = await SupabaseService.get_article_request(request_id)
+    if not request:
+        error_msg = "找不到请求记录"
+        await RequestLogger.error(request_id, Steps.DETAILED_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
+        
+    # 获取文章信息
+    article = await SupabaseService.get_article_by_request_id(request_id)
+    if not article:
+        error_msg = "找不到文章记录"
+        await RequestLogger.error(request_id, Steps.DETAILED_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
+    
     await RequestLogger.info(
         request_id,
         Steps.DETAILED_PROCESS,
@@ -175,7 +214,7 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
         if lang == 'na':
             continue
             
-        detailed_workflow_id = (
+        workflow_id = (
             settings.COZE_DETAILED_WORKFLOW_ID_ZH if lang == 'zh'
             else settings.COZE_DETAILED_WORKFLOW_ID_EN
         )
@@ -183,16 +222,16 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
         await RequestLogger.info(
             request_id,
             Steps.DETAILED_PROCESS,
-            f"使用工作流 {detailed_workflow_id} 处理 {lang} 语言"
+            f"使用工作流 {workflow_id} 处理 {lang} 语言"
         )
         
         try:
-            # 处理分段详述内容
+            # 添加分段详述处理
             await ContentDetailerService.process_article_content(
                 article_id=article['id'],
-                chapters=chapters,
+                chapters=request.get('chapters'),
                 language=lang,
-                workflow_id=detailed_workflow_id
+                workflow_id=workflow_id
             )
             
             msg = f"{lang} 分段详述处理完成"
@@ -297,10 +336,6 @@ async def process_article_task(request: FetchRequest):
             summary_task = asyncio.create_task(
                 process_summary_content(
                     request.id,
-                    request.parsed_url,
-                    content,
-                    chapters,
-                    article,
                     request.summary_languages
                 )
             )
@@ -309,10 +344,6 @@ async def process_article_task(request: FetchRequest):
             subtitle_task = asyncio.create_task(
                 process_subtitle_content(
                     request.id,
-                    request.parsed_url,
-                    content,
-                    chapters,
-                    article,
                     request.subtitle_languages
                 )
             )
@@ -324,10 +355,6 @@ async def process_article_task(request: FetchRequest):
             detailed_task = asyncio.create_task(
                 process_detailed_content(
                     request.id,
-                    request.parsed_url,
-                    content,
-                    chapters,
-                    article,
                     request.detailed_languages
                 )
             )
