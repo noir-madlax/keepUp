@@ -171,5 +171,12 @@ export default {
       deleteSuccess: '删除成功',
       deleteFailed: '删除失败'
     }
+  },
+  chat: {
+    actions: {
+      summary: '总结',
+      explain: '解释',
+      question: '提问'
+    }
   }
 } 

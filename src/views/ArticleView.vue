@@ -252,7 +252,11 @@
         <div class="h-[1px] bg-gray-200"></div>
 
         <!-- 文章内容部分 -->
-        <div class="p-4 md:p-8">
+        <div 
+          class="p-4 md:p-8 article-content"
+          @mouseup="handleTextSelection"
+          @touchend="handleTextSelection"
+        >
           <!-- 文章内容 -->
           <article class="prose prose-sm md:prose-lg max-w-none">
             <!-- 如果sections存在，则渲染sections -->
@@ -264,8 +268,8 @@
                 class="mb-8"
                 :data-section-type="section.section_type"
               >
-
                 <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
+                
                 <!-- 根据不同的小节类型使用不同的渲染方式 -->
                 <template v-if="section.section_type === '思维导图'">
                   <div class="flex items-center gap-2">
@@ -288,8 +292,21 @@
                   <mermaid :content="section.content" />
                 </template>
                 <template v-else>
-                  <!-- 其他小节类型使用markdown渲染 -->
-                  <div v-html="marked(section.content)"></div>
+                  <!-- 使用问题标记包装markdown内容 -->
+                  <div class="relative">
+                    <div v-html="marked(section.content)"></div>
+                    <!-- 添加section级别的问题标记 -->
+                    <template v-if="getSectionQuestionCount(section.id)">
+                      <div class="absolute right-0 top-0">
+                        <QuestionMark 
+                          :count="getSectionQuestionCount(section.id)"
+                          :mark-id="section.id.toString()"
+                        >
+                          <span class="text-gray-400 text-sm">问题</span>
+                        </QuestionMark>
+                      </div>
+                    </template>
+                  </div>
                 </template>
               </div>
             </template>
@@ -437,6 +454,12 @@
       :original-url="article?.original_link"
       :section-status="sectionStatus"
     />
+
+    <!-- 添加工具栏组件 -->
+    <ChatToolbar />
+
+    <!-- 添加聊天窗口 -->
+    <ChatWindow />
   </div>
 </template>
 
@@ -459,10 +482,15 @@ import MindMap from '../components/MindMap.vue'
 import Mermaid from '../components/Mermaid.vue'
 import { isSupportedMediaUrl } from '../utils/mediaUtils'
 import MoreContentModal from '../components/MoreContentModal.vue'
+import { useChatStore } from '../stores/chat'
+import ChatToolbar from '../components/chat/ChatToolbar.vue'
+import ChatWindow from '../components/chat/ChatWindow.vue'
+import QuestionMark from '../components/chat/QuestionMark.vue'
 
 
 // 将 i18n 相关初始化移前面
 const { t, locale } = useI18n()
+const chatStore = useChatStore()
 
 const route = useRoute()
 const router = useRouter()
@@ -1018,6 +1046,8 @@ onMounted(() => {
   window.addEventListener('resize', () => {
     isMobile.value = window.innerWidth <= 768
   })
+  console.log('ChatStore initialized:', chatStore)
+  console.log('ChatToolbar component mounted')
 })
 
 onUnmounted(() => {
@@ -1089,6 +1119,47 @@ const handleMoreContent = () => {
 // 添加控制提示显示的变量
 const showLanguageAlert = ref(false)
 const contentLanguage = ref('')
+
+// 处理文本选择
+const handleTextSelection = () => {
+  console.log('Text selection triggered')
+  const selection = window.getSelection()
+  if (!selection || selection.isCollapsed) {
+    console.log('No text selected')
+    chatStore.hideToolbar()
+    return
+  }
+
+  const range = selection.getRangeAt(0)
+  const rect = range.getBoundingClientRect()
+  
+  // 计算工具栏位置
+  const position = {
+    top: rect.bottom, // 放在选择区域下方
+    left: rect.left
+  }
+
+  // 处理边界情况
+  const viewportWidth = window.innerWidth
+  if (position.left + 200 > viewportWidth) {
+    position.left = viewportWidth - 220
+  }
+
+  // 确保不会超出底部
+  const viewportHeight = window.innerHeight
+  if (position.top + 50 > viewportHeight) { // 50 是工具栏的预估高度
+    position.top = rect.top - 50 // 如果底部放不下就放到上方
+  }
+
+  chatStore.showToolbar(position, selection.toString())
+}
+
+// 添加获取section级别问题数量的方法
+const getSectionQuestionCount = (sectionId: string) => {
+  // 这里需要实现获取section级别问题数量的逻辑
+  // 这里只是一个示例，实际实现需要根据你的需求来实现
+  return 0
+}
 </script>
 
 <style>

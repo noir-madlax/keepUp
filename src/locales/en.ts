@@ -172,5 +172,12 @@ export default {
       deleteSuccess: 'Deleted successfully',
       deleteFailed: 'Failed to delete'
     }
+  },
+  chat: {
+    actions: {
+      summary: 'Summary',
+      explain: 'Explain',
+      question: 'Question'
+    }
   }
 } 
