@@ -67,11 +67,15 @@ export default {
     fallbackLanguage: {
       zh: 'Chinese',
       en: 'English',
-      message: 'Currently displaying {language} content'
+      message: 'You are viewing the {language} version,',
+      getOtherLanguage: 'click to get summary in other languages'
     },
     preview: {
       enlarge: 'Enlarge View'
-    }
+    },
+    id: 'Article ID',
+    originalUrl: 'Original URL',
+    getOtherLanguage: 'Get Content in Other Languages'
   },
   summarize: {
     title: 'Summarize',
@@ -116,7 +120,10 @@ export default {
     fileRequired: 'Please select a file',
     fileTooLarge: 'File size cannot exceed 10MB',
     invalidFileType: 'Invalid file type. Please upload DOC, PDF, or TXT files',
-    filePlaceholder: 'Select or drag a file to upload'
+    filePlaceholder: 'Select or drag a file to upload',
+    moreContent: 'More Content',
+    alreadyExists: 'Already Exists',
+    supplementSuccess: 'Submitted successfully, content will be available in 5 minutes'
   },
   common: {
     retry: 'Retry',
@@ -164,6 +171,13 @@ export default {
     message: {
       deleteSuccess: 'Deleted successfully',
       deleteFailed: 'Failed to delete'
+    }
+  },
+  chat: {
+    actions: {
+      summary: 'Summary',
+      explain: 'Explain',
+      question: 'Question'
     }
   }
 } 

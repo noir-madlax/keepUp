@@ -67,11 +67,15 @@ export default {
     fallbackLanguage: {
       zh: '中文',
       en: '英文',
-      message: '当前显示 {language} 内容'
+      message: '当前查看的是{language}版本，',
+      getOtherLanguage: '点击获取其他语言版本'
     },
     preview: {
       enlarge: '放大显示'
-    }
+    },
+    id: '文章ID',
+    originalUrl: '原始链接',
+    getOtherLanguage: '获取其他语言内容'
   },
   summarize: {
     title: '总结',
@@ -116,7 +120,10 @@ export default {
     fileRequired: '请选择文件',
     fileTooLarge: '文件大小不能超过10MB',
     invalidFileType: '不支持的文件类型，请上传DOC、PDF或TXT文件',
-    filePlaceholder: '选择或拖拽文件上传'
+    filePlaceholder: '选择或拖拽文件上传',
+    moreContent: '更多内容',
+    alreadyExists: '已存在',
+    supplementSuccess: '提交成功，内容将在5分钟后可见'
   },
   common: {
     retry: '重试',
@@ -163,6 +170,13 @@ export default {
     message: {
       deleteSuccess: '删除成功',
       deleteFailed: '删除失败'
+    }
+  },
+  chat: {
+    actions: {
+      summary: '总结',
+      explain: '解释',
+      question: '提问'
     }
   }
 } 
