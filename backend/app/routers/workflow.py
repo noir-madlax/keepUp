@@ -471,7 +471,7 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
             "请求已接受,开始后台处理",
             metadata={
                 "platform": platform,
-                "parsed_url": parsed_url if parsed_url != original_url else None
+                "parsed_url": parsed_url
             }
         )
         
@@ -480,7 +480,7 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
             "message": "请求已接受,开始后台处理",
             "request_id": request.id,
             "platform": platform,
-            "parsed_url": parsed_url if parsed_url != original_url else None
+            "parsed_url": parsed_url
         }
         
     except Exception as e:
