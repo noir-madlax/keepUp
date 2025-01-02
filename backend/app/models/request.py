@@ -12,9 +12,18 @@ class FetchRequest(BaseModel):
     detailed_languages: List[str] = ['zh']  # 默认中文,可选 ['zh', 'en']
     platform: Optional[str] = None # 平台
     content: Optional[str] = None # 文本
+    article_id: Optional[int] = None
+    is_supplement: bool = False
 
 class ParseRequest(BaseModel):
     id: int
     url: str
     content: Optional[str] = None 
     chapters: Optional[str] = None 
+
+class AppendRequest(BaseModel):
+    """追加内容请求模型"""
+    article_id: int
+    summary_languages: List[str] = []
+    subtitle_languages: List[str] = []
+    detailed_languages: List[str] = [] 

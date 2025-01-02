@@ -208,15 +208,15 @@ class SupabaseService:
             if not article_result.data:
                 raise ValueError(f"未找到文章: {article_id}")
                 
-            url = article_result.data.get("original_link")
-            if not url:
+            original_link = article_result.data.get("original_link")
+            if not original_link:
                 raise ValueError(f"文章缺少原始链接: {article_id}")
             
             # 2. 通过URL获取请求记录
-            request_result = client.table("keep_article_requests").select("id").eq("url", url).single().execute()
+            request_result = client.table("keep_article_requests").select("id").eq("original_url", original_link).single().execute()
             
             if not request_result.data:
-                raise ValueError(f"未找到对应的请求记录: {url}")
+                raise ValueError(f"未找到对应的请求记录: {original_link}")
             
             request_id = request_result.data.get("id")
             logger.info(f"找到对应的请求ID: article_id={article_id}, request_id={request_id}")

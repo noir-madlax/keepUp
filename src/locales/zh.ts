@@ -75,7 +75,8 @@ export default {
     },
     id: '文章ID',
     originalUrl: '原始链接',
-    getOtherLanguage: '获取其他语言内容'
+    getOtherLanguage: '获取其他语言内容',
+    fetchSectionsError: '获取文章内容状态失败'
   },
   summarize: {
     title: '总结',
