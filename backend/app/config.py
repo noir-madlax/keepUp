@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     COZE_DETAILED_WORKFLOW_ID_EN: str  # 英文分段详述工作流
     COZE_WEB_SUMMARY_ID_ZH: str  # 中文网页工作流
     COZE_WEB_SUMMARY_ID_EN: str  # 英文网页工作流
+    COZE_FILE_SUMMARY_ID_ZH: str  # 中文文件工作流
+    COZE_FILE_SUMMARY_ID_EN: str  # 英文文件工作流
+
+    # 是否使用mock coze
     USE_MOCK_COZE: bool = False
     
     # AssemblyAI 配置
@@ -38,6 +42,8 @@ class Settings(BaseSettings):
         "https://*.vercel.app",
         "https://*.now.sh"
     ]
+    
+
     
     class Config:
         env_file = ".env"

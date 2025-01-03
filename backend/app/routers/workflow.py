@@ -50,17 +50,22 @@ async def process_summary_content(request_id: int, languages: list[str]) -> list
         await RequestLogger.error(request_id, Steps.SUMMARY_PROCESS, error_msg, Exception(error_msg))
         return [error_msg]
     
-    # 判断是否是网页内容
-    is_webpage = article.get('channel') == 'webpage'
+    # 判断内容类型
+    channel = article.get('channel')
     
     for lang in languages:
         # 根据内容类型和语言选择工作流ID
-        if is_webpage:
+        if channel == 'webpage':
             workflow_id = (
                 settings.COZE_WEB_SUMMARY_ID_ZH if lang == 'zh'
                 else settings.COZE_WEB_SUMMARY_ID_EN
             )
-        else:
+        elif channel == 'file':
+            workflow_id = (
+                settings.COZE_FILE_SUMMARY_ID_ZH if lang == 'zh'
+                else settings.COZE_FILE_SUMMARY_ID_EN
+            )
+        else:  # 视频类型
             workflow_id = (
                 settings.COZE_WORKFLOW_ID_ZH if lang == 'zh'
                 else settings.COZE_WORKFLOW_ID_EN
@@ -540,6 +545,7 @@ async def upload_workflow(
         # 3. 创建请求记录
         request_data = await SupabaseService.create_article_request({
             "original_url": f"file://{file.filename}",  # 添加file://前缀
+            "url": f"file://{file.filename}",
             "platform": "file", 
             "status": "pending",
             "user_id": user_id
