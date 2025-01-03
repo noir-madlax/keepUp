@@ -21,28 +21,26 @@
 <script setup lang="ts">
 import { useChatStore } from '../../stores/chat'
 import { supabase } from '../../supabaseClient'
+import type { Position } from '../../types/chat'
 
 const props = defineProps<{
   markId: string
   articleId: number
-  sectionType?: string
+  sectionType: string
   markContent: string
-  position: {
-    start: number
-    end: number
-  }
+  position: Position
 }>()
 
 const chatStore = useChatStore()
 
 const handleClick = async () => {
   try {
-    // 1. 获取该标记相关的会话
+    // 获取该标记相关的会话
     const { data: sessions, error } = await supabase
-      .from('chat_sessions')
+      .from('keep_chat_sessions')
       .select(`
         *,
-        messages:chat_messages(*)
+        messages:keep_chat_messages(*)
       `)
       .eq('article_id', props.articleId)
       .eq('mark_content', props.markContent)
@@ -54,22 +52,6 @@ const handleClick = async () => {
     if (sessions && sessions.length > 0) {
       // 加载最新的会话
       await chatStore.loadSession(sessions[0].id)
-    } else {
-      // 如果没有找到会话，创建新会话
-      await chatStore.createSession(
-        props.articleId,
-        'word',
-        props.markContent,
-        'question',
-        {
-          sectionType: props.sectionType,
-          selection: {
-            content: props.markContent,
-            type: 'word',
-            position: props.position
-          }
-        }
-      )
     }
 
     // 打开聊天窗口

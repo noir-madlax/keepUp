@@ -22,11 +22,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { useChatStore } from '../../stores/chat'
 import { useRoute } from 'vue-router'
-import type { ChatAction } from '../../types/chat'
+import type { ChatAction, Position } from '../../types/chat'
 import { useI18n } from 'vue-i18n'
+import { TextPositionHelper } from '@/utils/textPosition'
 
 const { t } = useI18n()
 const chatStore = useChatStore()
@@ -34,15 +35,8 @@ const route = useRoute()
 
 const visible = computed(() => chatStore.toolbarVisible)
 const position = computed(() => chatStore.toolbarPosition)
-
-// 添加 watch 来调试状态变化
-watch(() => chatStore.toolbarVisible, (newVal) => {
-  console.log('Toolbar visibility changed:', newVal)
-})
-
-watch(() => chatStore.toolbarPosition, (newVal) => {
-  console.log('Toolbar position changed:', newVal)
-})
+const selectedText = computed(() => chatStore.selectedText)
+const articleId = Number(route.params.id)
 
 // 定义工具栏按钮
 const actions = [
@@ -60,86 +54,60 @@ const actions = [
   }
 ]
 
-// 处理按钮点击
-const handleAction = (action: ChatAction) => {
-  let prompt = ''
-  const selectedContent = chatStore.selectedText
-  
-  // 获取选中文本的 section 信息
+// 获取当前section
+const getCurrentSection = () => {
   const selection = window.getSelection()
-  let currentSectionType: string | undefined
-  let selectionRange: Range | null = null
+  if (!selection) return null
   
-  if (selection && selection.rangeCount > 0) {
-    selectionRange = selection.getRangeAt(0)
-    // 从选中的元素向上查找，直到找到带有 data-section-type 属性的元素
-    let element: Element | null = selectionRange.commonAncestorContainer as Element
-    while (element && !element.getAttribute) {
-      element = element.parentElement
-    }
-    
-    while (element && !element.getAttribute('data-section-type')) {
-      element = element.parentElement
-    }
-    
-    // 如果找到了带有 section 信息的元素
-    if (element) {
-      currentSectionType = element.getAttribute('data-section-type') || undefined
-      console.log('Found section type:', currentSectionType)
-    }
+  const range = selection.getRangeAt(0)
+  const element = range.startContainer.parentElement
+  return element?.closest('[data-section-type]')
+}
+
+// 添加工具函数
+const getTextOffset = (text: string, selectedText: string): Position | null => {
+  const startIndex = text.indexOf(selectedText)
+  if (startIndex === -1) {
+    console.warn('无法找到选中文本的位置:', {
+      selectedText,
+      textLength: text.length,
+      textPreview: text.slice(0, 100) + '...' // 只显示前100个字符
+    })
+    return null
+  }
+  return {
+    start: startIndex,
+    end: startIndex + selectedText.length
+  }
+}
+
+const handleAction = async (type: 'summary' | 'explain' | 'question') => {
+  const currentSection = getCurrentSection()
+  if (!currentSection) return
+
+  const selection = window.getSelection()
+  if (!selection) return
+
+  const position = TextPositionHelper.capturePosition(currentSection, selection)
+  if (!position) {
+    console.warn('无法记录文本位置')
+    return
   }
 
-  // 根据动作类型生成不同的提示语
-  switch (action) {
-    case 'summary':
-      prompt = `请总结以下内容的要点：\n\n${selectedContent}`
-      break
-    case 'explain':
-      prompt = `请解释以下内容的含义：\n\n${selectedContent}`
-      break
-    case 'question':
-      prompt = `关于以下内容，我想请教：\n\n${selectedContent}`
-      break
-  }
-  
-  // 获取文章上下文信息
-  const articleId = Number(route.params.id)
-  
-  // 构建会话上下文
-  const context = {
-    articleId,
-    sectionType: currentSectionType,
-    selection: {
-      content: selectedContent,
-      type: 'word' as const,
-      position: {
-        start: selectionRange?.startOffset || 0,
-        end: selectionRange?.endOffset || 0
+  try {
+    await chatStore.createSession(
+      articleId,
+      'word',
+      selection.toString(),
+      type,
+      {
+        sectionType: currentSection.getAttribute('data-section-type'),
+        position
       }
-    },
-    action,
-    prompt
+    )
+  } catch (error) {
+    console.error('创建会话失败:', error)
   }
-  
-  // 打印完整上下文到控制台
-  console.log('Creating chat session with context:', context)
-
-  // 构建发送给聊天窗口的完整消息
-  const fullPrompt = `
-用户操作：${action}
-选中内容：${selectedContent}
-位置信息：${currentSectionType ? `在 ${currentSectionType} 部分` : '未知部分'}
-提示语：${prompt}
-  `.trim()
-
-  chatStore.hideToolbar()
-  chatStore.createSession(
-    articleId,
-    'word',
-    fullPrompt,
-    action,
-    context
-  )
 }
 </script> 
 
