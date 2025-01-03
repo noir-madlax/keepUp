@@ -8,30 +8,76 @@
       <slot></slot>
     </span>
     
-    <!-- 问题计数气泡 -->
+    <!-- 问题计数气泡 - 固定显示数字1 -->
     <span 
-      v-if="count > 0"
       class="question-count"
       @click="handleClick"
     >
-      {{ count }}
+      1
     </span>
   </span>
 </template>
 
 <script setup lang="ts">
 import { useChatStore } from '../../stores/chat'
+import { supabase } from '../../supabaseClient'
 
 const props = defineProps<{
-  count: number
   markId: string
+  articleId: number
+  sectionType?: string
+  markContent: string
+  position: {
+    start: number
+    end: number
+  }
 }>()
 
 const chatStore = useChatStore()
 
-const handleClick = () => {
-  // TODO: 加载历史会话
-  chatStore.isChatOpen = true
+const handleClick = async () => {
+  try {
+    // 1. 获取该标记相关的会话
+    const { data: sessions, error } = await supabase
+      .from('chat_sessions')
+      .select(`
+        *,
+        messages:chat_messages(*)
+      `)
+      .eq('article_id', props.articleId)
+      .eq('mark_content', props.markContent)
+      .eq('section_type', props.sectionType)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    if (sessions && sessions.length > 0) {
+      // 加载最新的会话
+      await chatStore.loadSession(sessions[0].id)
+    } else {
+      // 如果没有找到会话，创建新会话
+      await chatStore.createSession(
+        props.articleId,
+        'word',
+        props.markContent,
+        'question',
+        {
+          sectionType: props.sectionType,
+          selection: {
+            content: props.markContent,
+            type: 'word',
+            position: props.position
+          }
+        }
+      )
+    }
+
+    // 打开聊天窗口
+    chatStore.isChatOpen = true
+
+  } catch (error) {
+    console.error('加载会话失败:', error)
+  }
 }
 </script>
 
