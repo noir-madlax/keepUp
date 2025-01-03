@@ -11,23 +11,26 @@ export interface ToolbarPosition {
 // 聊天消息
 export interface ChatMessage {
   id: string
+  session_id: string
   role: ChatRole
   content: string
-  createdAt: string
+  created_at: string
 }
 
 // 聊天会话
 export interface ChatSession {
   id: string
-  articleId: number
-  userId: string
-  markType: MarkType
-  markContent: string
-  sectionType?: string
-  isPrivate: boolean
-  messages: ChatMessage[]
-  createdAt: string
-  updatedAt: string
+  article_id: number
+  user_id: string
+  mark_type: MarkType
+  mark_content: string
+  section_type?: string
+  position?: any
+  context?: any
+  is_private: boolean
+  created_at: string
+  updated_at: string
+  messages?: ChatMessage[]
 }
 
 // 问题标记
