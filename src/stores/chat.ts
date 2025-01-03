@@ -22,6 +22,7 @@ export const useChatStore = defineStore('chat', () => {
   const toolbarPosition = ref<ToolbarPosition>({ top: 0, left: 0 })
   const selectedText = ref('')
   const isLoading = ref(false)
+  const lastCreatedSession = ref<ChatSession | null>(null)
 
   // 显示工具栏
   const showToolbar = (position: ToolbarPosition, text: string) => {
@@ -42,7 +43,8 @@ export const useChatStore = defineStore('chat', () => {
     markType: MarkType, 
     content: string,
     action: ChatAction,
-    context?: any
+    context?: any,
+    skipInitialMessage: boolean = false
   ) => {
     try {
       isLoading.value = true
@@ -68,33 +70,35 @@ export const useChatStore = defineStore('chat', () => {
       if (sessionError) throw sessionError
       if (!sessionData) throw new Error('No session data returned')
 
-      // 2. 保存用户的首条消息
-      const { error: messageError } = await supabase
-        .from('keep_chat_messages')
-        .insert({
-          session_id: sessionData.id,
-          role: 'user',
-          content: content,
-          created_at: new Date().toISOString()
-        })
+      // 如果不是跳过初始消息的模式，则创建初始消息
+      if (!skipInitialMessage) {
+        // 2. 保存用户的首条消息
+        const { error: messageError } = await supabase
+          .from('keep_chat_messages')
+          .insert({
+            session_id: sessionData.id,
+            role: 'user',
+            content: content,
+            created_at: new Date().toISOString()
+          })
 
-      if (messageError) throw messageError
+        if (messageError) throw messageError
 
-      // 3. 获取AI响应
-      // TODO: 接入实际的AI服务
-      const aiResponse = `这是一个模拟的 AI 响应，基于动作类型 "${action}"，处理的内容长度为 ${content.length} 字符。`
+        // 3. 获取AI响应
+        const aiResponse = `这是一个模拟的 AI 响应，基于动作类型 "${action}"，处理的内容长度为 ${content.length} 字符。`
 
-      // 4. 保存AI响应消息
-      const { error: aiMessageError } = await supabase
-        .from('keep_chat_messages')
-        .insert({
-          session_id: sessionData.id,
-          role: 'assistant',
-          content: aiResponse,
-          created_at: new Date().toISOString()
-        })
+        // 4. 保存AI响应消息
+        const { error: aiMessageError } = await supabase
+          .from('keep_chat_messages')
+          .insert({
+            session_id: sessionData.id,
+            role: 'assistant',
+            content: aiResponse,
+            created_at: new Date().toISOString()
+          })
 
-      if (aiMessageError) throw aiMessageError
+        if (aiMessageError) throw aiMessageError
+      }
 
       // 5. 加载完整会话
       await loadSession(sessionData.id)
@@ -102,11 +106,15 @@ export const useChatStore = defineStore('chat', () => {
       // 6. 成功后再打开聊天窗口
       isChatOpen.value = true
 
+      // 保存最新创建的会话
+      lastCreatedSession.value = sessionData
+
+      return sessionData
     } catch (error) {
       console.error('创建会话失败:', error)
       ElMessage.error('创建会话失败，请重试')
-      // 发生错误时确保聊天窗口关闭
       isChatOpen.value = false
+      throw error
     } finally {
       isLoading.value = false
     }
@@ -201,7 +209,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   // 添加创建新会话的方法
-  const createNewSession = async (articleId: number) => {
+  const createNewSession = async (articleId: number, selectedText?: string, isAskAI: boolean = false) => {
     try {
       if (!authStore.user?.id) {
         throw new Error('用户未登录')
@@ -210,20 +218,43 @@ export const useChatStore = defineStore('chat', () => {
       isLoading.value = true
       isChatOpen.value = true  // 立即打开聊天窗口
       
-      // 创建一个新的会话
-      const result = await createSession(
-        articleId,
-        'section',
-        '让我们开始讨论这篇文章',
-        'question',
-        {
+      // 根据是否是 Ask AI 模式设置不同的参数
+      const sessionParams = isAskAI ? {
+        markType: 'article' as MarkType,
+        content: '',  // Ask AI 模式不需要初始内容
+        action: 'question' as ChatAction,
+        context: {
+          sectionType: 'general',
+          selection: {
+            content: '整篇文章',
+            type: 'article',
+            position: null
+          }
+        },
+        skipInitialMessage: true  // Ask AI 模式跳过初始消息
+      } : {
+        markType: 'section' as MarkType,
+        content: '让我们开始讨论这篇文章',
+        action: 'question' as ChatAction,
+        context: {
           sectionType: 'general',
           selection: {
             content: '整篇文章',
             type: 'section',
             position: null
           }
-        }
+        },
+        skipInitialMessage: false
+      }
+      
+      // 创建会话
+      const result = await createSession(
+        articleId,
+        sessionParams.markType,
+        sessionParams.content,
+        sessionParams.action,
+        sessionParams.context,
+        sessionParams.skipInitialMessage
       )
       
       // 重新加载会话列表
@@ -234,7 +265,7 @@ export const useChatStore = defineStore('chat', () => {
       console.error('创建新会话失败:', error)
       ElMessage.error(error instanceof Error ? error.message : '创建新会话失败')
       isChatOpen.value = false
-      throw error  // 向上传递错误
+      throw error
     } finally {
       isLoading.value = false
     }
@@ -254,6 +285,7 @@ export const useChatStore = defineStore('chat', () => {
     hideToolbar,
     loadSession,
     loadSessions,
-    createNewSession
+    createNewSession,
+    lastCreatedSession
   }
 }) 

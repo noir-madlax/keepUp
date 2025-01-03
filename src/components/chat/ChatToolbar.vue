@@ -95,7 +95,8 @@ const handleAction = async (type: 'summary' | 'explain' | 'question') => {
   }
 
   try {
-    await chatStore.createSession(
+    // 创建会话
+    const session = await chatStore.createSession(
       articleId,
       'word',
       selection.toString(),
@@ -105,6 +106,9 @@ const handleAction = async (type: 'summary' | 'explain' | 'question') => {
         position
       }
     )
+
+    // 打开聊天窗口
+    chatStore.isChatOpen = true
   } catch (error) {
     console.error('创建会话失败:', error)
   }

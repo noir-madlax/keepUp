@@ -1220,10 +1220,10 @@ const handleAskAI = async () => {
   }
   
   try {
-    await chatStore.createNewSession(article.value.id)
+    // 传入isAskAI参数
+    await chatStore.createNewSession(article.value.id, undefined, true)
   } catch (error) {
     console.error('创建AI对话失败:', error)
-    // 错误消息已经在 store 中处理，这里不需要重复显示
   }
 }
 
@@ -1348,6 +1348,28 @@ const renderSectionContent = (section: ArticleSection) => {
 onMounted(async () => {
   await fetchArticle()
   await fetchArticleMarks()
+})
+
+// 监听最新创建的会话
+watch(() => chatStore.lastCreatedSession, async (newSession) => {
+  if (newSession) {
+    // 重新获取文章标记
+    await fetchArticleMarks()
+    
+    // 在下一个 tick 重新处理标记
+    nextTick(() => {
+      const sections = document.querySelectorAll('[data-section-type]')
+      sections.forEach(section => {
+        if (section.getAttribute('data-section-type') === newSession.section_type) {
+          // 重新渲染该 section 的内容
+          const sectionData = sections.value.find(s => s.section_type === newSession.section_type)
+          if (sectionData) {
+            renderSectionContent(sectionData)
+          }
+        }
+      })
+    })
+  }
 })
 </script>
 
