@@ -18,15 +18,19 @@ export interface ChatMessage {
 }
 
 // 聊天会话
+export interface Position {
+  start: number
+  end: number
+}
+
 export interface ChatSession {
-  id: string
+  id?: string
   article_id: number
-  user_id: string
-  mark_type: MarkType
+  section_type: string
+  mark_type: 'word' | 'sentence' | 'section'
   mark_content: string
-  section_type?: string
-  position?: any
-  context?: any
+  position: TextMark
+  user_id: string
   is_private: boolean
   created_at: string
   updated_at: string
@@ -45,4 +49,12 @@ export interface QuestionMark {
     end: number
   }
   questionCount: number
+}
+
+// 使用统一的 TextMark 接口
+export interface TextMark {
+  nodeIndex: number
+  startOffset: number
+  endOffset: number
+  text: string
 } 

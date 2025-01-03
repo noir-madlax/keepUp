@@ -305,7 +305,7 @@
                 <template v-else>
                   <!-- 使用问题标记包装markdown内容 -->
                   <div class="relative">
-                    <div v-html="marked(section.content)"></div>
+                    <div v-html="renderSectionContent(section)"></div>
                     <!-- 添加section级别的问题标记 -->
                     <template v-if="getSectionQuestionCount(section.id)">
                       <div class="absolute right-0 top-0">
@@ -475,7 +475,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, onUnmounted } from 'vue'
+import { ref, onMounted, computed, watch, onUnmounted, nextTick, h, render } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import LoginModal from '../components/LoginModal.vue'
 import { format } from 'date-fns'
@@ -497,6 +497,9 @@ import { useChatStore } from '../stores/chat'
 import ChatToolbar from '../components/chat/ChatToolbar.vue'
 import ChatWindow from '../components/chat/ChatWindow.vue'
 import QuestionMark from '../components/chat/QuestionMark.vue'
+import { TextPositionHelper } from '@/utils/textPosition'
+import type { ChatSession } from '../types/chat'
+import type { TextMark } from '@/utils/textPosition'
 
 
 // 将 i18n 相关初始化移前面
@@ -1223,6 +1226,129 @@ const handleAskAI = async () => {
     // 错误消息已经在 store 中处理，这里不需要重复显示
   }
 }
+
+// 添加获取文章标记的方法
+const articleMarks = ref<ChatSession[]>([])
+
+const fetchArticleMarks = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('keep_chat_sessions')
+      .select('*')
+      .eq('article_id', route.params.id)
+    
+    if (error) throw error
+    if (data) {
+      articleMarks.value = data
+    }
+  } catch (error) {
+    console.error('获取文章标记失败:', error)
+  }
+}
+
+// 添加处理标记的方法
+const processQuestionMarks = () => {
+  const wrappers = document.querySelectorAll('.question-mark-wrapper')
+  wrappers.forEach(wrapper => {
+    const markId = wrapper.getAttribute('data-mark-id')
+    const articleId = wrapper.getAttribute('data-article-id')
+    const sectionType = wrapper.getAttribute('data-section-type')
+    const markContent = wrapper.getAttribute('data-mark-content')
+    const position = wrapper.getAttribute('data-position')
+
+    if (markId && articleId && sectionType && markContent && position) {
+      // 创建一个临时容器
+      const container = document.createElement('div')
+      
+      // 使用 h 函数创建 VNode
+      const vnode = h(QuestionMark, {
+        markId,
+        articleId: Number(articleId),
+        sectionType,
+        markContent,
+        position: JSON.parse(position)
+      }, () => [wrapper.textContent])
+
+      // 渲染到临时容器
+      render(vnode, container)
+      
+      // 替换原始元素
+      if (container.firstElementChild) {
+        wrapper.replaceWith(container.firstElementChild)
+      }
+    }
+  })
+}
+
+// 修改 renderSectionContent 方法
+const renderSectionContent = (section: ArticleSection) => {
+  if (!section || !section.content) {
+    console.warn('无效的 section:', section)
+    return ''
+  }
+
+  try {
+    // 先渲染 markdown
+    const htmlContent = marked(section.content)
+    const container = document.createElement('div')
+    container.innerHTML = htmlContent
+
+    // 获取该 section 的所有标记
+    const sectionMarks = articleMarks.value?.filter(
+      mark => mark.section_type === section.section_type
+    ) || []
+
+    // 处理标记
+    sectionMarks.forEach(mark => {
+      const position = mark.position || mark.context?.position
+
+      if (!position || 
+          typeof position.nodeIndex !== 'number' || 
+          typeof position.startOffset !== 'number' || 
+          typeof position.endOffset !== 'number') {
+        console.warn('无效的标记位置:', { mark, position })
+        return
+      }
+
+      const textMark: TextMark = {
+        nodeIndex: position.nodeIndex,
+        startOffset: position.startOffset,
+        endOffset: position.endOffset,
+        text: mark.mark_content
+      }
+
+      const range = TextPositionHelper.findPosition(container, textMark)
+      if (range) {
+        // 使用新的 applyMarkStyle 方法
+        const markInfo = {
+          'mark-id': mark.id,
+          'article-id': section.article_id,
+          'section-type': section.section_type,
+          'mark-content': mark.mark_content,
+          'position': JSON.stringify(mark.position)
+        }
+        
+        TextPositionHelper.applyMarkStyle(range, markInfo)
+      }
+    })
+
+    // 在处理完标记后，调用 processQuestionMarks
+    nextTick(() => {
+      processQuestionMarks()
+    })
+
+    return container.innerHTML
+  } catch (error) {
+    console.error('渲染 section 内容失败:', error)
+    return ''
+  }
+}
+
+// 在组件挂载时获取标记
+onMounted(async () => {
+  await fetchArticle()
+  await fetchArticleMarks()
+})
 </script>
 
 <style>
@@ -1375,5 +1501,22 @@ img {
 /* 确保预览容器不会滚动 */
 .overflow-hidden {
   overflow: hidden !important;
+}
+
+.wavy-underline {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: rgba(255, 200, 0, 0.3);
+  text-decoration-thickness: 2px;
+}
+
+.wavy-underline:hover {
+  text-decoration-color: rgba(255, 200, 0, 0.6);
+}
+
+/* 添加必要的样式 */
+.question-mark-wrapper {
+  position: relative;
+  display: inline-block;
 }
 </style>

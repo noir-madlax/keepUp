@@ -67,9 +67,9 @@ const props = defineProps<{
 
 const { t } = useI18n()
 
-const threshold = props.threshold || 50  // 触发刷新的阈值
+const threshold = props.threshold || 20  // 触发刷新的阈值
 const maxDistance = props.maxDistance || 100  // 最大下拉距离
-const dampingFactor = 0.4  // 阻尼系数，越大阻力越小
+const dampingFactor = 0.2  // 阻尼系数，越大阻力越小
 
 const status = ref<'pulling'|'canRelease'|'refreshing'|'success'>('pulling')
 const distance = ref(0)
