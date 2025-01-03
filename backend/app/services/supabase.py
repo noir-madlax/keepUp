@@ -3,6 +3,7 @@ from app.config import settings
 from app.utils.logger import logger
 from app.models.coze import ArticleCreate
 import json
+from typing import Optional, Dict
 
 class SupabaseService:
     _client: Client = None
@@ -207,15 +208,15 @@ class SupabaseService:
             if not article_result.data:
                 raise ValueError(f"未找到文章: {article_id}")
                 
-            url = article_result.data.get("original_link")
-            if not url:
+            original_link = article_result.data.get("original_link")
+            if not original_link:
                 raise ValueError(f"文章缺少原始链接: {article_id}")
             
             # 2. 通过URL获取请求记录
-            request_result = client.table("keep_article_requests").select("id").eq("url", url).single().execute()
+            request_result = client.table("keep_article_requests").select("id").eq("original_url", original_link).single().execute()
             
             if not request_result.data:
-                raise ValueError(f"未找到对应的请求记录: {url}")
+                raise ValueError(f"未找到对应的请求记录: {original_link}")
             
             request_id = request_result.data.get("id")
             logger.info(f"找到对应的请求ID: article_id={article_id}, request_id={request_id}")
@@ -494,3 +495,38 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"创建请求记录失败: {str(e)}", exc_info=True)
             raise
+    
+    @classmethod
+    async def get_article_by_request_id(cls, request_id: int) -> Optional[Dict]:
+        """通过请求ID获取文章信息
+        
+        Args:
+            request_id: 请求ID
+            
+        Returns:
+            Optional[Dict]: 文章信息或None
+        """
+        try:
+            # 1. 先获取请求信息
+            request = await cls.get_article_request(request_id)
+            if not request:
+                logger.error(f"找不到请求记录: request_id={request_id}")
+                return None
+            
+            # 2. 通过 original_url 查找文章
+            client = cls.get_client()
+            response = client.table('keep_articles')\
+                .select('*')\
+                .eq('original_link', request.get('original_url'))\
+                .single()\
+                .execute()
+            
+            if response.data:
+                return response.data
+            
+            logger.warning(f"找不到对应的文章: request_id={request_id}, original_url={request.get('original_url')}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"获取文章信息失败: request_id={request_id}, error={str(e)}")
+            return None

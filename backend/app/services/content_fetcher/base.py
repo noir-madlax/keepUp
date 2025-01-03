@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Dict
 from pydantic import BaseModel
 from app.models.article import ArticleCreate
+from app.models.request import FetchRequest
 
 class VideoInfo(BaseModel):
     """视频基本信息"""
@@ -16,7 +17,7 @@ class VideoInfo(BaseModel):
 class ContentFetcher(ABC):
     """内容获取基类"""
     @abstractmethod
-    async def fetch(self, url: str) -> Optional[str]:
+    async def fetch(self, url: str, request: Optional[FetchRequest] = None) -> Optional[str]:
         """获取内容"""
         pass
         

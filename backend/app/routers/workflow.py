@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
-from app.models.request import FetchRequest, ParseRequest
+from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, Form
+from app.models.request import FetchRequest, ParseRequest, AppendRequest
 from app.services.content_fetcher.service import ContentFetcherService
 from app.services.supabase import SupabaseService
 from app.utils.logger import logger
@@ -11,20 +11,19 @@ from app.services.podcast_matcher import PodcastMatcher
 from app.services.content_fetcher.youtube import YouTubeFetcher
 from app.services.content_resolver import ContentResolver
 from app.services.request_logger import RequestLogger, Steps
+from app.utils.file_processor import process_file_content
 
 import asyncio
+import json
+from typing import List
 
 router = APIRouter()
 
-async def process_summary_content(request_id: int, url: str, content: str, chapters: str, article, languages: list[str]) -> list[str]:
+async def process_summary_content(request_id: int, languages: list[str]) -> list[str]:
     """处理总结内容解析
     
     Args:
         request_id: 请求ID
-        url: 视频URL
-        content: 视频内容
-        chapters: 章节信息
-        article: 文章信息
         languages: 需要处理的语言列表
         
     Returns:
@@ -36,6 +35,20 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
         Steps.SUMMARY_PROCESS,
         f"开始总结内容处理，语言列表: {languages}"
     )
+    
+    # 获取请求信息
+    request = await SupabaseService.get_article_request(request_id)
+    if not request:
+        error_msg = "找不到请求记录"
+        await RequestLogger.error(request_id, Steps.SUMMARY_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
+        
+    # 获取文章信息
+    article = await SupabaseService.get_article_by_request_id(request_id)
+    if not article:
+        error_msg = "找不到文章记录"
+        await RequestLogger.error(request_id, Steps.SUMMARY_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
     
     # 判断是否是网页内容
     is_webpage = article.get('channel') == 'webpage'
@@ -62,9 +75,9 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
         try:
             parse_request = ParseRequest(
                 id=request_id, 
-                url=url, 
-                content=content, 
-                chapters=chapters
+                url=request.get('url'),
+                content=request.get('content'),
+                chapters=request.get('chapters')
             )
             
             coze_response = await call_coze_and_parse(
@@ -77,7 +90,7 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
             await process_coze_result(
                 coze_response, 
                 request_id, 
-                url,
+                request.get('parsed_url'),
                 article,
                 lang
             )
@@ -90,12 +103,13 @@ async def process_summary_content(request_id: int, url: str, content: str, chapt
             error_msg = f"{lang} 语言处理失败"
             await RequestLogger.error(request_id, Steps.SUMMARY_PROCESS, error_msg, e)
             results.append(error_msg)
+            logger.error(f"处理失败: {error_msg}, {e}")
             continue
     
     return results
 
 
-async def process_subtitle_content(request_id: int, url: str, content: str, chapters: str, article, languages: list[str]) -> list[str]:
+async def process_subtitle_content(request_id: int, languages: list[str]) -> list[str]:
     """处理多语言字幕内容解析"""
     results = []
     
@@ -107,6 +121,20 @@ async def process_subtitle_content(request_id: int, url: str, content: str, chap
             "字幕处理已跳过"
         )
         return ["字幕处理已跳过"]
+    
+    # 获取请求信息
+    request = await SupabaseService.get_article_request(request_id)
+    if not request:
+        error_msg = "找不到请求记录"
+        await RequestLogger.error(request_id, Steps.SUBTITLE_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
+        
+    # 获取文章信息
+    article = await SupabaseService.get_article_by_request_id(request_id)
+    if not article:
+        error_msg = "找不到文章记录"
+        await RequestLogger.error(request_id, Steps.SUBTITLE_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
     
     await RequestLogger.info(
         request_id,
@@ -133,7 +161,7 @@ async def process_subtitle_content(request_id: int, url: str, content: str, chap
             # 添加内容润色处理
             await ContentPolisherService.process_article_content(
                 article_id=article['id'],
-                original_content=content,
+                original_content=request.get('content'),
                 language=lang,
                 workflow_id=polish_workflow_id
             )
@@ -150,8 +178,8 @@ async def process_subtitle_content(request_id: int, url: str, content: str, chap
     
     return results
 
-async def process_detailed_content(request_id: int, url: str, content: str, chapters: str, article, languages: list[str]) -> list[str]:
-    """处理分段详述内容"""
+async def process_detailed_content(request_id: int, languages: list[str]) -> list[str]:
+    """处理分段详述内容解析"""
     results = []
     
     # 如果只有 'na'，直接返回空结果
@@ -163,6 +191,20 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
         )
         return ["分段详述处理已跳过"]
     
+    # 获取请求信息
+    request = await SupabaseService.get_article_request(request_id)
+    if not request:
+        error_msg = "找不到请求记录"
+        await RequestLogger.error(request_id, Steps.DETAILED_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
+        
+    # 获取文章信息
+    article = await SupabaseService.get_article_by_request_id(request_id)
+    if not article:
+        error_msg = "找不到文章记录"
+        await RequestLogger.error(request_id, Steps.DETAILED_PROCESS, error_msg, Exception(error_msg))
+        return [error_msg]
+    
     await RequestLogger.info(
         request_id,
         Steps.DETAILED_PROCESS,
@@ -173,7 +215,7 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
         if lang == 'na':
             continue
             
-        detailed_workflow_id = (
+        workflow_id = (
             settings.COZE_DETAILED_WORKFLOW_ID_ZH if lang == 'zh'
             else settings.COZE_DETAILED_WORKFLOW_ID_EN
         )
@@ -181,16 +223,16 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
         await RequestLogger.info(
             request_id,
             Steps.DETAILED_PROCESS,
-            f"使用工作流 {detailed_workflow_id} 处理 {lang} 语言"
+            f"使用工作流 {workflow_id} 处理 {lang} 语言"
         )
         
         try:
-            # 处理分段详述内容
+            # 添加分段详述处理
             await ContentDetailerService.process_article_content(
                 article_id=article['id'],
-                chapters=chapters,
+                chapters=request.get('chapters'),
                 language=lang,
-                workflow_id=detailed_workflow_id
+                workflow_id=workflow_id
             )
             
             msg = f"{lang} 分段详述处理完成"
@@ -205,7 +247,58 @@ async def process_detailed_content(request_id: int, url: str, content: str, chap
     
     return results
 
-# 将原来的处理逻辑封装成一个独立的后台任务函数
+async def process_multilingual_tasks(request_id: int, summary_languages: List[str], subtitle_languages: List[str], detailed_languages: List[str]) -> None:
+    """处理多语言任务
+    
+    Args:
+        request_id: 请求ID
+        summary_languages: 需要处理的摘要语言列表
+        subtitle_languages: 需要处理的字幕语言列表
+        detailed_languages: 需要处理的详述语言列表
+    """
+    # 创建异步任务
+    async with RequestLogger.step_context(request_id, Steps.SUMMARY_PROCESS):
+        summary_task = asyncio.create_task(
+            process_summary_content(
+                request_id,
+                summary_languages
+            )
+        )
+
+    async with RequestLogger.step_context(request_id, Steps.SUBTITLE_PROCESS):
+        subtitle_task = asyncio.create_task(
+            process_subtitle_content(
+                request_id,
+                subtitle_languages
+            )
+        )
+
+    # 等待summary_task完成
+    summary_result = await summary_task
+
+    async with RequestLogger.step_context(request_id, Steps.DETAILED_PROCESS):
+        detailed_task = asyncio.create_task(
+            process_detailed_content(
+                request_id,
+                detailed_languages
+            )
+        )
+
+    # 等待所有任务完成
+    results = await asyncio.gather(
+        summary_task,
+        subtitle_task,
+        detailed_task,
+        return_exceptions=True
+    )
+    
+    await RequestLogger.info(
+        request_id,
+        Steps.PROCESS_COMPLETE,
+        "多语言处理完成",
+        metadata={"results": results}
+    )
+
 async def process_article_task(request: FetchRequest):
     try:
         await RequestLogger.info(
@@ -216,7 +309,7 @@ async def process_article_task(request: FetchRequest):
         
         # 2. 获取视频基础信息
         async with RequestLogger.step_context(request.id, Steps.VIDEO_INFO_FETCH):
-            service = ContentFetcherService()
+            service = ContentFetcherService(request)
             video_info = await service.get_video_info(request.parsed_url)
             
             if not video_info:
@@ -290,59 +383,12 @@ async def process_article_task(request: FetchRequest):
         # 等待确保数据已保存
         await asyncio.sleep(1)
 
-        # 创建异步任务
-        async with RequestLogger.step_context(request.id, Steps.SUMMARY_PROCESS):
-            summary_task = asyncio.create_task(
-                process_summary_content(
-                    request.id,
-                    request.parsed_url,
-                    content,
-                    chapters,
-                    article,
-                    request.summary_languages
-                )
-            )
-
-        async with RequestLogger.step_context(request.id, Steps.SUBTITLE_PROCESS):
-            subtitle_task = asyncio.create_task(
-                process_subtitle_content(
-                    request.id,
-                    request.parsed_url,
-                    content,
-                    chapters,
-                    article,
-                    request.subtitle_languages
-                )
-            )
-
-        # 等待summary_task完成
-        summary_result = await summary_task
-
-        async with RequestLogger.step_context(request.id, Steps.DETAILED_PROCESS):
-            detailed_task = asyncio.create_task(
-                process_detailed_content(
-                    request.id,
-                    request.parsed_url,
-                    content,
-                    chapters,
-                    article,
-                    request.detailed_languages
-                )
-            )
-
-        # 等待所有任务完成
-        results = await asyncio.gather(
-            summary_task,
-            subtitle_task,
-            detailed_task,
-            return_exceptions=True
-        )
-        
-        await RequestLogger.info(
+        # 处理多语言任务
+        await process_multilingual_tasks(
             request.id,
-            Steps.PROCESS_COMPLETE,
-            "后台处理完成",
-            metadata={"results": results}
+            request.summary_languages,
+            request.subtitle_languages,
+            request.detailed_languages
         )
         
     except Exception as e:
@@ -442,7 +488,7 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
             "请求已接受,开始后台处理",
             metadata={
                 "platform": platform,
-                "parsed_url": parsed_url if parsed_url != original_url else None
+                "parsed_url": parsed_url
             }
         )
         
@@ -451,7 +497,7 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
             "message": "请求已接受,开始后台处理",
             "request_id": request.id,
             "platform": platform,
-            "parsed_url": parsed_url if parsed_url != original_url else None
+            "parsed_url": parsed_url
         }
         
     except Exception as e:
@@ -463,4 +509,111 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
                 "failed",
                 error_message=str(e)
             )
+        raise HTTPException(status_code=500, detail=str(e)) 
+
+@router.post("/workflow/upload")
+async def upload_workflow(
+    file: UploadFile,
+    summary_languages: str = Form(...),
+    user_id: str = Form(...),
+    background_tasks: BackgroundTasks = BackgroundTasks()
+):
+    """处理文件上传请求"""
+    try:
+        # 1. 验证文件类型
+        file_extension = file.filename.split('.')[-1].lower()
+        if file_extension not in ['pdf', 'doc', 'docx', 'txt']:
+            return {
+                "success": False,
+                "message": "不支持的文件类型"
+            }
+            
+        # 2. 验证文件大小（10MB限制）
+        MAX_SIZE = 10 * 1024 * 1024  # 10MB
+        content = await file.read()
+        if len(content) > MAX_SIZE:
+            return {
+                "success": False,
+                "message": "文件大小超过限制"
+            }
+                
+        # 3. 创建请求记录
+        request_data = await SupabaseService.create_article_request({
+            "original_url": f"file://{file.filename}",  # 添加file://前缀
+            "platform": "file", 
+            "status": "pending",
+            "user_id": user_id
+        })
+        request_id = request_data["id"]
+        
+        # 4. 处理文件内容
+        text_content = await process_file_content(content, file_extension)
+        
+        if not text_content:
+            await SupabaseService.update_status(request_id, "failed", "文件内容提取失败")
+            return {
+                "success": False,
+                "message": "文件内容提取失败"
+            }
+        
+        logger.info(f"文件内容提取成功: {len(text_content)} 字符")
+            
+        # 5. 创建处理请求对象
+        file_request = FetchRequest(
+            id=request_id,
+            original_url=f"file://{file.filename}",
+            parsed_url=f"file://{file.filename}",
+            platform="file",
+            content=text_content,  # 添加解析后的文本内容
+            summary_languages=json.loads(summary_languages),
+            subtitle_languages=["na"],
+            detailed_languages=["na"],
+            user_id=user_id
+        )
+        
+        # 6. 异步启动处理任务
+        background_tasks.add_task(process_article_task, file_request)
+        
+        return {
+            "success": True,
+            "message": "文件已接收，开始处理",
+            "request_id": request_id
+        }
+        
+    except Exception as e:
+        logger.error(f"文件上传处理失败: {str(e)}")
+        return {
+            "success": False,
+            "message": str(e)
+        } 
+
+@router.post("/workflow/append")
+async def append_workflow(
+    request: AppendRequest,
+    background_tasks: BackgroundTasks
+):
+    """处理内容补充请求"""
+    try:
+        # 1. 获取原始请求信息
+        request_id = await SupabaseService.get_request_id_by_article_id(request.article_id)
+        if not request_id:
+            raise HTTPException(status_code=404, detail="找不到原始文章请求")
+
+        # 2. 启动后台处理任务
+        background_tasks.add_task(
+            process_multilingual_tasks,
+            request_id,
+            request.summary_languages,
+            request.subtitle_languages,
+            request.detailed_languages
+        )
+        
+        return {
+            "success": True,
+            "message": "补充请求已接受，开始处理",
+            "request_id": request_id
+        }
+        
+    except Exception as e:
+        logger.error(f"创建补充请求失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 

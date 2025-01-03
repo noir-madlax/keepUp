@@ -243,15 +243,13 @@ const handleSubmit = async () => {
     // 准备提交数据
     const requestData = {
       article_id: props.articleId,
-      original_url: props.originalUrl,
-      is_supplement: true,
       summary_languages: summaryLanguages.value,
       detailed_languages: detailedLanguages.value,
       subtitle_languages: subtitleLanguages.value
     }
 
     // 发送请求
-    const response = await fetch('/api/workflow/process', {
+    const response = await fetch('/api/workflow/append', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

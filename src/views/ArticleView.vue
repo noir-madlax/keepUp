@@ -1101,18 +1101,50 @@ const isMediaArticle = computed(() => {
   return article.value && isSupportedMediaUrl(article.value.original_link || '')
 })
 
-// 获取文章各部分内容的状态
-const sectionStatus = computed(() => {
-  if (!sections.value) return null
-  
-  return {
-    summaryZh: sections.value.some(s => s.section_type === '总结' && s.language === 'zh'),
-    summaryEn: sections.value.some(s => s.section_type === '总结' && s.language === 'en'),
-    detailedZh: sections.value.some(s => s.section_type === '分段详述' && s.language === 'zh'),
-    detailedEn: sections.value.some(s => s.section_type === '分段详述' && s.language === 'en'),
-    subtitleZh: sections.value.some(s => s.section_type === '原文字幕' && s.language === 'zh'),
-    subtitleEn: sections.value.some(s => s.section_type === '原文字幕' && s.language === 'en')
+// 定义响应式状态
+const sectionStatus = ref({
+  summaryZh: false,
+  summaryEn: false,
+  detailedZh: false,
+  detailedEn: false,
+  subtitleZh: false,
+  subtitleEn: false
+})
+
+// 获取所有语言的sections
+const fetchAllSections = async () => {
+  try {
+    const { data: allSections, error } = await supabase
+      .from('keep_article_sections')
+      .select('section_type, language')
+      .eq('article_id', route.params.id)
+
+    if (error) throw error
+
+    if (allSections) {
+      sectionStatus.value = {
+        summaryZh: allSections.some(s => s.section_type === '总结' && s.language === 'zh'),
+        summaryEn: allSections.some(s => s.section_type === '总结' && s.language === 'en'),
+        detailedZh: allSections.some(s => s.section_type === '分段详述' && s.language === 'zh'),
+        detailedEn: allSections.some(s => s.section_type === '分段详述' && s.language === 'en'),
+        subtitleZh: allSections.some(s => s.section_type === '原文字幕' && s.language === 'zh'),
+        subtitleEn: allSections.some(s => s.section_type === '原文字幕' && s.language === 'en')
+      }
+    }
+  } catch (error) {
+    console.error('获取sections状态失败:', error)
+    ElMessage.error(t('article.fetchSectionsError'))
   }
+}
+
+// 在组件挂载时获取sections状态
+onMounted(() => {
+  fetchAllSections()
+})
+
+// 当路由参数变化时重新获取
+watch(() => route.params.id, () => {
+  fetchAllSections()
 })
 
 // 控制更多内容 modal 的显示

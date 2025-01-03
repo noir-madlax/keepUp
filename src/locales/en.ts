@@ -75,7 +75,8 @@ export default {
     },
     id: 'Article ID',
     originalUrl: 'Original URL',
-    getOtherLanguage: 'Get Content in Other Languages'
+    getOtherLanguage: 'Get Content in Other Languages',
+    fetchSectionsError: 'Failed to fetch article sections status'
   },
   summarize: {
     title: 'Summarize',
