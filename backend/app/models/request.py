@@ -13,7 +13,6 @@ class FetchRequest(BaseModel):
     platform: Optional[str] = None # 平台
     content: Optional[str] = None # 文本
     article_id: Optional[int] = None
-    is_supplement: bool = False
 
 class ParseRequest(BaseModel):
     id: int
