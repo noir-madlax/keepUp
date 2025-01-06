@@ -386,18 +386,11 @@
     </div>
 
     <!-- 登录模态框 -->
-    <div 
-      v-if="showLoginModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      @click="showLoginModal = false"
-    >
-      <div @click.stop>
-        <login-modal 
-          v-model="showLoginModal"
-          @login-success="showLoginModal = false"
-        />
-      </div>
-    </div>
+    <login-modal 
+      v-if="showLoginModal" 
+      @close="showLoginModal = false"
+      @success="handleLoginSuccess"
+    />
 
     <!-- 预览模态框 -->
     <div 
