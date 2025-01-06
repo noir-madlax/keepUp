@@ -124,7 +124,16 @@ export default {
     filePlaceholder: 'Select or drag a file to upload',
     moreContent: 'More Content',
     alreadyExists: 'Already Exists',
-    supplementSuccess: 'Submitted successfully, content will be available in 5 minutes'
+    supplementSuccess: 'Submitted successfully, content will be available in 5 minutes',
+    fileSummaryLanguageTitle: 'Select Summary Language',
+    fileSummaryLanguageTitleNote: '(Summarize the core points from the file)',
+    uploadProgress: 'Upload Progress: {progress}%',
+    uploadComplete: 'Upload Complete',
+    uploadFailed: 'Upload Failed',
+    fileProcessing: 'File Processing: {progress}%',
+    fileProcessingComplete: 'File Processing Complete',
+    fileProcessingFailed: 'File Processing Failed',
+    summaryLanguageRequired: 'Please select at least one summary language'
   },
   common: {
     retry: 'Retry',

@@ -270,7 +270,7 @@
                       {{ t('summarize.browseFiles') }}
                     </button>
                     <p class="text-xs text-gray-400 mt-2">
-                      {{ t('summarize.supportedFormats') }}: DOC, PDF, TXT ({{ t('summarize.maxSize') }}: 10MB)
+                      {{ t('summarize.supportedFormats') }}: DOC, PDF, TXT ({{ t('summarize.maxSize') }}: 30MB)
                     </p>
                   </div>
 
@@ -709,8 +709,8 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
 const isDragging = ref(false)
 
-// 文件大小限制（10MB）
-const MAX_FILE_SIZE = 10 * 1024 * 1024
+// 文件大小限制（30MB）
+const MAX_FILE_SIZE = 30 * 1024 * 1024
 
 // 获取文件图标
 const getFileIcon = (filename: string): string => {

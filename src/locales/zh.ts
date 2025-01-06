@@ -124,7 +124,16 @@ export default {
     filePlaceholder: '选择或拖拽文件上传',
     moreContent: '更多内容',
     alreadyExists: '已存在',
-    supplementSuccess: '提交成功，内容将在5分钟后可见'
+    supplementSuccess: '提交成功，内容将在5分钟后可见',
+    fileSummaryLanguageTitle: '选择总结语言',
+    fileSummaryLanguageTitleNote: '(从文件中总结出核心要点)',
+    uploadProgress: '上传进度: {progress}%',
+    uploadComplete: '上传完成',
+    uploadFailed: '上传失败',
+    fileProcessing: '文件处理中: {progress}%',
+    fileProcessingComplete: '文件处理完成',
+    fileProcessingFailed: '文件处理失败',
+    summaryLanguageRequired: '请至少选择一种总结语言'
   },
   common: {
     retry: '重试',
