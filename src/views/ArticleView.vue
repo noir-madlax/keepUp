@@ -1228,7 +1228,7 @@ const handleAskAI = async () => {
   }
   
   try {
-    // 传入isAskAI参数
+    // 传入isAskAI参数，第三个变量为ture
     await chatStore.createNewSession(article.value.id, undefined, true)
   } catch (error) {
     console.error('创建AI对话失败:', error)

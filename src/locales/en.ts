@@ -188,6 +188,9 @@ export default {
       summary: 'Summary',
       explain: 'Explain',
       question: 'Question'
+    },
+    input: {
+      placeholder: 'How can I help you today?'
     }
   }
 } 

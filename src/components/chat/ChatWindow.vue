@@ -27,15 +27,7 @@
           />
         </el-select>
       </div>
-      <button 
-        @click="chatStore.isChatOpen = false"
-        class="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-      >
-        <span class="sr-only">Close</span>
-        <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-        </svg>
-      </button>
+      <CloseButton @click="chatStore.isChatOpen = false" />
     </div>
 
     <!-- 消息列表 减去导航栏高度和其他元素高度 -->
@@ -64,11 +56,30 @@
           </div>
         </div>
       </template>
-      <div v-else-if="chatStore.isLoading" class="text-center text-gray-500">
-        <el-icon class="animate-spin mr-2">
-          <Loading />
-        </el-icon>
-        加载中...
+      <div v-else-if="chatStore.isLoading || chatStore.isInitializing" class="space-y-4 animate-pulse">
+        <!-- AI消息骨架 -->
+        <div class="flex justify-start">
+          <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+            <div class="h-2 bg-gray-200 rounded-full w-[180px]"></div>
+            <div class="h-2 bg-gray-200 rounded-full w-[120px]"></div>
+          </div>
+        </div>
+        
+        <!-- 用户消息骨架 -->
+        <div class="flex justify-end">
+          <div class="max-w-[80%] space-y-2 bg-blue-100 rounded-lg px-4 py-3">
+            <div class="h-2 bg-blue-200 rounded-full w-[160px]"></div>
+            <div class="h-2 bg-blue-200 rounded-full w-[100px]"></div>
+          </div>
+        </div>
+
+        <!-- AI第二条消息骨架 -->
+        <div class="flex justify-start">
+          <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+            <div class="h-2 bg-gray-200 rounded-full w-[200px]"></div>
+            <div class="h-2 bg-gray-200 rounded-full w-[140px]"></div>
+          </div>
+        </div>
       </div>
       <div v-else class="text-center text-gray-500">
         开始对话...
@@ -81,7 +92,7 @@
         <input
           v-model="messageInput"
           type="text"
-          placeholder="输入消息..."
+          :placeholder="$t('chat.input.placeholder')"
           class="flex-1 px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           :disabled="chatStore.isLoading"
         />
@@ -106,6 +117,7 @@ import { useChatStore } from '../../stores/chat'
 import { Loading } from '@element-plus/icons-vue'
 import { format } from 'date-fns'
 import type { ChatSession } from '../../types/chat'
+import CloseButton from '../common/CloseButton.vue'
 
 const chatStore = useChatStore()
 const messageInput = ref('')

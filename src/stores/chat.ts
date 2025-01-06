@@ -23,6 +23,7 @@ export const useChatStore = defineStore('chat', () => {
   const selectedText = ref('')
   const isLoading = ref(false)
   const lastCreatedSession = ref<ChatSession | null>(null)
+  const isInitializing = ref(false)
 
   // 显示工具栏
   const showToolbar = (position: ToolbarPosition, text: string) => {
@@ -48,6 +49,8 @@ export const useChatStore = defineStore('chat', () => {
   ) => {
     try {
       isLoading.value = true
+      isInitializing.value = true
+      currentSession.value = null
       
       // 1. 创建会话记录
       const { data: sessionData, error: sessionError } = await supabase
@@ -72,7 +75,7 @@ export const useChatStore = defineStore('chat', () => {
 
       // 如果不是跳过初始消息的模式，则创建初始消息
       if (!skipInitialMessage) {
-        // 2. 保存用户的首条消息
+        // 2. 保存用户的首条消息和AI响应
         const { error: messageError } = await supabase
           .from('keep_chat_messages')
           .insert({
@@ -100,20 +103,24 @@ export const useChatStore = defineStore('chat', () => {
         if (aiMessageError) throw aiMessageError
       }
 
-      // 5. 加载完整会话
+      // 3. 先加载会话内容
       await loadSession(sessionData.id)
       
-      // 6. 成功后再打开聊天窗口
+      // 4. 延迟关闭初始化状态
+      setTimeout(() => {
+        isInitializing.value = false
+      }, 1000)
+      
+      // 5. 设置状态
       isChatOpen.value = true
-
-      // 保存最新创建的会话
       lastCreatedSession.value = sessionData
-
+      
       return sessionData
     } catch (error) {
       console.error('创建会话失败:', error)
       ElMessage.error('创建会话失败，请重试')
       isChatOpen.value = false
+      isInitializing.value = false
       throw error
     } finally {
       isLoading.value = false
@@ -146,8 +153,8 @@ export const useChatStore = defineStore('chat', () => {
     if (!currentSession.value) return
     
     try {
-      isLoading.value = true
-
+      isLoading.value = false
+      
       // 1. 保存用户消息
       const { error: messageError } = await supabase
         .from('keep_chat_messages')
@@ -286,6 +293,7 @@ export const useChatStore = defineStore('chat', () => {
     loadSession,
     loadSessions,
     createNewSession,
-    lastCreatedSession
+    lastCreatedSession,
+    isInitializing
   }
 }) 

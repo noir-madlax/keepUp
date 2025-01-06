@@ -95,19 +95,39 @@ const handleAction = async (type: 'summary' | 'explain' | 'question') => {
   }
 
   try {
-    // 创建会话
-    const session = await chatStore.createSession(
-      articleId,
-      'word',
-      selection.toString(),
-      type,
-      {
-        sectionType: currentSection.getAttribute('data-section-type'),
-        position
-      }
-    )
+    // 2024-03-14: 根据动作类型使用不同的参数
+    if (type === 'question') {
+      // 问题模式：跳过初始消息，等待用户输入
+      const session = await chatStore.createSession(
+        articleId,
+        'word',
+        selection.toString(),
+        type,
+        {
+          sectionType: currentSection.getAttribute('data-section-type'),
+          position,
+          selection: {
+            content: selection.toString(),
+            type: 'word',
+            position
+          }
+        },
+        true  // skipInitialMessage = true
+      )
+    } else {
+      // 总结和解释模式：保持原有逻辑
+      const session = await chatStore.createSession(
+        articleId,
+        'word',
+        selection.toString(),
+        type,
+        {
+          sectionType: currentSection.getAttribute('data-section-type'),
+          position
+        }
+      )
+    }
 
-    // 打开聊天窗口
     chatStore.isChatOpen = true
   } catch (error) {
     console.error('创建会话失败:', error)

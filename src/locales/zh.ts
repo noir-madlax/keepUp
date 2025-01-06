@@ -187,6 +187,9 @@ export default {
       summary: '总结',
       explain: '解释',
       question: '提问'
+    },
+    input: {
+      placeholder: '需要我为您做些什么？'
     }
   }
 } 
