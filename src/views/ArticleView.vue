@@ -46,8 +46,9 @@
                 alt="User Avatar" 
                 class="w-[32px] h-[32px] rounded-full"
               />
-              <!-- 登出按钮 - 增加最小宽度确保字完整显示 -->
+              <!-- 登出按钮 -->
               <button 
+                @click="handleLogout"
                 class="text-gray-600 hover:text-gray-800 min-w-[64px] h-[32px] text-center"
               >
                 {{ t('home.nav.logout') }}
@@ -57,6 +58,7 @@
             <!-- 未登录状态显示 -->
             <template v-else>
               <button 
+                @click="showLoginModal = true"
                 class="w-[32px] h-[32px] flex items-center justify-center"
               >
                 <img 
@@ -384,18 +386,11 @@
     </div>
 
     <!-- 登录模态框 -->
-    <div 
-      v-if="showLoginModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      @click="showLoginModal = false"
-    >
-      <div @click.stop>
-        <login-modal 
-          v-model="showLoginModal"
-          @login-success="showLoginModal = false"
-        />
-      </div>
-    </div>
+    <login-modal 
+      v-if="showLoginModal" 
+      @close="showLoginModal = false"
+      @success="handleLoginSuccess"
+    />
 
     <!-- 预览模态框 -->
     <div 
@@ -1379,6 +1374,13 @@ watch(() => chatStore.lastCreatedSession, async (newSession) => {
     })
   }
 })
+
+// 处理登录成功
+const handleLoginSuccess = () => {
+  showLoginModal.value = false
+  // 2024-01-09: 移除登录成功提示,避免重复提示
+  // ElMessage.success(t('auth.loginSuccess')) // 删除这行
+}
 </script>
 
 <style>

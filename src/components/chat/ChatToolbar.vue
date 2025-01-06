@@ -12,7 +12,8 @@
       <button 
         v-for="action in actions"
         :key="action.type"
-        @click="handleAction(action.type)"
+        @click.prevent="handleAction(action.type)"
+        @touchstart.prevent="handleAction(action.type)"
         class="px-3 py-1 text-sm rounded hover:bg-gray-100 transition-colors flex items-center gap-1"
       >
         {{ action.label }}
@@ -24,13 +25,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useChatStore } from '../../stores/chat'
+import { useAuthStore } from '../../stores/auth'
 import { useRoute } from 'vue-router'
 import type { ChatAction, Position } from '../../types/chat'
 import { useI18n } from 'vue-i18n'
 import { TextPositionHelper } from '@/utils/textPosition'
+import { ElMessage } from 'element-plus'
 
 const { t } = useI18n()
 const chatStore = useChatStore()
+const authStore = useAuthStore()
 const route = useRoute()
 
 const visible = computed(() => chatStore.toolbarVisible)
@@ -82,6 +86,14 @@ const getTextOffset = (text: string, selectedText: string): Position | null => {
 }
 
 const handleAction = async (type: 'summary' | 'explain' | 'question') => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning(t('auth.loginRequired'))
+    chatStore.hideToolbar()
+    return
+  }
+
+  const selectedContent = window.getSelection()?.toString() || ''
+  
   const currentSection = getCurrentSection()
   if (!currentSection) return
 
@@ -95,31 +107,28 @@ const handleAction = async (type: 'summary' | 'explain' | 'question') => {
   }
 
   try {
-    // 2024-03-14: 根据动作类型使用不同的参数
     if (type === 'question') {
-      // 问题模式：跳过初始消息，等待用户输入
       const session = await chatStore.createSession(
         articleId,
         'word',
-        selection.toString(),
+        selectedContent,
         type,
         {
           sectionType: currentSection.getAttribute('data-section-type'),
           position,
           selection: {
-            content: selection.toString(),
+            content: selectedContent,
             type: 'word',
             position
           }
         },
-        true  // skipInitialMessage = true
+        true
       )
     } else {
-      // 总结和解释模式：保持原有逻辑
       const session = await chatStore.createSession(
         articleId,
         'word',
-        selection.toString(),
+        selectedContent,
         type,
         {
           sectionType: currentSection.getAttribute('data-section-type'),
@@ -136,6 +145,12 @@ const handleAction = async (type: 'summary' | 'explain' | 'question') => {
 </script> 
 
 <style scoped>
+.toolbar-container button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
 .toolbar-container {
   position: fixed;
   top: 0;
