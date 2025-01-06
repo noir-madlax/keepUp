@@ -46,8 +46,9 @@
                 alt="User Avatar" 
                 class="w-[32px] h-[32px] rounded-full"
               />
-              <!-- 登出按钮 - 增加最小宽度确保字完整显示 -->
+              <!-- 登出按钮 -->
               <button 
+                @click="handleLogout"
                 class="text-gray-600 hover:text-gray-800 min-w-[64px] h-[32px] text-center"
               >
                 {{ t('home.nav.logout') }}
@@ -57,6 +58,7 @@
             <!-- 未登录状态显示 -->
             <template v-else>
               <button 
+                @click="showLoginModal = true"
                 class="w-[32px] h-[32px] flex items-center justify-center"
               >
                 <img 
@@ -1379,6 +1381,12 @@ watch(() => chatStore.lastCreatedSession, async (newSession) => {
     })
   }
 })
+
+// 处理登录成功
+const handleLoginSuccess = () => {
+  showLoginModal.value = false
+  ElMessage.success(t('auth.loginSuccess'))
+}
 </script>
 
 <style>

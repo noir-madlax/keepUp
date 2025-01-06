@@ -192,5 +192,17 @@ export default {
     input: {
       placeholder: 'How can I help you today?'
     }
+  },
+  auth: {
+    loginSuccess: 'Login successful',
+    logoutSuccess: 'Logout successful',
+    logoutError: 'Logout failed',
+    loginRequired: 'Please login first'
+  },
+  error: {
+    updateFailed: 'Update failed, please try again',
+    systemError: 'System error, please try again later',
+    articleFetchFailed: 'Failed to fetch article',
+    updateSuccess: 'Update successful'
   }
 } 

@@ -191,5 +191,17 @@ export default {
     input: {
       placeholder: '需要我为您做些什么？'
     }
+  },
+  auth: {
+    loginSuccess: '登录成功',
+    logoutSuccess: '已退出登录',
+    logoutError: '退出失败',
+    loginRequired: '请先登录'
+  },
+  error: {
+    updateFailed: '更新失败，请重试',
+    systemError: '系统错误，请稍后重试',
+    articleFetchFailed: '获取文章失败',
+    updateSuccess: '更新成功'
   }
 } 
