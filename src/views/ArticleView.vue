@@ -1378,7 +1378,8 @@ watch(() => chatStore.lastCreatedSession, async (newSession) => {
 // 处理登录成功
 const handleLoginSuccess = () => {
   showLoginModal.value = false
-  ElMessage.success(t('auth.loginSuccess'))
+  // 2024-01-09: 移除登录成功提示,避免重复提示
+  // ElMessage.success(t('auth.loginSuccess')) // 删除这行
 }
 </script>
 
