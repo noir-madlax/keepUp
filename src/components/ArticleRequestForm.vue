@@ -632,10 +632,16 @@ onUnmounted(() => {
 })
 
 // 修改 openModalWithUrl 方法
-const openModalWithUrl = (url: string) => {
-  // 移除登录检查，由父组件统一处理
-  requestUrl.value = url
-  showUploadModal.value = true
+const openModalWithUrl = (url: string, type: 'url' | 'web' | 'file' = 'url') => {
+  // 2024-03-14: 根据类型打开不同的 modal
+  if (type === 'file') {
+    showFileUploadModal.value = true
+    isFileMode.value = true
+  } else {
+    requestUrl.value = url
+    showUploadModal.value = true
+    isFileMode.value = false
+  }
 }
 
 // 暴露方法给父组件

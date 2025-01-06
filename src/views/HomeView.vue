@@ -938,7 +938,8 @@ const handlePaste = async () => {
 const pendingUrl = ref('')
 
 // 修改 submitRequest 函数
-const submitRequest = async (url?: string) => {
+const submitRequest = async (url?: string, type: 'url' | 'web' | 'file' = 'url') => {
+  // 2024-03-14: 添加类型参数处理
   // 如果没有传入url，则使用输入框的值
   let uploadUrl = url || requestUrl.value
   
@@ -955,9 +956,10 @@ const submitRequest = async (url?: string) => {
     await authStore.loadUser()
   }
   
-  // 已登录则正常打开上传modal
+  // 已登录则根据类型打开对应的modal
   if (articleRequestFormRef.value) {
-    articleRequestFormRef.value.openModalWithUrl(uploadUrl)
+    // 2024-03-14: 根据类型调用不同的打开方式
+    articleRequestFormRef.value.openModalWithUrl(uploadUrl, type)
   }
 }
 

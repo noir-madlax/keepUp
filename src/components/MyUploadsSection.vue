@@ -29,7 +29,7 @@
         <!-- NewUploadCard 固定在第一个位置 -->
         <div class="upload-container flex-shrink-0">
           <!-- 新增可点击区域容器 -->
-          <div class="clickable-area" @click="handleNewUploadClick">
+          <div class="clickable-area" @click="handleNewUploadClick('url', $event)">
             <!-- Upload Icon -->
             <div class="upload-icon">
               <img src="/images/icons/upload.svg" alt="Upload" class="w-[43px] h-[43px]">
@@ -67,7 +67,7 @@
          <!-- NewUploadCard2 固定文章上传的卡片在第二个位置 -->
          <div class="web-content-container flex-shrink-0">
           <!-- 新增可点击区域容器 -->
-          <div class="clickable-area" @click="handleNewUploadClick">
+          <div class="clickable-area" @click="handleNewUploadClick('web', $event)">
             <!-- Upload Icon -->
             <div class="upload-icon">
               <img src="/images/icons/web.svg" alt="Upload" class="w-[45px] h-[45px] object-contain">
@@ -85,7 +85,7 @@
          <!-- NewUploadCard3 pdf/doc/txt的上传-->
          <div class="upload-container flex-shrink-0">
           <!-- 新增可点击区域容器 -->
-          <div class="clickable-area" @click="handleNewUploadClick">
+          <div class="clickable-area" @click="handleNewUploadClick('file', $event)">
             <!-- Upload Icon -->
             <div class="upload-icon">
               <img src="/images/icons/file.svg" alt="Upload" class="w-[43px] h-[43px]">
@@ -361,9 +361,16 @@ watch(() => authStore.user?.id, (newId) => {
 const emit = defineEmits(['upload'])
 
 // 修改点击处理函数
-const handleNewUploadClick = async () => {
+const handleNewUploadClick = async (type: 'url' | 'web' | 'file' = 'url') => {
   try {
-    // 读取剪贴板内容
+    // 2024-03-14: 添加类型参数，区分不同上传方式
+    if (type === 'file') {
+      // 如果是文件上传类型，直接触发上传事件
+      emit('upload', '', type)
+      return
+    }
+
+    // 保留原有的剪贴板读取逻辑
     const clipboardText = await navigator.clipboard.readText()
     // 验证是否是有效的URL
     const isValidUrl = clipboardText.startsWith('http://') || clipboardText.startsWith('https://')
@@ -375,8 +382,8 @@ const handleNewUploadClick = async () => {
       // 存储到 localStorage，复用现有逻辑
       localStorage.setItem('pendingUploadUrl', uploadUrl)
     }
-    // 触发上传事件，并传递 URL
-    emit('upload', uploadUrl)
+    // 触发上传事件，并传递 URL 和类型
+    emit('upload', uploadUrl, type)
   } catch (err) {
     console.error('Failed to read clipboard:', err)
     // 读取失败时使用默认标记URL
@@ -384,7 +391,7 @@ const handleNewUploadClick = async () => {
     if (!authStore.isAuthenticated) {
       localStorage.setItem('pendingUploadUrl', defaultUrl)
     }
-    emit('upload', defaultUrl)
+    emit('upload', defaultUrl, type)
   }
 }
 
