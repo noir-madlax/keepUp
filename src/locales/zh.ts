@@ -190,6 +190,12 @@ export default {
     },
     input: {
       placeholder: '需要我为您做些什么？'
+    },
+    window: {
+      title: 'AI 助手',
+      sessionSelect: '选择会话',
+      startChat: '开始对话...',
+      send: '发送'
     }
   },
   auth: {

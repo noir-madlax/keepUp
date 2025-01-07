@@ -32,7 +32,7 @@ import { useI18n } from 'vue-i18n'
 import { TextPositionHelper } from '@/utils/textPosition'
 import { ElMessage } from 'element-plus'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const chatStore = useChatStore()
 const authStore = useAuthStore()
 const route = useRoute()
@@ -84,15 +84,29 @@ const getTextOffset = (text: string, selectedText: string): Position | null => {
 
 // 生成提问内容
 const generateQuestion = (type: ChatAction, selectedContent: string): string => {
-  switch (type) {
-    case 'explain':
-      return `请解释一下"${selectedContent}"在这篇文章中的具体含义和用法。`
-    case 'elaborate':
-      return `请详细展开说明"${selectedContent}"这部分内容，包括具体的细节和例子。`
-    case 'question':
-      return selectedContent
-    default:
-      return selectedContent
+  // 2024-01-09: 根据当前语言环境生成对应语言的提问
+  if (locale.value === 'zh') {
+    switch (type) {
+      case 'explain':
+        return `请解释一下"${selectedContent}"在这篇文章中的具体含义和用法。`
+      case 'elaborate':
+        return `请详细展开说明"${selectedContent}"这部分内容，包括具体的细节和例子。`
+      case 'question':
+        return selectedContent
+      default:
+        return selectedContent
+    }
+  } else {
+    switch (type) {
+      case 'explain':
+        return `Please explain the meaning and usage of "${selectedContent}" in this article.`
+      case 'elaborate':
+        return `Please elaborate on "${selectedContent}" with more details and examples.`
+      case 'question':
+        return selectedContent
+      default:
+        return selectedContent
+    }
   }
 }
 
