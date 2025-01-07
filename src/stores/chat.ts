@@ -49,7 +49,6 @@ export const useChatStore = defineStore('chat', () => {
   ) => {
     try {
       isLoading.value = true
-      isInitializing.value = true
       currentSession.value = null
       
       // 1. 创建会话记录
@@ -112,7 +111,6 @@ export const useChatStore = defineStore('chat', () => {
       }, 1000)
       
       // 5. 设置状态
-      isChatOpen.value = true
       lastCreatedSession.value = sessionData
       
       return sessionData
