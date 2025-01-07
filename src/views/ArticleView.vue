@@ -744,9 +744,13 @@ const handleScroll = () => {
 }
 
 onMounted(async () => {
+  // 2024-01-11: 确保打开新文章时聊天窗口是关闭的
+  chatStore.isChatOpen = false
+  
   window.addEventListener('scroll', handleScroll)
   await authStore.loadUser()
   await fetchArticle()
+  await fetchArticleMarks()
 })
 
 // 在 onUnmounted 中移除滚动监听
