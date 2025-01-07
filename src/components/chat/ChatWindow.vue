@@ -56,7 +56,7 @@
           </div>
         </div>
       </template>
-      <div v-else-if="chatStore.isLoading || chatStore.isInitializing" class="space-y-4 animate-pulse">
+      <div v-else-if="chatStore.isInitializing" class="space-y-4 animate-pulse">
         <!-- AI消息骨架 -->
         <div class="flex justify-start">
           <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
@@ -98,13 +98,26 @@
         />
         <button
           type="submit"
-          class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+          class="relative px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium min-w-[80px] overflow-hidden transition-all duration-200"
           :disabled="!messageInput.trim() || chatStore.isLoading"
         >
-          <el-icon v-if="chatStore.isLoading" class="animate-spin">
-            <Loading />
-          </el-icon>
-          <span v-else>{{ $t('chat.window.send') }}</span>
+          <div class="flex items-center justify-center gap-1"
+               :class="[chatStore.isLoading ? 'opacity-0' : 'opacity-100']"
+               style="transition: opacity 0.2s ease-in-out">
+            <span>{{ $t('chat.window.send') }}</span>
+            <el-icon class="text-lg">
+              <ArrowRight />
+            </el-icon>
+          </div>
+
+          <div v-if="chatStore.isLoading" 
+               class="absolute inset-0 flex items-center justify-center bg-blue-600"
+               style="transition: all 0.2s ease-in-out">
+            <div class="relative w-5 h-5">
+              <div class="absolute inset-0 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div class="absolute inset-1 border-2 border-white border-b-transparent rounded-full animate-spin-reverse"></div>
+            </div>
+          </div>
         </button>
       </form>
     </div>
@@ -114,7 +127,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useChatStore } from '../../stores/chat'
-import { Loading } from '@element-plus/icons-vue'
+import { Loading, ArrowRight } from '@element-plus/icons-vue'
 import { format } from 'date-fns'
 import type { ChatSession } from '../../types/chat'
 import CloseButton from '../common/CloseButton.vue'
@@ -185,5 +198,19 @@ const handleSubmit = async () => {
 .overflow-y-auto::-webkit-scrollbar-thumb {
   background-color: rgba(156, 163, 175, 0.5);
   border-radius: 3px;
+}
+
+/* 2024-01-10 22:45: 添加反向旋转动画 */
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 1s linear infinite;
 }
 </style> 

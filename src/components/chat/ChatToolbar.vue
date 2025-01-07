@@ -161,14 +161,15 @@ const handleAction = async (type: ChatAction) => {
       ]
     }
 
-    // 统一处理所有类型的会话创建
+    // 2024-01-12: 修改createSession调用，传入完整问题内容作为message content
     const session = await chatStore.createSession(
       articleId,
       'word' as MarkType,
-      selectedContent, // 使用原文内容作为mark_content
+      selectedContent, // mark_content仍然使用原文内容
       type,
       context,
-      type === 'question' // 只有question类型跳过初始消息
+      type === 'question', // 只有question类型跳过初始消息
+      questionContent // 新增参数：传入完整的问题内容
     )
 
     // 2024-01-11: session创建成功后，隐藏toolbar
