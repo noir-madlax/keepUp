@@ -12,7 +12,7 @@ export interface ToolbarPosition {
 export interface ChatMessage {
   id: string
   session_id: string
-  role: ChatRole
+  role: 'user' | 'assistant'
   content: string
   created_at: string
 }
@@ -24,17 +24,15 @@ export interface Position {
 }
 
 export interface ChatSession {
-  id?: string
+  id: string
   article_id: number
-  section_type: string
-  mark_type: 'word' | 'sentence' | 'section'
+  mark_type: string
   mark_content: string
-  position: TextMark
-  user_id: string
-  is_private: boolean
+  section_type?: string
+  context?: any
+  messages?: ChatMessage[]
   created_at: string
   updated_at: string
-  messages?: ChatMessage[]
 }
 
 // 问题标记
@@ -57,4 +55,8 @@ export interface TextMark {
   startOffset: number
   endOffset: number
   text: string
+}
+
+export interface ChatResponse {
+  content: string
 } 

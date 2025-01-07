@@ -72,9 +72,9 @@ export const useChatStore = defineStore('chat', () => {
       if (sessionError) throw sessionError
       if (!sessionData) throw new Error('No session data returned')
 
-      // 如果不是跳过初始消息的模式，则创建初始消息
+      // 如果不是跳过初始消息的模式，则创建初始消息并调用 AI
       if (!skipInitialMessage) {
-        // 2. 保存用户的首条消息和AI响应
+        // 2. 保存用户的首条消息
         const { error: messageError } = await supabase
           .from('keep_chat_messages')
           .insert({
@@ -86,34 +86,32 @@ export const useChatStore = defineStore('chat', () => {
 
         if (messageError) throw messageError
 
-        // 3. 获取AI响应
-        const aiResponse = `这是一个模拟的 AI 响应，基于动作类型 "${action}"，处理的内容长度为 ${content.length} 字符。`
+        // 3. 调用后端 AI 接口获取响应
+        const response = await fetch(`/api/chat/${sessionData.id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
 
-        // 4. 保存AI响应消息
-        const { error: aiMessageError } = await supabase
-          .from('keep_chat_messages')
-          .insert({
-            session_id: sessionData.id,
-            role: 'assistant',
-            content: aiResponse,
-            created_at: new Date().toISOString()
-          })
-
-        if (aiMessageError) throw aiMessageError
+        if (!response.ok) {
+          throw new Error(`API 调用失败: ${response.status}`)
+        }
       }
 
-      // 3. 先加载会话内容
+      // 4. 加载会话内容
       await loadSession(sessionData.id)
       
-      // 4. 延迟关闭初始化状态
+      // 5. 延迟关闭初始化状态
       setTimeout(() => {
         isInitializing.value = false
       }, 1000)
       
-      // 5. 设置状态
+      // 6. 设置状态
       lastCreatedSession.value = sessionData
       
       return sessionData
+
     } catch (error) {
       console.error('创建会话失败:', error)
       ElMessage.error('创建会话失败，请重试')
@@ -151,7 +149,7 @@ export const useChatStore = defineStore('chat', () => {
     if (!currentSession.value) return
     
     try {
-      isLoading.value = false
+      isLoading.value = true
       
       // 1. 保存用户消息
       const { error: messageError } = await supabase
@@ -165,23 +163,19 @@ export const useChatStore = defineStore('chat', () => {
 
       if (messageError) throw messageError
 
-      // 2. 获取AI响应
-      // TODO: 接入实际的AI服务
-      const aiResponse = `这是对 "${content}" 的模拟回复`
+      // 2. 调用后端 AI 接口
+      const response = await fetch(`/api/chat/${currentSession.value.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
 
-      // 3. 保存AI响应
-      const { error: aiMessageError } = await supabase
-        .from('keep_chat_messages')
-        .insert({
-          session_id: currentSession.value.id,
-          role: 'assistant',
-          content: aiResponse,
-          created_at: new Date().toISOString()
-        })
+      if (!response.ok) {
+        throw new Error(`API 调用失败: ${response.status}`)
+      }
 
-      if (aiMessageError) throw aiMessageError
-
-      // 4. 重新加载会话以获取最新消息
+      // 3. 重新加载会话以获取最新消息
       await loadSession(currentSession.value.id)
 
     } catch (error) {

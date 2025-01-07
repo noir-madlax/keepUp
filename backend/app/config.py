@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     
     # AssemblyAI 配置
     ASSEMBLYAI_API_KEY: str
+
+    # Deepseek 配置
+    DEEPSEEK_API_KEY: str
     
     # 代理配置
     USE_PROXY: bool = False

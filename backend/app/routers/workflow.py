@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, Form
 from app.models.request import FetchRequest, ParseRequest, AppendRequest
 from app.services.content_fetcher.service import ContentFetcherService
-from app.services.supabase import SupabaseService
+from app.repositories.supabase import SupabaseService
 from app.utils.logger import logger
 from app.routers.parse import call_coze_and_parse, process_coze_result
 from app.config import settings

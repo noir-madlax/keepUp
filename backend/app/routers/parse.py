@@ -5,7 +5,7 @@ from typing import Optional
 from app.models.request import ParseRequest
 from app.models.coze import CozeResponse, CozeArticleContent, ArticleCreate
 from app.services.coze import CozeService
-from app.services.supabase import SupabaseService
+from app.repositories.supabase import SupabaseService
 from app.utils.logger import logger
 from app.config import settings
 from app.services.content_polisher import ContentPolisherService

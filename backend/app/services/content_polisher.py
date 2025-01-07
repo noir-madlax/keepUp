@@ -2,7 +2,7 @@ from typing import List
 import re
 from app.utils.logger import logger
 from app.services.coze import CozeService
-from app.services.supabase import SupabaseService
+from app.repositories.supabase import SupabaseService
 import json
 import asyncio
 

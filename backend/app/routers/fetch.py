@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from app.models.request import FetchRequest
 from app.services.content_fetcher.service import ContentFetcherService
-from app.services.supabase import SupabaseService
+from app.repositories.supabase import SupabaseService
 from app.utils.logger import logger
 
 router = APIRouter()

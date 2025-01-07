@@ -4,6 +4,7 @@ from app.routers.parse import router as parse_router
 from app.routers.fetch import router as fetch_router
 from app.routers.workflow import router as workflow_router
 from app.config import settings
+from app.routers import chat
 
 app = FastAPI(title="Keep Up API")
 
@@ -20,6 +21,7 @@ app.add_middleware(
 app.include_router(parse_router)
 app.include_router(fetch_router)
 app.include_router(workflow_router)
+app.include_router(chat.router)
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 import traceback
 from typing import Optional
-from app.services.supabase import SupabaseService
+from app.repositories.supabase import SupabaseService
 from app.models.log import LogCreate
 from app.utils.logger import logger
 
