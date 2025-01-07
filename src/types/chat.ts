@@ -1,6 +1,6 @@
 export type ChatRole = 'user' | 'assistant'
 export type MarkType = 'section' | 'sentence' | 'word'
-export type ChatAction = 'summary' | 'explain' | 'question'
+export type ChatAction = 'elaborate' | 'explain' | 'question'
 
 // 工具栏位置
 export interface ToolbarPosition {

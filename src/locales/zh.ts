@@ -184,9 +184,9 @@ export default {
   },
   chat: {
     actions: {
-      summary: '总结',
-      explain: '解释',
-      question: '提问'
+      explain: '解释含义',
+      elaborate: '展开详述',
+      question: '自由提问'
     },
     input: {
       placeholder: '需要我为您做些什么？'

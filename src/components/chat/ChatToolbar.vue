@@ -16,7 +16,7 @@
         @touchstart.prevent="handleAction(action.type)"
         class="px-3 py-1 text-sm rounded hover:bg-gray-100 transition-colors flex items-center gap-1"
       >
-        {{ action.label }}
+        {{ t(`chat.actions.${action.type}`) }}
       </button>
     </div>
   </div>
@@ -45,16 +45,13 @@ const articleId = Number(route.params.id)
 // 定义工具栏按钮
 const actions = [
   {
-    type: 'summary' as ChatAction,
-    label: t('chat.actions.summary')
+    type: 'explain' as ChatAction
   },
   {
-    type: 'explain' as ChatAction,
-    label: t('chat.actions.explain')
+    type: 'elaborate' as ChatAction
   },
   {
-    type: 'question' as ChatAction,
-    label: t('chat.actions.question')
+    type: 'question' as ChatAction
   }
 ]
 
@@ -85,7 +82,21 @@ const getTextOffset = (text: string, selectedText: string): Position | null => {
   }
 }
 
-const handleAction = async (type: 'summary' | 'explain' | 'question') => {
+// 生成提问内容
+const generateQuestion = (type: ChatAction, selectedContent: string): string => {
+  switch (type) {
+    case 'explain':
+      return `请解释一下"${selectedContent}"在这篇文章中的具体含义和用法。`
+    case 'elaborate':
+      return `请详细展开说明"${selectedContent}"这部分内容，包括具体的细节和例子。`
+    case 'question':
+      return selectedContent
+    default:
+      return selectedContent
+  }
+}
+
+const handleAction = async (type: ChatAction) => {
   if (!authStore.isAuthenticated) {
     ElMessage.warning(t('auth.loginRequired'))
     chatStore.hideToolbar()
@@ -111,22 +122,25 @@ const handleAction = async (type: 'summary' | 'explain' | 'question') => {
     chatStore.isChatOpen = true
     chatStore.isInitializing = true
 
+    // 生成对应的提问内容
+    const questionContent = type === 'question' ? selectedContent : generateQuestion(type, selectedContent)
+
     // 统一处理所有类型的会话创建
     const commonParams = {
       articleId,
       markType: 'word' as MarkType,
-      selectedContent,
+      selectedContent: questionContent, // 使用生成的提问内容
       type,
       context: {
         sectionType: currentSection.getAttribute('data-section-type'),
         position,
-        selection: type === 'question' ? {
+        selection: {
           content: selectedContent,
           type: 'word',
           position
-        } : undefined
+        }
       },
-      skipInitialMessage: type === 'question'
+      skipInitialMessage: type === 'question' // 只有question类型跳过初始消息
     }
 
     const session = await chatStore.createSession(
