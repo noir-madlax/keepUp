@@ -27,7 +27,7 @@ import { computed } from 'vue'
 import { useChatStore } from '../../stores/chat'
 import { useAuthStore } from '../../stores/auth'
 import { useRoute } from 'vue-router'
-import type { ChatAction, Position } from '../../types/chat'
+import type { ChatAction, Position, MarkType } from '../../types/chat'
 import { useI18n } from 'vue-i18n'
 import { TextPositionHelper } from '@/utils/textPosition'
 import { ElMessage } from 'element-plus'
@@ -107,39 +107,42 @@ const handleAction = async (type: 'summary' | 'explain' | 'question') => {
   }
 
   try {
-    if (type === 'question') {
-      const session = await chatStore.createSession(
-        articleId,
-        'word',
-        selectedContent,
-        type,
-        {
-          sectionType: currentSection.getAttribute('data-section-type'),
-          position,
-          selection: {
-            content: selectedContent,
-            type: 'word',
-            position
-          }
-        },
-        true
-      )
-    } else {
-      const session = await chatStore.createSession(
-        articleId,
-        'word',
-        selectedContent,
-        type,
-        {
-          sectionType: currentSection.getAttribute('data-section-type'),
+    // 2024-01-09: 先打开聊天窗口并设置初始化状态
+    chatStore.isChatOpen = true
+    chatStore.isInitializing = true
+
+    // 统一处理所有类型的会话创建
+    const commonParams = {
+      articleId,
+      markType: 'word' as MarkType,
+      selectedContent,
+      type,
+      context: {
+        sectionType: currentSection.getAttribute('data-section-type'),
+        position,
+        selection: type === 'question' ? {
+          content: selectedContent,
+          type: 'word',
           position
-        }
-      )
+        } : undefined
+      },
+      skipInitialMessage: type === 'question'
     }
 
-    chatStore.isChatOpen = true
+    const session = await chatStore.createSession(
+      commonParams.articleId,
+      commonParams.markType,
+      commonParams.selectedContent,
+      commonParams.type,
+      commonParams.context,
+      commonParams.skipInitialMessage
+    )
+
   } catch (error) {
     console.error('创建会话失败:', error)
+    // 2024-01-09: 发生错误时重置状态
+    chatStore.isInitializing = false
+    chatStore.isChatOpen = false
   }
 }
 </script> 

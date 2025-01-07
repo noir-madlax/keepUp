@@ -27,7 +27,7 @@
           />
         </el-select>
       </div>
-      <CloseButton @click="chatStore.isChatOpen = false" />
+      <CloseButton @click="handleClose" />
     </div>
 
     <!-- 消息列表 减去导航栏高度和其他元素高度 -->
@@ -146,6 +146,12 @@ onMounted(async () => {
     selectedSessionId.value = chatStore.currentSession.id
   }
 })
+
+// 2024-01-10: 添加关闭处理函数，同时处理 chat 窗口和 toolbar 的状态
+const handleClose = () => {
+  chatStore.isChatOpen = false
+  chatStore.hideToolbar()  // 同时隐藏 toolbar
+}
 
 const handleSubmit = async () => {
   if (!messageInput.value.trim() || chatStore.isLoading) return
