@@ -10,12 +10,12 @@
     <!-- 标题栏 -->
     <div class="flex justify-between items-center p-4 border-b">
       <div class="flex items-center gap-2">
-        <h3 class="text-lg font-medium">AI 助手</h3>
+        <h3 class="text-lg font-medium">{{ $t('chat.window.title') }}</h3>
         <!-- 添加会话选择下拉框 -->
         <el-select 
           v-model="selectedSessionId" 
           size="small" 
-          placeholder="选择会话"
+          :placeholder="$t('chat.window.sessionSelect')"
           class="w-48"
           @change="handleSessionChange"
         >
@@ -82,7 +82,7 @@
         </div>
       </div>
       <div v-else class="text-center text-gray-500">
-        开始对话...
+        {{ $t('chat.window.startChat') }}
       </div>
     </div>
 
@@ -104,7 +104,7 @@
           <el-icon v-if="chatStore.isLoading" class="animate-spin">
             <Loading />
           </el-icon>
-          <span v-else>发送</span>
+          <span v-else>{{ $t('chat.window.send') }}</span>
         </button>
       </form>
     </div>

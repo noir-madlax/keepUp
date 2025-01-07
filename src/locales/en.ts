@@ -191,6 +191,12 @@ export default {
     },
     input: {
       placeholder: 'How can I help you today?'
+    },
+    window: {
+      title: 'AI Assistant',
+      sessionSelect: 'Select Session',
+      startChat: 'Start chatting...',
+      send: 'Send'
     }
   },
   auth: {
