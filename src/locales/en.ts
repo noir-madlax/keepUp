@@ -185,9 +185,9 @@ export default {
   },
   chat: {
     actions: {
-      summary: 'Summary',
-      explain: 'Explain',
-      question: 'Question'
+      explain: 'Explain Meaning',
+      elaborate: 'Elaborate Details',
+      question: 'Ask Question'
     },
     input: {
       placeholder: 'How can I help you today?'
