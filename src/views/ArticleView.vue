@@ -470,7 +470,7 @@
     />
 
     <!-- 添加工具栏组件 -->
-    <ChatToolbar />
+    <ChatToolbar @refresh-anchors="handleRefreshAnchors" />
 
     <!-- 添加聊天窗口 -->
     <ChatWindow v-if="chatStore.isChatOpen" />
@@ -1303,7 +1303,7 @@ const renderSectionContent = (section: ArticleSection) => {
 
     // 处理标记
     sectionMarks.forEach(mark => {
-      const position = mark.position || mark.context?.position
+      const position = mark.position
 
       if (!position || 
           typeof position.nodeIndex !== 'number' || 
@@ -1317,7 +1317,7 @@ const renderSectionContent = (section: ArticleSection) => {
         nodeIndex: position.nodeIndex,
         startOffset: position.startOffset,
         endOffset: position.endOffset,
-        text: mark.mark_content
+        text: mark.mark_content // 使用原文内容进行匹配
       }
 
       const range = TextPositionHelper.findPosition(container, textMark)
@@ -1327,8 +1327,8 @@ const renderSectionContent = (section: ArticleSection) => {
           'mark-id': mark.id,
           'article-id': section.article_id,
           'section-type': section.section_type,
-          'mark-content': mark.mark_content,
-          'position': JSON.stringify(mark.position)
+          'mark-content': mark.mark_content, // 使用原文内容作为显示内容
+          'position': JSON.stringify(position)
         }
         
         TextPositionHelper.applyMarkStyle(range, markInfo)
@@ -1380,6 +1380,26 @@ const handleLoginSuccess = () => {
   showLoginModal.value = false
   // 2024-01-09: 移除登录成功提示,避免重复提示
   // ElMessage.success(t('auth.loginSuccess')) // 删除这行
+}
+
+// 添加处理刷新锚点的方法
+const handleRefreshAnchors = async () => {
+  // 2024-01-11: 重新获取文章标记并刷新显示
+  await fetchArticleMarks()
+  
+  // 在下一个 tick 重新处理标记
+  nextTick(() => {
+    const sections = document.querySelectorAll('[data-section-type]')
+    sections.forEach(section => {
+      const sectionType = section.getAttribute('data-section-type')
+      if (sectionType) {
+        const sectionData = sections.value.find(s => s.section_type === sectionType)
+        if (sectionData) {
+          renderSectionContent(sectionData)
+        }
+      }
+    })
+  })
 }
 </script>
 
