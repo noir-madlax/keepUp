@@ -32,6 +32,11 @@ import { useI18n } from 'vue-i18n'
 import { TextPositionHelper } from '@/utils/textPosition'
 import { ElMessage } from 'element-plus'
 
+// 2024-01-11: 添加emit定义，用于通知父组件刷新锚点
+const emit = defineEmits<{
+  (e: 'refresh-anchors'): void
+}>()
+
 const { t, locale } = useI18n()
 const chatStore = useChatStore()
 const authStore = useAuthStore()
@@ -139,32 +144,41 @@ const handleAction = async (type: ChatAction) => {
     // 生成对应的提问内容
     const questionContent = type === 'question' ? selectedContent : generateQuestion(type, selectedContent)
 
-    // 统一处理所有类型的会话创建
-    const commonParams = {
-      articleId,
-      markType: 'word' as MarkType,
-      selectedContent: questionContent, // 使用生成的提问内容
-      type,
-      context: {
-        sectionType: currentSection.getAttribute('data-section-type'),
-        position,
-        selection: {
-          content: selectedContent,
-          type: 'word',
-          position
-        }
+    // 2024-01-11: 分开保存原文内容和问题内容
+    const context = {
+      sectionType: currentSection.getAttribute('data-section-type'),
+      position,
+      selection: {
+        content: selectedContent, // 原文内容
+        type: 'word',
+        position
       },
-      skipInitialMessage: type === 'question' // 只有question类型跳过初始消息
+      messages: [
+        {
+          role: 'user',
+          content: questionContent // 完整的问题内容
+        }
+      ]
     }
 
+    // 统一处理所有类型的会话创建
     const session = await chatStore.createSession(
-      commonParams.articleId,
-      commonParams.markType,
-      commonParams.selectedContent,
-      commonParams.type,
-      commonParams.context,
-      commonParams.skipInitialMessage
+      articleId,
+      'word' as MarkType,
+      selectedContent, // 使用原文内容作为mark_content
+      type,
+      context,
+      type === 'question' // 只有question类型跳过初始消息
     )
+
+    // 2024-01-11: session创建成功后，隐藏toolbar
+    chatStore.hideToolbar()
+    
+    // 2024-01-11: 触发锚点刷新
+    if (session) {
+      // 通知父组件刷新锚点
+      emit('refresh-anchors')
+    }
 
   } catch (error) {
     console.error('创建会话失败:', error)
