@@ -918,8 +918,25 @@ const stopDrag = () => {
 // 鼠标滚轮缩放
 const handleWheel = (e: WheelEvent) => {
   e.preventDefault()
-  const delta = e.deltaY > 0 ? 0.9 : 1.1
-  const newScale = scale.value * delta
+  
+  // 2024-01-12: 添加触摸板检测和灵敏度控制
+  // 检查是否是触摸板事件 (通过检查 deltaMode 和 deltaY 的精确度)
+  const isTouchpad = e.deltaMode === 0 && Math.abs(e.deltaY) < 50
+  
+  // 根据设备类型使用不同的缩放系数
+  let zoomFactor
+  if (isTouchpad) {
+    // 触摸板使用更小的缩放系数
+    zoomFactor = e.deltaY > 0 ? 0.98 : 1.02
+  } else {
+    // 鼠标滚轮使用稍大的缩放系数
+    zoomFactor = e.deltaY > 0 ? 0.9 : 1.1
+  }
+  
+  // 计算新的缩放值
+  const newScale = scale.value * zoomFactor
+  
+  // 限制缩放范围
   if (newScale >= 0.1 && newScale <= 5) {
     scale.value = newScale
   }
