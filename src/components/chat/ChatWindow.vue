@@ -35,7 +35,9 @@
       class="flex-1 overflow-y-auto p-4 space-y-4" 
       style="height: calc(100vh - 71px - 130px);"  
     >
+      <!-- 1. 有消息时的显示 -->
       <template v-if="chatStore.currentSession?.messages?.length">
+        <!-- 显示所有消息 -->
         <div
           v-for="message in chatStore.currentSession.messages"
           :key="message.id"
@@ -55,32 +57,28 @@
             {{ message.content }}
           </div>
         </div>
-      </template>
-      <div v-else-if="chatStore.isInitializing" class="space-y-4 animate-pulse">
-        <!-- AI消息骨架 -->
-        <div class="flex justify-start">
-          <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
+        
+        <!-- 2024-01-13: LLM 响应等待时的骨架屏 -->
+        <div v-if="chatStore.isLoading" class="flex justify-start">
+          <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200 animate-pulse">
             <div class="h-2 bg-gray-200 rounded-full w-[180px]"></div>
             <div class="h-2 bg-gray-200 rounded-full w-[120px]"></div>
           </div>
         </div>
-        
+      </template>
+
+      <!-- 2. 初始化时的骨架屏 -->
+      <div v-else-if="chatStore.isInitializing" class="space-y-4">
         <!-- 用户消息骨架 -->
         <div class="flex justify-end">
-          <div class="max-w-[80%] space-y-2 bg-blue-100 rounded-lg px-4 py-3">
+          <div class="max-w-[80%] space-y-2 bg-blue-100 rounded-lg px-4 py-3 animate-pulse">
             <div class="h-2 bg-blue-200 rounded-full w-[160px]"></div>
             <div class="h-2 bg-blue-200 rounded-full w-[100px]"></div>
           </div>
         </div>
-
-        <!-- AI第二条消息骨架 -->
-        <div class="flex justify-start">
-          <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200">
-            <div class="h-2 bg-gray-200 rounded-full w-[200px]"></div>
-            <div class="h-2 bg-gray-200 rounded-full w-[140px]"></div>
-          </div>
-        </div>
       </div>
+
+      <!-- 3. 空状态提示 -->
       <div v-else class="text-center text-gray-500">
         {{ $t('chat.window.startChat') }}
       </div>
