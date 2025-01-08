@@ -58,7 +58,7 @@
       <div v-if="article.status === 'failed'" class="error-text">
         {{ getErrorMessage }}
       </div>
-      <div class="url-text single-line">
+      <div class="url-text single-line cursor-pointer hover:text-blue-500" @click="handleUrlClick">
         {{ article.original_url || t('upload.card.fallback.noLink') }}
       </div>
     </div>
@@ -246,6 +246,16 @@ const handleDelete = (event: Event) => {
   event.stopPropagation() // 阻止事件冒泡，防止触发卡片点击
   if (props.article.requestId) {
     emit('delete', props.article.requestId)
+  }
+}
+
+// 添加URL点击处理函数
+const handleUrlClick = (event: Event) => {
+  event.stopPropagation() // 阻止事件冒泡，防止触发卡片点击
+  const url = props.article.original_url
+  if (url) {
+    // 2023-12-21: 添加新窗口打开原始链接功能
+    window.open(url, '_blank')
   }
 }
 </script>
