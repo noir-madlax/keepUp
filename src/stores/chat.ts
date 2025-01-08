@@ -88,89 +88,101 @@ export const useChatStore = defineStore('chat', () => {
     messageContent?: string
   ) => {
     try {
-      isLoading.value = true
       isInitializing.value = true
       currentSession.value = null
       
-      if (isDev) {
-        // 开发模式：使用模拟数据
-        const mockSession: ChatSession = {
-          id: `mock-${Date.now()}`,
+      // 1. 创建会话记录
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('keep_chat_sessions')
+        .insert({
           article_id: articleId,
+          user_id: authStore.user?.id,
           mark_type: markType,
           mark_content: content,
           section_type: context?.sectionType,
+          position: context?.selection?.position,
           context: context,
-          messages: [],
+          is_private: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        }
+        })
+        .select('*')
+        .single()
 
-        if (!skipInitialMessage) {
-          const userMessage: ChatMessage = {
-            id: `mock-${Date.now()}`,
-            session_id: mockSession.id,
+      if (sessionError) throw sessionError
+      if (!sessionData) throw new Error('No session data returned')
+      if (!isChatSession(sessionData)) throw new Error('Invalid session data')
+
+      // 2. 创建初始会话状态
+      currentSession.value = {
+        ...sessionData,
+        messages: [] as ChatMessage[]
+      } as ChatSession
+      
+      // 结束初始化加载状态
+      isInitializing.value = false
+
+      if (!skipInitialMessage && currentSession.value) {
+        // 3. 创建并显示用户消息
+        const userMessage: ChatMessage = {
+          id: `temp-${Date.now()}`,
+          session_id: sessionData.id,
+          role: 'user',
+          content: messageContent || content,
+          created_at: new Date().toISOString()
+        }
+        
+        // 立即更新界面显示用户消息
+        currentSession.value.messages = [userMessage]
+        
+        // 写入用户消息到数据库
+        const { error: messageError } = await supabase
+          .from('keep_chat_messages')
+          .insert({
+            session_id: sessionData.id,
             role: 'user',
             content: messageContent || content,
             created_at: new Date().toISOString()
-          }
-          
-          // 2024-01-10 23:15: 只在生成AI响应前添加延迟
+          })
+
+        if (messageError) throw messageError
+
+        // 4. 开始加载 AI 响应
+        isLoading.value = true
+
+        // 处理 AI 响应
+        if (isDev) {
+          // 开发模式：使用模拟数据
           await mockLLMDelay()
           
+          // 创建模拟的AI响应消息
           const aiMessage: ChatMessage = {
-            id: `mock-${Date.now() + 1}`,
-            session_id: mockSession.id,
+            id: `mock-${Date.now()}`,
+            session_id: sessionData.id,
             role: 'assistant',
             content: getRandomMockResponse(),
             created_at: new Date().toISOString()
           }
-          
-          mockSession.messages = [userMessage, aiMessage]
-        }
 
-        // 更新状态
-        currentSession.value = mockSession
-        sessions.value = [mockSession, ...sessions.value]
-        lastCreatedSession.value = mockSession
-        
-        return mockSession
-      } else {
-        // 生产模式
-        const { data: sessionData, error: sessionError } = await supabase
-          .from('keep_chat_sessions')
-          .insert({
-            article_id: articleId,
-            user_id: authStore.user?.id,
-            mark_type: markType,
-            mark_content: content,
-            section_type: context?.sectionType,
-            position: context?.selection?.position,
-            context: context,
-            is_private: false,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select('*')
-          .single()
-
-        if (sessionError) throw sessionError
-        if (!sessionData) throw new Error('No session data returned')
-        if (!isChatSession(sessionData)) throw new Error('Invalid session data')
-
-        if (!skipInitialMessage) {
-          // 2024-01-12: 使用完整的问题内容
-          const { error: messageError } = await supabase
+          // 写入数据库
+          const { error: aiMessageError } = await supabase
             .from('keep_chat_messages')
             .insert({
               session_id: sessionData.id,
-              role: 'user',
-              content: messageContent || content, // 优先使用完整问题内容
+              role: 'assistant',
+              content: aiMessage.content,
               created_at: new Date().toISOString()
             })
 
-          if (messageError) throw messageError
+          if (aiMessageError) throw aiMessageError
 
+          // 更新界面显示 AI 响应
+          currentSession.value.messages = [
+            ...currentSession.value.messages,
+            aiMessage
+          ]
+        } else {
+          // 生产模式：调用实际的 AI 接口
           const response = await fetch(`/api/chat/${sessionData.id}`, {
             method: 'POST',
             headers: {
@@ -181,20 +193,20 @@ export const useChatStore = defineStore('chat', () => {
           if (!response.ok) {
             throw new Error(`API 调用失败: ${response.status}`)
           }
-        }
 
-        await loadSession(sessionData.id)
-        lastCreatedSession.value = sessionData
-        
-        return sessionData
+          // 重新加载会话以获取最新消息
+          await loadSession(sessionData.id)
+        }
       }
+
+      lastCreatedSession.value = sessionData
+      return sessionData
     } catch (error) {
       console.error('创建会话失败:', error)
       ElMessage.error('创建会话失败，请重试')
       isChatOpen.value = false
       throw error
     } finally {
-      isInitializing.value = false
       isLoading.value = false
     }
   }
@@ -229,54 +241,66 @@ export const useChatStore = defineStore('chat', () => {
     try {
       isLoading.value = true
       
-      if (isDev) {
-        // 开发模式：使用模拟数据
-        // 2024-01-10 23:15: 立即添加用户消息，无需延迟
-        const userMessage: ChatMessage = {
-          id: `mock-${Date.now()}`,
+      // 1. 立即创建并显示用户消息
+      const userMessage: ChatMessage = {
+        id: `temp-${Date.now()}`,
+        session_id: currentSession.value.id,
+        role: 'user',
+        content: content,
+        created_at: new Date().toISOString()
+      }
+
+      // 2. 更新界面显示
+      currentSession.value.messages = [
+        ...(currentSession.value.messages || []),
+        userMessage
+      ]
+
+      // 3. 将用户消息写入数据库
+      const { error: messageError } = await supabase
+        .from('keep_chat_messages')
+        .insert({
           session_id: currentSession.value.id,
           role: 'user',
           content: content,
           created_at: new Date().toISOString()
-        }
-        
-        // 立即更新用户消息
-        currentSession.value.messages = [
-          ...(currentSession.value.messages || []),
-          userMessage
-        ]
-        
-        // 2024-01-10 23:15: 只在生成AI响应前添加延迟
+        })
+
+      if (messageError) throw messageError
+
+      // 4. 处理 AI 响应
+      if (isDev) {
+        // 开发模式：使用模拟数据
         await mockLLMDelay()
         
-        // 模拟AI响应
+        // 创建模拟的AI响应消息
         const aiMessage: ChatMessage = {
-          id: `mock-${Date.now() + 1}`,
+          id: `mock-${Date.now()}`,
           session_id: currentSession.value.id,
           role: 'assistant',
           content: getRandomMockResponse(),
           created_at: new Date().toISOString()
         }
 
-        // 更新AI响应
+        // 写入数据库
+        const { error: aiMessageError } = await supabase
+          .from('keep_chat_messages')
+          .insert({
+            session_id: currentSession.value.id,
+            role: 'assistant',
+            content: aiMessage.content,
+            created_at: new Date().toISOString()
+          })
+
+        if (aiMessageError) throw aiMessageError
+
+        // 更新界面显示
         currentSession.value.messages = [
           ...(currentSession.value.messages || []),
           aiMessage
         ]
       } else {
-        // 生产模式：正常调用API
-        const { error: messageError } = await supabase
-          .from('keep_chat_messages')
-          .insert({
-            session_id: currentSession.value.id,
-            role: 'user',
-            content: content,
-            created_at: new Date().toISOString()
-          })
-
-        if (messageError) throw messageError
-
-        // 调用后端 AI 接口
+        // 生产模式：调用实际的 AI 接口
         const response = await fetch(`/api/chat/${currentSession.value.id}`, {
           method: 'POST',
           headers: {

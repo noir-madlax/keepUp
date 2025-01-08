@@ -33,6 +33,9 @@ export interface ChatSession {
   messages?: ChatMessage[]
   created_at: string
   updated_at: string
+  user_id?: string
+  position?: any
+  is_private?: boolean
 }
 
 // 问题标记
