@@ -1,11 +1,14 @@
 <template>
-  <div class="chat-window fixed right-0 bg-white shadow-lg flex flex-col" 
+  <div class="chat-window fixed right-0 bg-white shadow-lg flex flex-col chat-window-transition" 
     :class="[
-      isMobile ? 'w-full' : 'w-[420px]',  // 移动端全宽，桌面端固定宽度
+      isMobile ? 'w-full' : '',  // 移动端全宽
       'top-[71px]',  // 从导航栏下方开始
       'bottom-0',    // 延伸到底部
       'border-l'     // 左侧添加边框
     ]"
+    :style="!isMobile ? {
+      width: 'var(--chat-window-width)'
+    } : {}"
   >
     <!-- 标题栏 -->
     <div class="flex justify-between items-center p-4 border-b">
@@ -32,8 +35,11 @@
 
     <!-- 消息列表 减去导航栏高度和其他元素高度 -->
     <div 
+      ref="messageListRef"
       class="flex-1 overflow-y-auto p-4 space-y-4" 
-      style="height: calc(100vh - 71px - 130px);"  
+      style="height: calc(100vh - 71px - 130px);"
+      @wheel.stop="handleChatScroll"
+      @touchmove.stop="handleChatScroll"
     >
       <!-- 1. 有消息时的显示 -->
       <template v-if="chatStore.currentSession?.messages?.length">
@@ -171,6 +177,33 @@ const handleSubmit = async () => {
   messageInput.value = ''
   
   await chatStore.sendMessage(content)
+}
+
+// 添加消息列表引用
+const messageListRef = ref<HTMLElement | null>(null)
+
+// 添加滚动处理函数
+const handleChatScroll = (event: WheelEvent | TouchEvent) => {
+  if (!messageListRef.value) return
+  
+  const container = messageListRef.value
+  const isAtBottom = container.scrollHeight - container.scrollTop === container.clientHeight
+  const isAtTop = container.scrollTop === 0
+  
+  // 如果是触摸事件
+  if (event.type === 'touchmove') {
+    event.stopPropagation()
+    return
+  }
+  
+  // 如果是滚轮事件
+  const wheelEvent = event as WheelEvent
+  const deltaY = wheelEvent.deltaY
+  
+  // 在顶部向上滚动或底部向下滚动时阻止事件传播
+  if ((isAtTop && deltaY < 0) || (isAtBottom && deltaY > 0)) {
+    event.preventDefault()
+  }
 }
 </script>
 
