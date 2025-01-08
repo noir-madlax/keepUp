@@ -1,6 +1,9 @@
 <template>
   <!-- 页面容器 -->
-  <div class="min-h-screen bg-white overflow-x-hidden">
+  <div 
+    class="min-h-screen bg-white overflow-x-hidden"
+    :class="{ 'chat-open': chatStore.isChatOpen }"
+  >
     <!-- 顶部导航栏 -->
     <header class="fixed top-0 left-0 right-0 bg-white z-[999] w-full">
       <!-- 使用transition组件包裹两个导航样式 -->
@@ -165,7 +168,17 @@
 
       <!-- 文章标题和作者信息 -->
       <div class="bg-white">
-        <div class="w-full mx-auto" style="max-width: min(100%, 1024px);">
+        <div 
+          class="w-full transition-all duration-300 relative" 
+          :style="{
+            maxWidth: chatStore.isChatOpen 
+              ? 'min(100%, calc(100vw - var(--chat-window-width)))' 
+              : 'min(100%, 1024px)',
+            margin: chatStore.isChatOpen 
+              ? '0 var(--chat-window-width) 0 auto'
+              : '0 auto'
+          }"
+        >
           <div class="relative px-4 py-8">
             <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
               <!-- 文章封面 -->
@@ -253,89 +266,105 @@
       </div>
 
       <!-- 小节标签 -->
-      <div class="w-full mx-auto bg-white" style="max-width: min(100%, 1024px);">
+      <div class="w-full mx-auto bg-white">
         <!-- 小节标签 -->
-        <div class="flex flex-wrap gap-3 p-4">
-          <button
-            v-for="sectionType in ALL_SECTION_TYPES"
-            :key="sectionType"
-            @click="toggleSection(sectionType)"
-            class="px-4 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
-            :class="selectedSections.includes(sectionType) ? 
-              'bg-white border-blue-400 text-blue-400' : 
-              'bg-white border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
-          >
-            {{ getLocalizedSectionType(sectionType) }}
-          </button>
-        </div>
-
-        <!-- 分割线 -->
-        <div class="h-[1px] bg-gray-200"></div>
-
-        <!-- 文章内容部分 -->
         <div 
-          class="p-4 md:p-8 article-content"
-          @mouseup="handleTextSelection"
-          @touchend="handleTextSelection"
+          class="w-full mx-auto transition-all duration-300"
+          :style="{
+            maxWidth: chatStore.isChatOpen 
+              ? 'min(100%, calc(100vw - var(--chat-window-width)))' 
+              : 'min(100%, 1024px)',
+            margin: chatStore.isChatOpen 
+              ? '0 var(--chat-window-width) 0 auto'
+              : '0 auto'
+          }"
         >
-          <!-- 文章内容 -->
-          <article class="prose prose-sm md:prose-lg max-w-none">
-            <!-- 如果sections存在，则渲染sections -->
-            <template v-if="sections.length">
-              <!-- 遍历sections，渲染每个section -->
-              <div 
-                v-for="section in displaySections" 
-                :key="section.id"
-                class="mb-8"
-                :data-section-type="section.section_type"
+          <div class="tags-container">
+            <div class="flex flex-wrap gap-3">
+              <button
+                v-for="sectionType in ALL_SECTION_TYPES"
+                :key="sectionType"
+                @click="toggleSection(sectionType)"
+                class="px-4 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
+                :class="selectedSections.includes(sectionType) ? 
+                  'bg-white border-blue-400 text-blue-400' : 
+                  'bg-white border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
               >
-                <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
-                
-                <!-- 根据不同的小节类型使用不同的渲染方式 -->
-                <template v-if="section.section_type === '思维导图'">
-                  <div class="flex items-center gap-2">
-                        <span 
-                          @click="handlePreviewMindmap" 
-                          class="text-blue-500 hover:text-blue-600 cursor-pointer text-sm flex items-center"
-                        >
-                          <i class="el-icon-zoom-in mr-1"></i>
-                          {{ t('article.preview.enlarge') }}
-                        </span>
-                      </div>
-                    <mind-map 
-                      :content="section.content" 
-                      @preview="url => previewImageUrl = url"
-                    />
+                {{ getLocalizedSectionType(sectionType) }}
+              </button>
+            </div>
+          </div>
 
-                </template>
-                <template v-else-if="section.section_type === '结构图'">
-                  <!-- 结构图组件 --> 
-                  <mermaid :content="section.content" />
-                </template>
-                <template v-else>
-                  <!-- 使用问题标记包装markdown内容 -->
-                  <div class="relative">
-                    <div v-html="renderSectionContent(section)"></div>
-                    <!-- 添加section级别的问题标记 -->
-                    <template v-if="getSectionQuestionCount(section.id)">
-                      <div class="absolute right-0 top-0">
-                        <QuestionMark 
-                          :count="getSectionQuestionCount(section.id)"
-                          :mark-id="section.id.toString()"
-                        >
-                          <span class="text-gray-400 text-sm">问题</span>
-                        </QuestionMark>
+          <!-- 分割线 -->
+          <div class="h-[1px] bg-gray-200"></div>
+
+          <!-- 文章内容部分 -->
+          <div class="article-main-container">
+            <div 
+              class="p-4 md:p-8 article-content"
+              @mouseup="handleTextSelection"
+              @touchend="handleTextSelection"
+            >
+              <!-- 文章内容 -->
+              <article class="prose prose-sm md:prose-lg max-w-none">
+                <!-- 如果sections存在，则渲染sections -->
+                <template v-if="sections.length">
+                  <!-- 遍历sections，渲染每个section -->
+                  <div 
+                    v-for="section in displaySections" 
+                    :key="section.id"
+                    class="mb-8"
+                    :data-section-type="section.section_type"
+                  >
+                    <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
+                    
+                    <!-- 根据不同的小节类型使用不同的渲染方式 -->
+                    <template v-if="section.section_type === '思维导图'">
+                      <div class="flex items-center gap-2">
+                            <span 
+                              @click="handlePreviewMindmap" 
+                              class="text-blue-500 hover:text-blue-600 cursor-pointer text-sm flex items-center"
+                            >
+                              <i class="el-icon-zoom-in mr-1"></i>
+                              {{ t('article.preview.enlarge') }}
+                            </span>
+                          </div>
+                        <mind-map 
+                          :content="section.content" 
+                          @preview="url => previewImageUrl = url"
+                        />
+
+                    </template>
+                    <template v-else-if="section.section_type === '结构图'">
+                      <!-- 结构图组件 --> 
+                      <mermaid :content="section.content" />
+                    </template>
+                    <template v-else>
+                      <!-- 使用问题标记包装markdown内容 -->
+                      <div class="relative">
+                        <div v-html="renderSectionContent(section)"></div>
+                        <!-- 添加section级别的问题标记 -->
+                        <template v-if="getSectionQuestionCount(section.id)">
+                          <div class="absolute right-0 top-0">
+                            <QuestionMark 
+                              :count="getSectionQuestionCount(section.id)"
+                              :mark-id="section.id.toString()"
+                            >
+                              <span class="text-gray-400 text-sm">问题</span>
+                            </QuestionMark>
+                          </div>
+                        </template>
                       </div>
                     </template>
                   </div>
                 </template>
-              </div>
-            </template>
-            <div v-else>  
-              <!-- 如果sections不存在，则渲染markdown内容 -->
-              <div v-html="markdownContent"></div>
+                <div v-else>  
+                  <!-- 如果sections不存在，则渲染markdown内容 -->
+                  <div v-html="markdownContent"></div>
+                </div>
+              </article>
             </div>
-          </article>
+          </div>
         </div>
       </div>
     </template>
@@ -1591,5 +1620,85 @@ img {
 .question-mark-wrapper {
   position: relative;
   display: inline-block;
+}
+
+/* 添加CSS变量 */
+:root {
+  --chat-window-width: 30vw;
+  --content-max-width: 1024px;
+  --content-padding: 1rem;  /* 新增：统一内容padding */
+  --min-side-margin: 1rem;  /* 新增：最小侧边距 */
+}
+
+@media (max-width: 1600px) {
+  :root {
+    --chat-window-width: 480px;
+  }
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --chat-window-width: 420px;
+    --content-padding: 0.75rem;
+  }
+}
+
+/* 确保内容不会被聊天窗口遮挡 */
+.min-h-screen {
+  padding-top: 71px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* 调整内容容器布局 */
+.article-content {
+  margin: 0 auto;
+  padding: 0 var(--content-padding);
+  max-width: var(--content-max-width);
+  transition: all 0.3s ease-in-out;
+  width: 100%;
+}
+
+/* 当聊天窗口打开时的样式 */
+.chat-open .article-content {
+  margin-right: var(--chat-window-width);
+  max-width: calc(100vw - var(--chat-window-width) - var(--min-side-margin) * 2);
+}
+
+/* 标签区域样式 */
+.tags-container {
+  width: 100%;
+  padding: 1rem var(--content-padding);
+  transition: all 0.3s ease-in-out;
+}
+
+.chat-open .tags-container {
+  margin-right: var(--chat-window-width);
+  max-width: calc(100vw - var(--chat-window-width));
+}
+
+/* 文章主容器样式 */
+.article-main-container {
+  width: 100%;
+  margin: 0 auto;
+  transition: all 0.3s ease-in-out;
+}
+
+.chat-open .article-main-container {
+  margin-right: var(--chat-window-width);
+  max-width: calc(100vw - var(--chat-window-width));
+}
+
+@media (max-width: 768px) {
+  :root {
+    --content-padding: 0.5rem;
+    --min-side-margin: 0.5rem;
+  }
+  
+  .chat-open .article-content,
+  .chat-open .tags-container,
+  .chat-open .article-main-container {
+    margin-right: 0;
+    max-width: 100%;
+  }
 }
 </style>
