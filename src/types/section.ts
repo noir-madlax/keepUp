@@ -1,5 +1,5 @@
 import { useI18n } from 'vue-i18n'
-
+// 小节类型 
 export type SectionType = 
   | '背景'
   | '总结'
@@ -18,10 +18,10 @@ export type SectionType =
 ;
 
 
-
-
+// 语言类型
 export type Language = 'zh' | 'en';
 
+// 文章小节类型
 export interface ArticleSection {
   id: number;
   article_id: number;
@@ -31,15 +31,15 @@ export interface ArticleSection {
   sort_order: number;
 }
 
+// 视图类型
 export type ViewType = '默认视图';
 
-// 先定义所有小节类型（确保总结在最前面）
+// 这里的顺序决定了展示顺序
 export const ALL_SECTION_TYPES: SectionType[] = [
-  '背景',
   '总结',
-  '分段提纲',
   '结构图',
   '要点总结',
+  '分段提纲',
   '思维导图',
   '人物介绍',
   '名词解释',
@@ -48,6 +48,7 @@ export const ALL_SECTION_TYPES: SectionType[] = [
   '彩蛋',
   '分段详述',
   '原文字幕',
+  '背景',
   '典型案例',
 ];
 

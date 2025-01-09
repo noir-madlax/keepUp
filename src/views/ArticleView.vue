@@ -361,7 +361,7 @@
                 <template v-if="sections.length">
                   <!-- 遍历sections，渲染每个section -->
                   <div 
-                    v-for="section in sections" 
+                    v-for="section in displaySections" 
                     :key="section.id"
                     class="mb-8"
                     :data-section-type="section.section_type"
@@ -611,7 +611,16 @@ const availableSectionTypes = computed(() => {
 const displaySections = computed(() => {
   return sections.value
     .filter(section => selectedSections.value.includes(section.section_type))
-    .sort((a, b) => a.sort_order - b.sort_order)
+    .sort((a, b) => {
+      // 首先按照 ALL_SECTION_TYPES 中的顺序排序
+      const orderA = ALL_SECTION_TYPES.indexOf(a.section_type)
+      const orderB = ALL_SECTION_TYPES.indexOf(b.section_type)
+      if (orderA !== orderB) {
+        return orderA - orderB
+      }
+      // 如果类型顺序相同，则使用 sort_order 作为次要排序条件
+      return a.sort_order - b.sort_order
+    })
 })
 
 // 切换小节显示状态
