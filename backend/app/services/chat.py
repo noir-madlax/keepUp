@@ -12,6 +12,33 @@ class ChatService:
         self.chat_repository = ChatRepository()
         self.deepseek_service = DeepseekService()
         
+    @staticmethod
+    def _extract_content_from_sse_response(response_chunks: List[str]) -> str:
+        """从 SSE 响应中提取完整的 content"""
+        try:
+            
+            content_parts = []
+            for i, chunk in enumerate(response_chunks):
+                try:
+                    if chunk.startswith('data: '):
+                        data_str = chunk[6:]
+                        if data_str == '[DONE]':
+                            continue
+                        data = json.loads(data_str)
+                        if content := data.get('content'):
+                            content_parts.append(content)
+                except Exception as e:
+                    logger.warning(f"处理响应块失败: {str(e)}, chunk: {chunk}")
+                    continue
+                    
+            final_content = ''.join(content_parts)
+            logger.info(f"最终拼接的内容: {final_content}")  # 打印最终结果
+            return final_content
+            
+        except Exception as e:
+            logger.error(f"提取 content 失败: {str(e)}")
+            return ''
+            
     async def process_chat_stream(self, session_id: UUID) -> AsyncGenerator[str, None]:
         """处理流式聊天请求"""
         try:
@@ -36,18 +63,19 @@ class ChatService:
             )
             
             # 5. 流式调用 Deepseek API
-            full_response = []
+            response_chunks = []
             async for chunk in self.deepseek_service.chat_stream(context):
-                full_response.append(chunk)
+                response_chunks.append(chunk)
                 yield chunk
-                
-            # 6. 保存完整响应
-            complete_response = "".join(full_response)
-            await self.chat_repository.save_message(
-                session_id=session_id,
-                role="assistant",
-                content=complete_response
-            )
+            
+            # 6. 提取并保存完整响应
+            complete_content = self._extract_content_from_sse_response(response_chunks)
+            if complete_content:  # 只在有内容时保存
+                await self.chat_repository.save_message(
+                    session_id=session_id,
+                    role="assistant",
+                    content=complete_content
+                )
             
         except Exception as e:
             logger.error(f"处理聊天请求失败: {str(e)}", exc_info=True)
