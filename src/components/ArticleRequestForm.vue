@@ -363,10 +363,12 @@ import { ref, watch, onUnmounted, nextTick } from 'vue'
 import { ElMessage, ElLoading } from 'element-plus'
 import { supabase } from '../supabaseClient'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 
 // 添加 auth store
 import { useAuthStore } from '../stores/auth'
 const authStore = useAuthStore()
+const router = useRouter()
 
 // 初始化国际化工具
 const { t, locale } = useI18n()
@@ -541,7 +543,57 @@ const checkDuplicate = async (url: string): Promise<boolean> => {
     .single()
     
   if (urlData || originalUrlData) {
-    ElMessage.error(t('summarize.messages.duplicateUrl'))
+    // 获取重复的请求ID
+    const duplicateId = (urlData as any)?.id || (originalUrlData as any)?.id
+
+    if (duplicateId) {
+      // 先查询请求状态
+      const { data: requestData, error: requestError } = await supabase
+        .from('keep_article_requests')
+        .select('status, original_url')
+        .eq('id', duplicateId)
+        .single()
+      
+      if (requestError) {
+        ElMessage.error(t('summarize.messages.duplicateUrl'))
+        return false
+      }
+
+      // 如果请求已完成，查找对应的文章
+      if ((requestData as any)?.status === 'processed') {
+        const { data: articleData, error: articleError } = await supabase
+          .from('keep_articles')
+          .select('id')
+          .eq('original_link', (requestData as any).original_url)
+          .single()
+
+        if (!articleError && (articleData as any)?.id) {
+          const articleId = (articleData as any).id
+          
+          ElMessage({
+            message: `
+              <div class="flex items-center gap-1 cursor-default">
+                <span>${t('summarize.messages.duplicateUrl')}</span>
+                <span>,</span>
+                <span class="text-blue-500 hover:text-blue-600 underline cursor-pointer" onclick="window.location.href='/article/${articleId}'">${t('summarize.messages.click')}</span>
+                <span>${t('summarize.messages.toViewExistingArticle')}</span>
+              </div>
+            `,
+            type: 'warning',
+            duration: 8000,
+            showClose: true,
+            dangerouslyUseHTMLString: true,
+            customClass: 'clickable-message'
+          })
+        } else {
+          ElMessage.error(t('summarize.messages.duplicateUrl'))
+        }
+      } else {
+        ElMessage.error(t('summarize.messages.duplicateUrl'))
+      }
+    } else {
+      ElMessage.error(t('summarize.messages.duplicateUrl'))
+    }
     return false
   }
   return true
@@ -608,7 +660,6 @@ const submitRequest = async () => {
     emit('refresh', { type: 'upload' })
     
   } catch (error) {
-    console.error('提交失败:', error)
     ElMessage.error(t('summarize.messages.submitFailed'))
   } finally {
     isSubmitting.value = false
@@ -863,7 +914,6 @@ const submitFileRequest = async () => {
     })
 
   } catch (error) {
-    console.error('文件上传失败:', error)
     ElMessage.error(error instanceof Error ? error.message : t('summarize.messages.submitFailed'))
   } finally {
     isFileProcessing.value = false
@@ -898,5 +948,12 @@ const resetForm = () => {
 .overflow-y-auto::-webkit-scrollbar-thumb {
   background-color: #CBD5E0;
   border-radius: 3px;
+}
+
+.clickable-message {
+  cursor: pointer !important;
+  &:hover {
+    opacity: 0.8;
+  }
 }
 </style>
