@@ -98,6 +98,8 @@ export default {
       urlRequired: 'Please enter URL',
       invalidUrl: 'Please enter a valid URL',
       duplicateUrl: 'This URL has already been submitted',
+      click: 'click',
+      toViewExistingArticle: 'to view existing article',
       languageRequired: 'Please select at least one output language',
       submitSuccess: 'Submitted successfully, content is being processed',
       submitFailed: 'Submission failed, please try again',

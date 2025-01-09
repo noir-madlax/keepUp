@@ -99,12 +99,18 @@
                 <div v-else :key="'prev-empty'" class="w-20"></div>
 
                 <!-- 当前section名称 -->
-                <h2 
+                <div 
                   :key="currentVisibleSection || 'current'"
-                  class="text-base md:text-lg text-gray-900 font-medium"
+                  class="relative"
                 >
-                  {{ currentVisibleSection ? getLocalizedSectionType(currentVisibleSection) : '' }}
-                </h2>
+                  <h2 class="text-base md:text-lg text-gray-900 font-medium">
+                    {{ currentVisibleSection ? getLocalizedSectionType(currentVisibleSection) : '' }}
+                  </h2>
+                  <!-- 添加与tabs相同的底部指示条 -->
+                  <div 
+                    class="absolute inset-x-0 bottom-[-4px] h-0.5 bg-blue-500 transform scale-100 transition-transform duration-200"
+                  ></div>
+                </div>
 
                 <!-- 下一节 -->
                 <div 
@@ -265,6 +271,9 @@
         </div>
       </div>
 
+      <!-- 2024-01-17: 添加分割线 -->
+      <div class="w-full h-[1px] bg-[#E5E5E5]"></div>
+
       <!-- 小节标签 -->
       <div class="w-full mx-auto bg-white">
         <!-- 小节标签 -->
@@ -280,23 +289,64 @@
           }"
         >
           <div class="tags-container">
-            <div class="flex flex-wrap gap-3">
-              <button
-                v-for="sectionType in ALL_SECTION_TYPES"
-                :key="sectionType"
-                @click="toggleSection(sectionType)"
-                class="px-4 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
-                :class="selectedSections.includes(sectionType) ? 
-                  'bg-white border-blue-400 text-blue-400' : 
-                  'bg-white border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
-              >
-                {{ getLocalizedSectionType(sectionType) }}
-              </button>
+            <!-- 2024-01-16: 新的tabs设计 -->
+            <div class="section-tabs" ref="sectionTabsRef">
+              <div class="flex relative">
+                <div 
+                  class="flex space-x-4 overflow-x-auto hide-scrollbar" 
+                  ref="tabsContainerRef"
+                  @scroll="handleTabsScroll"
+                >
+                       <!-- 2024-01-16: 新的section tabs 字的大小是17px -->
+                  <button
+                    v-for="(sectionType, index) in availableSectionTypes"
+                    :key="sectionType"
+                    @click="toggleSection(sectionType)"
+                    class="group relative py-2.5 px-5 md:text-lg text-gray-900 font-medium text-center transition-all duration-200"
+                    :class="[
+                      currentVisibleSection === sectionType ? 'text-blue-600' : 'text-gray-600',
+                    ]"
+                  >
+                    <div class="relative inline-flex flex-col items-center">
+                      <!-- hover时的胶囊背景，放在文字前面 -->
+                      <div 
+                        class="absolute -inset-x-2 -inset-y-1 rounded-full bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-0"
+                        style="transform: scale(1.1);"
+                      ></div>
+                      <!-- 文字内容 -->
+                      <span class="relative z-10">{{ getLocalizedSectionType(sectionType) }}</span>
+                      <!-- 底部指示条，跟随文字宽度 -->
+                      <div 
+                        class="absolute bottom-[-2px] h-0.5 bg-blue-500 transition-all duration-200 z-10"
+                        :class="[
+                          currentVisibleSection === sectionType || (index === 0 && !currentVisibleSection)
+                            ? 'w-full' 
+                            : 'w-0'
+                        ]"
+                        style="left: 0; right: 0;"
+                      ></div>
+                    </div>
+                  </button>
+                </div>
+                <!-- 固定在右侧的More Sections按钮 -->
+                <div 
+                  v-if="showGradientMask && !isAtEnd"
+                  class="absolute left-5 top-0 bottom-0 flex items-center bg-gradient-to-r from-transparent via-white to-white"
+                  style="width: 100px;"
+                >
+                  <button
+                    @click="handleMoreSections"
+                    class="ml-auto mr-2 px-3 py-1.5 text-[15px] font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200 z-10 whitespace-nowrap flex items-center gap-1"
+                  >
+                    More
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-
-          <!-- 分割线 -->
-          <div class="h-[1px] bg-gray-200"></div>
 
           <!-- 文章内容部分 -->
           <div class="article-main-container">
@@ -311,10 +361,11 @@
                 <template v-if="sections.length">
                   <!-- 遍历sections，渲染每个section -->
                   <div 
-                    v-for="section in displaySections" 
+                    v-for="section in sections" 
                     :key="section.id"
                     class="mb-8"
                     :data-section-type="section.section_type"
+                    :id="'section-' + section.section_type"
                   >
                     <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
                     
@@ -551,8 +602,9 @@ const selectedSections = ref<SectionType[]>(DEFAULT_SELECTED_SECTIONS)
 
 // 根据当前语言获取可用的节类型
 const availableSectionTypes = computed(() => {
-  // 始终返回所有小节类型
-  return ALL_SECTION_TYPES
+  // 2024-01-16: 只返回文章中实际存在的section类型
+  const existingSectionTypes = new Set(sections.value.map(section => section.section_type))
+  return ALL_SECTION_TYPES.filter(type => existingSectionTypes.has(type))
 })
 
 // 根据选中的小节筛选显示内容
@@ -564,13 +616,17 @@ const displaySections = computed(() => {
 
 // 切换小节显示状态
 const toggleSection = (sectionType: SectionType) => {
-  // 创建新数组来更新
-  if (selectedSections.value.includes(sectionType)) {
-    // 如果已选中，则移除
-    selectedSections.value = selectedSections.value.filter(type => type !== sectionType)
-  } else {
-    // 如果未选中，则添加
-    selectedSections.value = [...selectedSections.value, sectionType]
+  // 2024-01-16: 修改为只实现滚动定位功能，移除选中状态切换
+  const element = document.getElementById('section-' + sectionType)
+  if (element) {
+    const headerHeight = 71 // header的固定高度
+    const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+    
+    // 平滑滚动到目标位置，考虑header高度和一些额外的空间
+    window.scrollTo({
+      top: elementPosition - headerHeight - 20,
+      behavior: 'smooth'
+    })
   }
 }
 
@@ -729,7 +785,20 @@ const currentVisibleSection = ref<string>('')
 // 添加一个变量来控制是否允许导航切换
 const allowNavSwitch = ref(true)
 
-// 修改滚动监听函数
+// 添加新的section tabs滚动处理函数
+const handleTabsScroll = () => {
+  const container = tabsContainerRef.value
+  if (container) {
+    const hasOverflow = container.scrollWidth > container.clientWidth
+    // 更精确的滚动到末端判断，添加1px的容差
+    const isScrolledToEnd = Math.abs(container.scrollWidth - container.clientWidth - container.scrollLeft) <= 1
+    
+    showGradientMask.value = hasOverflow
+    isAtEnd.value = isScrolledToEnd
+  }
+}
+
+// 保持原有的handleScroll函数不变
 const handleScroll = () => {
   const currentScroll = window.scrollY
   
@@ -761,7 +830,7 @@ const handleScroll = () => {
   
   // 更新上次的滚动位置
   lastScrollTop.value = currentScroll <= 0 ? 0 : currentScroll
-
+  
   // 检测当前可见的section
   const sectionElements = document.querySelectorAll('[data-section-type]')
   sectionElements.forEach((element) => {
@@ -772,19 +841,44 @@ const handleScroll = () => {
   })
 }
 
+// 修改组件挂载时的事件监听
 onMounted(async () => {
   // 2024-01-11: 确保打开新文章时聊天窗口是关闭的
   chatStore.isChatOpen = false
   
+  // 添加页面滚动事件监听
   window.addEventListener('scroll', handleScroll)
+  
+  // 添加tabs滚动事件监听
+  const container = tabsContainerRef.value
+  if (container) {
+    container.addEventListener('scroll', handleTabsScroll)
+  }
+  
+  // 初始检查
+  handleScroll()
+  handleTabsScroll()
+  
+  // 加载用户信息和文章数据
   await authStore.loadUser()
   await fetchArticle()
   await fetchArticleMarks()
 })
 
-// 在 onUnmounted 中移除滚动监听
+// 修改组件卸载时的事件监听移除
 onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll)
+  const container = tabsContainerRef.value
+  if (container) {
+    container.removeEventListener('scroll', handleTabsScroll)
+  }
+})
+
+// 监听sections变化，重新检查tabs状态
+watch(() => sections.value, () => {
+  nextTick(() => {
+    handleTabsScroll()
+  })
 })
 
 // 复制当前页面URL
@@ -1399,6 +1493,24 @@ const renderSectionContent = (section: ArticleSection) => {
 
 // 在组件挂载时获取标记
 onMounted(async () => {
+  // 2024-01-11: 确保打开新文章时聊天窗口是关闭的
+  chatStore.isChatOpen = false
+  
+  // 添加页面滚动事件监听
+  window.addEventListener('scroll', handleScroll)
+  
+  // 添加tabs滚动事件监听
+  const container = tabsContainerRef.value
+  if (container) {
+    container.addEventListener('scroll', handleTabsScroll)
+  }
+  
+  // 初始检查
+  handleScroll()
+  handleTabsScroll()
+  
+  // 加载用户信息和文章数据
+  await authStore.loadUser()
   await fetchArticle()
   await fetchArticleMarks()
 })
@@ -1450,6 +1562,63 @@ const handleRefreshAnchors = async () => {
       }
     })
   })
+}
+
+// 添加新的响应式变量
+const sectionTabsRef = ref<HTMLElement | null>(null)
+const tabsContainerRef = ref<HTMLElement | null>(null)
+const showGradientMask = ref(false)
+
+// 添加新的计算属性来判断是否滚动到最右端
+const isAtEnd = ref(false)
+
+// 修改 checkOverflow 函数
+const checkOverflow = () => {
+  const container = tabsContainerRef.value
+  if (container) {
+    const hasOverflow = container.scrollWidth > container.clientWidth
+    const isScrolledToEnd = Math.abs(container.scrollWidth - container.clientWidth - container.scrollLeft) < 1
+    
+    showGradientMask.value = hasOverflow
+    isAtEnd.value = isScrolledToEnd
+  }
+}
+
+// 监听滚动事件
+onMounted(() => {
+  const container = tabsContainerRef.value
+  if (container) {
+    container.addEventListener('scroll', checkOverflow)
+  }
+  checkOverflow()
+})
+
+// 在组件卸载时移除事件监听
+onUnmounted(() => {
+  const container = tabsContainerRef.value
+  if (container) {
+    container.removeEventListener('scroll', handleTabsScroll)
+  }
+})
+
+// 监听sections变化，重新检查是否需要显示遮罩
+watch(() => sections.value, () => {
+  nextTick(checkOverflow)
+})
+
+// 添加 handleMoreSections 函数
+const handleMoreSections = () => {
+  const container = tabsContainerRef.value
+  if (container) {
+    const scrollStep = container.clientWidth * 0.8 // 滚动80%的可视区域宽度
+    const targetScroll = container.scrollLeft + scrollStep
+    
+    // 使用平滑滚动
+    container.scrollTo({
+      left: targetScroll,
+      behavior: 'smooth'
+    })
+  }
 }
 </script>
 
@@ -1667,7 +1836,7 @@ img {
 /* 标签区域样式 */
 .tags-container {
   width: 100%;
-  padding: 1rem var(--content-padding);
+  padding: 0.5rem var(--content-padding); /* 减少上下padding */
   transition: all 0.3s ease-in-out;
 }
 
@@ -1699,6 +1868,76 @@ img {
   .chat-open .article-main-container {
     margin-right: 0;
     max-width: 100%;
+  }
+}
+
+/* 2024-01-16: 更新section tabs的样式 */
+.section-tabs {
+  width: 100%;
+  position: relative;
+}
+
+.section-tabs .flex {
+  position: relative;
+  padding: 0.25rem 0; /* 减少上下padding */
+}
+
+/* 隐藏滚动条但保持可滚动 */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 100px; /* 调整为与渐变区域相同的宽度 */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* 胶囊式按钮样式 */
+.section-tabs button {
+  white-space: nowrap;
+  min-width: 100px;
+  position: relative;
+  overflow: visible; /* 改为visible允许hover效果溢出 */
+  padding: 0.5rem 1.25rem; /* 调整按钮内部的padding */
+}
+
+/* 更新hover效果 */
+.section-tabs button .relative {
+  position: relative;
+  z-index: 2;
+  display: inline-block; /* 确保容器大小贴合文字 */
+}
+
+/* 底部指示条样式优化 */
+.section-tabs button > div:last-child {
+  transform-origin: center;
+  bottom: -1px;
+}
+
+@media (min-width: 768px) {
+  .section-tabs button {
+    min-width: 140px;
+  }
+}
+
+/* 添加自定义指示条样式 */
+.indicator-line {
+  height: 2px;
+}
+
+@media (max-width: 768px) {
+  .tags-container {
+    padding: 0.25rem var(--content-padding); /* 移动端进一步减少padding */
+  }
+  
+  .section-tabs .flex {
+    padding: 0.125rem 0; /* 移动端进一步减少padding */
+  }
+  
+  .section-tabs button {
+    padding: 0.375rem 1rem; /* 移动端减小按钮内部padding */
   }
 }
 </style>

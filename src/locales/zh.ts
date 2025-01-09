@@ -98,6 +98,8 @@ export default {
       urlRequired: '请输入URL',
       invalidUrl: '请输入有效的URL地址',
       duplicateUrl: '该链接已经提交过了',
+      click: '点击',
+      toViewExistingArticle: '查看已有文章',
       languageRequired: '请选择一种输出语言',
       submitSuccess: '提交成功，内容正在处理中',
       submitFailed: '提交失败，请重试',

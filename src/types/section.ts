@@ -1,6 +1,7 @@
 import { useI18n } from 'vue-i18n'
 
 export type SectionType = 
+  | '背景'
   | '总结'
   | '分段提纲'
   | '结构图'
@@ -34,6 +35,7 @@ export type ViewType = '默认视图';
 
 // 先定义所有小节类型（确保总结在最前面）
 export const ALL_SECTION_TYPES: SectionType[] = [
+  '背景',
   '总结',
   '分段提纲',
   '结构图',
@@ -51,6 +53,7 @@ export const ALL_SECTION_TYPES: SectionType[] = [
 
 // 默认选中的小节
 export const DEFAULT_SELECTED_SECTIONS: SectionType[] = [
+  '背景',
   '总结',
   '分段提纲',
   '结构图',
