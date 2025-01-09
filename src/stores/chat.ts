@@ -206,7 +206,13 @@ export const useChatStore = defineStore('chat', () => {
             }
           },
           () => {
-            // 完成时重置当前消息
+            // 2024-01-14 11:45: 在连接结束时，如果没有收到过消息，尝试重新加载
+            if (!currentAIMessage.value && currentSession.value?.id) {
+              // 等待一秒，确保后端处理完成
+              setTimeout(() => {
+                loadSession(currentSession.value!.id)
+              }, 1000)
+            }
             currentAIMessage.value = null
             isLoading.value = false
           },
@@ -323,7 +329,13 @@ export const useChatStore = defineStore('chat', () => {
           }
         },
         () => {
-          // 完成时重置当前消息
+          // 2024-01-14 11:45: 在连接结束时，如果没有收到过消息，尝试重新加载
+          if (!currentAIMessage.value && currentSession.value?.id) {
+            // 等待一秒，确保后端处理完成
+            setTimeout(() => {
+              loadSession(currentSession.value!.id)
+            }, 1000)
+          }
           currentAIMessage.value = null
           isLoading.value = false
         },
