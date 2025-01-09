@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, AsyncGenerator
 import json
 from uuid import UUID
 from app.services.deepseek import DeepseekService
@@ -12,8 +12,8 @@ class ChatService:
         self.chat_repository = ChatRepository()
         self.deepseek_service = DeepseekService()
         
-    async def process_chat(self, session_id: UUID) -> str:
-        """处理聊天请求的完整流程"""
+    async def process_chat_stream(self, session_id: UUID) -> AsyncGenerator[str, None]:
+        """处理流式聊天请求"""
         try:
             # 1. 获取会话信息
             session = await self.chat_repository.get_session(session_id)
@@ -35,17 +35,19 @@ class ChatService:
                 article_content=article_content
             )
             
-            # 5. 调用 Deepseek API
-            response = await self.deepseek_service.chat(context)
-            
-            # 6. 保存响应
+            # 5. 流式调用 Deepseek API
+            full_response = []
+            async for chunk in self.deepseek_service.chat_stream(context):
+                full_response.append(chunk)
+                yield chunk
+                
+            # 6. 保存完整响应
+            complete_response = "".join(full_response)
             await self.chat_repository.save_message(
                 session_id=session_id,
                 role="assistant",
-                content=response
+                content=complete_response
             )
-            
-            return response
             
         except Exception as e:
             logger.error(f"处理聊天请求失败: {str(e)}", exc_info=True)

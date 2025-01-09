@@ -1,16 +1,17 @@
 import httpx
-from typing import Dict
+from typing import Dict, AsyncGenerator
 from app.config import settings
 from app.utils.logger import logger
 import json
+from app.utils.sse import SSEMessage
 
 class DeepseekService:
     def __init__(self):
         self.api_key = settings.DEEPSEEK_API_KEY
         self.api_url = "https://api.deepseek.com/v1/chat/completions"
         
-    async def chat(self, context: Dict) -> str:
-        """调用 Deepseek API"""
+    async def chat_stream(self, context: Dict) -> AsyncGenerator[str, None]:
+        """流式调用 Deepseek API"""
         try:
             # 构建请求数据
             request_data = {
@@ -23,7 +24,7 @@ class DeepseekService:
                 ],
                 "temperature": 0.7,
                 "max_tokens": 1000,
-                "stream": False
+                "stream": True  # 启用流式响应
             }
             
             # 添加历史消息
@@ -33,30 +34,40 @@ class DeepseekService:
                     "content": msg["content"]
                 })
             
-            # 记录请求数据(单行)
+            # 记录请求数据
             logger.info(f"Deepseek Request: {json.dumps(request_data, ensure_ascii=False)}")
             
             async with httpx.AsyncClient() as client:
-                response = await client.post(
+                async with client.stream(
+                    "POST",
                     self.api_url,
                     headers={
                         "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        "Accept": "text/event-stream"
                     },
                     json=request_data,
                     timeout=120.0
-                )
-                
-                response.raise_for_status()
-                result = response.json()
-                
-                # 记录响应数据(单行)
-                logger.info(f"Deepseek Response: {json.dumps(result, ensure_ascii=False)}")
-                
-                # 从响应中提取助手的回复
-                assistant_message = result["choices"][0]["message"]["content"]
-                return assistant_message
-                
+                ) as response:
+                    response.raise_for_status()
+                    
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            if line.strip() == "data: [DONE]":
+                                yield SSEMessage.create(content="", done=True)
+                                break
+                            
+                            try:
+                                data = json.loads(line[6:])
+                                if content := data["choices"][0]["delta"].get("content"):
+                                    # 使用统一的 SSE 消息格式
+                                    yield SSEMessage.create(
+                                        content=content,
+                                        event_type="deepseek"
+                                    )
+                            except json.JSONDecodeError:
+                                continue
+                    
         except Exception as e:
             logger.error(f"Deepseek API 调用失败: {str(e)}", exc_info=True)
             raise 

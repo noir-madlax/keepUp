@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import type { 
   ChatSession, 
   ChatMessage, 
@@ -11,30 +11,50 @@ import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from './auth'
 
-// 2024-01-10: 添加开发模式配置和模拟数据
-const isDev = import.meta.env.MODE === 'development'
-const MOCK_DELAY = 2000 // 模拟延迟时间
+const handleSSE = async (
+  url: string, 
+  init: RequestInit,
+  onMessage: (data: any) => void,
+  onDone: () => void,
+  onError: (error: any) => void
+) => {
+  try {
+    const response = await fetch(url, init)
+    if (!response.ok) {
+      throw new Error(`网络响应不是 OK: ${response.statusText}`)
+    }
 
-// 2024-01-10 23:15: 添加模拟LLM响应的延迟函数
-const mockLLMDelay = async () => {
-  if (isDev) {
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY))
+    const reader = response.body?.getReader()
+    const decoder = new TextDecoder('utf-8')
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader!.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      let boundary = buffer.indexOf('\n\n')
+      while (boundary !== -1) {
+        const chunk = buffer.slice(0, boundary)
+        buffer = buffer.slice(boundary + 2)
+        if (chunk.startsWith('data: ')) {
+          const dataStr = chunk.slice(6)
+          if (dataStr === '[DONE]') {
+            onDone()
+            return
+          }
+          try {
+            const data = JSON.parse(dataStr)
+            onMessage(data)
+          } catch (err) {
+            console.error('解析 SSE 数据失败:', err)
+          }
+        }
+        boundary = buffer.indexOf('\n\n')
+      }
+    }
+  } catch (error) {
+    onError(error)
   }
-}
-
-// 模拟的AI响应数据
-const mockResponses = [
-  "这是一个模拟的AI响应，用于开发测试。我理解你的问题，让我来回答一下...",
-  "作为一个模拟的AI助手，我认为这个问题可以从以下几个方面来看...",
-  "从技术角度来说，这个问题涉及到几个关键点...",
-  "根据我的分析，这个问题的解决方案是...",
-  "让我们一步步来分析这个问题..."
-]
-
-// 获取随机模拟响应
-const getRandomMockResponse = () => {
-  const index = Math.floor(Math.random() * mockResponses.length)
-  return mockResponses[index]
 }
 
 export const useChatStore = defineStore('chat', () => {
@@ -50,6 +70,7 @@ export const useChatStore = defineStore('chat', () => {
   const isLoading = ref(false)
   const lastCreatedSession = ref<ChatSession | null>(null)
   const isInitializing = ref(false)
+  const currentAIMessage = ref<ChatMessage | null>(null)
 
   // 显示工具栏
   const showToolbar = (position: ToolbarPosition, text: string) => {
@@ -151,52 +172,51 @@ export const useChatStore = defineStore('chat', () => {
         isLoading.value = true
 
         // 处理 AI 响应
-        if (isDev) {
-          // 开发模式：使用模拟数据
-          await mockLLMDelay()
-          
-          // 创建模拟的AI响应消息
-          const aiMessage: ChatMessage = {
-            id: `mock-${Date.now()}`,
-            session_id: sessionData.id,
-            role: 'assistant',
-            content: getRandomMockResponse(),
-            created_at: new Date().toISOString()
-          }
-
-          // 写入数据库
-          const { error: aiMessageError } = await supabase
-            .from('keep_chat_messages')
-            .insert({
-              session_id: sessionData.id,
-              role: 'assistant',
-              content: aiMessage.content,
-              created_at: new Date().toISOString()
-            })
-
-          if (aiMessageError) throw aiMessageError
-
-          // 更新界面显示 AI 响应
-          currentSession.value.messages = [
-            ...currentSession.value.messages,
-            aiMessage
-          ]
-        } else {
-          // 生产模式：调用实际的 AI 接口
-          const response = await fetch(`/api/chat/${sessionData.id}`, {
+        await handleSSE(
+          `/api/chat/${sessionData.id}/stream`,
+          {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ /* 如果需要发送额外的数据 */ })
+          },
+          (data) => {
+            if (data.content) {
+              if (!currentAIMessage.value) {
+                // 首次收到消息时创建新的 AI 消息对象
+                currentAIMessage.value = {
+                  id: `ai-${Date.now()}`,
+                  session_id: sessionData.id,
+                  role: 'assistant',
+                  content: data.content,
+                  created_at: new Date().toISOString()
+                }
+                // 添加到消息列表
+                currentSession.value!.messages = [
+                  ...currentSession.value!.messages,
+                  currentAIMessage.value
+                ]
+              } else {
+                // 后续消息累积到现有消息中
+                currentAIMessage.value.content += data.content
+                // 强制更新视图
+                currentSession.value!.messages = [...currentSession.value!.messages]
+              }
             }
-          })
-
-          if (!response.ok) {
-            throw new Error(`API 调用失败: ${response.status}`)
+          },
+          () => {
+            // 完成时重置当前消息
+            currentAIMessage.value = null
+            isLoading.value = false
+          },
+          (error) => {
+            console.error('SSE 连接错误:', error)
+            ElMessage.error('AI 响应加载失败，请重试')
+            currentAIMessage.value = null
+            isLoading.value = false
           }
-
-          // 重新加载会话以获取最新消息
-          await loadSession(sessionData.id)
-        }
+        )
       }
 
       lastCreatedSession.value = sessionData
@@ -269,52 +289,51 @@ export const useChatStore = defineStore('chat', () => {
       if (messageError) throw messageError
 
       // 4. 处理 AI 响应
-      if (isDev) {
-        // 开发模式：使用模拟数据
-        await mockLLMDelay()
-        
-        // 创建模拟的AI响应消息
-        const aiMessage: ChatMessage = {
-          id: `mock-${Date.now()}`,
-          session_id: currentSession.value.id,
-          role: 'assistant',
-          content: getRandomMockResponse(),
-          created_at: new Date().toISOString()
-        }
-
-        // 写入数据库
-        const { error: aiMessageError } = await supabase
-          .from('keep_chat_messages')
-          .insert({
-            session_id: currentSession.value.id,
-            role: 'assistant',
-            content: aiMessage.content,
-            created_at: new Date().toISOString()
-          })
-
-        if (aiMessageError) throw aiMessageError
-
-        // 更新界面显示
-        currentSession.value.messages = [
-          ...(currentSession.value.messages || []),
-          aiMessage
-        ]
-      } else {
-        // 生产模式：调用实际的 AI 接口
-        const response = await fetch(`/api/chat/${currentSession.value.id}`, {
+      await handleSSE(
+        `/api/chat/${currentSession.value.id}/stream`,
+        {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ /* 如果需要发送额外的数据 */ })
+        },
+        (data) => {
+          if (data.content) {
+            if (!currentAIMessage.value) {
+              // 首次收到消息时创建新的 AI 消息对象
+              currentAIMessage.value = {
+                id: `ai-${Date.now()}`,
+                session_id: currentSession.value.id,
+                role: 'assistant',
+                content: data.content,
+                created_at: new Date().toISOString()
+              }
+              // 添加到消息列表
+              currentSession.value!.messages = [
+                ...currentSession.value!.messages,
+                currentAIMessage.value
+              ]
+            } else {
+              // 后续消息累积到现有消息中
+              currentAIMessage.value.content += data.content
+              // 强制更新视图
+              currentSession.value!.messages = [...currentSession.value!.messages]
+            }
           }
-        })
-
-        if (!response.ok) {
-          throw new Error(`API 调用失败: ${response.status}`)
+        },
+        () => {
+          // 完成时重置当前消息
+          currentAIMessage.value = null
+          isLoading.value = false
+        },
+        (error) => {
+          console.error('SSE 连接错误:', error)
+          ElMessage.error('AI 响应加载失败，请重试')
+          currentAIMessage.value = null
+          isLoading.value = false
         }
-
-        // 重新加载会话以获取最新消息
-        await loadSession(currentSession.value.id)
-      }
+      )
 
     } catch (error) {
       console.error('发送消息失败:', error)
@@ -431,6 +450,7 @@ export const useChatStore = defineStore('chat', () => {
     loadSessions,
     createNewSession,
     lastCreatedSession,
-    isInitializing
+    isInitializing,
+    currentAIMessage
   }
 }) 
