@@ -6,6 +6,7 @@ from app.repositories.chat import ChatRepository
 from app.repositories.supabase import SupabaseService
 from app.utils.logger import logger
 from app.models.chat import ChatMessage, ChatSession
+from app.templates.prompts import BASE_CHAT_PROMPT, PROMPT_MAPPING
 
 class ChatService:
     def __init__(self):
@@ -117,16 +118,15 @@ class ChatService:
             
     def _build_context(self, session: ChatSession, messages: List[ChatMessage], article_content: str) -> dict:
         """构建发送给 Deepseek 的上下文"""
-        # 构建基础提示信息
-        base_prompt = f"""基于以下文章内容回答问题。
+        # 根据 mark_type 选择合适的提示模板
+        prompt_template = PROMPT_MAPPING.get(session.mark_type, BASE_CHAT_PROMPT)
         
-        文章内容:
-        {article_content}
-
-        当前选中内容:
-        {session.mark_content}
-
-        """
+        # 构建提示信息
+        base_prompt = prompt_template.format(
+            article_content=article_content,
+            mark_content=session.mark_content
+        )
+        
         # 添加历史消息
         history = []
         for msg in messages[-5:]:  # 只保留最近5轮对话
