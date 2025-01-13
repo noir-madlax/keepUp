@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
 export default defineConfig({
   base: '/',
@@ -90,11 +91,40 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: process.env.NODE_ENV === 'production' 
-          ? 'https://keep-up-backend.vercel.app'
-          : 'http://localhost:8000',
+        target: 'https://keep-up-backend.vercel.app',
+        // target: process.env.NODE_ENV === 'production' 
+        //   ? 'https://keep-up-backend.vercel.app'
+        //   : 'http://localhost:8000',
+        agent: new HttpsProxyAgent('http://127.0.0.1:7890'),
+        
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // 构建请求头字符串
+            const headers = Object.entries(req.headers)
+              .filter(([key]) => !['host', 'accept-encoding'].includes(key))
+              .map(([key, value]) => `-H '${key}: ${value}'`)
+              .join(' ');
+    
+            // 构建请求体
+            let curlCommand = `curl -X ${req.method} '${options.target}${proxyReq.path}'`;
+            
+            // 添加请求头
+            if (headers) {
+              curlCommand += ` ${headers}`;
+            }
+    
+            // 如果是 POST/PUT 请求，添加请求体
+            if (['POST', 'PUT'].includes(req.method) && req.body) {
+              curlCommand += ` -d '${JSON.stringify(req.body)}'`;
+            }
+    
+            console.log('\n=== CURL 命令 ===');
+            console.log(curlCommand);
+            console.log('================\n');
+          });
+        }
       }
     }
   },
