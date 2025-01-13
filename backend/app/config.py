@@ -40,10 +40,10 @@ class Settings(BaseSettings):
     
     # CORS 配置
     CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
         "http://localhost:8000",
         "http://47.116.210.164:8000",
-        "https://*.vercel.app",
-        "https://*.now.sh"
+        "https://keep-up-nine.vercel.app"
     ]
     
 
