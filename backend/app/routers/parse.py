@@ -82,9 +82,6 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
         if sections:  # 只在有小节时保存
             await SupabaseService.create_article_sections(article['id'], sections)
         
-        # 更新请求状态
-        await SupabaseService.update_status(request_id, "processed")
-        
     except Exception as e:
         logger.error(f"保存数据失败: {str(e)}", exc_info=True)
         await SupabaseService.update_status(request_id, "failed", str(e))

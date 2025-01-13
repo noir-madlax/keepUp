@@ -73,8 +73,7 @@ class SupabaseService:
         """更新请求"""
         client = cls.get_client()
         result = client.table("keep_article_requests").update({
-            "content": content,
-            "status": "processed"
+            "content": content
         }).eq("id", request_id).execute()
         logger.info(f"内容更新成功: ID={request_id}")
         return result
@@ -530,3 +529,27 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"获取文章信息失败: request_id={request_id}, error={str(e)}")
             return None
+    
+    @classmethod
+    async def update_article_visibility(cls, article_id: int, is_visible: bool) -> None:
+        """更新文章可见性状态
+        
+        Args:
+            article_id: 文章ID
+            is_visible: 是否可见
+        """
+        try:
+            client = cls.get_client()
+            
+            result = client.table('keep_articles').update({
+                'is_visible': is_visible
+            }).eq('id', article_id).execute()
+            
+            if not result.data:
+                raise Exception(f"未找到 ID 为 {article_id} 的文章")
+            
+            logger.info(f"文章可见性更新成功: ID={article_id}, is_visible={is_visible}")
+            
+        except Exception as e:
+            logger.error(f"更新文章可见性失败: {str(e)}", exc_info=True)
+            raise

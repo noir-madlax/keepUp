@@ -453,6 +453,7 @@ const fetchArticles = async (isRefresh = false) => {
         author_id,
         author:keep_authors(id, name, icon)
       `, { count: 'exact' })
+      .eq('is_visible', true)  // 只查询可见的文章
       .order('created_at', { ascending: false })
       .range(from, to)
 

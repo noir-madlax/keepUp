@@ -297,6 +297,15 @@ async def process_multilingual_tasks(request_id: int, summary_languages: List[st
         return_exceptions=True
     )
     
+    # 获取文章信息
+    article = await SupabaseService.get_article_by_request_id(request_id)
+    if article:
+        # 更新文章为可见状态
+        await SupabaseService.update_article_visibility(article['id'], True)
+    
+    # 更新请求状态
+    await SupabaseService.update_status(request_id, "processed")
+    
     await RequestLogger.info(
         request_id,
         Steps.PROCESS_COMPLETE,
