@@ -64,8 +64,8 @@
           </div>
         </div>
         
-        <!-- 2024-01-13: LLM 响应等待时的骨架屏 -->
-        <div v-if="chatStore.isLoading" class="flex justify-start">
+        <!-- 2024-01-19 16:30: 使用isAIInitialLoading来控制骨架屏 -->
+        <div v-if="chatStore.isAIInitialLoading" class="flex justify-start">
           <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200 animate-pulse">
             <div class="h-2 bg-gray-200 rounded-full w-[180px]"></div>
             <div class="h-2 bg-gray-200 rounded-full w-[120px]"></div>
@@ -92,21 +92,20 @@
 
     <!-- 输入框 -->
     <div class="p-4 border-t bg-gray-50">
-      <form @submit.prevent="handleSubmit" class="flex gap-2">
+      <form @submit.prevent="chatStore.isAIResponding ? handleAbort() : handleSubmit()" class="flex gap-2">
         <input
           v-model="messageInput"
           type="text"
           :placeholder="$t('chat.input.placeholder')"
           class="flex-1 px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          :disabled="chatStore.isLoading"
+          :disabled="chatStore.isAIResponding"
         />
         <button
           type="submit"
           class="relative px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium min-w-[80px] overflow-hidden transition-all duration-200"
-          :disabled="!messageInput.trim() || chatStore.isLoading"
         >
           <div class="flex items-center justify-center gap-1"
-               :class="[chatStore.isLoading ? 'opacity-0' : 'opacity-100']"
+               :class="[chatStore.isAIResponding ? 'opacity-0' : 'opacity-100']"
                style="transition: opacity 0.2s ease-in-out">
             <span>{{ $t('chat.window.send') }}</span>
             <el-icon class="text-lg">
@@ -114,12 +113,15 @@
             </el-icon>
           </div>
 
-          <div v-if="chatStore.isLoading" 
-               class="absolute inset-0 flex items-center justify-center bg-blue-600"
+          <div v-if="chatStore.isAIResponding" 
+               class="absolute inset-0 flex items-center justify-center bg-white hover:bg-gray-50 cursor-pointer rounded-lg"
                style="transition: all 0.2s ease-in-out">
-            <div class="relative w-5 h-5">
-              <div class="absolute inset-0 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <div class="absolute inset-1 border-2 border-white border-b-transparent rounded-full animate-spin-reverse"></div>
+            <div class="stop-icon-wrapper">
+              <img 
+                src="/images/icons/stop.svg" 
+                alt="Stop" 
+                class="w-8 h-8"
+              />
             </div>
           </div>
         </button>
@@ -171,12 +173,17 @@ const handleClose = () => {
 }
 
 const handleSubmit = async () => {
-  if (!messageInput.value.trim() || chatStore.isLoading) return
+  if (!messageInput.value.trim()) return
   
   const content = messageInput.value
   messageInput.value = ''
   
   await chatStore.sendMessage(content)
+}
+
+// 2024-01-19 17:30: 添加中止处理函数
+const handleAbort = () => {
+  chatStore.abortChat()
 }
 
 // 添加消息列表引用
@@ -243,5 +250,40 @@ const handleChatScroll = (event: WheelEvent | TouchEvent) => {
 
 .animate-spin-reverse {
   animation: spin-reverse 1s linear infinite;
+}
+
+/* 2024-01-19 19:00: 添加stop图标的动画效果 */
+.stop-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.stop-icon-wrapper:hover {
+  transform: scale(1.15);
+}
+
+/* 添加更明显的呼吸灯效果 */
+@keyframes pulse {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+.stop-icon-wrapper {
+  animation: pulse 1.5s ease-in-out infinite;
 }
 </style> 
