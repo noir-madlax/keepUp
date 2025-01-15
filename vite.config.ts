@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import { VitePWA } from 'vite-plugin-pwa'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
 export default defineConfig({
   base: '/',
@@ -90,9 +91,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: process.env.NODE_ENV === 'production' 
-          ? 'https://keep-up-backend.vercel.app'
-          : 'http://localhost:8000',
+        target: 'http://keep-up-backend.vercel.app',
+        agent: new HttpsProxyAgent('http://127.0.0.1:7890'),
+       // target: process.env.NODE_ENV === 'production' 
+        //  ? 'https://keep-up-backend.vercel.app'
+        //  : 'http://localhost:8000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
