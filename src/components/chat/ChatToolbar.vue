@@ -6,7 +6,7 @@
       :style="{
         top: `${position.top}px`,
         left: `${position.left}px`,
-        transform: 'translateY(10px)'
+        transform: 'translateY(40px)'
       }"
     >
       <button 
