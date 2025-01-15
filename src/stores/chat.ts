@@ -10,10 +10,16 @@ import type {
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from './auth'
+import { truncate, truncateSync } from 'fs'
 
 // 2024-01-19 14:30: 添加超时和重试相关的常量
-const TIMEOUT_MS = 10000 // 10秒超时
-const MAX_RETRIES = 1 // 最大重试次数
+const TIMEOUT_MS = 7000 // 7秒超时
+const MAX_RETRIES = 2 // 最大重试次数
+
+// 2024-01-19 17:30: 添加 AbortController 实例
+let currentAbortController: AbortController | null = null
+// 2024-01-19 18:00: 添加用户主动中止的标志
+let isUserAborted = false
 
 const handleSSE = async (
   url: string, 
@@ -22,6 +28,12 @@ const handleSSE = async (
   onDone: () => void,
   onError: (error: any) => void
 ) => {
+  // 2024-01-19 17:30: 创建新的 AbortController
+  currentAbortController = new AbortController()
+  init.signal = currentAbortController.signal
+  // 2024-01-19 18:00: 重置中止标志
+  isUserAborted = false
+
   // 2024-01-19 14:30: 添加重试计数和超时控制
   let retryCount = 0
   let timeoutId: number | null = null
@@ -49,12 +61,21 @@ const handleSSE = async (
 
       console.log('SSE 连接建立成功')
       const reader = response.body?.getReader()
+      console.log('SSE 连接建立成功1')
       const decoder = new TextDecoder('utf-8')
+      console.log('SSE 连接建立成功2')
       let buffer = ''
-
+      console.log('SSE 连接建立成功3')
       while (true) {
         const { done, value } = await reader!.read()
-        if (done) break
+        console.log('value', value, new Date().toLocaleTimeString('zh-CN', { hour12: false }))
+        console.log('done', done, new Date().toLocaleTimeString('zh-CN', { hour12: false }))
+        
+        if (done) {
+          console.log('SSE 读取完成，调用 onDone')
+          onDone()
+          break
+        }
         
         buffer += decoder.decode(value, { stream: true })
         let boundary = buffer.indexOf('\n\n')
@@ -63,9 +84,18 @@ const handleSSE = async (
           const chunk = buffer.slice(0, boundary)
           buffer = buffer.slice(boundary + 2)
           
+          if (chunk.includes('event: done') || chunk.includes('data: [DONE]')) {
+            console.log('检测到 SSE 结束信号，主动结束连接')
+            onDone()
+            return
+          }
+          
           if (chunk.startsWith('data: ')) {
+            console.log('SSE 连接建立成功6')
+            console.log('chunk', chunk)
             // 2024-01-19 14:30: 收到消息时清除超时计时器
             if (timeoutId) {
+              console.log('SSE 连接建立成功7')
               window.clearTimeout(timeoutId)
               timeoutId = null
             }
@@ -89,13 +119,18 @@ const handleSSE = async (
       }
     } catch (error) {
       console.log('SSE 连接发生错误:', error)
-      // 2024-01-19 14:30: 连接失败时的重试逻辑
-      if (retryCount < MAX_RETRIES) {
-        retryCount++
-        console.log(`连接失败，开始第 ${retryCount} 次重试`)
-        startSSEConnection()
+      // 2024-01-19 18:00: 只有在非用户主动中止时才重试和显示错误
+      if (!isUserAborted) {
+        if (retryCount < MAX_RETRIES) {
+          retryCount++
+          console.log(`连接失败，开始第 ${retryCount} 次重试`)
+          startSSEConnection()
+        } else {
+          onError(error)
+        }
       } else {
-        onError(error)
+        // 用户主动中止，直接调用 onDone
+        onDone()
       }
     } finally {
       // 2024-01-19 14:30: 清理超时计时器
@@ -120,7 +155,8 @@ export const useChatStore = defineStore('chat', () => {
   const toolbarVisible = ref(false)
   const toolbarPosition = ref<ToolbarPosition>({ top: 0, left: 0 })
   const selectedText = ref('')
-  const isLoading = ref(false)
+  const isAIResponding = ref(false)  // 2024-01-19 16:30: 控制整个AI响应过程
+  const isAIInitialLoading = ref(false)  // 2024-01-19 16:30: 控制骨架屏显示
   const lastCreatedSession = ref<ChatSession | null>(null)
   const isInitializing = ref(false)
   const currentAIMessage = ref<ChatMessage | null>(null)
@@ -164,6 +200,7 @@ export const useChatStore = defineStore('chat', () => {
     try {
       isInitializing.value = true
       currentSession.value = null
+      isAIResponding.value = true 
       
       // 1. 创建会话记录
       const { data: sessionData, error: sessionError } = await supabase
@@ -226,7 +263,7 @@ export const useChatStore = defineStore('chat', () => {
         if (messageError) throw messageError
 
         // 4. 开始加载 AI 响应
-        isLoading.value = true
+        isAIInitialLoading.value = true
               // 2024-01-18 15:30: 确保在开始新的 SSE 连接前重置 currentAIMessage
         currentAIMessage.value = null
 
@@ -251,7 +288,7 @@ export const useChatStore = defineStore('chat', () => {
                   content: data.content,
                   created_at: new Date().toISOString()
                 }
-                isLoading.value = false  // 收到第一条消息时就重置初始化状态
+                isAIInitialLoading.value = false  // 收到第一条消息时关闭骨架屏
                 // 添加到消息列表
                 currentSession.value!.messages = [
                   ...currentSession.value!.messages,
@@ -274,13 +311,19 @@ export const useChatStore = defineStore('chat', () => {
               }, 1000)
             }
             currentAIMessage.value = null
-            isLoading.value = false
+            isAIResponding.value = false  // AI响应完全结束
+            isAIInitialLoading.value = false
           },
           (error) => {
             console.error('SSE 连接错误:', error)
-            ElMessage.error('AI 响应加载失败，请重试')
+            // 2024-01-19 18:00: 只在非用户主动中止时显示错误提示
+            if (!isUserAborted) {
+              ElMessage.error('AI 响应加载失败，正在重试...')
+            }
+            // 错误处理保持现有逻辑
             currentAIMessage.value = null
-            isLoading.value = false
+            isAIResponding.value = false
+            isAIInitialLoading.value = false
           }
         )
       }
@@ -293,7 +336,8 @@ export const useChatStore = defineStore('chat', () => {
       isChatOpen.value = false
       throw error
     } finally {
-      isLoading.value = false
+      isAIInitialLoading.value = false
+      isAIResponding.value = false  // AI响应完全结束
     }
   }
 
@@ -325,7 +369,8 @@ export const useChatStore = defineStore('chat', () => {
     if (!currentSession.value) return
     
     try {
-      isLoading.value = true
+      isAIResponding.value = true
+      isAIInitialLoading.value = true
       
       // 1. 立即创建并显示用户消息
       const userMessage: ChatMessage = {
@@ -355,7 +400,6 @@ export const useChatStore = defineStore('chat', () => {
       if (messageError) throw messageError
 
       // 2024-01-18 15:30: 确保在开始新的 SSE 连接前重置 currentAIMessage
-      isLoading.value = true
       currentAIMessage.value = null
 
       // 4. 处理 AI 响应
@@ -379,7 +423,7 @@ export const useChatStore = defineStore('chat', () => {
                 content: data.content,
                 created_at: new Date().toISOString()
               }
-              isLoading.value = false  // 收到第一条消息时就重置初始化状态
+              isAIInitialLoading.value = false  // 收到第一条消息时关闭骨架屏
               // 添加到消息列表
               currentSession.value!.messages = [
                 ...currentSession.value!.messages,
@@ -403,14 +447,19 @@ export const useChatStore = defineStore('chat', () => {
             }, 1000)
           }
           currentAIMessage.value = null
-          isLoading.value = false
+          isAIResponding.value = false  // AI响应完全结束
+          isAIInitialLoading.value = false
         },
         (error) => {
           console.error('SSE 连接错误:', error)
-          ElMessage.error('AI 响应加载失败，正在重试...')
+          // 2024-01-19 18:00: 只在非用户主动中止时显示错误提示
+          if (!isUserAborted) {
+            ElMessage.error('AI 响应加载失败，正在重试...')
+          }
           // 错误处理保持现有逻辑
           currentAIMessage.value = null
-          isLoading.value = false
+          isAIResponding.value = false
+          isAIInitialLoading.value = false
         }
       )
 
@@ -419,7 +468,8 @@ export const useChatStore = defineStore('chat', () => {
       ElMessage.error('发送消息失败，请重试')
       // 2024-01-18 15:30: 确保在错误时也重置状态
       currentAIMessage.value = null
-      isLoading.value = false
+      isAIResponding.value = false
+      isAIInitialLoading.value = false
     }
   }
 
@@ -443,7 +493,7 @@ export const useChatStore = defineStore('chat', () => {
         throw new Error('用户未登录')
       }
 
-      isLoading.value = true
+      isAIInitialLoading.value = true
       isChatOpen.value = true  // 立即打开聊天窗口
       
       // 根据是否是 Ask AI 模式设置不同的参数
@@ -495,7 +545,7 @@ export const useChatStore = defineStore('chat', () => {
       isChatOpen.value = false
       throw error
     } finally {
-      isLoading.value = false
+      isAIInitialLoading.value = false
     }
   }
 
@@ -532,6 +582,21 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  // 2024-01-19 17:30: 添加中止聊天的方法
+  const abortChat = () => {
+    if (currentAbortController) {
+      // 2024-01-19 18:00: 设置用户主动中止标志
+      isUserAborted = true
+      currentAbortController.abort()
+      currentAbortController = null
+    }
+    
+    // 重置所有状态
+    isAIResponding.value = false
+    isAIInitialLoading.value = false
+    currentAIMessage.value = null
+  }
+
   return {
     currentSession,
     sessions,
@@ -539,7 +604,9 @@ export const useChatStore = defineStore('chat', () => {
     toolbarVisible,
     toolbarPosition,
     selectedText,
-    isLoading,
+    isLoading: isAIResponding,  // 2024-01-19 16:30: 为了保持向后兼容，将isLoading映射到isAIResponding
+    isAIResponding,
+    isAIInitialLoading,
     createSession,
     sendMessage,
     showToolbar,
@@ -550,6 +617,7 @@ export const useChatStore = defineStore('chat', () => {
     lastCreatedSession,
     isInitializing,
     currentAIMessage,
-    reloadCurrentAIMessage
+    reloadCurrentAIMessage,
+    abortChat  // 2024-01-19 17:30: 导出中止方法
   }
 }) 
