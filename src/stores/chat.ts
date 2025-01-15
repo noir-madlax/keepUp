@@ -11,6 +11,10 @@ import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from './auth'
 
+// 2024-01-19 14:30: 添加超时和重试相关的常量
+const TIMEOUT_MS = 10000 // 10秒超时
+const MAX_RETRIES = 1 // 最大重试次数
+
 const handleSSE = async (
   url: string, 
   init: RequestInit,
@@ -18,45 +22,92 @@ const handleSSE = async (
   onDone: () => void,
   onError: (error: any) => void
 ) => {
-  try {
-    const response = await fetch(url, init)
-    if (!response.ok) {
-      throw new Error(`网络响应不是 OK: ${response.statusText}`)
-    }
+  // 2024-01-19 14:30: 添加重试计数和超时控制
+  let retryCount = 0
+  let timeoutId: number | null = null
+  
+  const startSSEConnection = async () => {
+    console.log('SSE 连接开始建立')
+    
+    // 2024-01-19 14:30: 设置超时检测
+    timeoutId = window.setTimeout(() => {
+      console.log('SSE 连接超时')
+      if (retryCount < MAX_RETRIES) {
+        retryCount++
+        console.log(`开始第 ${retryCount} 次重试`)
+        startSSEConnection()
+      } else {
+        onError(new Error('SSE 连接超时且重试失败'))
+      }
+    }, TIMEOUT_MS)
 
-    const reader = response.body?.getReader()
-    const decoder = new TextDecoder('utf-8')
-    let buffer = ''
+    try {
+      const response = await fetch(url, init)
+      if (!response.ok) {
+        throw new Error(`网络响应不是 OK: ${response.statusText}`)
+      }
 
-    while (true) {
-      const { done, value } = await reader!.read()
-      if (done) break
-      buffer += decoder.decode(value, { stream: true })
-      let boundary = buffer.indexOf('\n\n')
-      while (boundary !== -1) {
-        const chunk = buffer.slice(0, boundary)
-        buffer = buffer.slice(boundary + 2)
-        if (chunk.startsWith('data: ')) {
-          const dataStr = chunk.slice(6)
-          if (dataStr === '[DONE]') {
-            onDone()
-            return
+      console.log('SSE 连接建立成功')
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder('utf-8')
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader!.read()
+        if (done) break
+        
+        buffer += decoder.decode(value, { stream: true })
+        let boundary = buffer.indexOf('\n\n')
+        
+        while (boundary !== -1) {
+          const chunk = buffer.slice(0, boundary)
+          buffer = buffer.slice(boundary + 2)
+          
+          if (chunk.startsWith('data: ')) {
+            // 2024-01-19 14:30: 收到消息时清除超时计时器
+            if (timeoutId) {
+              window.clearTimeout(timeoutId)
+              timeoutId = null
+            }
+            
+            const dataStr = chunk.slice(6)
+            if (dataStr === '[DONE]') {
+              console.log('SSE 收到完成信号')
+              onDone()
+              return
+            }
+            
+            try {
+              const data = JSON.parse(dataStr)
+              onMessage(data)
+            } catch (err) {
+              console.error('解析 SSE 数据失败:', err)
+            }
           }
-          try {
-            const data = JSON.parse(dataStr)
-            onMessage(data)
-          } catch (err) {
-            console.error('解析 SSE 数据失败:', err)
-          }
+          boundary = buffer.indexOf('\n\n')
         }
-        boundary = buffer.indexOf('\n\n')
+      }
+    } catch (error) {
+      console.log('SSE 连接发生错误:', error)
+      // 2024-01-19 14:30: 连接失败时的重试逻辑
+      if (retryCount < MAX_RETRIES) {
+        retryCount++
+        console.log(`连接失败，开始第 ${retryCount} 次重试`)
+        startSSEConnection()
+      } else {
+        onError(error)
+      }
+    } finally {
+      // 2024-01-19 14:30: 清理超时计时器
+      if (timeoutId) {
+        window.clearTimeout(timeoutId)
+        timeoutId = null
       }
     }
-  } catch (error) {
-    onError(error)
-  } finally {
-    onDone()
   }
+
+  // 开始首次连接
+  await startSSEConnection()
 }
 
 export const useChatStore = defineStore('chat', () => {
@@ -334,12 +385,12 @@ export const useChatStore = defineStore('chat', () => {
           }
         },
         () => {
-          // 2024-01-18 15:30: 在连接结束时，确保重置状态
-          console.log('SSE 连接结束，重置状态')
+          console.log('SSE 连接正常结束')
+          // 2024-01-19 14:30: 在连接结束时，如果没有收到消息，尝试重新加载最后一条 AI 消息
           if (!currentAIMessage.value && currentSession.value?.id) {
             // 等待一秒，确保后端处理完成
             setTimeout(() => {
-              loadSession(currentSession.value!.id)
+              reloadCurrentAIMessage(currentSession.value!.id)
             }, 1000)
           }
           currentAIMessage.value = null
@@ -347,8 +398,8 @@ export const useChatStore = defineStore('chat', () => {
         },
         (error) => {
           console.error('SSE 连接错误:', error)
-          ElMessage.error('AI 响应加载失败，请重试')
-          // 2024-01-18 15:30: 确保在错误时也重置状态
+          ElMessage.error('AI 响应加载失败，正在重试...')
+          // 错误处理保持现有逻辑
           currentAIMessage.value = null
           isLoading.value = false
         }
@@ -439,6 +490,39 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  // 2024-01-19 14:30: 添加重新加载当前 AI 消息的函数
+  const reloadCurrentAIMessage = async (sessionId: string) => {
+    try {
+      console.log('开始重新加载最后一条 AI 消息')
+      const { data, error } = await supabase
+        .from('keep_chat_messages')
+        .select('*')
+        .eq('session_id', sessionId)
+        .eq('role', 'assistant')
+        .order('created_at', { ascending: false })
+        .limit(1)
+      
+      if (error) throw error
+      
+      if (data?.[0] && currentSession.value) {
+        // 找到最后一条 AI 消息的索引
+        const lastAIMessageIndex = currentSession.value.messages
+          .findIndex(msg => msg.role === 'assistant')
+        
+        if (lastAIMessageIndex !== -1) {
+          // 更新消息内容
+          currentSession.value.messages[lastAIMessageIndex] = data[0]
+          // 强制更新视图
+          currentSession.value.messages = [...currentSession.value.messages]
+          console.log('成功更新最后一条 AI 消息')
+        }
+      }
+    } catch (error) {
+      console.error('重新加载 AI 消息失败:', error)
+      ElMessage.error('重新加载消息失败，请刷新页面重试')
+    }
+  }
+
   return {
     currentSession,
     sessions,
@@ -456,6 +540,7 @@ export const useChatStore = defineStore('chat', () => {
     createNewSession,
     lastCreatedSession,
     isInitializing,
-    currentAIMessage
+    currentAIMessage,
+    reloadCurrentAIMessage
   }
 }) 
