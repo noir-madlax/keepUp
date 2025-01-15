@@ -193,8 +193,12 @@ export const useChatStore = defineStore('chat', () => {
         messages: [] as ChatMessage[]
       } as ChatSession
       
+      // 保存最后创建的会话，用于锚点显示
+      lastCreatedSession.value = sessionData
+      
       // 结束初始化加载状态
       isInitializing.value = false
+      hideToolbar()
 
       if (!skipInitialMessage && currentSession.value) {
         // 3. 创建并显示用户消息
@@ -223,6 +227,8 @@ export const useChatStore = defineStore('chat', () => {
 
         // 4. 开始加载 AI 响应
         isLoading.value = true
+              // 2024-01-18 15:30: 确保在开始新的 SSE 连接前重置 currentAIMessage
+        currentAIMessage.value = null
 
         // 处理 AI 响应
         await handleSSE(
@@ -245,6 +251,7 @@ export const useChatStore = defineStore('chat', () => {
                   content: data.content,
                   created_at: new Date().toISOString()
                 }
+                isLoading.value = false  // 收到第一条消息时就重置初始化状态
                 // 添加到消息列表
                 currentSession.value!.messages = [
                   ...currentSession.value!.messages,
@@ -348,6 +355,7 @@ export const useChatStore = defineStore('chat', () => {
       if (messageError) throw messageError
 
       // 2024-01-18 15:30: 确保在开始新的 SSE 连接前重置 currentAIMessage
+      isLoading.value = true
       currentAIMessage.value = null
 
       // 4. 处理 AI 响应
@@ -371,6 +379,7 @@ export const useChatStore = defineStore('chat', () => {
                 content: data.content,
                 created_at: new Date().toISOString()
               }
+              isLoading.value = false  // 收到第一条消息时就重置初始化状态
               // 添加到消息列表
               currentSession.value!.messages = [
                 ...currentSession.value!.messages,
