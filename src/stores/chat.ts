@@ -54,6 +54,8 @@ const handleSSE = async (
     }
   } catch (error) {
     onError(error)
+  } finally {
+    onDone()
   }
 }
 
@@ -294,6 +296,9 @@ export const useChatStore = defineStore('chat', () => {
 
       if (messageError) throw messageError
 
+      // 2024-01-18 15:30: 确保在开始新的 SSE 连接前重置 currentAIMessage
+      currentAIMessage.value = null
+
       // 4. 处理 AI 响应
       await handleSSE(
         `/api/chat/${currentSession.value.id}/stream`,
@@ -310,7 +315,7 @@ export const useChatStore = defineStore('chat', () => {
               // 首次收到消息时创建新的 AI 消息对象
               currentAIMessage.value = {
                 id: `ai-${Date.now()}`,
-                session_id: currentSession.value.id,
+                session_id: currentSession.value!.id,
                 role: 'assistant',
                 content: data.content,
                 created_at: new Date().toISOString()
@@ -329,7 +334,8 @@ export const useChatStore = defineStore('chat', () => {
           }
         },
         () => {
-          // 2024-01-14 11:45: 在连接结束时，如果没有收到过消息，尝试重新加载
+          // 2024-01-18 15:30: 在连接结束时，确保重置状态
+          console.log('SSE 连接结束，重置状态')
           if (!currentAIMessage.value && currentSession.value?.id) {
             // 等待一秒，确保后端处理完成
             setTimeout(() => {
@@ -342,6 +348,7 @@ export const useChatStore = defineStore('chat', () => {
         (error) => {
           console.error('SSE 连接错误:', error)
           ElMessage.error('AI 响应加载失败，请重试')
+          // 2024-01-18 15:30: 确保在错误时也重置状态
           currentAIMessage.value = null
           isLoading.value = false
         }
@@ -350,35 +357,21 @@ export const useChatStore = defineStore('chat', () => {
     } catch (error) {
       console.error('发送消息失败:', error)
       ElMessage.error('发送消息失败，请重试')
-    } finally {
+      // 2024-01-18 15:30: 确保在错误时也重置状态
+      currentAIMessage.value = null
       isLoading.value = false
     }
   }
 
   // 添加加载会话列表的方法
   const loadSessions = async () => {
+    // 2024-01-17: 暂时移除会话列表加载逻辑，提升性能
     try {
-      const { data, error } = await supabase
-        .from('keep_chat_sessions')
-        .select(`
-          *,
-          messages:keep_chat_messages(*)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (error) throw error
-      if (!data) throw new Error('No sessions found')
-      
-      // 验证每个会话数据
-      const validSessions = data.filter(isChatSession)
-      if (validSessions.length !== data.length) {
-        console.warn('Some sessions were filtered out due to invalid data')
-      }
-
-      sessions.value = validSessions
+      // 返回空数组，保持数据结构一致
+      sessions.value = []
     } catch (error) {
       console.error('加载会话列表失败:', error)
+      // 保留错误提示，以防其他地方依赖这个行为
       ElMessage.error('加载会话列表失败')
     }
   }
