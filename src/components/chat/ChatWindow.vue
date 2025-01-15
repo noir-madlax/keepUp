@@ -115,7 +115,7 @@
 
           <div v-if="chatStore.isAIResponding" 
                class="absolute inset-0 flex items-center justify-center bg-white hover:bg-gray-50 cursor-pointer rounded-lg"
-               style="transition: all 0.2s ease-in-out">
+               style="transition: all 1.5s ease-in-out">
             <div class="stop-icon-wrapper">
               <img 
                 src="/images/icons/stop.svg" 
@@ -281,7 +281,9 @@ const handleChatScroll = (event: WheelEvent | TouchEvent) => {
     opacity: 0.7;
     transform: scale(0.95);
   }
+
 }
+
 
 .stop-icon-wrapper {
   animation: pulse 1.5s ease-in-out infinite;
