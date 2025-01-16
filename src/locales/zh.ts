@@ -197,7 +197,14 @@ export default {
     actions: {
       explain: '解释含义',
       elaborate: '展开详述',
-      question: '自由提问'
+      question: '自由提问',
+      structure: '内容结构图',
+      overview: '分段提纲',
+      quotes: '金句',
+      xmind: '思维导图',
+      expand: '展开说说',
+      original: '给出原文',
+      explain_selection: '解释一下'
     },
     input: {
       placeholder: '需要我为您做些什么？'
@@ -208,7 +215,10 @@ export default {
       startChat: '开始对话...',
       send: '发送'
     },
-    questionMark: '问题'
+    questionMark: '问题',
+    toolbar: {
+      hint: '🌟进一步提问，了解更多内容：(也可以选中文字后提问)'
+    }
   },
   auth: {
     loginSuccess: '登录成功',

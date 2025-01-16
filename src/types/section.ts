@@ -61,11 +61,10 @@ export const DEFAULT_SELECTED_SECTIONS: SectionType[] = [
 
 // 工具按钮对应的小节类型
 export const TOOL_SECTIONS = {
+  STRUCTURE: '结构图',
   OVERVIEW: '分段提纲',
-  PEOPLE: '人物介绍',
   QUOTES: '金句',
-  XMIND: '思维导图',
-  TERMS: '名词解释'
+  XMIND: '思维导图'
 } as const;
 
 // 视角预设配置

@@ -1,2 +1,15 @@
-<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--emojione-monotone" preserveAspectRatio="xMidYMid meet" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier">
-<path d="M32 2C15.432 2 2 15.432 2 32c0 16.569 13.432 30 30 30s30-13.431 30-30C62 15.432 48.568 2 32 2zm15 45H17V17h30v30z" fill="#000000"></path></g></svg>
+<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_804_2956)">
+<mask id="mask0_804_2956" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="0" y="0" width="30" height="30">
+<path d="M30 0H0V30H30V0Z" fill="white"/>
+</mask>
+<g mask="url(#mask0_804_2956)">
+<path d="M14.7692 0C6.61154 0 0 6.61154 0 14.7692C0 22.9269 6.61154 29.5385 14.7692 29.5385C22.9269 29.5385 29.5385 22.9269 29.5385 14.7692C29.5385 6.61154 22.9269 0 14.7692 0ZM20.7692 20.6538C20.7692 20.7173 20.7173 20.7692 20.6538 20.7692H8.88462C8.82115 20.7692 8.76923 20.7173 8.76923 20.6538V8.88462C8.76923 8.82115 8.82115 8.76923 8.88462 8.76923H20.6538C20.7173 8.76923 20.7692 8.82115 20.7692 8.88462V20.6538Z" fill="#333333"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_804_2956">
+<rect width="30" height="30" fill="white"/>
+</clipPath>
+</defs>
+</svg>
