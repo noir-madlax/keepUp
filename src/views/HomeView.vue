@@ -403,11 +403,11 @@ const isLoading = ref(false) // 加载状态
 const hasMore = ref(true) // 否还有更多数据
 
 // 添加重置函数
-const resetPageState = () => {
+const resetPageState = async () => {
   currentPage.value = 1
   articles.value = []
   hasMore.value = true
-  fetchArticles(true) // 重新获取第页数据
+  await fetchArticles(true) // 重新获取第页数据
 }
 
 // 监路由激活
@@ -425,21 +425,29 @@ const hasFilters = computed(() => {
 // 修改 fetchArticles 函数
 const fetchArticles = async (isRefresh = false) => {
   try {
+    // 2024-03-15: 添加更严格的检查
+    if (!authStore.isAuthenticated || !authStore.user?.id) {
+      articles.value = []
+      hasMore.value = false
+      isLoading.value = false
+      return
+    }
+
     if (isRefresh) {
       currentPage.value = 1
       articles.value = []
       hasMore.value = true
     }
 
-    if (!hasMore.value || isLoading.value) return
-
+    // 2024-03-15: 移动检查位置，确保在重置状态后再检查
     isLoading.value = true
 
     // 如果有筛选条件，不使用分页
     const from = hasFilters.value ? 0 : (currentPage.value - 1) * pageSize
     const to = hasFilters.value ? 999 : from + pageSize - 1
 
-    // 2024-03-14: 修改为通过 keep_article_requests 表获取用户的文章
+    // 2024-03-15: 确保有用户ID后再查询
+    const userId = authStore.user.id
     const { data: requestsData, error: requestsError } = await supabase
       .from('keep_article_requests')
       .select(`
@@ -451,7 +459,7 @@ const fetchArticles = async (isRefresh = false) => {
         original_url,
         platform
       `)
-      .eq('user_id', authStore.user?.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .range(from, to)
 
@@ -504,7 +512,7 @@ const fetchArticles = async (isRefresh = false) => {
     }
 
   } catch (error) {
-    console.error('获取文章列表时出错:', error)
+    console.error('获取文章列表失败:', error)
     ElMessage.error('获取文章列表失败，请稍后重试')
   } finally {
     isLoading.value = false
@@ -667,6 +675,12 @@ const handleLogout = async () => {
   try {
     await authStore.signOut()
     ElMessage.success(t('auth.logoutSuccessMessage'))
+    // 2024-03-15: 登出后重置页面状态
+    await resetPageState()
+    // 刷新我的上传区域
+    if (myUploadsRef.value) {
+      await myUploadsRef.value.fetchUserArticles()
+    }
   } catch (error) {
     console.error('Logout error:', error)
     ElMessage.error(t('auth.logoutFailedMessage'))
@@ -999,14 +1013,33 @@ const submitRequest = async (url?: string, type: 'url' | 'web' | 'file' = 'url')
 // 2. 修改登录成功的处理函数
 const handleLoginSuccess = async () => {
   showLoginModal.value = false
-  // 等待用户信息完全加载
-  await authStore.loadUser()
   
-  // 如果有待处理的url，则打开上传modal
-  const pendingUrl = localStorage.getItem('pendingUploadUrl')
-  if (pendingUrl && articleRequestFormRef.value && authStore.isAuthenticated) {
-    articleRequestFormRef.value.openModalWithUrl(pendingUrl)
-    localStorage.removeItem('pendingUploadUrl')
+  try {
+    // 等待用户信息完全加载
+    await authStore.loadUser()
+    
+    // 确保用户信息已加载完成
+    if (!authStore.user?.id) {
+      console.error('User information not loaded properly')
+      return
+    }
+    
+    // 2024-03-15: 登录成功后立即重置页面状态
+    await resetPageState()
+    // 刷新我的上传区域
+    if (myUploadsRef.value) {
+      await myUploadsRef.value.fetchUserArticles()
+    }
+    
+    // 最后处理待上传的URL
+    const pendingUrl = localStorage.getItem('pendingUploadUrl')
+    if (pendingUrl && articleRequestFormRef.value && authStore.isAuthenticated) {
+      articleRequestFormRef.value.openModalWithUrl(pendingUrl)
+      localStorage.removeItem('pendingUploadUrl')
+    }
+  } catch (error) {
+    console.error('Error during login success handling:', error)
+    ElMessage.error(t('error.loginFailed'))
   }
 }
 
