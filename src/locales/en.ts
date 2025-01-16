@@ -198,7 +198,14 @@ export default {
     actions: {
       explain: 'Explain Meaning',
       elaborate: 'Elaborate Details',
-      question: 'Ask Question'
+      question: 'Ask Question',
+      structure: 'Content Structure',
+      overview: 'Section Outline',
+      quotes: 'Key Quotes',
+      xmind: 'Mind Map',
+      expand: 'Elaborate',
+      original: 'Show Original',
+      explain_selection: 'Explain This'
     },
     input: {
       placeholder: 'How can I help you today?'
@@ -209,7 +216,10 @@ export default {
       startChat: 'Start chatting...',
       send: 'Send'
     },
-    questionMark: 'Question'
+    questionMark: 'Question',
+    toolbar: {
+      hint: '🌟Ask further questions to learn more: (You can also ask questions about selected text)'
+    }
   },
   auth: {
     loginSuccess: 'Login successful',

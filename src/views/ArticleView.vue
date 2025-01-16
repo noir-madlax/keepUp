@@ -260,63 +260,6 @@
           class="w-full max-w-[1024px] mx-auto transition-all duration-300"
         >
           <div class="tags-container">
-            <!-- 2024-01-16: 新的tabs设计 -->
-            <div class="section-tabs" ref="sectionTabsRef">
-              <div class="flex relative">
-                <div 
-                  class="flex space-x-4 overflow-x-auto hide-scrollbar" 
-                  ref="tabsContainerRef"
-                  @scroll="handleTabsScroll"
-                >
-                       <!-- 2024-01-16: 新的section tabs 字的大小是17px -->
-                  <button
-                    v-for="(sectionType, index) in availableSectionTypes"
-                    :key="sectionType"
-                    @click="toggleSection(sectionType)"
-                    class="group relative py-2.5 px-5 md:text-lg text-gray-900 font-medium text-center transition-all duration-200"
-                    :class="[
-                      currentVisibleSection === sectionType ? 'text-blue-600' : 'text-gray-600',
-                    ]"
-                  >
-                    <div class="relative inline-flex flex-col items-center">
-                      <!-- hover时的胶囊背景，放在文字前面 -->
-                      <div 
-                        class="absolute -inset-x-2 -inset-y-1 rounded-full bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-0"
-                        style="transform: scale(1.1);"
-                      ></div>
-                      <!-- 文字内容 -->
-                      <span class="relative z-10">{{ getLocalizedSectionType(sectionType) }}</span>
-                      <!-- 底部指示条，跟随文字宽度 -->
-                      <div 
-                        class="absolute bottom-[-2px] h-0.5 bg-blue-500 transition-all duration-200 z-10"
-                        :class="[
-                          currentVisibleSection === sectionType || (index === 0 && !currentVisibleSection)
-                            ? 'w-full' 
-                            : 'w-0'
-                        ]"
-                        style="left: 0; right: 0;"
-                      ></div>
-                    </div>
-                  </button>
-                </div>
-                <!-- 固定在右侧的More Sections按钮 -->
-                <div 
-                  v-if="showGradientMask && !isAtEnd"
-                  class="absolute left-5 top-0 bottom-0 flex items-center bg-gradient-to-r from-transparent via-white to-white"
-                  style="width: 100px;"
-                >
-                  <button
-                    @click="handleMoreSections"
-                    class="ml-auto mr-2 px-3 py-1.5 text-[15px] font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200 z-10 whitespace-nowrap flex items-center gap-1"
-                  >
-                    {{ t('common.more') }}
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- 文章内容部分 -->
@@ -798,7 +741,11 @@ const handleScroll = () => {
     // 设置一个阈值，比如当第一个section进入视口顶部200px范围内时
     const threshold = 200
     
-    if (currentScroll > lastScrollTop.value) {
+    // 2024-01-21 16:30: 修改导航切换逻辑
+    if (currentScroll <= 0) {
+      // 在顶部时强制显示导航A
+      showNavB.value = false
+    } else if (currentScroll > lastScrollTop.value) {
       // 向下滚动
       // 只有当第一个section开始入视口，且滚动超过100px时显示导航
       if (currentScroll > 100 && firstSectionRect.top < threshold) {
@@ -806,8 +753,8 @@ const handleScroll = () => {
       }
     } else {
       // 向上滚动
-      // 只有当向上滚动超过50px时，才切换回原来的导航
-      if (lastScrollTop.value - currentScroll > 50) {
+      // 只有当向上滚动超过30px时，才切换回原来的导航
+      if (lastScrollTop.value - currentScroll > 30) {
         showNavB.value = false
       }
     }
@@ -1313,12 +1260,19 @@ const handleTextSelection = () => {
     return
   }
 
+  // 2024-01-21 16:30: 添加登录检查
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning(t('chat.loginRequired'))
+    showLoginModal.value = true
+    return
+  }
+
   const range = selection.getRangeAt(0)
   const rect = range.getBoundingClientRect()
   
   // 计算工具栏位置
   const position = {
-    top: rect.bottom, // 放在选择区域下方
+    top: rect.bottom,
     left: rect.left
   }
 
@@ -1330,8 +1284,8 @@ const handleTextSelection = () => {
 
   // 确保不会超出底部
   const viewportHeight = window.innerHeight
-  if (position.top + 50 > viewportHeight) { // 50 是工具栏的预估高度
-    position.top = rect.top - 50 // 如果底部放不下就放到上方
+  if (position.top + 50 > viewportHeight) {
+    position.top = rect.top - 50
   }
 
   chatStore.showToolbar(position, selection.toString())
@@ -1613,6 +1567,21 @@ const handleMoreSections = () => {
       left: targetScroll,
       behavior: 'smooth'
     })
+  }
+}
+
+// 修改toggleChatWindow函数，添加登录检查
+const toggleChatWindow = () => {
+  // 2024-01-21 16:30: 添加登录检查
+  if (!authStore.isAuthenticated && chatStore.chatWindowState === 'minimized') {
+    ElMessage.warning(t('chat.loginRequired'))
+    showLoginModal.value = true
+    return
+  }
+  
+  chatStore.chatWindowState = chatStore.chatWindowState === 'expanded' ? 'minimized' : 'expanded'
+  if (chatStore.chatWindowState === 'expanded') {
+    windowHeight.value = DEFAULT_EXPANDED_HEIGHT
   }
 }
 </script>
