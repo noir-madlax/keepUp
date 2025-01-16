@@ -27,16 +27,7 @@ class DetailRequest(BaseModel):
 async def process_coze_result(coze_response: CozeResponse, request_id: int, url: str, article: ArticleCreate, language: str) -> None:
     """处理 Coze 返回结果并保存到数据库"""
     try:
-        # 首先将 CozeResponse 转换为字典，再更新到数据库
-        coze_response_dict = {
-            "code": coze_response.code,
-            "cost": coze_response.cost,
-            "data": coze_response.data,
-            "debug_url": coze_response.debug_url,
-            "msg": coze_response.msg,
-            "token": coze_response.token
-        }
-        await SupabaseService.update_parsed_content(request_id, coze_response_dict)
+
 
         # 解析返回结果
         article_content_dict = json.loads(coze_response.data)
@@ -88,8 +79,11 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
         raise
 
 @retry_decorator()
-async def call_coze_and_parse(url: str, content: str, chapters: str, workflow_id: str) -> CozeArticleContent:
+async def call_coze_and_parse(url: str, content: str, chapters: str, workflow_id: str,request_id: int) -> CozeArticleContent:
     """调用 Coze API 并解析结果"""
+
+    coze_response = None
+
     try:
         if settings.USE_MOCK_COZE:
             logger.info("使用 mock 数据")
@@ -110,10 +104,15 @@ async def call_coze_and_parse(url: str, content: str, chapters: str, workflow_id
             result = await coze_service.parse_content(url, content, chapters, workflow_id)
             coze_response = CozeResponse(**result)
             
+
         # 验证响应数据
+        if coze_response is None:
+            raise ValueError("未能获取到 Coze 响应")
+        
         article_content_dict = json.loads(coze_response.data)
         article_content = CozeArticleContent(**article_content_dict)
-        if not article_content.key5_summary:
+        if not article_content.key2_why:
+            logger.error(f"解析结果中缺少总结: {article_content_dict}")
             raise ValueError("解析结果中缺少总结")
         
         return coze_response
@@ -124,6 +123,17 @@ async def call_coze_and_parse(url: str, content: str, chapters: str, workflow_id
     except Exception as e:
         logger.error(f"Coze API 调用失败: {str(e)}", exc_info=True)
         raise e
+    finally:
+        # 首先将 CozeResponse 转换为字典，再更新到数据库
+        coze_response_dict = {
+            "code": coze_response.code,
+            "cost": coze_response.cost,
+            "data": coze_response.data,
+            "debug_url": coze_response.debug_url,
+            "msg": coze_response.msg,
+            "token": coze_response.token
+        }
+        await SupabaseService.update_parsed_content(request_id, coze_response_dict)
 
 @router.post("/parse")
 async def parse_content(request: ParseRequest):

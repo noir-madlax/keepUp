@@ -89,7 +89,8 @@ async def process_summary_content(request_id: int, languages: list[str]) -> list
                 parse_request.url, 
                 parse_request.content, 
                 parse_request.chapters,
-                workflow_id
+                workflow_id,
+                request_id
             )
             
             await process_coze_result(

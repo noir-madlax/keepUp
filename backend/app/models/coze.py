@@ -4,10 +4,10 @@ from typing import Optional
 class CozeArticleContent(BaseModel):
     key0_background:  Optional[str] = Field(None, description="文章背景信息")
     key1_people:  Optional[str] = Field(None, description="人物介绍")
-    key2_why:  Optional[str] = Field(None, description="为什么要读")
+    key2_why:  str = Field(None, description="为什么要读")
     key3_core:  Optional[str] = Field(None, description="核心观点")
     key4_word:  Optional[str] = Field(None, description="名词解释")
-    key5_summary:  str = Field(None, description="总结")
+    key5_summary:  Optional[str] = Field(None, description="总结")
     key6_part_title:  Optional[str] = Field(None, description="分段提纲")
     key7_part_detail:  Optional[str] = Field(None, description="分段详述")
     key8_qa:  Optional[str] = Field(None, description="QA环节")
