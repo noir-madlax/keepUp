@@ -10,6 +10,7 @@ import re
 import urllib.parse
 from app.utils.logger import logger
 from datetime import datetime, timedelta
+from app.utils.decorators import retry_decorator
 
 class ApplePodcastFetcher(ContentFetcher):
     """Apple Podcast 内容获取器"""
@@ -88,6 +89,7 @@ class ApplePodcastFetcher(ContentFetcher):
             logger.error(f"日期解析失败: {str(e)}, 原始日期: {date_str}")
             return None
     
+    @retry_decorator()
     async def fetch(self, url: str) -> Optional[str]:
         """
         获取 Apple Podcast 内容
@@ -114,7 +116,7 @@ class ApplePodcastFetcher(ContentFetcher):
             
         except Exception as e:
             logger.error(f"获取 Apple Podcast 内容失败: {str(e)}", exc_info=True)
-            return None
+            raise e
             
     async def _get_audio_url(self, page_url: str) -> Optional[str]:
         """获取音频文件URL"""
@@ -212,6 +214,7 @@ class ApplePodcastFetcher(ContentFetcher):
         """
         return "podcasts.apple.com" in url
         
+    @retry_decorator()
     async def get_video_info(self, url: str) -> Optional[VideoInfo]:
         """
         获取 Podcast 基本信息
@@ -316,7 +319,7 @@ class ApplePodcastFetcher(ContentFetcher):
             
         except Exception as e:
             logger.error(f"获取播客信息失败: {str(e)}", exc_info=True)
-            return None
+            raise e
 
     async def get_chapters(self, url: str) -> Optional[str]:
         """

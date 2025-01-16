@@ -10,6 +10,7 @@ from urllib.parse import urlparse, urljoin
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import urllib3
+from app.utils.decorators import retry_decorator
 
 # 禁用不安全请求警告
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -183,6 +184,7 @@ class WebPageFetcher(ContentFetcher):
             logger.error(f"获取网页内容失败: {str(e)}")
             return None
     
+    @retry_decorator()
     async def get_video_info(self, url: str) -> Optional[VideoInfo]:
         """获取网页信息"""
         try:

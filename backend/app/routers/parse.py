@@ -10,7 +10,7 @@ from app.utils.logger import logger
 from app.config import settings
 from app.services.content_polisher import ContentPolisherService
 from app.services.content_detailer import ContentDetailerService
-
+from app.utils.decorators import retry_decorator
 router = APIRouter(prefix="")
 
 # 添加请求模型
@@ -87,6 +87,7 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
         await SupabaseService.update_status(request_id, "failed", str(e))
         raise
 
+@retry_decorator()
 async def call_coze_and_parse(url: str, content: str, chapters: str, workflow_id: str) -> CozeArticleContent:
     """调用 Coze API 并解析结果"""
     try:
@@ -109,14 +110,20 @@ async def call_coze_and_parse(url: str, content: str, chapters: str, workflow_id
             result = await coze_service.parse_content(url, content, chapters, workflow_id)
             coze_response = CozeResponse(**result)
             
+        # 验证响应数据
+        article_content_dict = json.loads(coze_response.data)
+        article_content = CozeArticleContent(**article_content_dict)
+        if not article_content.key5_summary:
+            raise ValueError("解析结果中缺少总结")
+        
         return coze_response
         
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError | ValueError as e:
         logger.error(f"JSON 解析失败: {str(e)}", exc_info=True)
-        raise
+        raise e
     except Exception as e:
         logger.error(f"Coze API 调用失败: {str(e)}", exc_info=True)
-        raise
+        raise e
 
 @router.post("/parse")
 async def parse_content(request: ParseRequest):

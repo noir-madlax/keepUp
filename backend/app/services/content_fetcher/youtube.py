@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pytubefix import YouTube
 from pytubefix import Channel
+from app.utils.decorators import retry_decorator
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
@@ -44,6 +45,7 @@ class YouTubeFetcher(ContentFetcher):
                 return match.group(1)
         return None
     
+    @retry_decorator()
     async def fetch(self, url: str) -> Optional[str]:
         """获取 YouTube 视频内容并格式化字幕"""
         try:
@@ -59,7 +61,9 @@ class YouTubeFetcher(ContentFetcher):
             # 使用代理获取字幕
             logger.info(f"开始获取字幕，代理状态: {'启用' if self.proxies else '禁用'}")
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=self.proxies)
-            
+            if not transcript_list:
+                raise ValueError("未获取到视频字幕transcript_list")
+
             # 格式化字幕内容
             readable_text = []
             for entry in transcript_list:
@@ -76,14 +80,18 @@ class YouTubeFetcher(ContentFetcher):
             # 将所有行组合成最终文本
             final_content = "\n".join(readable_text)
             
-            logger.info(f"成功格式化视频字幕，总行数: {len(readable_text)}")
+            if not final_content:
+                raise ValueError("未获取到视频字幕final_content")
             
+            logger.info(f"成功格式化视频字幕，总行数: {len(readable_text)}")
+
             return final_content
             
         except Exception as e:
             logger.error(f"获取 YouTube 内容失败: {str(e)}", exc_info=True)
-            return None 
+            raise e
 
+    @retry_decorator()
     async def get_video_info(self, url: str) -> Optional[VideoInfo]:
         """获取YouTube视频信息"""
         try:
@@ -91,10 +99,13 @@ class YouTubeFetcher(ContentFetcher):
             
             # 获取页面内容
             response = requests.get(url, proxies=self.proxies)
+            response.raise_for_status()  # 如果状态码不是200，抛出异常
             soup = BeautifulSoup(response.text, 'html.parser')
 
             # 提取标题
             title = soup.find('meta', {'name': 'title'})['content']
+            if not title:
+                raise ValueError("未获取到视频标题")
             logger.info(f"获取到标题: {title}")
 
             # 提取描述
@@ -169,7 +180,7 @@ class YouTubeFetcher(ContentFetcher):
 
         except Exception as e:
             logger.error(f"获取YouTube视频信息失败: {str(e)}", exc_info=True)
-            return None 
+            raise e
 
     async def get_chapters(self, url: str) -> Optional[str]:
         """获取YouTube视频章节信息"""
