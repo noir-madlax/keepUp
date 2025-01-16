@@ -98,6 +98,7 @@ export default {
       urlRequired: 'Please enter URL',
       invalidUrl: 'Please enter a valid URL',
       duplicateUrl: 'This URL has already been submitted',
+      duplicateUrlAutoRedirect: 'This article already exists, redirecting to the article page in 2 seconds...',
       click: 'click',
       toViewExistingArticle: 'to view existing article',
       languageRequired: 'Please select at least one output language',
@@ -142,7 +143,15 @@ export default {
     loading: 'Loading...',
     scrollToLoadMore: 'Scroll to load more',
     noMoreData: 'No more data',
-    pleaseLogin: 'Please login first'
+    pleaseLogin: 'Please login first',
+    edit: 'Edit Article',
+    cancel: 'Cancel',
+    save: 'Save',
+    close: 'Close',
+    preview: 'Preview Mind Map',
+    processing: 'Processing',
+    askAI: 'Ask AI',
+    more: 'More'
   },
   upload: {
     card: {
@@ -199,18 +208,29 @@ export default {
       sessionSelect: 'Select Session',
       startChat: 'Start chatting...',
       send: 'Send'
-    }
+    },
+    questionMark: 'Question'
   },
   auth: {
     loginSuccess: 'Login successful',
     logoutSuccess: 'Logout successful',
     logoutError: 'Logout failed',
-    loginRequired: 'Please login first'
+    loginRequired: 'Please login first',
+    logoutSuccessMessage: 'Logged out successfully',
+    logoutFailedMessage: 'Logout failed, please try again'
   },
   error: {
     updateFailed: 'Update failed, please try again',
     systemError: 'System error, please try again later',
     articleFetchFailed: 'Failed to fetch article',
-    updateSuccess: 'Update successful'
+    updateSuccess: 'Update successful',
+    requiredFields: 'Title, content and author are required',
+    getAuthorsFailed: 'Failed to get authors list',
+    loginFirst: 'Please login',
+    submitArticleFailed: 'System error, please try again later',
+    requiredArticleFields: 'Title, content and author are required',
+    getArticleDetailsFailed: 'Failed to get article details',
+    dateFormatError: 'Date format error',
+    fetchArticleListFailed: 'Failed to get article list, please try again later'
   }
 } 

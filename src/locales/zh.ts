@@ -98,6 +98,7 @@ export default {
       urlRequired: '请输入URL',
       invalidUrl: '请输入有效的URL地址',
       duplicateUrl: '该链接已经提交过了',
+      duplicateUrlAutoRedirect: '该文章已存在，2秒后将自动跳转到文章页面...',
       click: '点击',
       toViewExistingArticle: '查看已有文章',
       languageRequired: '请选择一种输出语言',
@@ -142,7 +143,15 @@ export default {
     loading: '加载中...',
     scrollToLoadMore: '滚动加载更多',
     noMoreData: '没有更多数据了',
-    pleaseLogin: '请先登录后再操作'
+    pleaseLogin: '请先登录后再操作',
+    edit: '编辑文章',
+    cancel: '取消',
+    save: '保存',
+    close: '关闭',
+    preview: '预览思维导图',
+    processing: '处理中',
+    askAI: '询问AI',
+    more: '更多'
   },
   upload: {
     card: {
@@ -198,18 +207,29 @@ export default {
       sessionSelect: '选择会话',
       startChat: '开始对话...',
       send: '发送'
-    }
+    },
+    questionMark: '问题'
   },
   auth: {
     loginSuccess: '登录成功',
     logoutSuccess: '已退出登录',
     logoutError: '退出失败',
-    loginRequired: '请先登录'
+    loginRequired: '请先登录',
+    logoutSuccessMessage: '已退出登录',
+    logoutFailedMessage: '退出失败，请重试'
   },
   error: {
     updateFailed: '更新失败，请重试',
     systemError: '系统错误，请稍后重试',
     articleFetchFailed: '获取文章失败',
-    updateSuccess: '更新成功'
+    updateSuccess: '更新成功',
+    requiredFields: '标题、内容和作者为必填项',
+    getAuthorsFailed: '获取作者列表失败',
+    loginFirst: '请登录',
+    submitArticleFailed: '系统错误，请稍后重试',
+    requiredArticleFields: '标题、内容和作者为必填项',
+    getArticleDetailsFailed: '获取文章详情失败',
+    dateFormatError: '日期格式化错误',
+    fetchArticleListFailed: '获取文章列表失败，请稍后重试'
   }
 } 

@@ -570,21 +570,20 @@ const checkDuplicate = async (url: string): Promise<boolean> => {
         if (!articleError && (articleData as any)?.id) {
           const articleId = (articleData as any).id
           
+          // 2024-03-14: 修改为提示后自动跳转
           ElMessage({
-            message: `
-              <div class="flex items-center gap-1 cursor-default">
-                <span>${t('summarize.messages.duplicateUrl')}</span>
-                <span>,</span>
-                <span class="text-blue-500 hover:text-blue-600 underline cursor-pointer" onclick="window.location.href='/article/${articleId}'">${t('summarize.messages.click')}</span>
-                <span>${t('summarize.messages.toViewExistingArticle')}</span>
-              </div>
-            `,
+            message: t('summarize.messages.duplicateUrlAutoRedirect'),
             type: 'warning',
-            duration: 8000,
-            showClose: true,
-            dangerouslyUseHTMLString: true,
-            customClass: 'clickable-message'
+            duration: 2000,
+            showClose: false
           })
+
+          // 2秒后自动跳转
+          setTimeout(() => {
+            router.push(`/article/${articleId}`)
+          }, 2000)
+
+          return false
         } else {
           ElMessage.error(t('summarize.messages.duplicateUrl'))
         }
