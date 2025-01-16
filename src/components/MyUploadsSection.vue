@@ -162,33 +162,45 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import UploadCard from './UploadCard.vue'
-import type { ArticleRequest } from '../types/article'
 import { useAuthStore } from '../stores/auth'
 import { supabase } from '../supabaseClient'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
 
-// Props
-interface Props {
-  isLoading?: boolean
-  loadCompleted?: boolean
+// 添加类型定义
+interface SupabaseArticleRequest {
+  id: string
+  url: string
+  status: 'processing' | 'processed' | 'failed'
+  created_at: string
+  error_message?: string
+  original_url: string
+  platform?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  isLoading: false,
-  loadCompleted: false
-})
+interface ArticleRequest extends SupabaseArticleRequest {
+  requestId: string
+}
 
-// Refs
+interface OptimisticCard {
+  original_url: string
+  created_at: string
+  status: 'processing'
+  platform?: string
+  requestId: string
+}
+
+// 声明响应式变量
 const scrollContainer = ref<HTMLElement | null>(null)
 const canScrollLeft = ref(false)
 const canScrollRight = ref(true)
 const articles = ref<ArticleRequest[]>([])
+const optimisticCards = ref<OptimisticCard[]>([])
 const localLoading = ref(true)
 
 // 添加手势相关的状态
@@ -197,40 +209,8 @@ const touchStartY = ref(0)
 const isHorizontalMove = ref(false)
 const minDirectionDelta = 20 // 判断方向的最小位移差值
 
-// 添加乐观更新卡片的类型定义
-interface OptimisticCard {
-  requestId?: string
-  original_url: string
-  created_at: string
-  status: 'processing'
-  platform?: string
-}
-
-// 在 setup 中添加
-const optimisticCards = ref<OptimisticCard[]>([])
-
-// 修改展示逻辑
-const displayCards = computed(() => {
-  // 过滤掉已经存在于数据库记录中的乐观更新卡片
-  const filteredOptimisticCards = optimisticCards.value.filter(opt => 
-    !articles.value.some(article => article.original_url === opt.original_url)
-  )
-  // 把乐观更新卡片放在最前面
-  return [...filteredOptimisticCards, ...articles.value]
-})
-
-// 添加处理乐观更新的方法
-const addOptimisticCard = (url: string) => {
-  optimisticCards.value.push({
-    original_url: url,
-    created_at: new Date().toISOString(),
-    status: 'processing',
-    platform: getPlatformFromUrl(url)
-  })
-}
-
 // 从URL判断平台
-const getPlatformFromUrl = (url: string) => {
+const getPlatformFromUrl = (url: string): string => {
   if (url.includes('youtube.com') || url.includes('youtu.be')) {
     return 'youtube'
   }
@@ -243,18 +223,75 @@ const getPlatformFromUrl = (url: string) => {
   return 'webpage'
 }
 
-// Methods
-const handleScroll = () => {
-  if (!scrollContainer.value) return
+// 添加轮询相关的变量
+const POLL_INTERVAL = 15000  // 5秒轮询一次
+let pollTimer: NodeJS.Timeout | null = null
+
+// 添加轮询控制函数
+const startPolling = () => {
+  if (pollTimer) {
+    console.log('轮询已经在进行中，跳过启动')
+    return
+  }
   
-  const { scrollLeft, scrollWidth, clientWidth } = scrollContainer.value
-  
-  canScrollLeft.value = scrollLeft > 0
-  canScrollRight.value = scrollLeft < scrollWidth - clientWidth
+  console.log('开始轮询检查文章状态')
+  pollTimer = setInterval(async () => {
+    console.log('执行轮询检查...')
+    const hasProcessingItems = articles.value.some(
+      (article: ArticleRequest) => article.status === 'processing'
+    ) || optimisticCards.value.length > 0
+    
+    console.log('处理中的文章状态:', {
+      hasProcessingItems,
+      articlesInProcessing: articles.value.filter(a => a.status === 'processing').length,
+      optimisticCardsCount: optimisticCards.value.length
+    })
+    
+    if (hasProcessingItems) {
+      console.log('发现处理中的文章，执行刷新')
+      await fetchUserArticles(true)  // 传入 true 表示这是轮询调用
+    } else {
+      console.log('没有处理中的文章，停止轮询')
+      stopPolling()
+    }
+  }, POLL_INTERVAL)
 }
 
-// 获取用户上传的文章
-const fetchUserArticles = async () => {
+const stopPolling = () => {
+  if (pollTimer) {
+    console.log('停止轮询')
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+}
+
+// 添加乐观更新的方法
+const addOptimisticCard = (url: string) => {
+  const requestId = `temp-${Date.now()}`
+  optimisticCards.value.push({
+    original_url: url,
+    created_at: new Date().toISOString(),
+    status: 'processing' as const,
+    platform: getPlatformFromUrl(url),
+    requestId
+  })
+  
+  // 添加乐观更新卡片时启动轮询
+  startPolling()
+}
+
+// 计算属性
+const displayCards = computed(() => {
+  // 过滤掉已经存在于数据库记录中的乐观更新卡片
+  const filteredOptimisticCards = optimisticCards.value.filter(opt => 
+    !articles.value.some(article => article.original_url === opt.original_url)
+  )
+  // 把乐观更新卡片放在最前面
+  return [...filteredOptimisticCards, ...articles.value]
+})
+
+// 修改 fetchUserArticles 函数的类型处理
+const fetchUserArticles = async (isPolling: boolean = false) => {  // 添加参数标识是否是轮询调用
   try {
     const userId = authStore.user?.id
     if (!userId) {
@@ -263,9 +300,37 @@ const fetchUserArticles = async () => {
       return
     }
 
-    localLoading.value = true
+    console.log('开始获取用户文章列表', isPolling ? '(轮询更新)' : '(初始加载)')
     
-    // 1. 获取用户的所有请求
+    // 只在非轮询时显示加载状态
+    if (!isPolling) {
+      localLoading.value = true
+    }
+    
+    interface ArticleRequestResponse {
+      id: string
+      url: string
+      status: 'processing' | 'processed' | 'failed'
+      created_at: string
+      error_message?: string
+      original_url: string
+      platform?: string
+    }
+
+    interface ArticleDataResponse {
+      id: string
+      title: string
+      publish_date: string
+      channel: string
+      cover_image_url: string
+      original_link: string
+      author: {
+        id: string
+        name: string
+        icon: string
+      }
+    }
+
     const { data: requestsData, error: requestsError } = await supabase
       .from('keep_article_requests')
       .select(`
@@ -280,70 +345,119 @@ const fetchUserArticles = async () => {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
-    if (requestsError) {
+    if (requestsError || !requestsData) {
+      console.error('获取请求列表失败:', requestsError)
       throw requestsError
     }
 
-    // 2. 只对已处理成功的请求获取文章详情，其他状态直接使用请求数据
+    console.log('获取到的请求数据:', {
+      totalRequests: requestsData.length,
+      processingCount: requestsData.filter(r => r.status === 'processing').length,
+      processedCount: requestsData.filter(r => r.status === 'processed').length,
+      failedCount: requestsData.filter(r => r.status === 'failed').length
+    })
+
     const processedRequests = await Promise.all(
-      requestsData.map(async (request) => {
-        // 如果不是已处理成功状态，直接返回请求信息
+      (requestsData as unknown as ArticleRequestResponse[]).map(async (request) => {
+        const baseRequest: ArticleRequest = {
+          id: request.id,
+          url: request.url,
+          status: request.status,
+          created_at: request.created_at,
+          error_message: request.error_message,
+          original_url: request.original_url,
+          platform: request.platform,
+          requestId: request.id
+        }
+
         if (request.status !== 'processed') {
-          return {
-            ...request,
-            requestId: request.id
-          }
+          return baseRequest
         }
 
-        // 只有处理成功的才去查询文章详情
-        const { data: articleData, error: articleError } = await supabase
-          .from('keep_articles')
-          .select(`
-            id,
-            title,
-            publish_date,
-            channel,
-            cover_image_url,
-            original_link,
-            author:keep_authors (
-              id,
-              name,
-              icon
-            )
-          `)
-          .eq('original_link', request.original_url)
-          .single()
+        try {
+          const { data: articleData, error: articleError } = await supabase
+            .from('keep_articles')
+            .select(`
+              *,
+              user_id,
+              author:keep_authors (
+                id,
+                name,
+                icon
+              )
+            `)
+            .eq('original_link', request.original_url)
+            .single()
 
-        // 如果查询文章详情失败，也返回基本请求信息
-        if (articleError) {
-          console.error('获取文章详情失败:', articleError)
-          return {
-            ...request,
-            requestId: request.id
+          if (articleError || !articleData) {
+            console.warn('获取文章详情失败:', {
+              requestId: request.id,
+              error: articleError
+            })
+            return baseRequest
           }
-        }
 
-        // 返回完整的文章信息
-        return {
-          ...request,
-          requestId: request.id,
-          id: articleData.id,
-          title: articleData.title,
-          author: articleData.author,
-          publish_date: articleData.publish_date,
-          channel: request.platform,
-          cover_image_url: articleData.cover_image_url
+          const typedArticleData = articleData as unknown as ArticleDataResponse
+
+          return {
+            ...baseRequest,
+            ...typedArticleData,
+            author: typedArticleData.author,
+            id: typedArticleData.id
+          }
+        } catch (error) {
+          console.error('处理文章详情时出错:', {
+            requestId: request.id,
+            error
+          })
+          return baseRequest
         }
       })
     )
 
-    articles.value = processedRequests || []
+    // 更新文章列表前记录当前状态
+    console.log('更新前状态:', {
+      oldArticlesCount: articles.value.length,
+      newArticlesCount: processedRequests.length,
+      optimisticCardsCount: optimisticCards.value.length
+    })
+
+    articles.value = processedRequests
+    
+    // 清理已经完成的乐观更新卡片
+    optimisticCards.value = optimisticCards.value.filter(opt => 
+      !processedRequests.some(article => 
+        article.original_url === opt.original_url && article.status === 'processed'
+      )
+    )
+
+    // 检查是否有处理中的文章，有则启动轮询
+    const hasProcessingItems = processedRequests.some(
+      (article: ArticleRequest) => article.status === 'processing'
+    ) || optimisticCards.value.length > 0  // 添加对乐观更新卡片的检查
+
+    console.log('更新后状态:', {
+      hasProcessingItems,
+      articlesInProcessing: processedRequests.filter(a => a.status === 'processing').length,
+      remainingOptimisticCards: optimisticCards.value.length
+    })
+
+    if (hasProcessingItems && !pollTimer) {
+      console.log('检测到处理中的文章，启动轮询')
+      startPolling()
+    } else if (!hasProcessingItems && pollTimer) {
+      console.log('所有文章处理完成，停止轮询')
+      stopPolling()
+    }
     
   } catch (error) {
     console.error('获取上传文章失败:', error)
     ElMessage.error('获取上传文章失败')
   } finally {
-    localLoading.value = false
+    // 只在非轮询时重置加载状态
+    if (!isPolling) {
+      localLoading.value = false
+    }
   }
 }
 
@@ -395,11 +509,21 @@ const handleNewUploadClick = async (type: 'url' | 'web' | 'file' = 'url') => {
   }
 }
 
+// Methods
+const handleScroll = () => {
+  if (!scrollContainer.value) return
+  
+  const { scrollLeft, scrollWidth, clientWidth } = scrollContainer.value
+  
+  canScrollLeft.value = scrollLeft > 0
+  canScrollRight.value = scrollLeft < scrollWidth - clientWidth
+}
+
 // 处理触摸开始
 const handleTouchStart = (e: TouchEvent) => {
   touchStartX.value = e.touches[0].clientX
   touchStartY.value = e.touches[0].clientY
-  isHorizontalMove.value = false // 重置方向判断
+  isHorizontalMove.value = false
 }
 
 // 处理触摸移动
@@ -409,19 +533,16 @@ const handleTouchMove = (e: TouchEvent) => {
   const diffX = Math.abs(touchX - touchStartX.value)
   const diffY = Math.abs(touchY - touchStartY.value)
   
-  // 如果移动距离足够判断方向
   if (diffX > minDirectionDelta || diffY > minDirectionDelta) {
-    // 如果是水平移动
     if (diffX > diffY) {
       isHorizontalMove.value = true
-      e.stopPropagation() // 阻止事件冒泡，防止触发下拉刷新
+      e.stopPropagation()
     }
   }
 }
 
 // 处理触摸结束
 const handleTouchEnd = () => {
-  // 重置状态
   isHorizontalMove.value = false
 }
 
@@ -444,6 +565,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleScroll)
+  stopPolling()
 })
 
 // 添加删除请求的方法
