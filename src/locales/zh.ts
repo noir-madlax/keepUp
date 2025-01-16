@@ -98,6 +98,7 @@ export default {
       urlRequired: '请输入URL',
       invalidUrl: '请输入有效的URL地址',
       duplicateUrl: '该链接已经提交过了',
+      duplicateUrlAutoRedirect: '该文章已存在，2秒后将自动跳转到文章页面...',
       click: '点击',
       toViewExistingArticle: '查看已有文章',
       languageRequired: '请选择一种输出语言',

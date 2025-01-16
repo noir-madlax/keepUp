@@ -397,7 +397,7 @@ const selectedTag = ref('all')
 const tags = computed(() => PREDEFINED_TAGS)
 
 // 分页相关的状态
-const pageSize = 9 // 每加载的文章数量
+const pageSize = 18 // 每加载的文章数量
 const currentPage = ref(1)
 const isLoading = ref(false) // 加载状态
 const hasMore = ref(true) // 否还有更多数据
@@ -435,39 +435,72 @@ const fetchArticles = async (isRefresh = false) => {
 
     isLoading.value = true
 
-    // 如果有筛选条件，不使用分
+    // 如果有筛选条件，不使用分页
     const from = hasFilters.value ? 0 : (currentPage.value - 1) * pageSize
     const to = hasFilters.value ? 999 : from + pageSize - 1
 
-    // 从 API 获取数据
-    const { data, error, count } = await supabase
-      .from('keep_articles')
+    // 2024-03-14: 修改为通过 keep_article_requests 表获取用户的文章
+    const { data: requestsData, error: requestsError } = await supabase
+      .from('keep_article_requests')
       .select(`
         id,
-        title,
-        cover_image_url,
-        channel,
+        url,
+        status,
         created_at,
-        tags,
-        publish_date,
-        author_id,
-        author:keep_authors(id, name, icon)
-      `, { count: 'exact' })
+        error_message,
+        original_url,
+        platform
+      `)
+      .eq('user_id', authStore.user?.id)
       .order('created_at', { ascending: false })
       .range(from, to)
 
-    if (error) throw error
+    if (requestsError) throw requestsError
 
-    // 更新文章列表
-    articles.value = isRefresh || hasFilters.value ? data : [...articles.value, ...data]
+    // 只对已处理成功的请求获取文章详情
+    const processedRequests = await Promise.all(
+      requestsData.map(async (request) => {
+        // 如果不是已处理成功状态，跳过
+        if (request.status !== 'processed') {
+          return null
+        }
+
+        // 获取文章详情
+        const { data: articleData, error: articleError } = await supabase
+          .from('keep_articles')
+          .select(`
+            id,
+            title,
+            cover_image_url,
+            channel,
+            created_at,
+            tags,
+            publish_date,
+            author_id,
+            author:keep_authors(id, name, icon)
+          `)
+          .eq('original_link', request.original_url)
+          .single()
+
+        if (articleError) return null
+
+        return {
+          ...articleData,
+          requestId: request.id
+        }
+      })
+    )
+
+    // 过滤掉 null 值并更新文章列表
+    const validArticles = processedRequests.filter(article => article !== null)
+    articles.value = isRefresh || hasFilters.value ? validArticles : [...articles.value, ...validArticles]
     
-    // 更新否还有更多数据
-    // 如有筛选件就不显示加载更多
-    hasMore.value = hasFilters.value ? false : (count ? from + data.length < count : false)
+    // 更新是否还有更多数据
+    hasMore.value = hasFilters.value ? false : validArticles.length === pageSize
 
     // 只在完整刷新时更新缓存
     if (isRefresh) {
-      await localforage.setItem('articles-cache', data)
+      await localforage.setItem('articles-cache', validArticles)
     }
 
   } catch (error) {

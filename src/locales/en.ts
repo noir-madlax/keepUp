@@ -98,6 +98,7 @@ export default {
       urlRequired: 'Please enter URL',
       invalidUrl: 'Please enter a valid URL',
       duplicateUrl: 'This URL has already been submitted',
+      duplicateUrlAutoRedirect: 'This article already exists, redirecting to the article page in 2 seconds...',
       click: 'click',
       toViewExistingArticle: 'to view existing article',
       languageRequired: 'Please select at least one output language',
