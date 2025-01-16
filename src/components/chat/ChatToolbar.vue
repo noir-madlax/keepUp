@@ -4,6 +4,7 @@
     :style="{
       left: '20px',
       bottom: 'calc(60px)',
+      maxWidth: 'calc(100vw - 40px)'
     }"
   >
     <!-- 2024-01-21 11:30: 添加提示文字 -->
@@ -11,73 +12,76 @@
       {{ t('chat.toolbar.hint') }}
     </div>
     
-    <div class="flex gap-3">
-      <!-- B组按钮 - 始终显示 -->
-      <!-- 内容结构图按钮 -->
-      <button
-        @click="handleToolAction('STRUCTURE')"
-        class="bubble-button"
-      >
-        <img src="/images/icons/structure.svg" alt="Structure" class="w-4 h-4" />
-        <span>{{ t('chat.actions.structure') }}</span>
-      </button>
-
-      <!-- 分段提纲按钮 -->
-      <button
-        @click="handleToolAction('OVERVIEW')"
-        class="bubble-button"
-      >
-        <img src="/images/icons/overview.svg" alt="Overview" class="w-4 h-4" />
-        <span>{{ t('chat.actions.overview') }}</span>
-      </button>
-
-      <!-- 金句按钮 -->
-      <button
-        @click="handleToolAction('QUOTES')"
-        class="bubble-button"
-      >
-        <img src="/images/icons/quotes.svg" alt="Quotes" class="w-4 h-4" />
-        <span>{{ t('chat.actions.quotes') }}</span>
-      </button>
-
-      <!-- 思维导图按钮 -->
-      <button
-        @click="handleToolAction('XMIND')"
-        class="bubble-button"
-      >
-        <img src="/images/icons/xmind.svg" alt="XMind" class="w-4 h-4" />
-        <span>{{ t('chat.actions.xmind') }}</span>
-      </button>
-
-      <!-- A组按钮 - 有锚定词时显示在B组按钮右侧 -->
-      <template v-if="hasSelectedText">
-        <!-- 展开说说按钮 - 蓝色气泡 -->
+    <!-- 2024-01-23 16:30: 添加可滚动容器 -->
+    <div class="overflow-x-auto pb-2 -mb-2">
+      <div class="flex gap-3 w-fit min-w-full">
+        <!-- B组按钮 - 始终显示 -->
+        <!-- 内容结构图按钮 -->
         <button
-          @click="handleChatAction('EXPAND')"
-          class="bubble-button"
+          @click="handleToolAction('STRUCTURE')"
+          class="bubble-button shrink-0"
         >
-          <img src="/images/icons/expand.svg" alt="Expand" class="w-4 h-4" />
-          <span>{{ t('chat.actions.expand') }}</span>
+          <img src="/images/icons/structure.svg" alt="Structure" class="w-4 h-4" />
+          <span>{{ t('chat.actions.structure') }}</span>
         </button>
 
-        <!-- 给出原文按钮 - 绿色气泡 -->
+        <!-- 分段提纲按钮 -->
         <button
-          @click="handleChatAction('ORIGINAL')"
-          class="bubble-button"
+          @click="handleToolAction('OVERVIEW')"
+          class="bubble-button shrink-0"
         >
-          <img src="/images/icons/original.svg" alt="Original" class="w-4 h-4" />
-          <span>{{ t('chat.actions.original') }}</span>
+          <img src="/images/icons/overview.svg" alt="Overview" class="w-4 h-4" />
+          <span>{{ t('chat.actions.overview') }}</span>
         </button>
 
-        <!-- 解释一下按钮 - 紫色气泡 -->
+        <!-- 金句按钮 -->
         <button
-          @click="handleChatAction('EXPLAIN')"
-          class="bubble-button"
+          @click="handleToolAction('QUOTES')"
+          class="bubble-button shrink-0"
         >
-          <img src="/images/icons/explain.svg" alt="Explain" class="w-4 h-4" />
-          <span>{{ t('chat.actions.explain_selection') }}</span>
+          <img src="/images/icons/quotes.svg" alt="Quotes" class="w-4 h-4" />
+          <span>{{ t('chat.actions.quotes') }}</span>
         </button>
-      </template>
+
+        <!-- 思维导图按钮 -->
+        <button
+          @click="handleToolAction('XMIND')"
+          class="bubble-button shrink-0"
+        >
+          <img src="/images/icons/xmind.svg" alt="XMind" class="w-4 h-4" />
+          <span>{{ t('chat.actions.xmind') }}</span>
+        </button>
+
+        <!-- A组按钮 - 有锚定词时显示在B组按钮右侧 -->
+        <template v-if="hasSelectedText">
+          <!-- 展开说说按钮 - 蓝色气泡 -->
+          <button
+            @click="handleChatAction('EXPAND')"
+            class="bubble-button shrink-0"
+          >
+            <img src="/images/icons/expand.svg" alt="Expand" class="w-4 h-4" />
+            <span>{{ t('chat.actions.expand') }}</span>
+          </button>
+
+          <!-- 给出原文按钮 - 绿色气泡 -->
+          <button
+            @click="handleChatAction('ORIGINAL')"
+            class="bubble-button shrink-0"
+          >
+            <img src="/images/icons/original.svg" alt="Original" class="w-4 h-4" />
+            <span>{{ t('chat.actions.original') }}</span>
+          </button>
+
+          <!-- 解释一下按钮 - 紫色气泡 -->
+          <button
+            @click="handleChatAction('EXPLAIN')"
+            class="bubble-button shrink-0"
+          >
+            <img src="/images/icons/explain.svg" alt="Explain" class="w-4 h-4" />
+            <span>{{ t('chat.actions.explain_selection') }}</span>
+          </button>
+        </template>
+      </div>
     </div>
   </div>
 </template>
