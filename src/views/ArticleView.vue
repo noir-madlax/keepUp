@@ -262,7 +262,7 @@
                       alt="Ask AI"
                       class="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5"
                     />
-                    Ask AI
+                    {{ t('common.askAI') }}
                   </button>
                 </div>
               </div>
@@ -338,7 +338,7 @@
                     @click="handleMoreSections"
                     class="ml-auto mr-2 px-3 py-1.5 text-[15px] font-medium text-blue-600 hover:text-blue-700 transition-colors duration-200 z-10 whitespace-nowrap flex items-center gap-1"
                   >
-                    More
+                    {{ t('common.more') }}
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
@@ -401,7 +401,7 @@
                               :count="getSectionQuestionCount(section.id)"
                               :mark-id="section.id.toString()"
                             >
-                              <span class="text-gray-400 text-sm">问题</span>
+                              <span class="text-gray-400 text-sm">{{ t('chat.questionMark') }}</span>
                             </QuestionMark>
                           </div>
                         </template>
@@ -421,7 +421,7 @@
     </template>
 
     <div v-else class="text-center py-8">
-      <p>加载中...</p>
+      <p>{{ t('common.loading') }}</p>
     </div>
 
     <!-- 编辑模态框 -->
@@ -435,7 +435,7 @@
         @click.stop
       >
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold">编辑文章</h2>
+          <h2 class="text-xl font-bold">{{ t('common.edit') }}</h2>
           <button @click="showEditModal = false" class="text-gray-500">
             <i class="el-icon-close"></i>
           </button>
@@ -453,13 +453,13 @@
             @click="showEditModal = false" 
             class="px-4 py-2 border rounded-md hover:bg-gray-50"
           >
-            取消
+            {{ t('common.cancel') }}
           </button>
           <button 
             @click="submitEdit" 
             class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
-            保存
+            {{ t('common.save') }}
           </button>
         </div>
       </div>
@@ -489,7 +489,7 @@
       >
         <!-- 标题栏 -->
         <div class="flex justify-between items-center mb-4 flex-shrink-0">
-          <h2 class="text-xl font-bold">预览思维导图</h2>
+          <h2 class="text-xl font-bold">{{ t('common.preview') }}</h2>
           <button 
             @click="showMindmapPreview = false" 
             class="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -648,7 +648,7 @@ const formatDate = (date: string | null) => {
   try {
     return format(new Date(date), 'yyyy-MM-dd')
   } catch (error) {
-    console.error('日期格式化错误:', error)
+    console.error(t('error.dateFormatError'), error)
     return ''
   }
 }
@@ -708,8 +708,8 @@ const fetchArticle = async () => {
     article.value = articleData
     sections.value = sectionsData || []
   } catch (error) {
-    console.error('获取文章详情失败:', error)
-    ElMessage.error('获取文章失败')
+    console.error(t('error.getArticleDetailsFailed'), error)
+    ElMessage.error(t('error.articleFetchFailed'))
   }
 }
 
@@ -719,7 +719,7 @@ const formRef = ref<InstanceType<typeof ArticleForm> | null>(null)
 const submitEdit = async () => {
   try {
     if (!editForm.value.title || !editForm.value.content || !editForm.value.author_id) {
-      ElMessage.error('标题、内容和作者为必填项')
+      ElMessage.error(t('error.requiredFields'))
       return
     }
 
@@ -767,12 +767,12 @@ const submitEdit = async () => {
       }
     }
 
-    ElMessage.success('更新成功')
+    ElMessage.success(t('error.updateSuccess'))
     showEditModal.value = false
     await fetchArticle()
   } catch (error) {
     console.error('更新文章失败:', error)
-    ElMessage.error('更新失败，请重试')
+    ElMessage.error(t('error.updateFailed'))
   }
 }
 

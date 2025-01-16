@@ -538,9 +538,9 @@ const fetchAuthors = async () => {
     
   } catch (error) {
     console.error('获取作者列表失败:', error)
-    ElMessage.error('获取作者列表失败')
+    ElMessage.error(t('error.getAuthorsFailed'))
   } finally {
-    isLoadingAuthors.value = false // 无论成功失败都关闭loading
+    isLoadingAuthors.value = false
   }
 }
 
@@ -623,7 +623,7 @@ const selectTag = (tag: string): void => {
 
 const handleUpload = () => {
   if (!authStore.isAuthenticated) {
-    ElMessage.warning('请登录')
+    ElMessage.warning(t('error.loginFirst'))
     showLoginModal.value = true
     return
   }
@@ -633,10 +633,10 @@ const handleUpload = () => {
 const handleLogout = async () => {
   try {
     await authStore.signOut()
-    ElMessage.success('已退出登录')
+    ElMessage.success(t('auth.logoutSuccessMessage'))
   } catch (error) {
     console.error('Logout error:', error)
-    ElMessage.error('退出失败，请重试')
+    ElMessage.error(t('auth.logoutFailedMessage'))
   }
 }
 
@@ -661,13 +661,13 @@ const formRef = ref<InstanceType<typeof ArticleForm> | null>(null)
 const submitArticle = async () => {
   try {
     if (!authStore.isAuthenticated) {
-      ElMessage.warning('请先登录')
+      ElMessage.warning(t('error.loginFirst'))
       showLoginModal.value = true
       return
     }
 
     if (!articleForm.value.title || !articleForm.value.content || !articleForm.value.author_id) {
-      ElMessage.error('、内容和作者为必填项')
+      ElMessage.error(t('error.requiredArticleFields'))
       return
     }
     
@@ -706,14 +706,14 @@ const submitArticle = async () => {
       }
     }
 
-    ElMessage.success('文章添加成功')
+    ElMessage.success(t('error.updateSuccess'))
 
     showUploadModal.value = false
     resetForm()
     await fetchArticles()
   } catch (error) {
     console.error('提交文章时出错:', error)
-    ElMessage.error('系统错误，请稍后重试')
+    ElMessage.error(t('error.submitArticleFailed'))
   }
 }
 
