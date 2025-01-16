@@ -55,7 +55,7 @@ const handleClick = async () => {
     }
 
     // 打开聊天窗口
-    chatStore.isChatOpen = true
+    chatStore.chatWindowState = 'expanded'
 
   } catch (error) {
     console.error('加载会话失败:', error)

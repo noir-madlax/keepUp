@@ -39,12 +39,12 @@ export const ALL_SECTION_TYPES: SectionType[] = [
   '总结',
   '结构图',
 //  '要点总结',
-//  '分段提纲',
-//  '思维导图',
-//  '人物介绍',
-//  '名词解释',
+'分段提纲',
+'思维导图',
+ '人物介绍',
+ '名词解释',
 //  'QA环节',
-//  '金句',
+  '金句',
 //  '彩蛋',
   '分段详述',
   '原文字幕',
@@ -52,24 +52,21 @@ export const ALL_SECTION_TYPES: SectionType[] = [
 //  '典型案例',
 ];
 
-// 默认选中的小节
+// 默认选中的小节 - 移除工具相关的小节
 export const DEFAULT_SELECTED_SECTIONS: SectionType[] = [
- // '背景',
   '总结',
- // '分段提纲',
-  '结构图',
- // '要点总结',
- // '思维导图',
- // '人物介绍',
- // '名词解释',
- // 'QA环节',
- // '金句',
- // '彩蛋',
   '分段详述',
-  '原文字幕',
- // '典型案例',
-
+  '原文字幕'
 ];
+
+// 工具按钮对应的小节类型
+export const TOOL_SECTIONS = {
+  OVERVIEW: '分段提纲',
+  PEOPLE: '人物介绍',
+  QUOTES: '金句',
+  XMIND: '思维导图',
+  TERMS: '名词解释'
+} as const;
 
 // 视角预设配置
 export const VIEW_CONFIGS = {

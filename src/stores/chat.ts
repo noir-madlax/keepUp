@@ -5,7 +5,8 @@ import type {
   ChatMessage, 
   MarkType,
   ChatAction,
-  ToolbarPosition 
+  ToolbarPosition,
+  ChatWindowState
 } from '../types/chat'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
@@ -151,12 +152,15 @@ export const useChatStore = defineStore('chat', () => {
   // 状态
   const currentSession = ref<ChatSession | null>(null)
   const sessions = ref<ChatSession[]>([])
-  const isChatOpen = ref(false)
+  const chatWindowState = ref<ChatWindowState>('minimized')
+  const hasActiveSession = ref(false)
+  const currentArticleId = ref<number | null>(null)
+  
   const toolbarVisible = ref(false)
   const toolbarPosition = ref<ToolbarPosition>({ top: 0, left: 0 })
   const selectedText = ref('')
-  const isAIResponding = ref(false)  // 2024-01-19 16:30: 控制整个AI响应过程
-  const isAIInitialLoading = ref(false)  // 2024-01-19 16:30: 控制骨架屏显示
+  const isAIResponding = ref(false)
+  const isAIInitialLoading = ref(false)
   const lastCreatedSession = ref<ChatSession | null>(null)
   const isInitializing = ref(false)
   const currentAIMessage = ref<ChatMessage | null>(null)
@@ -187,157 +191,80 @@ export const useChatStore = defineStore('chat', () => {
     )
   }
 
-  // 创建新会话
+  const isChatMessage = (data: any): data is ChatMessage => {
+    return (
+      data &&
+      typeof data.id === 'string' &&
+      typeof data.session_id === 'string' &&
+      (data.role === 'user' || data.role === 'assistant') &&
+      typeof data.content === 'string' &&
+      typeof data.created_at === 'string'
+    )
+  }
+
+  // 修改创建会话的函数
   const createSession = async (
-    articleId: number, 
-    markType: MarkType, 
-    content: string,
-    action: ChatAction,
+    articleId: number,
+    markType: MarkType,
+    markContent: string,
+    actionType: ChatAction,
     context?: any,
-    skipInitialMessage: boolean = false,
-    messageContent?: string
+    skipInitialMessage?: boolean,
+    initialMessage?: string
   ) => {
+    if (!authStore.user?.id) {
+      throw new Error('用户未登录')
+    }
+
     try {
-      isInitializing.value = true
-      currentSession.value = null
-      isAIResponding.value = true 
-      
-      // 1. 创建会话记录
-      const { data: sessionData, error: sessionError } = await supabase
+      // 2024-01-20 14:30: 确保 context 不为 null
+      const sessionContext = context || {
+        type: actionType,
+        content: markContent,
+        timestamp: new Date().toISOString()
+      }
+
+      // 创建会话记录
+      const { data: session, error: sessionError } = await supabase
         .from('keep_chat_sessions')
         .insert({
           article_id: articleId,
-          user_id: authStore.user?.id,
+          user_id: authStore.user.id,
           mark_type: markType,
-          mark_content: content,
+          mark_content: markContent,
           section_type: context?.sectionType,
-          position: context?.selection?.position,
-          context: context,
-          is_private: false,
+          context: sessionContext,
+          position: context?.position,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .select('*')
+        .select()
         .single()
 
       if (sessionError) throw sessionError
-      if (!sessionData) throw new Error('No session data returned')
-      if (!isChatSession(sessionData)) throw new Error('Invalid session data')
+      if (!session) throw new Error('创建会话失败')
 
-      // 2. 创建初始会话状态
-      currentSession.value = {
-        ...sessionData,
-        messages: [] as ChatMessage[]
-      } as ChatSession
-      
-      // 保存最后创建的会话，用于锚点显示
-      lastCreatedSession.value = sessionData
-      
-      // 结束初始化加载状态
-      isInitializing.value = false
-      hideToolbar()
-
-      if (!skipInitialMessage && currentSession.value) {
-        // 3. 创建并显示用户消息
-        const userMessage: ChatMessage = {
-          id: `temp-${Date.now()}`,
-          session_id: sessionData.id,
-          role: 'user',
-          content: messageContent || content,
-          created_at: new Date().toISOString()
-        }
-        
-        // 立即更新界面显示用户消息
-        currentSession.value.messages = [userMessage]
-        
-        // 写入用户消息到数据库
+      // 如果不跳过初始消息，则创建初始消息
+      if (!skipInitialMessage && initialMessage) {
         const { error: messageError } = await supabase
           .from('keep_chat_messages')
           .insert({
-            session_id: sessionData.id,
+            session_id: session.id,
             role: 'user',
-            content: messageContent || content,
+            content: initialMessage,
             created_at: new Date().toISOString()
           })
 
         if (messageError) throw messageError
-
-        // 4. 开始加载 AI 响应
-        isAIInitialLoading.value = true
-              // 2024-01-18 15:30: 确保在开始新的 SSE 连接前重置 currentAIMessage
-        currentAIMessage.value = null
-
-        // 处理 AI 响应
-        await handleSSE(
-          `/api/chat/${sessionData.id}/stream`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ /* 如果需要发送额外的数据 */ })
-          },
-          (data) => {
-            if (data.content) {
-              if (!currentAIMessage.value) {
-                // 首次收到消息时创建新的 AI 消息对象
-                currentAIMessage.value = {
-                  id: `ai-${Date.now()}`,
-                  session_id: sessionData.id,
-                  role: 'assistant',
-                  content: data.content,
-                  created_at: new Date().toISOString()
-                }
-                isAIInitialLoading.value = false  // 收到第一条消息时关闭骨架屏
-                // 添加到消息列表
-                currentSession.value!.messages = [
-                  ...currentSession.value!.messages,
-                  currentAIMessage.value
-                ]
-              } else {
-                // 后续消息累积到现有消息中
-                currentAIMessage.value.content += data.content
-                // 强制更新视图
-                currentSession.value!.messages = [...currentSession.value!.messages]
-              }
-            }
-          },
-          () => {
-            // 2024-01-14 11:45: 在连接结束时，如果没有收到过消息，尝试重新加载
-            if (!currentAIMessage.value && currentSession.value?.id) {
-              // 等待一秒，确保后端处理完成
-              setTimeout(() => {
-                loadSession(currentSession.value!.id)
-              }, 1000)
-            }
-            currentAIMessage.value = null
-            isAIResponding.value = false  // AI响应完全结束
-            isAIInitialLoading.value = false
-          },
-          (error) => {
-            console.error('SSE 连接错误:', error)
-            // 2024-01-19 18:00: 只在非用户主动中止时显示错误提示
-            if (!isUserAborted) {
-              ElMessage.error('AI 响应加载失败，正在重试...')
-            }
-            // 错误处理保持现有逻辑
-            currentAIMessage.value = null
-            isAIResponding.value = false
-            isAIInitialLoading.value = false
-          }
-        )
       }
 
-      lastCreatedSession.value = sessionData
-      return sessionData
+      await loadSession(session.id)
+      hasActiveSession.value = true
+      return session
+
     } catch (error) {
       console.error('创建会话失败:', error)
-      ElMessage.error('创建会话失败，请重试')
-      isChatOpen.value = false
       throw error
-    } finally {
-      isAIInitialLoading.value = false
-      isAIResponding.value = false  // AI响应完全结束
     }
   }
 
@@ -364,15 +291,76 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  // 发送消息
-  const sendMessage = async (content: string) => {
-    if (!currentSession.value) return
-    
+  // 2024-01-20 18:30: 修改初始化会话的函数，更优雅地处理文章内容获取
+  const initializeSession = async () => {
+    if (!authStore.user?.id) {
+      throw new Error('用户未登录')
+    }
+
+    if (!currentArticleId.value) {
+      throw new Error('没有当前文章ID')
+    }
+
     try {
+      // 获取文章内容
+      const { data: article } = await supabase
+        .from('keep_articles')
+        .select('title, content')
+        .eq('id', currentArticleId.value)
+        .single()
+
+      // 如果获取不到文章内容，使用空字符串作为默认值
+      const articleContent = article?.content || ''
+
+      // 创建针对整篇文章的会话，使用标准的 context 格式
+      const session = await createSession(
+        currentArticleId.value,
+        'article',
+        articleContent,
+        'question',
+        {
+          selection: {
+            type: 'article',
+            content: articleContent,
+            position: null
+          },
+          sectionType: 'general'
+        }
+      )
+
+      if (!session) {
+        throw new Error('创建会话失败')
+      }
+
+      hasActiveSession.value = true
+      return session
+    } catch (error) {
+      console.error('初始化会话失败:', error)
+      throw error
+    }
+  }
+
+  // 修改发送消息的函数
+  const sendMessage = async (content: string) => {
+    if (!authStore.user?.id) {
+      throw new Error('用户未登录')
+    }
+
+    try {
+      // 如果没有活跃会话，先初始化一个会话
+      if (!hasActiveSession.value || !currentSession.value) {
+        await initializeSession()
+      }
+
+      // 再次检查会话是否创建成功
+      if (!currentSession.value) {
+        throw new Error('无法创建或获取会话')
+      }
+
       isAIResponding.value = true
       isAIInitialLoading.value = true
-      
-      // 1. 立即创建并显示用户消息
+      chatWindowState.value = 'expanded'
+
       const userMessage: ChatMessage = {
         id: `temp-${Date.now()}`,
         session_id: currentSession.value.id,
@@ -381,13 +369,13 @@ export const useChatStore = defineStore('chat', () => {
         created_at: new Date().toISOString()
       }
 
-      // 2. 更新界面显示
-      currentSession.value.messages = [
-        ...(currentSession.value.messages || []),
-        userMessage
-      ]
+      // 更新当前会话的消息列表
+      if (!currentSession.value.messages) {
+        currentSession.value.messages = []
+      }
+      currentSession.value.messages.push(userMessage)
 
-      // 3. 将用户消息写入数据库
+      // 发送消息到服务器
       const { error: messageError } = await supabase
         .from('keep_chat_messages')
         .insert({
@@ -399,10 +387,8 @@ export const useChatStore = defineStore('chat', () => {
 
       if (messageError) throw messageError
 
-      // 2024-01-18 15:30: 确保在开始新的 SSE 连接前重置 currentAIMessage
       currentAIMessage.value = null
 
-      // 4. 处理 AI 响应
       await handleSSE(
         `/api/chat/${currentSession.value.id}/stream`,
         {
@@ -410,63 +396,65 @@ export const useChatStore = defineStore('chat', () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ /* 如果需要发送额外的数据 */ })
+          body: JSON.stringify({})
         },
         (data) => {
-          if (data.content) {
+          if (data.content && currentSession.value) {
             if (!currentAIMessage.value) {
-              // 首次收到消息时创建新的 AI 消息对象
-              currentAIMessage.value = {
+              const aiMessage: ChatMessage = {
                 id: `ai-${Date.now()}`,
-                session_id: currentSession.value!.id,
+                session_id: currentSession.value.id,
                 role: 'assistant',
                 content: data.content,
                 created_at: new Date().toISOString()
               }
-              isAIInitialLoading.value = false  // 收到第一条消息时关闭骨架屏
-              // 添加到消息列表
-              currentSession.value!.messages = [
-                ...currentSession.value!.messages,
-                currentAIMessage.value
-              ]
+              currentAIMessage.value = aiMessage
+              isAIInitialLoading.value = false
+
+              const messages = currentSession.value.messages || []
+              currentSession.value = {
+                ...currentSession.value,
+                messages: [...messages, aiMessage]
+              } as ChatSession
             } else {
-              // 后续消息累积到现有消息中
               currentAIMessage.value.content += data.content
-              // 强制更新视图
-              currentSession.value!.messages = [...currentSession.value!.messages]
+              if (currentSession.value.messages) {
+                const messages = [...currentSession.value.messages]
+                const lastMessage = messages[messages.length - 1]
+                if (lastMessage && lastMessage.role === 'assistant') {
+                  lastMessage.content = currentAIMessage.value.content
+                  currentSession.value = {
+                    ...currentSession.value,
+                    messages: messages
+                  } as ChatSession
+                }
+              }
             }
           }
         },
         () => {
-          console.log('SSE 连接正常结束')
-          // 2024-01-19 14:30: 在连接结束时，如果没有收到消息，尝试重新加载最后一条 AI 消息
           if (!currentAIMessage.value && currentSession.value?.id) {
-            // 等待一秒，确保后端处理完成
             setTimeout(() => {
               reloadCurrentAIMessage(currentSession.value!.id)
             }, 1000)
           }
           currentAIMessage.value = null
-          isAIResponding.value = false  // AI响应完全结束
+          isAIResponding.value = false
           isAIInitialLoading.value = false
         },
         (error) => {
           console.error('SSE 连接错误:', error)
-          // 2024-01-19 18:00: 只在非用户主动中止时显示错误提示
           if (!isUserAborted) {
             ElMessage.error('AI 响应加载失败，正在重试...')
           }
-          // 错误处理保持现有逻辑
           currentAIMessage.value = null
           isAIResponding.value = false
           isAIInitialLoading.value = false
         }
       )
-
     } catch (error) {
       console.error('发送消息失败:', error)
       ElMessage.error('发送消息失败，请重试')
-      // 2024-01-18 15:30: 确保在错误时也重置状态
       currentAIMessage.value = null
       isAIResponding.value = false
       isAIInitialLoading.value = false
@@ -486,67 +474,14 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  // 添加创建新会话的方法
-  const createNewSession = async (articleId: number, selectedText?: string, isAskAI: boolean = false) => {
-    try {
-      if (!authStore.user?.id) {
-        throw new Error('用户未登录')
-      }
+  // 2024-01-20 11:35: 添加设置当前文章ID的方法
+  const setCurrentArticle = (articleId: number) => {
+    currentArticleId.value = articleId
+  }
 
-      isAIInitialLoading.value = true
-      isChatOpen.value = true  // 立即打开聊天窗口
-      
-      // 根据是否是 Ask AI 模式设置不同的参数
-      const sessionParams = isAskAI ? {
-        markType: 'article' as MarkType,
-        content: '',  // Ask AI 模式不需要初始内容
-        action: 'question' as ChatAction,
-        context: {
-          sectionType: 'general',
-          selection: {
-            content: '整篇文章',
-            type: 'article',
-            position: null
-          }
-        },
-        skipInitialMessage: true  // Ask AI 模式跳过初始消息
-      } : {
-        markType: 'section' as MarkType,
-        content: '让我们开始讨论这篇文章',
-        action: 'question' as ChatAction,
-        context: {
-          sectionType: 'general',
-          selection: {
-            content: '整篇文章',
-            type: 'section',
-            position: null
-          }
-        },
-        skipInitialMessage: false
-      }
-      
-      // 创建会话
-      const result = await createSession(
-        articleId,
-        sessionParams.markType,
-        sessionParams.content,
-        sessionParams.action,
-        sessionParams.context,
-        sessionParams.skipInitialMessage
-      )
-      
-      // 重新加载会话列表
-      await loadSessions()
-      
-      return result
-    } catch (error) {
-      console.error('创建新会话失败:', error)
-      ElMessage.error(error instanceof Error ? error.message : '创建新会话失败')
-      isChatOpen.value = false
-      throw error
-    } finally {
-      isAIInitialLoading.value = false
-    }
+  // 2024-01-20 11:35: 添加切换聊天窗口状态的方法
+  const toggleChatWindow = () => {
+    chatWindowState.value = chatWindowState.value === 'minimized' ? 'expanded' : 'minimized'
   }
 
   // 2024-01-19 14:30: 添加重新加载当前 AI 消息的函数
@@ -582,29 +517,43 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
-  // 2024-01-19 17:30: 添加中止聊天的方法
+  // 2024-01-20 19:30: 修改中止聊天的方法，确保正确中断 SSE 连接
   const abortChat = () => {
     if (currentAbortController) {
-      // 2024-01-19 18:00: 设置用户主动中止标志
       isUserAborted = true
       currentAbortController.abort()
       currentAbortController = null
+      
+      // 立即重置所有状态
+      isAIResponding.value = false
+      isAIInitialLoading.value = false
+      
+      // 如果有当前 AI 消息，将其标记为中断
+      if (currentAIMessage.value && currentSession.value?.messages) {
+        currentAIMessage.value.content += '\n[用户中断]'
+        const messages = [...currentSession.value.messages]
+        const lastMessage = messages[messages.length - 1]
+        if (lastMessage && lastMessage.role === 'assistant') {
+          lastMessage.content = currentAIMessage.value.content
+          currentSession.value = {
+            ...currentSession.value,
+            messages
+          } as ChatSession
+        }
+      }
+      currentAIMessage.value = null
     }
-    
-    // 重置所有状态
-    isAIResponding.value = false
-    isAIInitialLoading.value = false
-    currentAIMessage.value = null
   }
 
   return {
     currentSession,
     sessions,
-    isChatOpen,
+    chatWindowState,
+    hasActiveSession,
     toolbarVisible,
     toolbarPosition,
     selectedText,
-    isLoading: isAIResponding,  // 2024-01-19 16:30: 为了保持向后兼容，将isLoading映射到isAIResponding
+    isLoading: isAIResponding,
     isAIResponding,
     isAIInitialLoading,
     createSession,
@@ -613,11 +562,12 @@ export const useChatStore = defineStore('chat', () => {
     hideToolbar,
     loadSession,
     loadSessions,
-    createNewSession,
     lastCreatedSession,
     isInitializing,
     currentAIMessage,
     reloadCurrentAIMessage,
-    abortChat  // 2024-01-19 17:30: 导出中止方法
+    abortChat,
+    setCurrentArticle,
+    toggleChatWindow
   }
 }) 

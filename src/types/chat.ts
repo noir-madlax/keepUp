@@ -2,6 +2,9 @@ export type ChatRole = 'user' | 'assistant'
 export type MarkType = 'section' | 'sentence' | 'word'
 export type ChatAction = 'elaborate' | 'explain' | 'question'
 
+// 2024-01-20 11:30: 添加聊天窗口状态类型
+export type ChatWindowState = 'minimized' | 'expanded'
+
 // 工具栏位置
 export interface ToolbarPosition {
   top: number
