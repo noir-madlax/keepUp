@@ -1,6 +1,7 @@
 <template>
   <div 
     class="fixed z-[999] flex flex-col gap-2"
+    :class="{ 'opacity-50 pointer-events-none': disabled }"
     :style="{
       left: '20px',
       bottom: 'calc(60px)',
@@ -92,6 +93,11 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { TOOL_SECTIONS } from '../../types/section'
 import { useArticleStore } from '../../stores/article'
 import { useI18n } from 'vue-i18n'
+
+// 2024-03-14 21:30: 添加disabled prop
+const props = defineProps<{
+  disabled?: boolean
+}>()
 
 const { t } = useI18n()
 const chatStore = useChatStore()

@@ -389,7 +389,7 @@
     <!-- 预览模态框 -->
     <div 
       v-if="showMindmapPreview"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1001]"
       @click="showMindmapPreview = false"
     >
       <div 
@@ -456,15 +456,20 @@
     </div>
 
     <!-- 更多内容 Modal -->
-    <more-content-modal
-      v-model="showMoreContentModal"
-      :article-id="article?.id"
-      :original-url="article?.original_link"
-      :section-status="sectionStatus"
-    />
+    <div class="z-[1001]">
+      <more-content-modal
+        v-model="showMoreContentModal"
+        :article-id="article?.id"
+        :original-url="article?.original_link"
+        :section-status="sectionStatus"
+      />
+    </div>
 
     <!-- 添加工具栏组件 -->
-    <ChatToolbar @refresh-anchors="handleRefreshAnchors" />
+    <ChatToolbar 
+      @refresh-anchors="handleRefreshAnchors" 
+      :disabled="showMoreContentModal"
+    />
 
     <!-- 添加聊天窗口 -->
     <ChatWindow />
