@@ -367,6 +367,10 @@ async def process_article_task(request: FetchRequest):
             article_data.channel = request.platform  # 使用解析得到的 platform
             article_data.original_link = request.original_url  # 使用原始 URL
             article = await SupabaseService.create_article(article_data)
+            
+            # 更新请求记录的文章ID
+            await SupabaseService.update_article_id(request.id, article['id'])
+            
         except ValueError as e:
             error_msg = str(e)
             await RequestLogger.error(

@@ -184,9 +184,8 @@ class SupabaseService:
     async def get_request_id_by_article_id(cls, article_id: int) -> int:
         """通过文章ID获取对应的请求ID
         
-        通过以下步骤获取:
-        1. 从 article 表获取 original_link
-        2. 用 original_link 查询 article_request 表获取请求ID
+        直接通过 article_id 字段查询 article_requests 表,
+        如果有多条记录则返回第一条。
         
         Args:
             article_id: 文章ID
@@ -200,24 +199,17 @@ class SupabaseService:
         try:
             logger.info(f"开始查找文章对应的请求ID: article_id={article_id}")
             
-            # 1. 获取文章URL
             client = cls.get_client()
-            article_result = client.table("keep_articles").select("original_link").eq("id", article_id).single().execute()
-            
-            if not article_result.data:
-                raise ValueError(f"未找到文章: {article_id}")
-                
-            original_link = article_result.data.get("original_link")
-            if not original_link:
-                raise ValueError(f"文章缺少原始链接: {article_id}")
-            
-            # 2. 通过URL获取请求记录
-            request_result = client.table("keep_article_requests").select("id").eq("original_url", original_link).single().execute()
+            request_result = client.table("keep_article_requests")\
+                .select("id")\
+                .eq("article_id", article_id)\
+                .execute()
             
             if not request_result.data:
-                raise ValueError(f"未找到对应的请求记录: {original_link}")
+                raise ValueError(f"未找到对应的请求记录: article_id={article_id}")
             
-            request_id = request_result.data.get("id")
+            # 取第一条记录的ID
+            request_id = request_result.data[0].get("id")
             logger.info(f"找到对应的请求ID: article_id={article_id}, request_id={request_id}")
             
             return request_id
@@ -506,24 +498,24 @@ class SupabaseService:
             Optional[Dict]: 文章信息或None
         """
         try:
-            # 1. 先获取请求信息
+            # 1. 获取请求记录以获取 article_id
             request = await cls.get_article_request(request_id)
-            if not request:
-                logger.error(f"找不到请求记录: request_id={request_id}")
+            if not request or not request.get('article_id'):
+                logger.warning(f"找不到请求记录或请求记录缺少文章ID: request_id={request_id}")
                 return None
             
-            # 2. 通过 original_url 查找文章
+            # 2. 通过 article_id 直接查询文章
             client = cls.get_client()
             response = client.table('keep_articles')\
                 .select('*')\
-                .eq('original_link', request.get('original_url'))\
+                .eq('id', request.get('article_id'))\
                 .single()\
                 .execute()
             
             if response.data:
                 return response.data
             
-            logger.warning(f"找不到对应的文章: request_id={request_id}, original_url={request.get('original_url')}")
+            logger.warning(f"找不到对应的文章: request_id={request_id}, article_id={request.get('article_id')}")
             return None
             
         except Exception as e:
@@ -552,4 +544,28 @@ class SupabaseService:
             
         except Exception as e:
             logger.error(f"更新文章可见性失败: {str(e)}", exc_info=True)
+            raise
+    
+    @classmethod
+    async def update_article_id(cls, request_id: int, article_id: int) -> None:
+        """更新请求记录的文章ID
+        
+        Args:
+            request_id: 请求ID
+            article_id: 文章ID
+        """
+        try:
+            client = cls.get_client()
+            
+            result = client.table('keep_article_requests').update({
+                'article_id': article_id
+            }).eq('id', request_id).execute()
+            
+            if not result.data:
+                raise Exception(f"未找到 ID 为 {request_id} 的请求记录")
+            
+            logger.info(f"请求记录文章ID更新成功: request_id={request_id}, article_id={article_id}")
+            
+        except Exception as e:
+            logger.error(f"更新请求记录文章ID失败: {str(e)}", exc_info=True)
             raise
