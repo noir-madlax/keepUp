@@ -12,6 +12,7 @@ import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from './auth'
 import { truncate, truncateSync } from 'fs'
+import { useI18n } from 'vue-i18n'
 
 // 2024-01-19 14:30: 添加超时和重试相关的常量
 const TIMEOUT_MS = 7000 // 7秒超时
@@ -148,6 +149,7 @@ const handleSSE = async (
 
 export const useChatStore = defineStore('chat', () => {
   const authStore = useAuthStore()
+  const { t } = useI18n()
   
   // 状态
   const currentSession = ref<ChatSession | null>(null)
@@ -213,7 +215,7 @@ export const useChatStore = defineStore('chat', () => {
     initialMessage?: string
   ) => {
     if (!authStore.user?.id) {
-      throw new Error('用户未登录')
+      throw new Error(t('chat.errors.userNotLoggedIn'))
     }
 
     try {
@@ -242,7 +244,7 @@ export const useChatStore = defineStore('chat', () => {
         .single()
 
       if (sessionError) throw sessionError
-      if (!session) throw new Error('创建会话失败')
+      if (!session) throw new Error(t('chat.errors.createSessionFailed'))
 
       // 如果不跳过初始消息，则创建初始消息
       if (!skipInitialMessage && initialMessage) {
@@ -281,24 +283,24 @@ export const useChatStore = defineStore('chat', () => {
         .single()
 
       if (error) throw error
-      if (!session) throw new Error('Session not found')
-      if (!isChatSession(session)) throw new Error('Invalid session data')
+      if (!session) throw new Error(t('chat.errors.sessionNotFound'))
+      if (!isChatSession(session)) throw new Error(t('chat.errors.invalidSessionData'))
 
       currentSession.value = session
     } catch (error) {
       console.error('加载会话失败:', error)
-      ElMessage.error('加载会话失败，请重试')
+      ElMessage.error(t('chat.errors.loadSessionFailed'))
     }
   }
 
   // 2024-01-20 18:30: 修改初始化会话的函数，更优雅地处理文章内容获取
   const initializeSession = async () => {
     if (!authStore.user?.id) {
-      throw new Error('用户未登录')
+      throw new Error(t('chat.errors.userNotLoggedIn'))
     }
 
     if (!currentArticleId.value) {
-      throw new Error('没有当前文章ID')
+      throw new Error(t('chat.errors.noCurrentArticle'))
     }
 
     try {
@@ -329,7 +331,7 @@ export const useChatStore = defineStore('chat', () => {
       )
 
       if (!session) {
-        throw new Error('创建会话失败')
+        throw new Error(t('chat.errors.createSessionFailed'))
       }
 
       hasActiveSession.value = true
@@ -343,7 +345,7 @@ export const useChatStore = defineStore('chat', () => {
   // 修改发送消息的函数
   const sendMessage = async (content: string) => {
     if (!authStore.user?.id) {
-      throw new Error('用户未登录')
+      throw new Error(t('chat.errors.userNotLoggedIn'))
     }
 
     try {
@@ -354,12 +356,12 @@ export const useChatStore = defineStore('chat', () => {
 
       // 再次检查会话是否创建成功
       if (!currentSession.value) {
-        throw new Error('无法创建或获取会话')
+        throw new Error(t('chat.errors.createOrGetSessionFailed'))
       }
 
-      isAIResponding.value = true
-      isAIInitialLoading.value = true
-      chatWindowState.value = 'expanded'
+      // 2024-01-22 17:30: 移除重复的状态设置，改为在消息发送后设置
+      // isAIResponding.value = true
+      // isAIInitialLoading.value = true
 
       const userMessage: ChatMessage = {
         id: `temp-${Date.now()}`,
@@ -388,6 +390,9 @@ export const useChatStore = defineStore('chat', () => {
       if (messageError) throw messageError
 
       currentAIMessage.value = null
+      // 2024-01-22 17:30: 关闭初始化状态，开启AI回复加载状态
+      isInitializing.value = false
+      isAIInitialLoading.value = true
 
       await handleSSE(
         `/api/chat/${currentSession.value.id}/stream`,
@@ -445,7 +450,7 @@ export const useChatStore = defineStore('chat', () => {
         (error) => {
           console.error('SSE 连接错误:', error)
           if (!isUserAborted) {
-            ElMessage.error('AI 响应加载失败，正在重试...')
+            ElMessage.error(t('chat.errors.aiResponseFailed'))
           }
           currentAIMessage.value = null
           isAIResponding.value = false
@@ -454,10 +459,12 @@ export const useChatStore = defineStore('chat', () => {
       )
     } catch (error) {
       console.error('发送消息失败:', error)
-      ElMessage.error('发送消息失败，请重试')
+      ElMessage.error(t('chat.errors.sendMessageFailed'))
       currentAIMessage.value = null
       isAIResponding.value = false
       isAIInitialLoading.value = false
+      isInitializing.value = false
+      throw error
     }
   }
 
@@ -470,7 +477,7 @@ export const useChatStore = defineStore('chat', () => {
     } catch (error) {
       console.error('加载会话列表失败:', error)
       // 保留错误提示，以防其他地方依赖这个行为
-      ElMessage.error('加载会话列表失败')
+      ElMessage.error(t('chat.errors.loadSessionListFailed'))
     }
   }
 
@@ -513,7 +520,7 @@ export const useChatStore = defineStore('chat', () => {
       }
     } catch (error) {
       console.error('重新加载 AI 消息失败:', error)
-      ElMessage.error('重新加载消息失败，请刷新页面重试')
+      ElMessage.error(t('chat.errors.reloadMessageFailed'))
     }
   }
 
@@ -530,7 +537,7 @@ export const useChatStore = defineStore('chat', () => {
       
       // 如果有当前 AI 消息，将其标记为中断
       if (currentAIMessage.value && currentSession.value?.messages) {
-        currentAIMessage.value.content += '\n[用户中断]'
+        currentAIMessage.value.content += '\n[User Aborted]'
         const messages = [...currentSession.value.messages]
         const lastMessage = messages[messages.length - 1]
         if (lastMessage && lastMessage.role === 'assistant') {

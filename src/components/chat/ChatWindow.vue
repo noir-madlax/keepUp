@@ -6,7 +6,7 @@
       { 'transition-none': isResizing }
     ]"
     :style="{
-      height: chatStore.chatWindowState === 'expanded' ? `${windowHeight}px` : '135px',
+      height: chatStore.chatWindowState === 'expanded' ? `${windowHeight}px` : '105px',
       zIndex: '998',
       border: '1px solid #DDDDDD',
       boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)'
@@ -17,30 +17,28 @@
       <!-- 拖拽条 - 仅在展开状态显示 -->
       <div 
         v-if="chatStore.chatWindowState === 'expanded'"
-        class="absolute left-0 right-0 top-0 h-1 cursor-ns-resize bg-transparent hover:bg-gray-200 transition-colors"
+        class="absolute left-0 right-0 top-0 h-1 cursor-ns-resize bg-transparent"
         @mousedown="startResize"
       ></div>
       <button
         @click="toggleChatWindow"
-        class="absolute left-1/2 -translate-x-1/2 -top-4 p-1 rounded-t-lg bg-white shadow-md hover:bg-gray-50 transition-colors"
+        class="absolute left-1/2 -translate-x-1/2 -top-1 transition-opacity hover:opacity-100 opacity-90"
         style="z-index: 999;"
         :title="chatStore.chatWindowState === 'expanded' ? '收起聊天' : '展开聊天'"
       >
-        <div class="w-12 h-3 flex items-center justify-center">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            :class="[
-              'w-4 h-4 transition-transform duration-300',
-              chatStore.chatWindowState === 'expanded' ? 'rotate-180' : ''
-            ]"
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            stroke-width="2"
-          >
-            <path d="M18 15l-6-6-6 6"/>
-          </svg>
-        </div>
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          :class="[
+            'w-10 h-4 transition-transform duration-300',
+            chatStore.chatWindowState === 'expanded' ? 'rotate-180' : ''
+          ]"
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          stroke-width="3.5"
+        >
+          <path d="M18 15l-6-6-6 6"/>
+        </svg>
       </button>
     </div>
 
@@ -200,7 +198,19 @@ const handleSubmit = async () => {
   const content = messageInput.value
   messageInput.value = ''
   
-  await chatStore.sendMessage(content)
+  // 2024-01-22 17:30: 立即展开聊天窗口并设置初始化状态
+  chatStore.chatWindowState = 'expanded'
+  chatStore.isInitializing = true
+  chatStore.isAIResponding = true
+  
+  try {
+    await chatStore.sendMessage(content)
+  } catch (error) {
+    // 2024-01-22 17:30: 发生错误时重置状态
+    chatStore.isInitializing = false
+    chatStore.isAIResponding = false
+    console.error('发送消息失败:', error)
+  }
 }
 
 // 添加中止处理函数
@@ -223,8 +233,8 @@ const isAtBottom = () => {
 }
 
 // 2024-01-21 17:00: 更新滚动到底部的工具函数
-const scrollToBottom = () => {
-  if (messageListRef.value && shouldAutoScroll.value) {
+const scrollToBottom = (force: boolean = false) => {
+  if (messageListRef.value && (shouldAutoScroll.value || force)) {
     setTimeout(() => {
       messageListRef.value!.scrollTop = messageListRef.value!.scrollHeight
     }, 0)
@@ -236,10 +246,11 @@ const handleScroll = () => {
   shouldAutoScroll.value = isAtBottom()
 }
 
-// 2024-01-21 16:30: 监听消息变化，自动滚动到底部
+// 监听消息变化
 watch(
   () => chatStore.currentSession?.messages,
   () => {
+    // 当有新消息时，根据 shouldAutoScroll 决定是否滚动
     scrollToBottom()
   },
   { deep: true }
@@ -247,25 +258,12 @@ watch(
 
 // 添加滚动处理函数
 const handleChatScroll = (event: WheelEvent | TouchEvent) => {
-  if (!messageListRef.value) return
+  // 阻止事件冒泡，避免影响文章页面的滚动
+  event.stopPropagation()
   
-  const container = messageListRef.value
-  const isAtBottom = container.scrollHeight - container.scrollTop === container.clientHeight
-  const isAtTop = container.scrollTop === 0
-  
-  // 如果是触摸事件
-  if (event.type === 'touchmove') {
-    event.stopPropagation()
-    return
-  }
-  
-  // 如果是滚轮事件
-  const wheelEvent = event as WheelEvent
-  const deltaY = wheelEvent.deltaY
-  
-  // 在顶部向上滚动或底部向下滚动时阻止事件传播
-  if ((isAtTop && deltaY < 0) || (isAtBottom && deltaY > 0)) {
-    event.preventDefault()
+  // 更新自动滚动标志
+  if (messageListRef.value) {
+    shouldAutoScroll.value = isAtBottom()
   }
 }
 

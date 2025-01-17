@@ -204,7 +204,10 @@ export default {
       xmind: '思维导图',
       expand: '展开说说',
       original: '给出原文',
-      explain_selection: '解释一下'
+      explain_selection: '解释一下',
+      expand_prompt: '请详细展开解释这段内容的含义和背景，用通俗易懂的方式说明。',
+      original_prompt: '请给出这段内容的完整原文，并标注出重要的关键词和短语。',
+      explain_selection_prompt: '请解释这段内容中的专业术语和难懂概念，帮助我更好地理解。'
     },
     input: {
       placeholder: '需要我为您做些什么？'
@@ -217,7 +220,21 @@ export default {
     },
     questionMark: '问题',
     toolbar: {
-      hint: '🌟进一步提问，了解更多内容：(也可以选中文字后提问)'
+      hint: '🌟选中文字,进一步提问了解更多:'
+    },
+    errors: {
+      userNotLoggedIn: '用户未登录',
+      createSessionFailed: '创建会话失败',
+      createOrGetSessionFailed: '无法创建或获取会话',
+      sessionNotFound: '未找到会话',
+      invalidSessionData: '会话数据无效',
+      loadSessionFailed: '加载会话失败，请重试',
+      noCurrentArticle: '没有当前文章ID',
+      initSessionFailed: '初始化会话失败',
+      sendMessageFailed: '发送消息失败，请重试',
+      loadSessionListFailed: '加载会话列表失败',
+      reloadMessageFailed: '重新加载消息失败，请刷新页面重试',
+      aiResponseFailed: 'AI 响应加载失败，正在重试...'
     }
   },
   auth: {
