@@ -20,8 +20,8 @@
       <button
         @click="handleChatAction('EXPAND')"
         class="bubble-button shrink-0"
-        :class="{ 'disabled-button': !hasSelectedText }"
-        :disabled="!hasSelectedText"
+        :class="{ 'disabled-button': !hasSelectedText || chatStore.isAIResponding }"
+        :disabled="!hasSelectedText || chatStore.isAIResponding"
       >
         <img src="/images/icons/expand.svg" alt="Expand" class="w-4 h-4" />
         <span>{{ t('chat.actions.expand') }}</span>
@@ -31,8 +31,8 @@
       <button
         @click="handleChatAction('ORIGINAL')"
         class="bubble-button shrink-0"
-        :class="{ 'disabled-button': !hasSelectedText }"
-        :disabled="!hasSelectedText"
+        :class="{ 'disabled-button': !hasSelectedText || chatStore.isAIResponding }"
+        :disabled="!hasSelectedText || chatStore.isAIResponding"
       >
         <img src="/images/icons/original.svg" alt="Original" class="w-4 h-4" />
         <span>{{ t('chat.actions.original') }}</span>
@@ -42,8 +42,8 @@
       <button
         @click="handleChatAction('EXPLAIN')"
         class="bubble-button shrink-0"
-        :class="{ 'disabled-button': !hasSelectedText }"
-        :disabled="!hasSelectedText"
+        :class="{ 'disabled-button': !hasSelectedText || chatStore.isAIResponding }"
+        :disabled="!hasSelectedText || chatStore.isAIResponding"
       >
         <img src="/images/icons/explain.svg" alt="Explain" class="w-4 h-4" />
         <span>{{ t('chat.actions.explain_selection') }}</span>

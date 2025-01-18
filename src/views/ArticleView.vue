@@ -183,7 +183,7 @@
               <img 
                 :src="getArticleImage(article.cover_image_url)"
                 :alt="getArticleTitle()" 
-                class="w-full md:w-64 h-48 md:h-64 object-cover rounded-lg shadow-md" 
+                class="w-auto h-48 md:h-64 object-contain rounded-lg shadow-md" 
               />
               <div class="flex-1">
                 <!-- 文章标题 --> 
