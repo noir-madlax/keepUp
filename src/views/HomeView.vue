@@ -425,82 +425,54 @@ const hasFilters = computed(() => {
 // 修改 fetchArticles 函数
 const fetchArticles = async (isRefresh = false) => {
   try {
-    // 2024-03-15: 添加更严格的检查
-    if (!authStore.isAuthenticated || !authStore.user?.id) {
-      articles.value = []
-      hasMore.value = false
-      isLoading.value = false
-      return
-    }
-
+    // 重置页码
     if (isRefresh) {
       currentPage.value = 1
-      articles.value = []
-      hasMore.value = true
     }
 
-    // 2024-03-15: 移动检查位置，确保在重置状态后再检查
     isLoading.value = true
 
-    // 如果有筛选条件，不使用分页
-    const from = hasFilters.value ? 0 : (currentPage.value - 1) * pageSize
-    const to = hasFilters.value ? 999 : from + pageSize - 1
-
-    // 2024-03-15: 确保有用户ID后再查询
-    const userId = authStore.user.id
-    const { data: requestsData, error: requestsError } = await supabase
-      .from('keep_article_requests')
+    // 构建查询
+    const query = supabase
+      .from('keep_article_views')
       .select(`
-        id,
-        url,
-        status,
+        article_id,
         created_at,
-        error_message,
-        original_url,
-        platform
+        is_author,
+        article:keep_articles(
+          id,
+          title,
+          cover_image_url,
+          channel,
+          created_at,
+          tags,
+          publish_date,
+          author_id,
+          author:keep_authors(id, name, icon)
+        )
       `)
-      .eq('user_id', userId)
+      .eq('user_id', authStore.user?.id)
       .order('created_at', { ascending: false })
-      .range(from, to)
+      .range((currentPage.value - 1) * pageSize, currentPage.value * pageSize - 1)
 
-    if (requestsError) throw requestsError
+    // 添加筛选条件
+    if (selectedTag.value !== 'all') {
+      query.contains('article.tags', [selectedTag.value])
+    }
 
-    // 只对已处理成功的请求获取文章详情
-    const processedRequests = await Promise.all(
-      requestsData.map(async (request) => {
-        // 如果不是已处理成功状态，跳过
-        if (request.status !== 'processed') {
-          return null
-        }
+    const { data: views, error } = await query
 
-        // 获取文章详情
-        const { data: articleData, error: articleError } = await supabase
-          .from('keep_articles')
-          .select(`
-            id,
-            title,
-            cover_image_url,
-            channel,
-            created_at,
-            tags,
-            publish_date,
-            author_id,
-            author:keep_authors(id, name, icon)
-          `)
-          .eq('original_link', request.original_url)
-          .single()
+    if (error) throw error
 
-        if (articleError) return null
+    // 处理结果,提取文章信息
+    const validArticles = views
+      ?.map(view => ({
+        ...view.article,
+        is_author: view.is_author
+      }))
+      .filter(article => article !== null)
 
-        return {
-          ...articleData,
-          requestId: request.id
-        }
-      })
-    )
-
-    // 过滤掉 null 值并更新文章列表
-    const validArticles = processedRequests.filter(article => article !== null)
+    // 更新文章列表
     articles.value = isRefresh || hasFilters.value ? validArticles : [...articles.value, ...validArticles]
     
     // 更新是否还有更多数据

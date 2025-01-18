@@ -12,6 +12,7 @@ from app.services.content_fetcher.youtube import YouTubeFetcher
 from app.services.content_resolver import ContentResolver
 from app.services.request_logger import RequestLogger, Steps
 from app.utils.file_processor import process_file_content
+from ..repositories.article_views import ArticleViewsRepository
 
 import asyncio
 import json
@@ -410,6 +411,9 @@ async def process_article_task(request: FetchRequest):
             request.detailed_languages
         )
         
+        # 在创建文章成功后，添加浏览记录
+        await create_article_view_record(request.user_id, article['id'])
+        
     except Exception as e:
         logger.error(f"后台处理失败: request_id={request.id}, error={str(e)}")
         await RequestLogger.error(
@@ -424,6 +428,25 @@ async def process_article_task(request: FetchRequest):
             "failed", 
             error_message=str(e)
         )
+
+async def create_article_view_record(user_id: str, article_id: int):
+    """
+    创建文章浏览记录
+    
+    Args:
+        user_id: 用户ID
+        article_id: 文章ID
+    """
+    try:
+        await ArticleViewsRepository.create_article_view(
+            user_id=user_id,
+            article_id=article_id,
+            is_author=True  # 上传时创建的记录，用户是作者
+        )
+        logger.info(f"创建文章浏览记录成功: user_id={user_id}, article_id={article_id}")
+    except Exception as e:
+        # 这里我们只记录错误，不抛出异常，因为这不是核心流程
+        logger.error(f"创建文章浏览记录失败: {str(e)}", exc_info=True)
 
 @router.post("/workflow/process")
 async def process_workflow(request: FetchRequest, background_tasks: BackgroundTasks):

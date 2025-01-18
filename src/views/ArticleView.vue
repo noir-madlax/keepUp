@@ -503,6 +503,7 @@ import { TextPositionHelper } from '@/utils/textPosition'
 import type { ChatSession } from '../types/chat'
 import type { TextMark } from '@/utils/textPosition'
 import { useArticleStore } from '../stores/article'
+import axios from 'axios'
 
 
 // 将 i18n 相关初始化移前面
@@ -778,6 +779,28 @@ const handleScroll = () => {
   })
 }
 
+// 添加记录文章访问的方法
+const recordArticleView = async (userId: string, articleId: number) => {
+  try {
+    const response = await fetch('/api/article-views/record', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        article_id: articleId
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('请求失败')
+    }
+  } catch (error) {
+    console.error('记录文章访问失败:', error)
+  }
+}
+
 // 修改组件挂载时的事件监听
 onMounted(async () => {
   // 2024-01-20 13:30: 设置当前文章ID
@@ -805,6 +828,12 @@ onMounted(async () => {
   await authStore.loadUser()
   await fetchArticle()
   await fetchArticleMarks()
+
+  // 记录文章访问
+  const userStore = useAuthStore()
+  if (article.value?.id && userStore.user?.id) {
+    await recordArticleView(userStore.user.id, article.value.id)
+  }
 })
 
 // 修改组件卸载时的事件监听移除
