@@ -43,6 +43,16 @@ const handleSSE = async (
   const startSSEConnection = async () => {
     console.log('SSE 连接开始建立')
     
+    // 2024-03-22 11:30: 如果是重试，先清理之前不完整的消息
+    if (retryCount > 0 && currentSession.value?.messages) {
+      const messages = [...currentSession.value.messages]
+      if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+        messages.pop() // 删除不完整的消息
+        currentSession.value.messages = messages
+        currentAIMessage.value = null
+      }
+    }
+
     // 2024-01-19 14:30: 设置超时检测
     timeoutId = window.setTimeout(() => {
       console.log('SSE 连接超时')
@@ -349,6 +359,13 @@ export const useChatStore = defineStore('chat', () => {
     }
 
     try {
+      // 2024-03-22 14:30: 检查当前会话是否属于当前文章
+      if (currentSession.value && currentSession.value.article_id !== currentArticleId.value) {
+        // 如果会话不属于当前文章，重置会话状态
+        currentSession.value = null
+        hasActiveSession.value = false
+      }
+
       // 如果没有活跃会话，先初始化一个会话
       if (!hasActiveSession.value || !currentSession.value) {
         await initializeSession()
@@ -394,6 +411,21 @@ export const useChatStore = defineStore('chat', () => {
       isInitializing.value = false
       isAIInitialLoading.value = true
 
+      // 2024-03-22 11:30: 添加重试计数变量
+      let retryCount = 0
+
+      // 2024-03-22 11:30: 清理函数
+      const cleanupBeforeRetry = () => {
+        if (currentSession.value?.messages) {
+          const messages = [...currentSession.value.messages]
+          if (messages.length > 0 && messages[messages.length - 1].role === 'assistant') {
+            messages.pop()
+            currentSession.value.messages = messages
+            currentAIMessage.value = null
+          }
+        }
+      }
+
       await handleSSE(
         `/api/chat/${currentSession.value.id}/stream`,
         {
@@ -430,7 +462,7 @@ export const useChatStore = defineStore('chat', () => {
                   lastMessage.content = currentAIMessage.value.content
                   currentSession.value = {
                     ...currentSession.value,
-                    messages: messages
+                    messages
                   } as ChatSession
                 }
               }
@@ -450,6 +482,11 @@ export const useChatStore = defineStore('chat', () => {
         (error) => {
           console.error('SSE 连接错误:', error)
           if (!isUserAborted) {
+            // 2024-03-22 11:30: 在重试之前清理不完整的消息
+            if (retryCount < MAX_RETRIES) {
+              retryCount++
+              cleanupBeforeRetry()
+            }
             ElMessage.error(t('chat.errors.aiResponseFailed'))
           }
           currentAIMessage.value = null
