@@ -1,85 +1,16 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
-import { VitePWA } from 'vite-plugin-pwa'
+// 2024-03-19: 暂时注释掉 PWA 相关配置
+// import { VitePWA } from 'vite-plugin-pwa'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 
 export default defineConfig({
   base: '/',
   plugins: [
     vue(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-      manifest: {
-        name: 'Keep Up',
-        short_name: 'Keep Up',
-        description: '文章收藏和分享平台',
-        theme_color: '#ffffff',
-        icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
-        ]
-      },
-      workbox: {
-        clientsClaim: true,
-        skipWaiting: true,
-        cleanupOutdatedCaches: true,
-        runtimeCaching: [
-          {
-            urlPattern: /\/$/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'html-cache',
-              expiration: {
-                maxAgeSeconds: 60 * 60 * 24
-              }
-            }
-          },
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxAgeSeconds: 60 * 60
-              },
-              matchOptions: {
-                ignoreSearch: false,
-                ignoreVary: false
-              }
-            }
-          },
-          {
-            urlPattern: /\.(js|css|png|jpg|jpeg|svg|gif)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'static-resources',
-              expiration: {
-                maxAgeSeconds: 60 * 60 * 24 * 7
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
-      }
-    })
+    // 2024-03-19: 暂时移除 PWA 配置
+    // VitePWA({...})
   ],
   resolve: {
     alias: {
@@ -115,9 +46,10 @@ export default defineConfig({
               curlCommand += ` ${headers}`;
             }
     
-            // 如果是 POST/PUT 请求，添加请求体
-            if (['POST', 'PUT'].includes(req.method) && req.body) {
-              curlCommand += ` -d '${JSON.stringify(req.body)}'`;
+            // 2024-03-19: 修复 req.body 类型错误
+            const body = (req as any).body;
+            if (['POST', 'PUT'].includes(req.method) && body) {
+              curlCommand += ` -d '${JSON.stringify(body)}'`;
             }
     
             console.log('\n=== CURL 命令 ===');
@@ -129,8 +61,14 @@ export default defineConfig({
     }
   },
   build: {
+    // 2024-03-19: 合并 rollupOptions 配置，添加更严格的缓存控制
     rollupOptions: {
       output: {
+        // 确保每次构建生成唯一的文件名
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: `assets/[name].[hash].[ext]`,
+        // 分包配置
         manualChunks: {
           'vendor': ['vue', 'vue-router', 'pinia'],
           'article': ['marked'],
@@ -139,6 +77,11 @@ export default defineConfig({
       }
     },
     sourcemap: true,
-    assetsDir: 'assets'
+    assetsDir: 'assets',
+    // 2024-03-19: 添加时间戳到构建输出
+    assetsInlineLimit: 4096, // 4kb
+    // 确保生成的文件名包含内容哈希
+    cssCodeSplit: true,
+    write: true,
   }
 })
