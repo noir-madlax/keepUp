@@ -1,5 +1,5 @@
 <template>
-  <span class="relative inline-block group">
+  <span v-if="showQuestionMark" class="relative inline-block group">
     <!-- 波浪下划线文本 -->
     <span 
       class="wavy-underline cursor-pointer"
@@ -16,6 +16,9 @@
       1
     </span>
   </span>
+  <span v-else>
+    <slot></slot>
+  </span>
 </template>
 
 <script setup lang="ts">
@@ -29,6 +32,7 @@ const props = defineProps<{
   sectionType: string
   markContent: string
   position: Position
+  showQuestionMark?: boolean
 }>()
 
 const chatStore = useChatStore()

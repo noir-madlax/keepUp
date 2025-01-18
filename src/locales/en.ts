@@ -205,7 +205,10 @@ export default {
       xmind: 'Mind Map',
       expand: 'Elaborate',
       original: 'Show Original',
-      explain_selection: 'Explain This'
+      explain_selection: 'Explain This',
+      expand_prompt: 'Please explain this content in detail, including its meaning and background, in an easy-to-understand way.',
+      original_prompt: 'Please provide the complete original text and highlight important keywords and phrases.',
+      explain_selection_prompt: 'Please explain the technical terms and difficult concepts in this content to help me better understand.'
     },
     input: {
       placeholder: 'How can I help you today?'
@@ -218,7 +221,21 @@ export default {
     },
     questionMark: 'Question',
     toolbar: {
-      hint: '🌟Ask further questions to learn more: (You can also ask questions about selected text)'
+      hint: '🌟Ask further questions about SELECTED text:'
+    },
+    errors: {
+      userNotLoggedIn: 'Please login first',
+      createSessionFailed: 'Failed to create session',
+      createOrGetSessionFailed: 'Failed to create or get session',
+      sessionNotFound: 'Session not found',
+      invalidSessionData: 'Invalid session data',
+      loadSessionFailed: 'Failed to load session, please try again',
+      noCurrentArticle: 'No current article ID',
+      initSessionFailed: 'Failed to initialize session',
+      sendMessageFailed: 'Failed to send message, please try again',
+      loadSessionListFailed: 'Failed to load session list',
+      reloadMessageFailed: 'Failed to reload message, please refresh the page',
+      aiResponseFailed: 'AI response loading failed, retrying...'
     }
   },
   auth: {

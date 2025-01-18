@@ -571,6 +571,9 @@ onUnmounted(() => {
 // 添加删除请求的方法
 const deleteRequest = async (requestId: string) => {
   try {
+    // 2024-03-14: 先找到要删除的文章，用于后续清理乐观更新卡片
+    const articleToDelete = articles.value.find(article => article.requestId === requestId)
+    
     const { error } = await supabase
       .from('keep_article_requests')
       .delete()
@@ -580,6 +583,14 @@ const deleteRequest = async (requestId: string) => {
 
     // 删除成功后从列表中移除该项
     articles.value = articles.value.filter(article => article.requestId !== requestId)
+    
+    // 如果找到了要删除的文章，同时清理对应的乐观更新卡片
+    if (articleToDelete) {
+      optimisticCards.value = optimisticCards.value.filter(opt => 
+        opt.original_url !== articleToDelete.original_url
+      )
+    }
+    
     ElMessage.success(t('upload.message.deleteSuccess'))
   } catch (error) {
     console.error('删除请求失败:', error)

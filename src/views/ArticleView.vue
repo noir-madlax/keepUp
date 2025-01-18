@@ -314,6 +314,7 @@
                             <QuestionMark 
                               :count="getSectionQuestionCount(section.id)"
                               :mark-id="section.id.toString()"
+                              :show-question-mark="false"
                             >
                               <span class="text-gray-400 text-sm">{{ t('chat.questionMark') }}</span>
                             </QuestionMark>
@@ -1391,7 +1392,8 @@ const processQuestionMarks = () => {
         articleId: Number(articleId),
         sectionType,
         markContent,
-        position: JSON.parse(position)
+        position: JSON.parse(position),
+        showQuestionMark: false
       }, () => [wrapper.textContent])
 
       // 渲染到临时容器
