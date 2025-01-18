@@ -65,11 +65,12 @@
         <!-- 1. 有消息时的显示 -->
         <template v-if="chatStore.currentSession?.messages?.length">
           <div
-            v-for="message in chatStore.currentSession.messages"
+            v-for="(message, index) in chatStore.currentSession.messages"
             :key="message.id"
             :class="[
               'flex',
-              message.role === 'assistant' ? 'justify-start' : 'justify-end'
+              message.role === 'assistant' ? 'justify-start' : 'justify-end',
+              index !== chatStore.currentSession.messages.length - 1 ? 'mb-3' : ''
             ]"
           >
             <div 
@@ -148,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, defineExpose } from 'vue'
 import { useChatStore } from '../../stores/chat'
 import { Loading, ArrowRight } from '@element-plus/icons-vue'
 import { format } from 'date-fns'
@@ -318,6 +319,11 @@ const toggleChatWindow = () => {
     windowHeight.value = DEFAULT_EXPANDED_HEIGHT // 使用默认展开高度常量
   }
 }
+
+// 2024-03-21 14:30: 暴露scrollToBottom方法供外部调用
+defineExpose({
+  scrollToBottom
+})
 </script>
 
 <style scoped>
