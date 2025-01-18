@@ -230,28 +230,17 @@ let pollTimer: NodeJS.Timeout | null = null
 // 添加轮询控制函数
 const startPolling = () => {
   if (pollTimer) {
-    console.log('轮询已经在进行中，跳过启动')
     return
   }
   
-  console.log('开始轮询检查文章状态')
   pollTimer = setInterval(async () => {
-    console.log('执行轮询检查...')
     const hasProcessingItems = articles.value.some(
       (article: ArticleRequest) => article.status === 'processing'
     ) || optimisticCards.value.length > 0
     
-    console.log('处理中的文章状态:', {
-      hasProcessingItems,
-      articlesInProcessing: articles.value.filter(a => a.status === 'processing').length,
-      optimisticCardsCount: optimisticCards.value.length
-    })
-    
     if (hasProcessingItems) {
-      console.log('发现处理中的文章，执行刷新')
-      await fetchUserArticles(true)  // 传入 true 表示这是轮询调用
+      await fetchUserArticles(true)
     } else {
-      console.log('没有处理中的文章，停止轮询')
       stopPolling()
     }
   }, POLL_INTERVAL)
@@ -259,7 +248,6 @@ const startPolling = () => {
 
 const stopPolling = () => {
   if (pollTimer) {
-    console.log('停止轮询')
     clearInterval(pollTimer)
     pollTimer = null
   }
@@ -291,7 +279,7 @@ const displayCards = computed(() => {
 })
 
 // 修改 fetchUserArticles 函数的类型处理
-const fetchUserArticles = async (isPolling: boolean = false) => {  // 添加参数标识是否是轮询调用
+const fetchUserArticles = async (isPolling: boolean = false) => {
   try {
     const userId = authStore.user?.id
     if (!userId) {
@@ -299,10 +287,7 @@ const fetchUserArticles = async (isPolling: boolean = false) => {  // 添加参�
       articles.value = []
       return
     }
-
-    console.log('开始获取用户文章列表', isPolling ? '(轮询更新)' : '(初始加载)')
     
-    // 只在非轮询时显示加载状态
     if (!isPolling) {
       localLoading.value = true
     }
@@ -315,6 +300,7 @@ const fetchUserArticles = async (isPolling: boolean = false) => {  // 添加参�
       error_message?: string
       original_url: string
       platform?: string
+      article_id?: string
     }
 
     interface ArticleDataResponse {
@@ -340,22 +326,15 @@ const fetchUserArticles = async (isPolling: boolean = false) => {  // 添加参�
         created_at,
         error_message,
         original_url,
-        platform
+        platform,
+        article_id
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
     if (requestsError || !requestsData) {
-      console.error('获取请求列表失败:', requestsError)
       throw requestsError
     }
-
-    console.log('获取到的请求数据:', {
-      totalRequests: requestsData.length,
-      processingCount: requestsData.filter(r => r.status === 'processing').length,
-      processedCount: requestsData.filter(r => r.status === 'processed').length,
-      failedCount: requestsData.filter(r => r.status === 'failed').length
-    })
 
     const processedRequests = await Promise.all(
       (requestsData as unknown as ArticleRequestResponse[]).map(async (request) => {
@@ -370,7 +349,7 @@ const fetchUserArticles = async (isPolling: boolean = false) => {  // 添加参�
           requestId: request.id
         }
 
-        if (request.status !== 'processed') {
+        if (request.status !== 'processed' || !request.article_id) {
           return baseRequest
         }
 
@@ -386,14 +365,10 @@ const fetchUserArticles = async (isPolling: boolean = false) => {  // 添加参�
                 icon
               )
             `)
-            .eq('original_link', request.original_url)
+            .eq('id', request.article_id)
             .single()
 
           if (articleError || !articleData) {
-            console.warn('获取文章详情失败:', {
-              requestId: request.id,
-              error: articleError
-            })
             return baseRequest
           }
 
@@ -406,55 +381,32 @@ const fetchUserArticles = async (isPolling: boolean = false) => {  // 添加参�
             id: typedArticleData.id
           }
         } catch (error) {
-          console.error('处理文章详情时出错:', {
-            requestId: request.id,
-            error
-          })
           return baseRequest
         }
       })
     )
 
-    // 更新文章列表前记录当前状态
-    console.log('更新前状态:', {
-      oldArticlesCount: articles.value.length,
-      newArticlesCount: processedRequests.length,
-      optimisticCardsCount: optimisticCards.value.length
-    })
-
     articles.value = processedRequests
     
-    // 清理已经完成的乐观更新卡片
     optimisticCards.value = optimisticCards.value.filter(opt => 
       !processedRequests.some(article => 
         article.original_url === opt.original_url && article.status === 'processed'
       )
     )
 
-    // 检查是否有处理中的文章，有则启动轮询
     const hasProcessingItems = processedRequests.some(
       (article: ArticleRequest) => article.status === 'processing'
-    ) || optimisticCards.value.length > 0  // 添加对乐观更新卡片的检查
-
-    console.log('更新后状态:', {
-      hasProcessingItems,
-      articlesInProcessing: processedRequests.filter(a => a.status === 'processing').length,
-      remainingOptimisticCards: optimisticCards.value.length
-    })
+    ) || optimisticCards.value.length > 0
 
     if (hasProcessingItems && !pollTimer) {
-      console.log('检测到处理中的文章，启动轮询')
       startPolling()
     } else if (!hasProcessingItems && pollTimer) {
-      console.log('所有文章处理完成，停止轮询')
       stopPolling()
     }
     
   } catch (error) {
-    console.error('获取上传文章失败:', error)
-    ElMessage.error('获取上传文章失败')
+    ElMessage.error(t('upload.message.getFailed'))
   } finally {
-    // 只在非轮询时重置加载状态
     if (!isPolling) {
       localLoading.value = false
     }

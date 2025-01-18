@@ -53,14 +53,14 @@
     <!-- 聊天内容区域 -->
     <div 
       v-if="chatStore.chatWindowState === 'expanded'"
-      class="h-[calc(100%-60px-70px)] overflow-y-auto"
+      class="h-[calc(100%-60px-40px)] overflow-y-auto"
     >
       <!-- 聊天消息内容 -->
       <div 
         ref="messageListRef"
         class="messages-container"
-        @wheel.stop="handleChatScroll"
-        @touchmove.stop="handleChatScroll"
+        @wheel.prevent="handleChatScroll"
+        @touchmove.prevent="handleChatScroll"
       >
         <!-- 1. 有消息时的显示 -->
         <template v-if="chatStore.currentSession?.messages?.length">
@@ -258,12 +258,22 @@ watch(
 
 // 添加滚动处理函数
 const handleChatScroll = (event: WheelEvent | TouchEvent) => {
-  // 阻止事件冒泡，避免影响文章页面的滚动
+  // 确保事件不会传播到父元素
   event.stopPropagation()
   
-  // 更新自动滚动标志
-  if (messageListRef.value) {
-    shouldAutoScroll.value = isAtBottom()
+  // 根据事件类型处理滚动
+  if (event instanceof WheelEvent) {
+    if (messageListRef.value) {
+      // 手动控制滚动
+      messageListRef.value.scrollTop += event.deltaY
+      // 更新自动滚动标志
+      shouldAutoScroll.value = isAtBottom()
+    }
+  } else if (event instanceof TouchEvent) {
+    // 触摸事件的处理保持不变
+    if (messageListRef.value) {
+      shouldAutoScroll.value = isAtBottom()
+    }
   }
 }
 

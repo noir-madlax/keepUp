@@ -178,7 +178,8 @@
             </div>
           </div>
 
-          <div class="mb-8">
+          <!-- 2024-03-15: 只有登录用户才显示作者筛选区域 -->
+          <div v-if="authStore.isAuthenticated" class="mb-8" v-show="false">
             <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.authorTitle') }}</h2>
             <div class="flex flex-wrap gap-3">
               <!-- 修改加载状态判断 -->
@@ -303,7 +304,7 @@
           </div>
 
           <!-- 加载状态提示 -->
-          <div v-if="isLoading || hasMore" class="text-center py-4">
+          <div v-if="authStore.isAuthenticated && (isLoading || hasMore)" class="text-center py-4">
             <div v-if="isLoading" class="flex justify-center items-center space-x-2">
               <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
               <span class="text-gray-500">{{ t('common.loading') }}</span>
@@ -314,8 +315,8 @@
           </div>
           
           <!-- 没有更多数据的提示 -->
-          <div v-if="!isLoading && !hasMore" class="text-center py-4 text-gray-500">
-            {{ t('common.noMoreData') }}
+          <div v-if="!isLoading && (!hasMore || !authStore.isAuthenticated)" class="text-center py-4 text-gray-500">
+            {{ authStore.isAuthenticated ? t('common.noMoreData') : t('common.loginToViewMore') }}
           </div>
         </div>
     </pull-to-refresh>
@@ -525,63 +526,152 @@ const isLoadingAuthors = ref(true)
 // 改作者获取函数
 const fetchAuthors = async () => {
   try {
-    // 1. 先 IndexedDB 获存数据
+    console.log('[fetchAuthors] Starting to fetch authors')
+    isLoadingAuthors.value = true
+
+    // 1. 先从 IndexedDB 获取缓存数据
     const cachedAuthors = await localforage.getItem('authors-cache')
     if (cachedAuthors) {
+      console.log('[fetchAuthors] Found cached authors:', cachedAuthors)
       authors.value = cachedAuthors as Author[]
-      isLoadingAuthors.value = false // 有缓存数据就关闭loading
+      isLoadingAuthors.value = false
     }
 
-    // 2. 如果离线且有缓存，直接回
+    // 2. 如果离线且有缓存，直接返回
     if (!navigator.onLine && cachedAuthors) {
+      console.log('[fetchAuthors] Offline mode, using cached data')
       return
     }
 
+    console.log('[fetchAuthors] Fetching authors from API')
     // 3. 从 API 获取数据
     const { data, error } = await supabase
       .from('keep_authors')
-      .select('*')
+      .select('id, name, icon')
       .order('name')
 
-    if (error) throw error
+    if (error) {
+      console.error('[fetchAuthors] API error:', error)
+      throw error
+    }
 
-    // 4. 更新 IndexedDB 缓存
-    await localforage.setItem('authors-cache', data)
-    authors.value = data
+    console.log('[fetchAuthors] Received authors from API:', data)
+    if (data && data.length > 0) {
+      // 4. 更新 IndexedDB 缓存和状态
+      await localforage.setItem('authors-cache', data)
+      authors.value = data
+    } else {
+      console.warn('[fetchAuthors] No authors data received from API')
+    }
     
   } catch (error) {
-    console.error('获取作者列表失败:', error)
+    console.error('[fetchAuthors] Error:', error)
     ElMessage.error(t('error.getAuthorsFailed'))
   } finally {
+    console.log('[fetchAuthors] Completed, setting isLoadingAuthors to false')
     isLoadingAuthors.value = false
   }
 }
 
-// 改 onMounted
+// 修改登录成功的处理函数
+const handleLoginSuccess = async () => {
+  showLoginModal.value = false
+  
+  try {
+    console.log('[handleLoginSuccess] Starting login success handling')
+    // 等待用户信息完全加载
+    await authStore.loadUser()
+    
+    // 确保用户信息已加载完成
+    if (!authStore.user?.id) {
+      console.error('[handleLoginSuccess] User information not loaded properly')
+      return
+    }
+    
+    console.log('[handleLoginSuccess] Loading data after login')
+    // 2024-03-15: 登录成功后初始化作者相关状态
+    isLoadingAuthors.value = true
+
+    try {
+      // 先恢复缓存的状态
+      const [savedSelectedAuthors, savedExpanded] = await Promise.all([
+        localforage.getItem('selected-authors'),
+        localforage.getItem('authors-expanded')
+      ])
+
+      if (savedSelectedAuthors) {
+        selectedAuthors.value = savedSelectedAuthors as number[]
+      }
+      if (savedExpanded !== null) {
+        isExpanded.value = savedExpanded as boolean
+      }
+
+      // 获取文章和作者数据
+      await Promise.all([
+        fetchArticles(),
+        fetchAuthors(),
+        updateCacheTimestamp()
+      ])
+
+      // 刷新我的上传区域
+      if (myUploadsRef.value) {
+        await myUploadsRef.value.fetchUserArticles()
+      }
+    } catch (error) {
+      console.error('[handleLoginSuccess] Error loading data:', error)
+      ElMessage.error(t('error.loginFailed'))
+      return
+    }
+    
+    // 最后处理待上传的URL
+    const pendingUrl = localStorage.getItem('pendingUploadUrl')
+    if (pendingUrl && articleRequestFormRef.value && authStore.isAuthenticated) {
+      articleRequestFormRef.value.openModalWithUrl(pendingUrl)
+      localStorage.removeItem('pendingUploadUrl')
+    }
+  } catch (error) {
+    console.error('[handleLoginSuccess] Error:', error)
+    ElMessage.error(t('error.loginFailed'))
+  }
+}
+
+// 修改 onMounted 钩子
 onMounted(async () => {
-  isLoadingAuthors.value = true // 始化时设置loading
+  console.log('[onMounted] Component mounting, auth status:', authStore.isAuthenticated)
+  
+  // 2024-03-15: 先加载用户信息
+  await authStore.loadUser()
+  console.log('[onMounted] User loaded, new auth status:', authStore.isAuthenticated)
+  
+  // 如果用户已登录，初始化作者相关状态
+  if (authStore.isAuthenticated) {
+    console.log('[onMounted] User is authenticated, initializing author data')
+    isLoadingAuthors.value = true
 
-  // 先复缓存的状态
-  const [savedSelectedAuthors, savedExpanded] = await Promise.all([
-    localforage.getItem('selected-authors'),
-    localforage.getItem('authors-expanded')
-  ])
+    try {
+      // 先恢复缓存的状态
+      const [savedSelectedAuthors, savedExpanded] = await Promise.all([
+        localforage.getItem('selected-authors'),
+        localforage.getItem('authors-expanded')
+      ])
 
-  if (savedSelectedAuthors) {
-    selectedAuthors.value = savedSelectedAuthors as number[]
+      if (savedSelectedAuthors) {
+        selectedAuthors.value = savedSelectedAuthors as number[]
+      }
+      if (savedExpanded !== null) {
+        isExpanded.value = savedExpanded as boolean
+      }
+
+      // 获取文章和作者数据
+      await Promise.all([
+        fetchArticles(),
+        fetchAuthors(),
+        updateCacheTimestamp()
+      ])
+    } catch (error) {
+      console.error('[onMounted] Error loading data:', error)
+    }
   }
-  if (savedExpanded !== null) {
-    isExpanded.value = savedExpanded as boolean
-  }
-
-  // 并获取据
-  await Promise.all([
-    fetchArticles(),
-    fetchAuthors(),
-    updateCacheTimestamp()
-  ])
-
-  authStore.loadUser()
   
   // 预加载常用资源
   const preloadLinks = [
@@ -645,16 +735,26 @@ const handleUpload = () => {
 
 const handleLogout = async () => {
   try {
+    console.log('[handleLogout] Starting logout process')
+    
+    // 2024-03-15: 先清空本地数据
+    articles.value = []
+    authors.value = []
+    selectedAuthors.value = []
+    selectedChannels.value = []
+    currentPage.value = 1
+    hasMore.value = true
+    isLoading.value = false
+    
+    // 清理缓存
+    await clearCache()
+    
+    // 执行登出
     await authStore.signOut()
     ElMessage.success(t('auth.logoutSuccessMessage'))
-    // 2024-03-15: 登出后重置页面状态
-    await resetPageState()
-    // 刷新我的上传区域
-    if (myUploadsRef.value) {
-      await myUploadsRef.value.fetchUserArticles()
-    }
+    
   } catch (error) {
-    console.error('Logout error:', error)
+    console.error('[handleLogout] Error:', error)
     ElMessage.error(t('auth.logoutFailedMessage'))
   }
 }
@@ -922,6 +1022,9 @@ const getChannelIcon = (channel: string): string => {
 
 // 添加滚动加载处理函数
 const handleScroll = () => {
+  // 2024-03-15: 未登录用户不执行滚动加载
+  if (!authStore.isAuthenticated) return
+  
   // 获取滚容
   const container = document.documentElement
   
@@ -982,42 +1085,6 @@ const submitRequest = async (url?: string, type: 'url' | 'web' | 'file' = 'url')
   }
 }
 
-// 2. 修改登录成功的处理函数
-const handleLoginSuccess = async () => {
-  showLoginModal.value = false
-  
-  try {
-    // 等待用户信息完全加载
-    await authStore.loadUser()
-    
-    // 确保用户信息已加载完成
-    if (!authStore.user?.id) {
-      console.error('User information not loaded properly')
-      return
-    }
-    
-    // 2024-03-15: 登录成功后立即重置页面状态
-    await resetPageState()
-    // 刷新我的上传区域
-    if (myUploadsRef.value) {
-      await myUploadsRef.value.fetchUserArticles()
-    }
-    
-    // 最后处理待上传的URL
-    const pendingUrl = localStorage.getItem('pendingUploadUrl')
-    if (pendingUrl && articleRequestFormRef.value && authStore.isAuthenticated) {
-      articleRequestFormRef.value.openModalWithUrl(pendingUrl)
-      localStorage.removeItem('pendingUploadUrl')
-    }
-  } catch (error) {
-    console.error('Error during login success handling:', error)
-    ElMessage.error(t('error.loginFailed'))
-  }
-}
-
-// 添加对 MyUploadsSection 的引用
-const myUploadsRef = ref<InstanceType<typeof MyUploadsSection> | null>(null)
-
 // 添加刷新处理函数
 const handleUploadRefresh = () => {
   if (myUploadsRef.value) {
@@ -1045,6 +1112,9 @@ const handleUploadSuccess = (url: string) => {
     myUploadsRef.value.addOptimisticCard(url)
   }
 }
+
+// 添加 ref 定义
+const myUploadsRef = ref<InstanceType<typeof MyUploadsSection> | null>(null)
 </script>
 
 <style scoped>

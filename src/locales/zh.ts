@@ -151,7 +151,8 @@ export default {
     preview: '预览思维导图',
     processing: '处理中',
     askAI: '询问AI',
-    more: '更多'
+    more: '更多',
+    loginToViewMore: '请登录后查看更多内容'
   },
   upload: {
     card: {

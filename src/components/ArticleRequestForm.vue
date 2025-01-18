@@ -533,14 +533,14 @@ const checkDuplicate = async (url: string): Promise<boolean> => {
     .from('keep_article_requests')
     .select('id')
     .eq('url', url)
-    .single()
+    .maybeSingle()
     
   // 检查 original_url 字段
   const { data: originalUrlData, error: originalUrlError } = await supabase
     .from('keep_article_requests')
     .select('id')
     .eq('original_url', url)
-    .single()
+    .maybeSingle()
     
   if (urlData || originalUrlData) {
     // 获取重复的请求ID
@@ -617,7 +617,7 @@ const validateLanguageSelections = (): boolean => {
 }
 
 /**
- * 提交文章处理求
+ * 提交文章处理请求
  */
 const submitRequest = async () => {
   if (isSubmitting.value) return
@@ -637,8 +637,8 @@ const submitRequest = async () => {
     // 先触发乐观更新
     emit('uploadSuccess', requestUrl.value)
 
-    // 再发送请求
-    fetch('/api/workflow/process', {
+    // 发送请求并等待响应
+    const response = await fetch('/api/workflow/process', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -652,6 +652,18 @@ const submitRequest = async () => {
       })
     })
 
+    // 检查响应状态
+    if (!response.ok) {
+      throw new Error(await response.text())
+    }
+
+    // 解析响应数据
+    const data = await response.json()
+    
+    if (!data.success) {
+      throw new Error(data.message || t('summarize.messages.submitFailed'))
+    }
+
     ElMessage.success(t('summarize.messages.submitSuccess'))
     requestUrl.value = ''
     showUploadModal.value = false
@@ -659,7 +671,7 @@ const submitRequest = async () => {
     emit('refresh', { type: 'upload' })
     
   } catch (error) {
-    ElMessage.error(t('summarize.messages.submitFailed'))
+    ElMessage.error(error instanceof Error ? error.message : t('summarize.messages.submitFailed'))
   } finally {
     isSubmitting.value = false
   }

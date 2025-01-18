@@ -151,7 +151,8 @@ export default {
     preview: 'Preview Mind Map',
     processing: 'Processing',
     askAI: 'Ask AI',
-    more: 'More'
+    more: 'More',
+    loginToViewMore: 'Please login to view more content'
   },
   upload: {
     card: {
