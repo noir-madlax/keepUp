@@ -470,10 +470,11 @@
     <ChatToolbar 
       @refresh-anchors="handleRefreshAnchors" 
       :disabled="showMoreContentModal"
+      @scroll-to-bottom="handleScrollToBottom"
     />
 
     <!-- 添加聊天窗口 -->
-    <ChatWindow />
+    <ChatWindow ref="chatWindowRef" />
   </div>
 </template>
 
@@ -1619,6 +1620,13 @@ const toggleChatWindow = () => {
   if (chatStore.chatWindowState === 'expanded') {
     windowHeight.value = DEFAULT_EXPANDED_HEIGHT
   }
+}
+
+const chatWindowRef = ref<InstanceType<typeof ChatWindow> | null>(null)
+
+// 2024-03-21 14:30: 处理滚动到底部事件
+const handleScrollToBottom = () => {
+  chatWindowRef.value?.scrollToBottom(true)
 }
 </script>
 

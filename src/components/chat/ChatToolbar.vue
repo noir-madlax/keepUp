@@ -101,6 +101,10 @@ const CHAT_ACTIONS = {
   }
 }
 
+const emit = defineEmits<{
+  (e: 'scrollToBottom'): void
+}>()
+
 // 处理聊天按钮点击
 const handleChatAction = async (action: keyof typeof CHAT_ACTIONS) => {
   const selection = window.getSelection()
@@ -116,6 +120,9 @@ const handleChatAction = async (action: keyof typeof CHAT_ACTIONS) => {
     chatStore.chatWindowState = 'expanded'
     chatStore.isInitializing = true
     chatStore.isAIResponding = true
+    
+    // 2024-03-21 14:30: 发送消息前触发滚动到底部事件
+    emit('scrollToBottom')
     
     // 将选中的文本作为上下文发送
     const prompt = `${selectedText}\n\n${CHAT_ACTIONS[action].prompt}`
