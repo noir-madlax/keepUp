@@ -102,7 +102,7 @@ export default {
       click: '点击',
       toViewExistingArticle: '查看已有文章',
       languageRequired: '请选择一种输出语言',
-      submitSuccess: '提交成功，内容正在处理中',
+      submitSuccess: '提交成功，内容正在处理中，预计5分钟左右完成',
       submitFailed: '提交失败，请重试',
       maxSelectionsExceeded: '最多只能选择3个语言选项',
       onlyForMedia: '只支持视频和播客类型的内容'

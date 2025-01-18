@@ -102,7 +102,7 @@ export default {
       click: 'click',
       toViewExistingArticle: 'to view existing article',
       languageRequired: 'Please select at least one output language',
-      submitSuccess: 'Submitted successfully, content is being processed',
+      submitSuccess: 'Submitted successfully, content will be available IN 5 MINTUES ',
       submitFailed: 'Submission failed, please try again',
       maxSelectionsExceeded: 'You can select up to 3 language options',
       onlyForMedia: 'Only available for video and podcast content'

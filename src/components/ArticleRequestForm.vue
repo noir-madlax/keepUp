@@ -733,6 +733,7 @@ const isSupportedMediaUrl = (url: string): boolean => {
   return lowercaseUrl.includes('youtube.com') ||
          lowercaseUrl.includes('youtu.be') ||
          lowercaseUrl.includes('spotify.com') ||
+         lowercaseUrl.includes('podcasts.apple.com') ||
          lowercaseUrl.includes('apple.com/podcast')
 }
 
