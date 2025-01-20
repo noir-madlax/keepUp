@@ -22,6 +22,7 @@
         class="absolute left-0 right-0 top-0 h-1 cursor-ns-resize bg-transparent"
         @mousedown="startResize"
       ></div>
+           <!-- 拖拽按钮这个控制位置贴近框 -top-[0px] -->
       <button
         @click="toggleChatWindow"
         class="absolute left-1/2 -translate-x-1/2 -top-[0px] transition-opacity hover:opacity-100 opacity-90 bg-white rounded-t-lg px-2 "
@@ -52,7 +53,7 @@
     >
     </div>
 
-    <!-- 聊天内容区域 -->
+    <!-- 聊天内容区域  "h-[calc(100%-60px-40px) 这个控制高度-->
     <div 
       v-if="chatStore.chatWindowState === 'expanded'"
       class="h-[calc(100%-60px-40px)] overflow-y-auto"
@@ -162,12 +163,14 @@
     </div>
 
     <!-- 输入框区域 -->
-        <!--max-w-[98%]是为了ai的聊天和用户聊天对齐 和输入框对齐 -->
+        <!--mr-[-20px] 是为了ai的聊天右边的输入框对齐 -->
     <div 
       class="absolute bottom-0 left-0 right-0 bg-white px-11 py-3 mr-[-20px] "
       style="height: 59px;"
     >
+      <!-- 输入框 --> 
       <form @submit.prevent="handleSubmit" class="relative flex items-center h-full">
+               <!-- mr-[24px] 控制按钮位置 -->
         <input
           v-model="messageInput"
           type="text"
@@ -175,6 +178,7 @@
           class="w-full px-4 py-2 pr-12 mr-[24px] border border-[#D9D9D9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#BFBFBF] bg-white text-[#333333] text-base"
           :disabled="chatStore.isAIResponding"
         />
+        <!-- 发送按钮 -->
         <button
           type="button"
           class="absolute right-[32px] w-[32px] h-[32px] flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors"

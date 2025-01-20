@@ -26,6 +26,23 @@
         @touchend="handleTouchEnd"
         @scroll="handleScroll"
       >
+        <!-- Early Access 欢迎卡片 -->
+        <div class="early-access-container flex-shrink-0">
+          <div class="early-access-inner-card">
+            <div class="early-access-content">
+              <div class="early-access-title">
+                <span class="emoji">🎉</span>{{ t('home.earlyAccess.card.title') }}
+              </div>
+              <div class="early-access-privileges">
+                <div class="privilege-item">·{{ t('home.earlyAccess.card.privileges.aiSummary') }}</div>
+                <div class="privilege-item">·{{ t('home.earlyAccess.card.privileges.priorityAccess') }}</div>
+                <div class="privilege-item">·{{ t('home.earlyAccess.card.privileges.feedback') }}</div>
+                <div class="privilege-item">·{{ t('home.earlyAccess.card.privileges.discount') }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- NewUploadCard 固定在第一个位置 -->
         <div class="upload-container flex-shrink-0">
           <!-- 新增可点击区域容器 -->
@@ -64,8 +81,8 @@
           </div>
         </div>
 
-         <!-- NewUploadCard2 固定文章上传的卡片在第二个位置 -->
-         <div class="web-content-container flex-shrink-0">
+         <!-- NewUploadCard2 固定文章上传的卡片在第二个位置   v-if="false" 控制不展示 -->
+         <div class="web-content-container flex-shrink-0" v-if="false">
           <!-- 新增可点击区域容器 -->
           <div class="clickable-area" @click="handleNewUploadClick('web', $event)">
             <!-- Upload Icon -->
@@ -82,8 +99,8 @@
           </div>
         </div>
 
-         <!-- NewUploadCard3 pdf/doc/txt的上传-->
-         <div class="upload-container flex-shrink-0">
+         <!-- NewUploadCard3 pdf/doc/txt的上传  v-if="false" 控制不展示-->
+         <div class="upload-container flex-shrink-0" v-if="false">
           <!-- 新增可点击区域容器 -->
           <div class="clickable-area" @click="handleNewUploadClick('file', $event)">
             <!-- Upload Icon -->
@@ -866,5 +883,78 @@ defineExpose({
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   transition: height 0.3s ease;
+}
+
+/* Early Access 卡片样式 */
+.early-access-container {
+  width: 200px;
+  height: 238px;
+  padding: 3px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #FC6679 0%, #F720B6 100%);
+  box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.early-access-inner-card {
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: 8px;
+  padding: 14px 12px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.early-access-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: "PingFang SC", sans-serif;
+}
+
+.early-access-title {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #FA4C9B;
+  justify-content: center;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+
+.emoji {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.early-access-privileges {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 6px;
+}
+
+.privilege-item {
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 400;
+  color: #FA4C9B;
+  letter-spacing: -0.3px;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style> 
