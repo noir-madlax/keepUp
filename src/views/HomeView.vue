@@ -33,7 +33,14 @@
             {{ t('home.title') }}
           </h1>
         </div>
+     <!-- 2024-03-19: Early Access横幅 -->
+     <div class="bg-white py-2 text-center text-pink-500 font-medium">
+        <p class="animate-bounce">{{ t('home.earlyAccess.title') }}</p>
+      </div>
+      
+      
 
+        
         <!-- 右侧导航元素容器 - 增加右侧padding并调整gap -->
         <div class="flex items-center gap-3 pr-2">
           <!-- 语言切换组件 -->

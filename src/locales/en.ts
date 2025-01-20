@@ -36,6 +36,18 @@ export default {
     },
     articles: {
       title: 'Articles'
+    },
+    earlyAccess: {
+      title: '🎉Early Access - Experience Keep Up Now!',
+      card: {
+        title: 'Early Access Privileges',
+        privileges: {
+          aiSummary: 'Unlimited Summaries',
+          priorityAccess: 'Free AI Chat',
+          feedback: 'VIP Feedback Channel',
+          discount: 'Premium Discounts'
+        }
+      }
     }
   },
   article: {
@@ -80,6 +92,7 @@ export default {
   },
   summarize: {
     title: 'Summarize',
+    title_early: '🎉Early Access🎉  AI Summary',
     manualupload:'Manual',
     urlPlaceholder: 'Enter Video, Podcast, WebPage URL to summarize',
     languageTitle: 'Select Output Languages',
@@ -222,7 +235,7 @@ export default {
     },
     questionMark: 'Question',
     toolbar: {
-      hint: '🌟Ask further questions about SELECTED text:'
+      hint: '🎉Early Access - AI Chat 🎉 Ask further questions about SELECTED text:'
     },
     errors: {
       userNotLoggedIn: 'Please login first',

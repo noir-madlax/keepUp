@@ -59,7 +59,7 @@
                  <!-- 添加上方空间，以免和右上角的按钮展示重叠冲突   -->
                  <div class="h-8"></div>
                 <div class="flex items-center gap-4 mb-2 flex-wrap">
-                  <h3 class="text-lg font-medium">{{ t('summarize.title') }}</h3>
+                  <h3 class="text-lg font-medium">{{ t('summarize.title_early') }}</h3>
                   
                   <!-- 根据模式显示不同的图标 -->
                   <div class="flex items-center gap-3 flex-wrap">
@@ -111,7 +111,7 @@
 
 
                 <!-- 全文字幕的语言选择 -->
-                <div>
+                <div v-if="isPrivilegedUser">
                   <div class="flex items-center gap-2 mb-2" :class="locale === 'en' ? 'max-[450px]:flex-col max-[450px]:items-start' : ''">
                     <h3 class="text-sm font-semibold text-gray-700">{{ t('summarize.subtitleLanguageTitle') }}</h3>
                     <p class="text-xs text-gray-400">{{ t('summarize.subtitleLanguageTitleNote') }}</p>
@@ -141,7 +141,7 @@
                 </div>
 
                 <!-- 分段详述的语言选择 -->
-                <div>
+                <div v-if="isPrivilegedUser">
                   <div class="flex items-center gap-2 mb-2" :class="locale === 'en' ? 'max-[450px]:flex-col max-[450px]:items-start' : ''">
                     <h3 class="text-sm font-semibold text-gray-700">{{ t('summarize.detailedLanguageTitle') }}</h3>
                     <p class="text-xs text-gray-400">{{ t('summarize.detailedLanguageTitleNote') }}</p>
@@ -359,7 +359,7 @@
 
 <script setup lang="ts">
 // 导入必要的依赖
-import { ref, watch, onUnmounted, nextTick } from 'vue'
+import { ref, watch, onUnmounted, nextTick, computed } from 'vue'
 import { ElMessage, ElLoading } from 'element-plus'
 import { supabase } from '../supabaseClient'
 import { useI18n } from 'vue-i18n'
@@ -369,6 +369,11 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 const authStore = useAuthStore()
 const router = useRouter()
+
+// 2024-03-14: 添加特权用户判断
+const isPrivilegedUser = computed(() => {
+  return authStore.user?.id === '40568d0d-cd39-4bbe-8cba-634e9484b5c'
+})
 
 // 初始化国际化工具
 const { t, locale } = useI18n()

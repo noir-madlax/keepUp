@@ -3,7 +3,7 @@
     class="fixed z-[999]"
     :class="{ 'opacity-50 pointer-events-none': disabled }"
     :style="{
-      left: '20px',
+      left: '40px',
       bottom: 'calc(60px)',
       maxWidth: 'calc(100vw - 40px)'
     }"

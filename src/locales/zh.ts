@@ -36,6 +36,18 @@ export default {
     },
     articles: {
       title: '文章'
+    },
+    earlyAccess: {
+      title: '🎉抢先体验 Keep Up 享专属权益',
+      card: {
+        title: 'Early Access 特权',
+        privileges: {
+          aiSummary: '抢先体验全新AI总结',
+          priorityAccess: '享受功能优先使用权',
+          feedback: '专属的用户反馈渠道',
+          discount: '享有未来高级功能折扣'
+        }
+      }
     }
   },
   article: {
@@ -80,6 +92,7 @@ export default {
   },
   summarize: {
     title: '总结',
+    title_early: '🎉Early Access🎉  抢先体验AI总结',
     manualupload:'手工',
     urlPlaceholder: '输入要总结的视频、播客、网页链接或者文档',
     languageTitle: '选择输出语言',
@@ -221,7 +234,7 @@ export default {
     },
     questionMark: '问题',
     toolbar: {
-      hint: '🌟选中文字,进一步提问了解更多:'
+      hint: '🎉Early Access - 抢先体验AI问答 ： 选中文字后,进一步提问了解更多'
     },
     errors: {
       userNotLoggedIn: '用户未登录',
