@@ -73,16 +73,35 @@
               index !== chatStore.currentSession.messages.length - 1 ? 'mb-3' : ''
             ]"
           >
-            <div 
-              :class="[
-                'max-w-[95%] rounded-lg px-4 py-2',
-                message.role === 'assistant' 
-                  ? 'bg-gray-50 text-gray-800 border border-gray-200' 
-                  : 'bg-blue-600 text-white'
-              ]"
-            >
-              {{ message.content }}
-            </div>
+            <!-- 2024-03-21 16:00: 添加AI消息的logo -->
+            <template v-if="message.role === 'assistant'">
+              <div class="flex items-start">
+                <img 
+                  src="/images/icons/logo.svg" 
+                  alt="Keep Up Logo" 
+                  class="w-[24px] h-[24px] mr-2 flex-shrink-0 mt-1" 
+                />
+                <div 
+                  :class="[
+                    'max-w-[95%] rounded-lg px-4 py-2 prose prose-sm',
+                    'bg-gray-50 text-gray-800 border border-gray-200'
+                  ]"
+                  v-html="renderMarkdown(message.content)"
+                >
+                </div>
+              </div>
+            </template>
+            <!-- 用户消息保持原样 -->
+            <template v-else>
+              <div 
+                :class="[
+                  'max-w-[95%] rounded-lg px-4 py-2 prose prose-sm',
+                  'bg-blue-600 text-white prose-invert'
+                ]"
+                v-html="renderMarkdown(message.content)"
+              >
+              </div>
+            </template>
           </div>
           
           <!-- 使用isAIInitialLoading来控制骨架屏 -->
@@ -154,6 +173,7 @@ import { useChatStore } from '../../stores/chat'
 import { Loading, ArrowRight } from '@element-plus/icons-vue'
 import { format } from 'date-fns'
 import type { ChatSession } from '../../types/chat'
+import { marked } from 'marked'
 
 const chatStore = useChatStore()
 const messageInput = ref('')
@@ -324,6 +344,16 @@ const toggleChatWindow = () => {
 defineExpose({
   scrollToBottom
 })
+
+// 2024-03-21 15:30: 添加Markdown渲染函数
+const renderMarkdown = (content: string) => {
+  try {
+    return marked(content)
+  } catch (error) {
+    console.error('Markdown渲染失败:', error)
+    return content
+  }
+}
 </script>
 
 <style scoped>
@@ -419,4 +449,53 @@ defineExpose({
 }
 
 /* 移除之前的 resizing 类，因为我们现在使用 transition-none */
+
+/* 2024-03-21 15:30: 添加Markdown样式 */
+:deep(.prose) {
+  max-width: none;
+}
+
+:deep(.prose p) {
+  margin: 0.5em 0;
+}
+
+:deep(.prose strong) {
+  font-weight: 600;
+}
+
+:deep(.prose ul),
+:deep(.prose ol) {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+:deep(.prose li) {
+  margin: 0.25em 0;
+}
+
+:deep(.prose-invert) {
+  color: white;
+}
+
+:deep(.prose-invert strong) {
+  color: white;
+}
+
+:deep(.prose-invert a) {
+  color: white;
+  text-decoration: underline;
+}
+
+:deep(.prose pre) {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0.5em;
+  border-radius: 0.25em;
+  overflow-x: auto;
+}
+
+:deep(.prose code) {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25em;
+}
 </style> 
