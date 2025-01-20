@@ -520,6 +520,11 @@ export const useChatStore = defineStore('chat', () => {
 
   // 2024-01-20 11:35: 添加设置当前文章ID的方法
   const setCurrentArticle = (articleId: number) => {
+    // 2024-03-22 15:30: 如果当前有会话且属于不同文章，清除会话
+    if (currentSession.value && currentSession.value.article_id !== articleId) {
+      currentSession.value = null
+      hasActiveSession.value = false
+    }
     currentArticleId.value = articleId
   }
 
