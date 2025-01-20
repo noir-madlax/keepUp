@@ -220,9 +220,9 @@ export default {
       expand: 'Elaborate',
       original: 'Show Original',
       explain_selection: 'Explain This',
-      expand_prompt: 'Please explain this content in detail, including its meaning and background, in an easy-to-understand way.',
-      original_prompt: 'Please provide the complete original text and highlight important keywords and phrases.',
-      explain_selection_prompt: 'Please explain the technical terms and difficult concepts in this content to help me better understand.'
+      expand_prompt: 'Please explain this content in detail, including more specific details based on the original context.',
+      original_prompt: 'Please check my input content above.And provide the complete original text and highlight important keywords.',
+      explain_selection_prompt: 'Please explain the specific meaning of this content based on the original context.'
     },
     input: {
       placeholder: 'How can I help you today?'

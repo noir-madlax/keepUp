@@ -219,9 +219,9 @@ export default {
       expand: '展开说说',
       original: '给出原文',
       explain_selection: '解释一下',
-      expand_prompt: '请详细展开解释这段内容的含义和背景，用通俗易懂的方式说明。',
-      original_prompt: '请给出这段内容的完整原文，并标注出重要的关键词和短语。',
-      explain_selection_prompt: '请解释这段内容中的专业术语和难懂概念，帮助我更好地理解。'
+      expand_prompt: '请详细展开解释这段内容，包含更多具体细。',
+      original_prompt: '请提供这段内容在原文中的完整原文，并标注出重要的关键词和短语。',
+      explain_selection_prompt: '请根据文章上下文，解释这段内容中的专业术语和难懂概念。'
     },
     input: {
       placeholder: '需要我为您做些什么？'
