@@ -22,11 +22,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-         target: 'https://keep-up-backend.vercel.app',
-         agent: new HttpsProxyAgent('http://127.0.0.1:7890'),
-        //target: process.env.NODE_ENV === 'production' 
-         // ? 'https://keep-up-backend.vercel.app'
-         //  : 'http://localhost:8000',
+        //  target: 'https://keep-up-backend.vercel.app',
+        //  agent: new HttpsProxyAgent('http://127.0.0.1:7890'),
+        target: process.env.NODE_ENV === 'production' 
+         ? 'https://keep-up-backend.vercel.app'
+          : 'http://localhost:8000',
         
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
@@ -83,5 +83,11 @@ export default defineConfig({
     // 确保生成的文件名包含内容哈希
     cssCodeSplit: true,
     write: true,
+  },
+  optimizeDeps: {
+    include: [
+      // ... existing deps ...
+      '@vercel/analytics'
+    ]
   }
 })

@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { inject } from '@vercel/analytics'
 import App from './App.vue'
 import router from './router'
 import i18n from './i18n'
@@ -49,5 +50,8 @@ if (import.meta.env.PROD) {
   // 在页面加载时执行清理
   window.addEventListener('load', clearBrowserData)
 }
+
+// 注入 Vercel Analytics
+inject()
 
 app.mount('#app')
