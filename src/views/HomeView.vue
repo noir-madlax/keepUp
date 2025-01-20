@@ -383,6 +383,7 @@ import LanguageSwitch from '../components/LanguageSwitch.vue'
 import PullToRefresh from '../components/PullToRefresh.vue'
 import localforage from 'localforage'
 import MyUploadsSection from '../components/MyUploadsSection.vue'
+import { trackEvent } from '@/utils/analytics'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -1115,6 +1116,20 @@ const handleUploadSuccess = (url: string) => {
 
 // 添加 ref 定义
 const myUploadsRef = ref<InstanceType<typeof MyUploadsSection> | null>(null)
+
+// 在相关方法中添加追踪
+const handleArticleClick = (article: Article) => {
+  trackEvent('article_click_from_home', {
+    articleId: article.id,
+    title: article.title
+  })
+}
+
+const handleCategoryChange = (category: string) => {
+  trackEvent('category_change', {
+    category: category
+  })
+}
 </script>
 
 <style scoped>

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { supabase } from '../supabaseClient'
 import type { User } from '@supabase/supabase-js'
 import type { Provider } from '@supabase/supabase-js'
+import { identifyUser, updateUserProperties } from '@/utils/analytics'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -16,10 +17,24 @@ export const useAuthStore = defineStore('auth', () => {
       if (session?.user) {
         // 2. 如果 session 中有用户信息，直接使用
         user.value = session.user
+        // 加载用户信息后设置用户身份
+        if (user.value) {
+          identifyUser(user.value.id, {
+            email: user.value.email,
+            name: user.value.user_metadata?.full_name
+          })
+        }
       } else {
         // 3. 没有 session 才调用 getUser
         const { data: { user: currentUser } } = await supabase.auth.getUser()
         user.value = currentUser
+        // 加载用户信息后设置用户身份
+        if (user.value) {
+          identifyUser(user.value.id, {
+            email: user.value.email,
+            name: user.value.user_metadata?.full_name
+          })
+        }
       }
     } catch (error) {
       console.error('Error loading user:', error)
@@ -72,6 +87,12 @@ export const useAuthStore = defineStore('auth', () => {
       if (session) {
         user.value = session.user
         console.log('Callback: 用户会话获取成功', session.user)
+        // 登录成功后设置用户身份
+        identifyUser(session.user.id, {
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name,
+          login_time: new Date().toISOString()
+        })
       } else {
         console.log('Callback: 没有获取到用户会话')
       }

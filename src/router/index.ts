@@ -5,6 +5,7 @@ import AdminLayout from '../views/admin/AdminLayout.vue'
 import RequestsView from '../views/admin/RequestsView.vue'
 import ArticleView from '../views/ArticleView.vue'
 import AuthCallback from '../views/AuthCallback.vue'
+import { trackEvent } from '@/utils/analytics'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -51,6 +52,15 @@ router.beforeEach((to, from, next) => {
   if (to.name === 'home') {
     import('../views/ArticleView.vue')
   }
+  console.log(`路由变化: 从 ${from.fullPath} 到 ${to.fullPath}`)
+  
+  // 添加页面访问追踪
+  trackEvent('page_view', {
+    path: to.fullPath,
+    title: to.meta.title || to.name,
+    from: from.fullPath
+  })
+  
   next()
 })
 

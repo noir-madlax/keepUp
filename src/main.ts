@@ -4,6 +4,7 @@ import { inject } from '@vercel/analytics'
 import App from './App.vue'
 import router from './router'
 import i18n from './i18n'
+import { initAnalytics } from './utils/analytics'
 
 // 导入 tailwind 基础样式
 import './assets/tailwind.css'
@@ -50,6 +51,9 @@ if (import.meta.env.PROD) {
   // 在页面加载时执行清理
   window.addEventListener('load', clearBrowserData)
 }
+
+// 初始化 analytics
+initAnalytics()
 
 // 注入 Vercel Analytics
 inject()

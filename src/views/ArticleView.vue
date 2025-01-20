@@ -505,6 +505,7 @@ import { TextPositionHelper } from '@/utils/textPosition'
 import type { ChatSession } from '../types/chat'
 import type { TextMark } from '@/utils/textPosition'
 import { useArticleStore } from '../stores/article'
+import { trackEvent } from '@/utils/analytics'
 
 
 // 将 i18n 相关初始化移前面
@@ -633,6 +634,11 @@ const fetchArticle = async () => {
 
     article.value = articleData
     sections.value = sectionsData || []
+
+    trackEvent('article_view', {
+      articleId: route.params.id,
+      title: articleData.title
+    })
   } catch (error) {
     console.error(t('error.getArticleDetailsFailed'), error)
     ElMessage.error(t('error.articleFetchFailed'))
