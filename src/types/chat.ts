@@ -65,4 +65,12 @@ export interface TextMark {
 
 export interface ChatResponse {
   content: string
+}
+
+// 添加 PromptType 枚举
+export enum PromptType {
+  BASE = 'base',
+  ELABORATE = 'elaborate',
+  EXPLAIN = 'explain',
+  ORIGIN = 'origin'
 } 

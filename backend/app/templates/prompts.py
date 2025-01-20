@@ -1,3 +1,5 @@
+from app.models.chat import PromptType
+
 # 基础对话提示模板
 BASE_CHAT_PROMPT = """Answer questions based on the following article content.
 
@@ -34,31 +36,18 @@ Maintain a relaxed, conversational tone, avoiding overly formal language.
 Keep the response length under 500 words.
 """
 
-# 文章分析提示模板 暂未使用
-ARTICLE_ANALYSIS_PROMPT = """请分析以下文章的主要观点和论据。
 
-文章内容:
-{article_content}
 
-分析重点:
-{focus_points}
-"""
+ELABORATE_PROMPT = """... 详细展开的提示 ..."""
 
-# 段落总结提示模板 暂未使用
-SECTION_SUMMARY_PROMPT = """请总结以下段落的主要内容。
+EXPLAIN_PROMPT = """... 解释性提示 ..."""
 
-段落内容:
-{section_content}
-
-要求:
-1. 保持简洁明了
-2. 突出关键信息
-3. 保留原文的核心观点
-"""
+ORIGIN_PROMPT = """... 原始提示 ..."""
 
 # 根据不同的 mark_type 选择不同的提示模板
 PROMPT_MAPPING = {
-    'article': BASE_CHAT_PROMPT,
-    'analysis': ARTICLE_ANALYSIS_PROMPT,
-    'section': SECTION_SUMMARY_PROMPT
+    PromptType.BASE: BASE_CHAT_PROMPT,
+    PromptType.ELABORATE: ELABORATE_PROMPT,
+    PromptType.EXPLAIN: EXPLAIN_PROMPT,
+    PromptType.ORIGIN: ORIGIN_PROMPT
 } 

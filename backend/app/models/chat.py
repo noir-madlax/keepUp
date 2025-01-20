@@ -2,6 +2,13 @@ from pydantic import BaseModel
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
+from enum import Enum
+
+class PromptType(Enum):
+    BASE = "base"
+    ELABORATE = "elaborate"
+    EXPLAIN = "explain"
+    ORIGIN = "origin"
 
 class ChatMessage(BaseModel):
     role: str

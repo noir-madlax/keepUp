@@ -25,6 +25,7 @@
 import { useChatStore } from '../../stores/chat'
 import { supabase } from '../../supabaseClient'
 import type { Position } from '../../types/chat'
+import { PromptType } from '@/types/chat'
 
 const props = defineProps<{
   markId: string
@@ -64,6 +65,21 @@ const handleClick = async () => {
   } catch (error) {
     console.error('加载会话失败:', error)
   }
+}
+
+const handleExplain = () => {
+  chatStore.sendMessage(chatStore.selectedText, PromptType.EXPLAIN)
+  chatStore.hideToolbar()
+}
+
+const handleOrigin = () => {
+  chatStore.sendMessage(chatStore.selectedText, PromptType.ORIGIN)
+  chatStore.hideToolbar()
+}
+
+const handleElaborate = () => {
+  chatStore.sendMessage(chatStore.selectedText, PromptType.ELABORATE)
+  chatStore.hideToolbar()
 }
 </script>
 

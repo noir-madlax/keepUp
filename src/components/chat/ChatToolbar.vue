@@ -56,6 +56,7 @@
 import { useChatStore } from '../../stores/chat'
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { PromptType } from '../../types/chat'
 
 // 2024-03-14 21:30: 添加disabled prop
 const props = defineProps<{
@@ -116,20 +117,31 @@ const handleChatAction = async (action: keyof typeof CHAT_ACTIONS) => {
   }
 
   try {
-    // 2024-01-22 17:30: 立即展开聊天窗口并设置初始化状态
     chatStore.chatWindowState = 'expanded'
     chatStore.isInitializing = true
     chatStore.isAIResponding = true
     
-    // 2024-03-21 14:30: 发送消息前触发滚动到底部事件
     emit('scrollToBottom')
     
-    // 将选中的文本作为上下文发送
+    let promptType: PromptType
+    switch (action) {
+      case 'EXPAND':
+        promptType = PromptType.ELABORATE
+        break
+      case 'ORIGINAL':
+        promptType = PromptType.ORIGIN
+        break
+      case 'EXPLAIN':
+        promptType = PromptType.EXPLAIN
+        break
+      default:
+        promptType = PromptType.BASE
+    }
+    
     const prompt = `${selectedText}\n\n${CHAT_ACTIONS[action].prompt}`
-    await chatStore.sendMessage(prompt)
+    await chatStore.sendMessage(prompt, promptType)
   } catch (error) {
     console.error('发送消息失败:', error)
-    // 2024-01-22 17:30: 发生错误时重置状态
     chatStore.isInitializing = false
     chatStore.isAIResponding = false
   }

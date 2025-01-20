@@ -6,8 +6,9 @@ import type {
   MarkType,
   ChatAction,
   ToolbarPosition,
-  ChatWindowState
+  ChatWindowState,
 } from '../types/chat'
+import { PromptType } from '../types/chat'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from './auth'
@@ -353,7 +354,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   // 修改发送消息的函数
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, promptType: PromptType = PromptType.BASE) => {
     if (!authStore.user?.id) {
       throw new Error(t('chat.errors.userNotLoggedIn'))
     }
@@ -427,7 +428,7 @@ export const useChatStore = defineStore('chat', () => {
       }
 
       await handleSSE(
-        `/api/chat/${currentSession.value.id}/stream`,
+        `/api/chat/${currentSession.value.id}/stream${promptType !== PromptType.BASE ? `?prompt_type=${promptType}` : ''}`,
         {
           method: 'POST',
           headers: {

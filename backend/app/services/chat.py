@@ -5,7 +5,7 @@ from app.services.deepseek import DeepseekService
 from app.repositories.chat import ChatRepository
 from app.repositories.supabase import SupabaseService
 from app.utils.logger import logger
-from app.models.chat import ChatMessage, ChatSession
+from app.models.chat import ChatMessage, ChatSession, PromptType
 from app.templates.prompts import BASE_CHAT_PROMPT, PROMPT_MAPPING
 
 class ChatService:
@@ -40,7 +40,7 @@ class ChatService:
             logger.error(f"提取 content 失败: {str(e)}")
             return ''
             
-    async def process_chat_stream(self, session_id: UUID) -> AsyncGenerator[str, None]:
+    async def process_chat_stream(self, session_id: UUID, prompt_type: PromptType) -> AsyncGenerator[str, None]:
         """处理流式聊天请求"""
         try:
             # 1. 获取会话信息
@@ -56,11 +56,12 @@ class ChatService:
             if not article_content:
                 raise ValueError(f"Article content not found: article_id={session.article_id}")
             
-            # 4. 构建上下文
+            # 4. 构建上下文，传入 prompt_type
             context = self._build_context(
                 session=session,
                 messages=messages,
-                article_content=article_content
+                article_content=article_content,
+                prompt_type=prompt_type
             )
             
             # 5. 流式调用 Deepseek API
@@ -116,13 +117,13 @@ class ChatService:
             logger.error(f"获取文章内容失败: {str(e)}", exc_info=True)
             raise
             
-    def _build_context(self, session: ChatSession, messages: List[ChatMessage], article_content: str) -> dict:
+    def _build_context(self, session: ChatSession, messages: List[ChatMessage], article_content: str, prompt_type: PromptType) -> dict:
         """构建发送给 Deepseek 的上下文"""
-        # 根据 mark_type 选择合适的提示模板
-        prompt_template = PROMPT_MAPPING.get(session.mark_type, BASE_CHAT_PROMPT)
+        # 根据 prompt_type 获取对应的系统提示
+        system_prompt = PROMPT_MAPPING[prompt_type]
         
         # 构建提示信息
-        base_prompt = prompt_template.format(
+        base_prompt = system_prompt.format(
             article_content=article_content,
             mark_content=session.mark_content
         )
