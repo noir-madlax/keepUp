@@ -78,10 +78,19 @@ export default defineConfig({
     },
     sourcemap: true,
     assetsDir: 'assets',
-    // 2024-03-19: 添加时间戳到构建输出
+    // 2024-03-20: 添加manifest配置
+    manifest: true,
+    // 2024-03-20: 确保每次构建都生成新的hash
+    write: true,
+    // 2024-03-20: 添加时间戳到构建输出
     assetsInlineLimit: 4096, // 4kb
     // 确保生成的文件名包含内容哈希
     cssCodeSplit: true,
-    write: true,
+    // 2024-03-20: 添加构建时间戳
+    outDir: 'dist',
+    emptyOutDir: true,
+    // 2024-03-20: 添加构建报告
+    reportCompressedSize: true,
+    chunkSizeWarningLimit: 1000
   }
 })
