@@ -8,12 +8,14 @@
     :style="{
       height: chatStore.chatWindowState === 'expanded' ? `${windowHeight}px` : '105px',
       zIndex: '998',
-      border: '1px solid #DDDDDD',
+      borderLeft: '1px solid #DDDDDD',
+      borderTop: '1px solid #DDDDDD',
+      borderBottom: '1px solid #DDDDDD',
       boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)'
     }"
   >
     <!-- 展开/收起按钮 - 始终显示在顶部 -->
-    <div class="relative w-full" style="z-index: 999;">
+    <div class="relative w-full bg-white" style="z-index: 999;">
       <!-- 拖拽条 - 仅在展开状态显示 -->
       <div 
         v-if="chatStore.chatWindowState === 'expanded'"
@@ -22,8 +24,8 @@
       ></div>
       <button
         @click="toggleChatWindow"
-        class="absolute left-1/2 -translate-x-1/2 -top-1 transition-opacity hover:opacity-100 opacity-90"
-        style="z-index: 999;"
+        class="absolute left-1/2 -translate-x-1/2 -top-[0px] transition-opacity hover:opacity-100 opacity-90 bg-white rounded-t-lg px-2 "
+        style="z-index: 998;"
         :title="chatStore.chatWindowState === 'expanded' ? '收起聊天' : '展开聊天'"
       >
         <svg 
@@ -45,7 +47,7 @@
     <!-- 收起状态时的内容区域 -->
     <div 
       v-if="chatStore.chatWindowState === 'minimized'"
-      class="w-full h-full cursor-pointer flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
+      class="border-0 w-full h-full cursor-pointer flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
       @click="toggleChatWindow"
     >
     </div>
@@ -58,7 +60,7 @@
       <!-- 聊天消息内容 -->
       <div 
         ref="messageListRef"
-        class="messages-container"
+        class="messages-container pt-4 px-6"
         @wheel.prevent="handleChatScroll"
         @touchmove.prevent="handleChatScroll"
       >
@@ -74,8 +76,9 @@
             ]"
           >
             <!-- 2024-03-21 16:00: 添加AI消息的logo -->
+                         <!--max-w-[98%]是为了ai的聊天和用户聊天对齐 和输入框对齐 -->
             <template v-if="message.role === 'assistant'">
-              <div class="flex items-start">
+              <div class="flex items-start max-w-[98%]">
                 <img 
                   src="/images/icons/logo.svg" 
                   alt="Keep Up Logo" 
@@ -83,7 +86,7 @@
                 />
                 <div 
                   :class="[
-                    'max-w-[95%] rounded-lg px-4 py-2 prose prose-sm',
+                    'rounded-lg px-4 py-2 prose prose-sm',
                     'bg-gray-50 text-gray-800 border border-gray-200'
                   ]"
                   v-html="renderMarkdown(message.content)"
@@ -93,32 +96,60 @@
             </template>
             <!-- 用户消息保持原样 -->
             <template v-else>
-              <div 
-                :class="[
-                  'max-w-[95%] rounded-lg px-4 py-2 prose prose-sm',
-                  'bg-blue-600 text-white prose-invert'
-                ]"
-                v-html="renderMarkdown(message.content)"
-              >
+              <div class="flex items-start max-w-[95%]">
+                <div 
+                  :class="[
+                    'rounded-lg px-4 py-2 prose prose-sm',
+                    'bg-blue-600 text-white prose-invert'
+                  ]"
+                  v-html="renderMarkdown(message.content)"
+                >
+                </div>
+                <!-- 2024-03-21 17:45: 使用与导航栏相同的用户头像获取方式 -->
+                <img 
+                  :src="authStore.user?.user_metadata?.avatar_url"
+                  alt="User Avatar" 
+                  class="w-[24px] h-[24px] ml-2 flex-shrink-0 mt-1 rounded-full" 
+                />
               </div>
             </template>
           </div>
           
           <!-- 使用isAIInitialLoading来控制骨架屏 -->
           <div v-if="chatStore.isAIInitialLoading" class="flex justify-start">
-            <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200 animate-pulse">
-              <div class="h-2 bg-gray-200 rounded-full w-[180px]"></div>
-              <div class="h-2 bg-gray-200 rounded-full w-[120px]"></div>
+            <div class="flex items-start max-w-[98%]">
+              <!-- AI头像骨架屏 -->
+              <div class="w-[24px] h-[24px] mr-2 flex-shrink-0 mt-1 rounded bg-gray-200 animate-pulse"></div>
+              <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200 animate-pulse">
+                <div class="h-2 bg-gray-200 rounded-full w-[180px]"></div>
+                <div class="h-2 bg-gray-200 rounded-full w-[120px]"></div>
+              </div>
             </div>
           </div>
         </template>
 
         <!-- 2. 初始化时的骨架屏 -->
         <div v-else-if="chatStore.isInitializing" class="space-y-4">
+          <!-- 用户消息骨架屏 -->
           <div class="flex justify-end">
-            <div class="max-w-[80%] space-y-2 bg-blue-100 rounded-lg px-4 py-3 animate-pulse">
-              <div class="h-2 bg-blue-200 rounded-full w-[160px]"></div>
-              <div class="h-2 bg-blue-200 rounded-full w-[100px]"></div>
+            <div class="flex items-start max-w-[95%]">
+              <div class="max-w-[80%] space-y-2 bg-blue-100 rounded-lg px-4 py-3 animate-pulse">
+                <div class="h-2 bg-blue-200 rounded-full w-[160px]"></div>
+                <div class="h-2 bg-blue-200 rounded-full w-[100px]"></div>
+              </div>
+              <!-- 用户头像骨架屏 -->
+              <div class="w-[24px] h-[24px] ml-2 flex-shrink-0 mt-1 rounded-full bg-blue-200 animate-pulse"></div>
+            </div>
+          </div>
+          <!-- AI回复骨架屏 -->
+          <div class="flex justify-start">
+            <div class="flex items-start max-w-[98%]">
+              <!-- AI头像骨架屏 -->
+              <div class="w-[24px] h-[24px] mr-2 flex-shrink-0 mt-1 rounded bg-gray-200 animate-pulse"></div>
+              <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200 animate-pulse">
+                <div class="h-2 bg-gray-200 rounded-full w-[180px]"></div>
+                <div class="h-2 bg-gray-200 rounded-full w-[120px]"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -131,35 +162,36 @@
     </div>
 
     <!-- 输入框区域 -->
+        <!--max-w-[98%]是为了ai的聊天和用户聊天对齐 和输入框对齐 -->
     <div 
-      class="absolute bottom-0 left-0 right-0 bg-white px-6 py-7"
+      class="absolute bottom-0 left-0 right-0 bg-white px-11 py-3 mr-[-20px] "
       style="height: 59px;"
     >
-      <form @submit.prevent="handleSubmit" class="flex items-center gap-4 h-full">
+      <form @submit.prevent="handleSubmit" class="relative flex items-center h-full">
         <input
           v-model="messageInput"
           type="text"
           :placeholder="$t('chat.input.placeholder')"
-          class="flex-1 px-4 py-2 border border-[#D9D9D9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#BFBFBF] bg-white text-[#333333] text-base"
+          class="w-full px-4 py-2 pr-12 mr-[24px] border border-[#D9D9D9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#BFBFBF] bg-white text-[#333333] text-base"
           :disabled="chatStore.isAIResponding"
         />
         <button
           type="button"
-          class="w-[40px] h-[40px] flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors"
+          class="absolute right-[32px] w-[32px] h-[32px] flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors"
           :disabled="!messageInput.trim() && !chatStore.isAIResponding"
           @click="chatStore.isAIResponding ? handleAbort() : handleSubmit()"
         >
           <img 
             src="/images/icons/send.svg" 
             alt="Send" 
-            class="w-[24px] h-[24px]"
+            class="w-[20px] h-[20px]"
             :class="chatStore.isAIResponding ? 'hidden' : ''"
           />
           <img 
             v-if="chatStore.isAIResponding"
             src="/images/icons/stop.svg" 
             alt="Stop" 
-            class="w-[32px] h-[32px] stop-icon-wrapper"
+            class="w-[24px] h-[24px] stop-icon-wrapper"
           />
         </button>
       </form>
@@ -170,12 +202,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, defineExpose } from 'vue'
 import { useChatStore } from '../../stores/chat'
+import { useAuthStore } from '../../stores/auth'
 import { Loading, ArrowRight } from '@element-plus/icons-vue'
 import { format } from 'date-fns'
 import type { ChatSession } from '../../types/chat'
 import { marked } from 'marked'
 
 const chatStore = useChatStore()
+const authStore = useAuthStore()
 const messageInput = ref('')
 const isMobile = computed(() => window.innerWidth < 768)
 const selectedSessionId = ref('')

@@ -177,7 +177,7 @@
         <div 
           class="w-full max-w-[1024px] mx-auto transition-all duration-300"
         >
-          <div class="relative px-4 py-8">
+          <div class="relative px-4 pt-8 pb-0">
             <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
               <!-- 文章封面 -->
               <img 
@@ -251,7 +251,7 @@
       </div>
 
       <!-- 2024-01-17: 添加分割线 -->
-      <div class="w-full h-[1px] bg-[#E5E5E5]"></div>
+      <div class="hidden w-full h-[1px] bg-[#E5E5E5]"></div>
 
       <!-- 小节标签 -->
       <div class="w-full mx-auto bg-white">
@@ -259,8 +259,6 @@
         <div 
           class="w-full max-w-[1024px] mx-auto transition-all duration-300"
         >
-          <div class="tags-container">
-          </div>
 
           <!-- 文章内容部分 -->
           <div class="article-main-container">
