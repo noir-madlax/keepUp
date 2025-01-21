@@ -1,43 +1,54 @@
 <template>
   <!-- 根据状态显示不同的卡片 -->
-  <div v-if="article.status === 'processed'" class="article-card cursor-pointer hover:shadow-lg transition-shadow" @click="navigateToDetail(article.id)">
-    <!-- 已完成的文章卡片内容 -->
-    <div class="article-image">
-      <img :src="getArticleImage()" :alt="article.title || t('upload.card.fallback.noTitle')">
-      <div class="upload-time">{{ t('upload.card.fallback.uploaded') }}{{ getUploadTimeText(article.created_at) }}</div>
-    </div>
-    
-    <div class="title-text">
-      {{ article.title || t('upload.card.fallback.noTitle') }}
-    </div>
-    
-    <div class="info-container">
-      <!-- Author Info -->
-      <div class="author-container">
-        <div class="author-avatar-wrapper">
-          <img 
-            :src="article.author?.icon || '/images/icons/author_default.svg'" 
-            :alt="article.author?.name || t('upload.card.fallback.unknownAuthor')" 
-            class="author-avatar"
-          />
-        </div>
-        <span class="author-name">
-          {{ article.author?.name || t('upload.card.fallback.unknownAuthor') }}
-        </span>
+  <router-link 
+    v-if="article.status === 'processed'" 
+    :to="`/article/${article.id}`"
+    class="article-card cursor-pointer hover:shadow-lg transition-shadow"
+    custom
+    v-slot="{ navigate }"
+  >
+    <div 
+      class="article-card cursor-pointer hover:shadow-lg transition-shadow"
+      @click="handleClick($event, navigate)"
+    >
+      <!-- 已完成的文章卡片内容 -->
+      <div class="article-image">
+        <img :src="getArticleImage()" :alt="article.title || t('upload.card.fallback.noTitle')">
+        <div class="upload-time">{{ t('upload.card.fallback.uploaded') }}{{ getUploadTimeText(article.created_at) }}</div>
       </div>
       
-      <!-- Channel and Date -->
-      <div class="meta-container">
-        <div class="finish-channel-icon">
-          <img 
-            :src="`/images/icons/${getChannelIcon(article.channel || '')}`" 
-            :alt="article.channel || t('upload.card.fallback.unknownChannel')" 
-          />
+      <div class="title-text">
+        {{ article.title || t('upload.card.fallback.noTitle') }}
+      </div>
+      
+      <div class="info-container">
+        <!-- Author Info -->
+        <div class="author-container">
+          <div class="author-avatar-wrapper">
+            <img 
+              :src="article.author?.icon || '/images/icons/author_default.svg'" 
+              :alt="article.author?.name || t('upload.card.fallback.unknownAuthor')" 
+              class="author-avatar"
+            />
+          </div>
+          <span class="author-name">
+            {{ article.author?.name || t('upload.card.fallback.unknownAuthor') }}
+          </span>
         </div>
-        <span class="date-text">{{ formatDate(article.publish_date) || t('upload.card.fallback.unknownDate') }}</span>
+        
+        <!-- Channel and Date -->
+        <div class="meta-container">
+          <div class="finish-channel-icon">
+            <img 
+              :src="`/images/icons/${getChannelIcon(article.channel || '')}`" 
+              :alt="article.channel || t('upload.card.fallback.unknownChannel')" 
+            />
+          </div>
+          <span class="date-text">{{ formatDate(article.publish_date) || t('upload.card.fallback.unknownDate') }}</span>
+        </div>
       </div>
     </div>
-  </div>
+  </router-link>
 
   <!-- 处理中/失败/等待处理的卡片 -->
   <div v-else class="upload">
@@ -100,10 +111,13 @@ const props = defineProps<{
 
 const router = useRouter()
 
-// 添加跳转方法
-const navigateToDetail = (articleId?: string) => {
-  if (articleId) {
-    router.push(`/article/${articleId}`)
+// 修改点击处理函数
+const handleClick = (event: MouseEvent, navigate: () => void) => {
+  // 如果按下了 Command (Mac) 或 Ctrl (Windows)，在新窗口打开
+  if (event.metaKey || event.ctrlKey) {
+    window.open(`/article/${props.article.id}`, '_blank')
+  } else {
+    navigate()
   }
 }
 

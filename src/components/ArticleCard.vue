@@ -1,49 +1,56 @@
 <template>
-  <div 
+  <router-link 
+    :to="`/article/${article.id}`"
     class="card-container"
-    @click="navigateToDetail(article.id)"
+    custom
+    v-slot="{ navigate }"
   >
-    <!-- 上半部分 -->
-    <div class="card-top">
-      <!-- 左侧标题 -->
-      <h3 class="article-title">{{ getTitle() }}</h3>
-      
-      <!-- 右侧封面 -->
-      <img 
-        :src="getArticleImage()" 
-        :alt="article.title"
-        class="cover-image" 
-      />
-    </div>
-
-    <!-- 分隔线 -->
-    <div class="divider"></div>
-
-    <!-- 下半部分 -->
-    <div class="card-bottom">
-      <!-- 左侧作者信息 -->
-      <div class="author-info">
-        <div class="author-icon-wrapper">
-          <img 
-            :src="getAuthorIcon()"
-            :alt="article.author?.name" 
-            class="author-icon"
-          />
-        </div>
-        <span class="author-name">{{ getAuthorName() }}</span>
-      </div>
-
-      <!-- 右侧渠道和日期 -->
-      <div class="channel-date">
+    <div 
+      class="card-container"
+      @click="handleClick($event, navigate)"
+    >
+      <!-- 上半部分 -->
+      <div class="card-top">
+        <!-- 左侧标题 -->
+        <h3 class="article-title">{{ getTitle() }}</h3>
+        
+        <!-- 右侧封面 -->
         <img 
-          :src="`/images/icons/${getChannelIcon(article.channel)}`" 
-          :alt="article.channel" 
-          class="channel-icon" 
+          :src="getArticleImage()" 
+          :alt="article.title"
+          class="cover-image" 
         />
-        <span class="date">{{ formatDate(article.publish_date) }}</span>
+      </div>
+
+      <!-- 分隔线 -->
+      <div class="divider"></div>
+
+      <!-- 下半部分 -->
+      <div class="card-bottom">
+        <!-- 左侧作者信息 -->
+        <div class="author-info">
+          <div class="author-icon-wrapper">
+            <img 
+              :src="getAuthorIcon()"
+              :alt="article.author?.name" 
+              class="author-icon"
+            />
+          </div>
+          <span class="author-name">{{ getAuthorName() }}</span>
+        </div>
+
+        <!-- 右侧渠道和日期 -->
+        <div class="channel-date">
+          <img 
+            :src="`/images/icons/${getChannelIcon(article.channel)}`" 
+            :alt="article.channel" 
+            class="channel-icon" 
+          />
+          <span class="date">{{ formatDate(article.publish_date) }}</span>
+        </div>
       </div>
     </div>
-  </div>
+  </router-link>
 </template>
 
 <script setup lang="ts">
@@ -81,8 +88,12 @@ const formatDate = (date: string | null) => {
   }
 }
 
-const navigateToDetail = (id: number) => {
-  router.push(`/article/${id}`)
+const handleClick = (event: MouseEvent, navigate: () => void) => {
+  if (event.metaKey || event.ctrlKey) {
+    window.open(`/article/${props.article.id}`, '_blank')
+  } else {
+    navigate()
+  }
 }
 
 const getChannelIcon = (channel: string): string => {
