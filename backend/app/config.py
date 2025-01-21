@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, List
 from app.utils.logger import logger
 import os
 
@@ -46,7 +46,18 @@ class Settings(BaseSettings):
         "https://keep-up-nine.vercel.app"
     ]
     
-
+    # 代理测试配置
+    PROXY_LIST: str = ""  # 改为 str 类型
+    PROXY_TEST_TIMEOUT: int = 10
+    PROXY_TEST_MAX_WORKERS: int = 5
+    YOUTUBE_TEST_URL: str = "https://www.youtube.com/watch?v=IFvLorAL5-8"
+    
+    @property
+    def proxy_list(self) -> List[str]:
+        """将代理字符串转换为列表"""
+        if not self.PROXY_LIST:
+            return []
+        return [x.strip() for x in self.PROXY_LIST.split(',') if x.strip()]
     
     class Config:
         env_file = ".env"
