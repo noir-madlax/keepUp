@@ -372,7 +372,7 @@ const router = useRouter()
 
 // 2024-03-14: 添加特权用户判断
 const isPrivilegedUser = computed(() => {
-  return authStore.user?.id === '40568d0d-cd39-4bbe-8cba-634e9484b5c'
+  return authStore.user?.id === '40568d0d-cd39-4bbe-8cba-634e9484b5cc'
 })
 
 // 初始化国际化工具
