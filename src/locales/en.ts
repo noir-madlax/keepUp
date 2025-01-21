@@ -165,7 +165,7 @@ export default {
     processing: 'Processing',
     askAI: 'Ask AI',
     more: 'More',
-    loginToViewMore: 'Please login to view more content'
+    loginToViewMore: 'No content yet. Upload a video or log in to see AI-generated summaries'
   },
   upload: {
     card: {

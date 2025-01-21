@@ -165,7 +165,7 @@ export default {
     processing: '处理中',
     askAI: '询问AI',
     more: '更多',
-    loginToViewMore: '请登录后查看更多内容'
+    loginToViewMore: '暂无内容，上传视频或登录后即可查看AI生成的摘要'
   },
   upload: {
     card: {
