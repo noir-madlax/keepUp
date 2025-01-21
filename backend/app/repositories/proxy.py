@@ -50,9 +50,18 @@ class ProxyRepository:
             proxy_url = proxy_url.replace('http://', '')
             
             if success:
+                # 先获取当前代理的成功次数
+                current = client.table("keep_proxies")\
+                    .select("success_count")\
+                    .eq("proxy_url", proxy_url)\
+                    .single()\
+                    .execute()
+                    
+                new_success_count = current.data["success_count"] + 1
+                
                 # 成功时更新
                 data = {
-                    "success_count": client.table("keep_proxies").select("success_count").single().execute().data["success_count"] + 1,
+                    "success_count": new_success_count,
                     "response_time": response_time,
                     "updated_at": "now()"
                 }
