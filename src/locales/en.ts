@@ -115,7 +115,7 @@ export default {
       click: 'click',
       toViewExistingArticle: 'to view existing article',
       languageRequired: 'Please select at least one output language',
-      submitSuccess: 'Submitted successfully, content will be available IN 5 MINTUES ',
+      submitSuccess: 'Submitted successfully, content will be available IN 2 MINUTES ',
       submitFailed: 'Submission failed, please try again',
       maxSelectionsExceeded: 'You can select up to 3 language options',
       onlyForMedia: 'Only available for video and podcast content'
@@ -140,7 +140,7 @@ export default {
     filePlaceholder: 'Select or drag a file to upload',
     moreContent: 'More Content',
     alreadyExists: 'Already Exists',
-    supplementSuccess: 'Submitted successfully, content will be available in 5 minutes',
+    supplementSuccess: 'Submitted successfully, content will be available in 2 minutes',
     fileSummaryLanguageTitle: 'Select Summary Language',
     fileSummaryLanguageTitleNote: '(Summarize the core points from the file)',
     uploadProgress: 'Upload Progress: {progress}%',

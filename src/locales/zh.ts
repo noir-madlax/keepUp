@@ -115,7 +115,7 @@ export default {
       click: '点击',
       toViewExistingArticle: '查看已有文章',
       languageRequired: '请选择一种输出语言',
-      submitSuccess: '提交成功，内容正在处理中，预计5分钟左右完成',
+      submitSuccess: '提交成功，内容正在处理中，预计2分钟左右完成',
       submitFailed: '提交失败，请重试',
       maxSelectionsExceeded: '最多只能选择3个语言选项',
       onlyForMedia: '只支持视频和播客类型的内容'
@@ -140,7 +140,7 @@ export default {
     filePlaceholder: '选择或拖拽文件上传',
     moreContent: '更多内容',
     alreadyExists: '已存在',
-    supplementSuccess: '提交成功，内容将在5分钟后可见',
+    supplementSuccess: '提交成功，内容将在2分钟后可见',
     fileSummaryLanguageTitle: '选择总结语言',
     fileSummaryLanguageTitleNote: '(从文件中总结出核心要点)',
     uploadProgress: '上传进度: {progress}%',
