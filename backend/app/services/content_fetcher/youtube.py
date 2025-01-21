@@ -4,7 +4,6 @@ from app.models.article import ArticleCreate
 import re
 from app.config import settings
 from youtube_transcript_api import YouTubeTranscriptApi
-import json
 from app.utils.logger import logger
 import requests
 from bs4 import BeautifulSoup
@@ -12,16 +11,18 @@ from datetime import datetime
 from pytubefix import YouTube
 from pytubefix import Channel
 from app.utils.decorators import retry_decorator
+from app.repositories.proxy import proxy_repository
+import time
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
         # 保留现有的代理配置
         self.proxies = None
-        if settings.USE_PROXY and settings.PROXY_URL:
-            self.proxies = {
-                'http': settings.PROXY_URL,
-                'https': settings.PROXY_URL
-            }
+        # if settings.USE_PROXY and settings.PROXY_URL:
+        #     self.proxies = {
+        #         'http': settings.PROXY_URL,
+        #         'https': settings.PROXY_URL
+        #     }
     
     def can_handle(self, url: str) -> bool:
         """检查是否是 YouTube URL"""
@@ -45,24 +46,46 @@ class YouTubeFetcher(ContentFetcher):
                 return match.group(1)
         return None
     
+    async def get_proxy(self) -> Optional[Dict[str, str]]:
+        if settings.USE_PROXY:
+            return await proxy_repository.get_available_proxy()
+        return None
+
+
     @retry_decorator()
     async def fetch(self, url: str) -> Optional[str]:
         """获取 YouTube 视频内容并格式化字幕"""
         try:
             logger.info(f"获取 YouTube 内容: {url}")
-            logger.info(f"当前代理配置: {self.proxies}")
             
             # 提取视频 ID
             video_id = self.extract_video_id(url)
             if not video_id:
                 logger.error(f"无法从 URL 提取视频 ID: {url}")
                 return None
-
-            # 使用代理获取字幕
-            logger.info(f"开始获取字幕，代理状态: {'启用' if self.proxies else '禁用'}")
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=self.proxies)
-            if not transcript_list:
-                raise ValueError("未获取到视频字幕transcript_list")
+            
+            start_time = time.time()
+            success = False
+            
+            try:
+                # 使用代理获取字幕
+                if settings.USE_PROXY:
+                    proxies = await self.get_proxy()
+                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies)
+                else:
+                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+                if not transcript_list:
+                    raise ValueError("未获取到视频字幕transcript_list")
+                success = True
+            finally:
+                # 更新代理状态
+                if settings.USE_PROXY:
+                    response_time = time.time() - start_time
+                    await proxy_repository.update_proxy_status(
+                        proxies['http'], 
+                        success=success,
+                        response_time=response_time
+                    )
 
             # 格式化字幕内容
             readable_text = []
@@ -96,17 +119,34 @@ class YouTubeFetcher(ContentFetcher):
         """获取YouTube视频信息"""
         try:
             logger.info(f"开始获取YouTube视频信息: {url}")
-            
-            # 获取页面内容
-            response = requests.get(url, proxies=self.proxies)
-            response.raise_for_status()  # 如果状态码不是200，抛出异常
-            soup = BeautifulSoup(response.text, 'html.parser')
 
-            # 提取标题
-            title = soup.find('meta', {'name': 'title'})['content']
-            if not title:
-                raise ValueError("未获取到视频标题")
-            logger.info(f"获取到标题: {title}")
+            start_time = time.time()
+            success = False
+            
+            try:
+                # 获取页面内容
+                if settings.USE_PROXY:
+                    proxies = await self.get_proxy()
+                    response = requests.get(url, proxies=proxies)
+                else:
+                    response = requests.get(url)
+                response.raise_for_status()
+                soup = BeautifulSoup(response.text, 'html.parser')
+
+                # 提取标题
+                title = soup.find('meta', {'name': 'title'})['content']
+                if not title:
+                    raise ValueError("未获取到视频标题")
+                success = True
+            finally:
+                # 更新代理状态
+                if settings.USE_PROXY:
+                    response_time = time.time() - start_time
+                    await proxy_repository.update_proxy_status(
+                        proxies['http'], 
+                        success=success,
+                        response_time=response_time
+                    )
 
             # 提取描述
             description_meta = soup.find('meta', {'name': 'description'})
@@ -135,9 +175,9 @@ class YouTubeFetcher(ContentFetcher):
 
             # 在提取作者信息后，添加获取作者头像的代码
             try:
-                if self.proxies:
+                if settings.USE_PROXY and proxies:
                     logger.info("使用代理获取作者头像")
-                    yt = YouTube(url, proxies=self.proxies)
+                    yt = YouTube(url, proxies=proxies)
                 else:
                     logger.info("不使用代理获取作者头像")
                     yt = YouTube(url)
@@ -186,11 +226,14 @@ class YouTubeFetcher(ContentFetcher):
         """获取YouTube视频章节信息"""
         try:
             logger.info(f"开始获取YouTube视频章节信息: {url}")
+            success = False
             
             # 设置代理
-            if self.proxies:
+            if settings.USE_PROXY:
                 logger.info("使用代理获取章节信息")
-                yt = YouTube(url, proxies=self.proxies)
+                proxies = await self.get_proxy()
+                yt = YouTube(url, proxies=proxies)
+                success = True
             else:
                 yt = YouTube(url)
             
@@ -213,3 +256,11 @@ class YouTubeFetcher(ContentFetcher):
         except Exception as e:
             logger.error(f"获取YouTube视频章节信息失败: {str(e)}", exc_info=True)
             return None
+        
+        finally:
+            # 更新代理状态
+            if settings.USE_PROXY:
+                await proxy_repository.update_proxy_status(
+                    proxies['http'], 
+                    success=success
+                )
