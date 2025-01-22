@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     SUPABASE_URL: str
     SUPABASE_SERVICE_ROLE_KEY: str
     
+    # Webshare 配置
+    WEBSHARE_API_TOKEN: str
+    
     # Coze 配置
     COZE_API_TOKEN: str
     COZE_WORKFLOW_ID_ZH: str  # 中文工作流
