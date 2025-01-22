@@ -35,7 +35,7 @@ Keep Up 是一个文章收藏和分享平台，帮助用户整理和分享有价
 
 生产环境：
 ```bash
-curl --location --request POST 'https://keep-up-backend.vercel.app/proxy/get'
+curl --location --request POST 'https://keep-up-backend.vercel.app/router/get'
 ```
 
 #### 2. 代理测试1 (proxy_tester1)
@@ -47,7 +47,7 @@ curl --location --request POST 'https://keep-up-backend.vercel.app/proxy/get'
 
 生产环境：
 ```bash
-curl --location --request POST 'https://keep-up-backend.vercel.app/proxy/test1'
+curl --location --request POST 'https://keep-up-backend.vercel.app/router/proxy_tester_db'
 ```
 
 #### 3. 测试代理配置 (原tester)

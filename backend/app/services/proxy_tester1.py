@@ -8,6 +8,8 @@ from app.utils.logger import logger
 from app.config import settings
 from app.repositories.supabase import SupabaseService
 from fastapi import HTTPException
+import re
+from urllib.parse import quote
 
 class ProxyTester1:
     def __init__(self, timeout=10, test_url=None):
@@ -16,10 +18,50 @@ class ProxyTester1:
         self.test_url = test_url or settings.YOUTUBE_TEST_URL
         self.client = SupabaseService.get_client()
 
+    def validate_proxy_url(self, proxy_url: str) -> bool:
+        """
+        验证代理URL格式是否正确
+        格式应为：username:password@host:port
+        host可以是IP地址（xxx.xxx.xxx.xxx）或域名
+        """
+        # 2024-03-19: 更新代理URL格式验证，优化IP地址匹配
+        # 用户名:密码@IP地址:端口
+        ip_pattern = r'^[^:]+:[^@]+@(?:\d{1,3}\.){3}\d{1,3}:\d+$'
+        # 用户名:密码@域名:端口
+        domain_pattern = r'^[^:]+:[^@]+@[\w.-]+:\d+$'
+        
+        return bool(re.match(ip_pattern, proxy_url) or re.match(domain_pattern, proxy_url))
+
+    def format_proxy_url(self, proxy_url: str) -> str:
+        """
+        格式化代理URL，确保正确编码和添加协议前缀
+        格式：http://username:password@host:port
+        """
+        # 2024-03-19: 更新代理URL格式化，添加URL编码
+        try:
+            # 解析代理URL的各个部分
+            auth, host_port = proxy_url.split('@')
+            username, password = auth.split(':')
+            
+            # 对用户名和密码进行URL编码
+            encoded_username = quote(username)
+            encoded_password = quote(password)
+            
+            # 重新组装URL
+            encoded_proxy = f"{encoded_username}:{encoded_password}@{host_port}"
+            
+            # 添加协议前缀
+            if not encoded_proxy.startswith(('http://', 'https://')):
+                return f'http://{encoded_proxy}'
+            return encoded_proxy
+            
+        except Exception as e:
+            logger.error(f"代理URL格式化失败: {proxy_url}, 错误: {str(e)}")
+            return proxy_url  # 如果处理失败，返回原始URL
+
     async def get_proxies_from_db(self) -> list:
         """从数据库获取代理列表"""
         try:
-            # 只获取激活状态的代理
             result = self.client.table("keep_proxies_list")\
                 .select("proxy_url")\
                 .eq("is_active", True)\
@@ -29,10 +71,16 @@ class ProxyTester1:
                 logger.warning("数据库中没有找到活跃的代理")
                 return []
             
-            # 代理URL已经包含完整格式，直接使用
-            proxies = [item["proxy_url"] for item in result.data]
-            logger.info(f"从数据库获取了 {len(proxies)} 个代理")
-            return proxies
+            valid_proxies = []
+            for item in result.data:
+                proxy_url = item["proxy_url"]
+                if not self.validate_proxy_url(proxy_url):
+                    logger.warning(f"忽略格式不正确的代理URL: {proxy_url}")
+                    continue
+                valid_proxies.append(proxy_url)
+            
+            logger.info(f"从数据库获取了 {len(valid_proxies)} 个有效代理")
+            return valid_proxies
             
         except Exception as e:
             logger.error(f"从数据库获取代理失败: {str(e)}", exc_info=True)
@@ -107,10 +155,18 @@ class ProxyTester1:
         Returns:
             dict: 测试结果
         """
-        # 代理URL已经包含用户名密码和端口，直接使用
+        if not self.validate_proxy_url(proxy):
+            logger.error(f"代理URL格式不正确: {proxy}")
+            return {
+                'proxy': proxy,
+                'status': 'failed',
+                'error': 'Proxy URL format is invalid'
+            }
+
+        formatted_proxy = self.format_proxy_url(proxy)
         proxies = {
-            'http': proxy,
-            'https': proxy
+            'http': formatted_proxy,
+            'https': formatted_proxy
         }
         
         logger.info(f"开始测试代理: {proxy}")
