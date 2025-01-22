@@ -22,7 +22,35 @@ Keep Up 是一个文章收藏和分享平台，帮助用户整理和分享有价
 
 ## 代理测试
 
-### 测试代理配置
+### 代理获取和测试
+
+系统包含三个主要的代理相关功能：
+
+#### 1. 代理获取 (proxy_get)
+从Webshare API获取代理列表并保存到数据库：
+- 自动获取所有可用代理
+- 使用upsert操作避免重复
+- 保留已存在代理的状态和统计数据
+- 新代理默认状态为active
+
+生产环境：
+```bash
+curl --location --request POST 'https://keep-up-backend.vercel.app/proxy/get'
+```
+
+#### 2. 代理测试1 (proxy_tester1)
+测试新数据库表(keep_proxies_list)中的代理：
+- 与原tester逻辑相同
+- 使用新的数据库表存储结果
+- 自动更新代理状态和统计数据
+- 支持并发测试多个代理
+
+生产环境：
+```bash
+curl --location --request POST 'https://keep-up-backend.vercel.app/proxy/test1'
+```
+
+#### 3. 测试代理配置 (原tester)
 
 可以通过调用 `/router/test` 接口来测试配置的代理是否正常工作:
 实际测试的代理地址在.env文件的 `PROXY_LIST` 中
