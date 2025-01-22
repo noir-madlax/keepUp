@@ -13,6 +13,7 @@ from app.services.content_resolver import ContentResolver
 from app.services.request_logger import RequestLogger, Steps
 from app.utils.file_processor import process_file_content
 from ..repositories.article_views import ArticleViewsRepository
+from app.services.openrouter_service import OpenRouterService
 
 import asyncio
 import json
@@ -79,6 +80,37 @@ async def process_summary_content(request_id: int, languages: list[str]) -> list
         )
         
         try:
+            # 调用 OpenRouter 获取摘要
+            await RequestLogger.info(
+                request_id,
+                Steps.SUMMARY_PROCESS,
+                f"开始调用 OpenRouter 处理 {lang} 语言摘要"
+            )
+            
+            try:
+                openrouter_summary = await OpenRouterService.get_summary(
+                    content=request.get('content'),
+                    article_id=article['id'],
+                    lang=lang
+                )
+                
+                await RequestLogger.info(
+                    request_id,
+                    Steps.SUMMARY_PROCESS,
+                    f"OpenRouter {lang} 语言摘要处理完成"
+                )
+                
+            except Exception as e:
+                await RequestLogger.error(
+                    request_id,
+                    Steps.SUMMARY_PROCESS,
+                    f"OpenRouter {lang} 语言摘要处理失败: {str(e)}",
+                    e
+                )
+                logger.error(f"OpenRouter处理失败: {str(e)}")
+                raise e
+            
+            # 继续原有的 Coze 处理流程
             parse_request = ParseRequest(
                 id=request_id, 
                 url=request.get('url'),

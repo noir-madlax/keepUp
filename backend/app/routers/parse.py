@@ -43,7 +43,7 @@ async def process_coze_result(coze_response: CozeResponse, request_id: int, url:
         # 定义所有可能的小节
         section_mappings = [
             ("背景", article_content.key0_background),
-            ("总结", article_content.key2_why),
+            # ("总结", article_content.key2_why),
             ("分段提纲", article_content.key6_part_title),
             ("结构图", article_content.key11_map),
             ("要点总结", article_content.key19_Takeaways),

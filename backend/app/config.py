@@ -33,6 +33,9 @@ class Settings(BaseSettings):
 
     # Deepseek 配置
     DEEPSEEK_API_KEY: str
+
+    # OpenRouter Configuration
+    OPENROUTER_API_KEY: str
     
     # 代理配置
     USE_PROXY: bool = False
