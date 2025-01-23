@@ -8,7 +8,7 @@ export default {
     },
     filter: {
       discover: 'Discover Articles by Tag',
-      myUpload: 'My Upload',
+      myUpload: 'Recent Uploads',
       all: 'All',
       channelTitle: 'Select Channels (Multiple)',
       authorTitle: 'Select Authors (Multiple)',
@@ -35,7 +35,7 @@ export default {
       weak: 'Weak network connection'
     },
     articles: {
-      title: 'Articles'
+      title: 'Summaries'
     },
     earlyAccess: {
       title: '🎉Early Access - Experience Keep Up Now!',
@@ -47,7 +47,8 @@ export default {
           feedback: 'VIP Feedback Channel',
           discount: 'Premium Discounts'
         }
-      }
+      },
+      feedback: 'Your feedback matters-->📨'
     }
   },
   article: {
@@ -94,7 +95,7 @@ export default {
     title: 'Summarize',
     title_early: '🎉Early Access🎉  AI Summary',
     manualupload:'Manual',
-    urlPlaceholder: 'Enter Video, Podcast, WebPage URL to summarize',
+    urlPlaceholder: 'Place any Youtube or Podcast link here to summarize',
     languageTitle: 'Select Output Languages',
     languages: {
       zh: 'Chinese',
@@ -165,7 +166,7 @@ export default {
     processing: 'Processing',
     askAI: 'Ask AI',
     more: 'More',
-    loginToViewMore: 'No content yet. Upload a video or log in to see AI-generated summaries'
+    loginToViewMore: 'Paste a link to see summaries in 2 minutes'
   },
   upload: {
     card: {

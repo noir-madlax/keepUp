@@ -29,13 +29,39 @@
             class="w-[48px] h-[48px] flex-shrink-0" 
           />
           <!-- 网站标题文本 -->
-          <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC']">
+          <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2">
             {{ t('home.title') }}
+            <!-- 2024-03-19: 添加beta标记 -->
+            <span class="px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
+              BETA
+            </span>
           </h1>
         </div>
      <!-- 2024-03-19: Early Access横幅 -->
-     <div class="bg-white py-2 text-center text-pink-500 font-medium">
-        <p class="animate-bounce">{{ t('home.earlyAccess.title') }}</p>
+     <div class="bg-white py-2 text-center text-pink-500 font-medium relative group">
+        <div class="flex items-center justify-center gap-2">
+          <p class="animate-bounce">{{ t('home.earlyAccess.feedback') }}</p>
+          <!-- 联系方式图标 -->
+          <div class="relative contact-info-container group">
+            <img 
+              :src="getContactImage('ContactMe.PNG')" 
+              alt="Contact Us" 
+              class="hidden w-10 h-10 cursor-pointer hover:opacity-80 transition-all duration-300 transform hover:scale-110"
+              @click.stop="showContactInfo = !showContactInfo"
+            />
+            <!-- Hover弹出框 - 修改为group-hover显示 -->
+            <div 
+              class="absolute right-0 top-full mt-2 bg-white p-4 rounded-lg shadow-lg z-50 w-[400px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2"
+              @click.stop
+            >
+              <img 
+                :src="getContactImage('ContactMe.PNG')" 
+                alt="Contact Details" 
+                class="w-full h-auto hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+          </div>
+        </div>
       </div>
       
       
@@ -80,7 +106,7 @@
       </div>
       
       <!-- 分割线 -->
-      <div class="h-[1px] bg-[#E5E5E5] w-full"></div>
+      <div class="h-[1px] hidden bg-[#E5E5E5] w-full"></div>
 </header>
 
     <!-- 登录模态框 -->
@@ -91,16 +117,17 @@
     />
 
     <!-- 主要内容区域 -->
-    <pull-to-refresh class="pt-[0px]" :onRefresh="handleRefresh">
+    <pull-to-refresh class="mt-[-20px]" :onRefresh="handleRefresh">
       <div class="px-4 sm:px-8 py-6 overflow-x-hidden">
         <!-- 修改容器最大宽度并确保居中 -->
         <div class="max-w-screen-2xl mx-auto w-full">
           <!-- 修改上传框的外边距 -->
-          <div class="flex flex-wrap items-center gap-4 mb-6 p-4 sm:p-6 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-pink-100">
+          <div class="flex flex-wrap items-center gap-4 mb-6 p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200">
             <!-- 标题和图标容器 -->
             <div class="flex items-center gap-4 w-full sm:w-auto mb-2 sm:mb-0">
+              
               <!-- 标题 - 优化字体大小和响应式显示 -->
-              <h3 class="text-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap flex items-center gap-2">
+              <h3 class="hidden text-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                 </svg>
@@ -123,18 +150,26 @@
 
             <!-- URL输入框和上传按钮容器 -->
             <div class="flex flex-col sm:flex-1 w-full sm:flex-row items-center gap-4">
-              <!-- 文章URL输入框 -->
-              <input
-                type="text"
-                v-model="requestUrl"
-                :placeholder="t('summarize.urlPlaceholder')"
-                class="w-full sm:flex-grow px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent bg-white"
-                @click="handlePaste"
-                @keyup.enter="() => submitRequest(requestUrl)"
-              />
               
-              <!-- 上传按钮 -->
-              <div class="w-[80px] sm:w-[100px] self-center sm:self-auto sm:flex-shrink-0 sm:mr-2 mt-2 sm:mt-0">
+              <!-- 文章URL输入框 -->
+              <div class="relative flex-grow">
+                <img 
+                  src="/images/icons/add.svg" 
+                  alt="Add" 
+                  class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                />
+                <input
+                  type="text"
+                  v-model="requestUrl"
+                  :placeholder="t('summarize.urlPlaceholder')"
+                  class="w-full sm:flex-grow pl-12 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100"
+                  @click="handlePaste"
+                  @keyup.enter="() => submitRequest(requestUrl)"
+                />
+              </div>
+              
+              <!-- 上传按钮 暂时hidden  -->
+              <div class=" hidden w-[80px] sm:w-[100px] self-center sm:self-auto sm:flex-shrink-0 sm:mr-2 mt-2 sm:mt-0">
                 <ArticleRequestForm 
                   ref="articleRequestFormRef"
                   @refresh="handleArticleRefresh"
@@ -152,13 +187,13 @@
             @upload="submitRequest"
           />
 
-          <!-- 发现区域 -->
-          <div class="mb-8">
+          <!-- 发现区域 暂时都不要了-->
+          <div class="hidden mb-8">
             <!-- 发现标题 -->
             <h2 class="text-xl mb-4">{{ t('home.filter.discover') }}</h2>
           </div>
-          <!-- 渠道筛选区域 -->
-          <div class="mb-8">
+          <!-- 渠道筛选区域 暂时都不要了-->
+          <div class="hidden mb-8">
             <!-- 渠道标题 -->
             <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.channelTitle') }}</h2>
             <!-- 渠道按钮容器 -->
@@ -1136,6 +1171,36 @@ const handleCategoryChange = (category: string) => {
   trackEvent('category_change', {
     category: category
   })
+}
+
+// 添加showContactInfo状态
+const showContactInfo = ref(false)
+
+// 添加点击外部关闭联系方式弹窗
+onMounted(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as HTMLElement
+    if (!target.closest('.contact-info-container')) {
+      showContactInfo.value = false
+    }
+  }
+  
+  document.addEventListener('click', handleClickOutside)
+  
+  onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside)
+  })
+})
+
+// 2024-03-19: 添加图片处理函数
+const getContactImage = (imageName: string): string => {
+  try {
+    // 尝试使用动态导入
+    return new URL(`/public/images/covers/${imageName}`, import.meta.url).href
+  } catch (error) {
+    console.error('Error loading image:', error)
+    return '' // 返回空字符串或默认图片路径
+  }
 }
 </script>
 
