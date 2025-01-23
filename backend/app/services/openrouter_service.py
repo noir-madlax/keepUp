@@ -80,7 +80,7 @@ class OpenRouterService:
                         ]
                     }
                 ],
-                "max_tokens": 8000,
+                "max_tokens": 1500,
                 "temperature": 0.1
             }
             
