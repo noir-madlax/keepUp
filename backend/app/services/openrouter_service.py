@@ -8,7 +8,7 @@ from app.repositories.llm_records_repository import LLMRecordsRepository
 
 class OpenRouterService:
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
-    MODEL = "anthropic/claude-3-sonnet"
+    MODEL = "anthropic/claude-3.5-sonnet"
     
     @staticmethod
     async def get_prompt_data(lang: str) -> Optional[str]:
