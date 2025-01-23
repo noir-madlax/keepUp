@@ -1,7 +1,7 @@
 <template>
   <!-- 页面容器 -->
   <div 
-    class="min-h-screen bg-white overflow-x-hidden"
+    class="min-h-screen bg-white overflow-x-hidden w-full"
     :class="{ 'chat-open': chatStore.chatWindowState === 'expanded' }"
   >
     <!-- 顶部导航栏 -->
@@ -24,22 +24,48 @@
             @click="router.push('/')"
           >
             <!-- 网站Logo图片 -->
-            <img 
-              src="/images/icons/logo.svg" 
-              alt="Keep Up Logo" 
-              class="w-[48px] h-[48px] flex-shrink-0" 
-            />
-            <!-- 网站标题文本 -->
-            <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC']">
-              {{ t('home.title') }}
-            </h1>
+          <img 
+            src="/images/icons/logo.svg" 
+            alt="Keep Up Logo" 
+            class="w-[48px] h-[48px] flex-shrink-0" 
+          />
+          <!-- 网站标题文本 -->
+          <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2">
+            {{ t('home.title') }}
+            <!-- 2024-03-19: 添加beta标记 -->
+            <span class="px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
+              BETA
+            </span>
+          </h1>
+              
           </div>
           
      <!-- 2024-03-19: Early Access横幅 -->
-     <div class="bg-white py-2 text-center text-pink-500 font-medium">
-        <p class="animate-bounce">{{ t('home.earlyAccess.title') }}</p>
+     <div class="bg-white py-2 text-center text-pink-500 font-medium relative group">
+        <div class="flex items-center justify-center gap-2">
+          <p class="animate-bounce">{{ t('home.earlyAccess.feedback') }}</p>
+          <!-- 联系方式图标 -->
+          <div class="relative contact-info-container group">
+            <img 
+              :src="getContactImage('ContactMe.PNG')" 
+              alt="Contact Us" 
+              class="w-10 h-10 cursor-pointer hover:opacity-80 transition-all duration-300 transform hover:scale-110"
+              @click.stop="showContactInfo = !showContactInfo"
+            />
+            <!-- Hover弹出框 - 修改为group-hover显示 -->
+            <div 
+              class="absolute right-0 top-full mt-2 bg-white p-4 rounded-lg shadow-lg z-50 w-[400px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2"
+              @click.stop
+            >
+              <img 
+                :src="getContactImage('ContactMe.PNG')" 
+                alt="Contact Details" 
+                class="w-full h-auto hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+          </div>
+        </div>
       </div>
-      
       
           
           <!-- 右侧导航元素容器 - 增加右侧padding并调整gap -->
@@ -138,7 +164,7 @@
       </transition>
       
       <!-- 分割线 -->
-      <div class="h-[1px] bg-[#E5E5E5] w-full"></div>
+      <div class="h-[1px] hidden bg-[#E5E5E5] w-full"></div>
     </header>
 
     <template v-if="article">
@@ -212,7 +238,7 @@
                   <button 
                     v-if="isMediaArticle"
                     @click="handleMoreContent" 
-                    class="inline-flex items-center px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200 whitespace-nowrap"
+                    class="hidden inline-flex items-center px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200 whitespace-nowrap"
                   >
                     <img
                       src="/images/icons/more_content.svg"
@@ -525,6 +551,9 @@ const showEditModal = ref(false)
 const editForm = ref<Partial<Article>>({})
 
 const articleStore = useArticleStore()
+
+// 2024-03-20: 添加联系方式显示状态
+const showContactInfo = ref(false)
 
 // 根据当前语言获取可用的节类型
 const availableSectionTypes = computed(() => {
@@ -1637,6 +1666,11 @@ const chatWindowRef = ref<InstanceType<typeof ChatWindow> | null>(null)
 const handleScrollToBottom = () => {
   chatWindowRef.value?.scrollToBottom(true)
 }
+
+// 2024-03-20: 添加获取联系方式图片的函数
+const getContactImage = (imageName: string): string => {
+  return `/images/covers/${imageName}`
+}
 </script>
 
 <style>
@@ -1719,12 +1753,18 @@ const handleScrollToBottom = () => {
 /* 优化滚动行为 */
 html {
   scroll-behavior: smooth;
+  overflow-y: scroll;
+  /* 下面两行确保滚动条总是显示，即使内容不够长 */
+  min-height: 101vh;
+  scrollbar-gutter: stable;
 }
 
 /*  style 标签中加下全样式 */
 body {
   overflow-x: hidden;
   width: 100%;
+  /* 添加这行来防止滚动条导致的页面跳动 */
+  margin-right: calc(-1 * (100vw - 100%));
 }
 
 /* 确保所有图片不会导容器溢出 */
@@ -1758,6 +1798,10 @@ header {
 /* 为内容添加顶部内边距，防止被导航栏遮挡 */
 .min-h-screen {
   padding-top: 71px; /* 导航栏高度 + 1px 边框 */
+  width: 100%;
+  box-sizing: border-box;
+  /* 添加这行来确保内容不会因为滚动条出现而移动 */
+  padding-right: calc(100vw - 100%);
 }
 
 /* 确保所有弹出层和态框的 z-index 大于导航栏 */

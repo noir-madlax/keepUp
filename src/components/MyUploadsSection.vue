@@ -26,8 +26,8 @@
         @touchend="handleTouchEnd"
         @scroll="handleScroll"
       >
-        <!-- Early Access 欢迎卡片 -->
-        <div class="early-access-container flex-shrink-0">
+        <!-- Early Access 欢迎卡片  -->
+        <div class="early-access-container flex-shrink-0 ">
           <div class="early-access-inner-card">
             <div class="early-access-content">
               <div class="early-access-title">
@@ -348,6 +348,7 @@ const fetchUserArticles = async (isPolling: boolean = false) => {
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
+      .limit(5)
 
     if (requestsError || !requestsData) {
       throw requestsError
@@ -885,7 +886,7 @@ defineExpose({
   transition: height 0.3s ease;
 }
 
-/* Early Access 卡片样式 */
+/* Early Access 卡片样式 暂时隐藏  display: none;*/
 .early-access-container {
   width: 200px;
   height: 238px;
@@ -898,6 +899,7 @@ defineExpose({
   align-items: center;
   position: relative;
   overflow: hidden;
+  display: none;
 }
 
 .early-access-inner-card {

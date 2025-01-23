@@ -8,7 +8,7 @@ export default {
     },
     filter: {
       discover: 'Discover Articles by Tag',
-      myUpload: '我的上传',
+      myUpload: '最近上传',
       all: '全部',
       channelTitle: '频道选择（多选）',
       authorTitle: '作者选择（多选）',
@@ -35,7 +35,7 @@ export default {
       weak: '网络信号较弱'
     },
     articles: {
-      title: '文章'
+      title: '总结'
     },
     earlyAccess: {
       title: '🎉抢先体验 Keep Up 享专属权益',
@@ -47,7 +47,8 @@ export default {
           feedback: '专属的用户反馈渠道',
           discount: '享有未来高级功能折扣'
         }
-      }
+      },
+      feedback: '👋您的反馈对我们很重要 -->'
     }
   },
   article: {
@@ -94,7 +95,7 @@ export default {
     title: '总结',
     title_early: '🎉Early Access🎉  抢先体验AI总结',
     manualupload:'手工',
-    urlPlaceholder: '输入要总结的视频、播客、网页链接或者文档',
+    urlPlaceholder: '在此输入YouTube/播客链接获取总结',
     languageTitle: '选择输出语言',
     languages: {
       zh: '中文',
