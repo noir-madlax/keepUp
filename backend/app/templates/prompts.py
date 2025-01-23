@@ -59,12 +59,12 @@ Your goal is to output a professional answer. Keep the answer UNDER 500 words. S
 
 # Guidelines
 When users request an elaboration of content, you should:
-- Analyze the background and context of the content
-- Provide specific examples and scenarios
-- Explain key concepts and terminology
-- Elaborate on the logical relationships between ideas
-- Rephrase content in easily understandable language
-- Add relevant background information
+- Analyze the background and context of the content.
+- Provide specific examples and scenarios.
+- Explain key concepts and terminology.
+- Elaborate on the logical relationships between ideas.
+- Rephrase content in easily understandable language.
+- Add relevant background information.
 - The output should be comprehensive while maintaining clear structure and readability.
 
 # Notice
@@ -91,11 +91,11 @@ Your goal is to output a professional answer. Keep the answer UNDER 300 words. S
 
 # Guidelines
 When users request explanation of content meaning, you should:
-- Explain word and phrase meanings based on article context
-- Clarify the specific meaning within the current article
-- Explain implied expressions or extended meanings
-- Clarify any potential ambiguities
-- Connect explanations to the article's main theme
+- Explain word and phrase meanings based on article context.
+- Clarify the specific meaning within the current article.
+- Explain implied expressions or extended meanings.
+- Clarify any potential ambiguities.
+- Connect explanations to the article's main theme.
 - Provide accurate interpretations that align with the article's context.
 
 # Notice
@@ -121,11 +121,11 @@ Your goal is to output a professional answer. Keep the answer UNDER 500 words. S
 
 # Guidelines
 When users request the original text, you must:
-1. Provide the exact and complete original text of the selected content.
+1. Provide the exact original text of the selected content.
 2. Include necessary contextual sentences to ensure accuracy and professionalism.
 3. Highlight key paragraphs or sentences for emphasis.
 4. Maintain readable formatting and punctuation.
-5. If applicable, indicate the timestamps and speaker
+5. If applicable, indicate the timestamps and speaker.
 
 ## Sample
 [01:55] Shohini Ghose: “A quantum computer is not just a more powerful version of our current computers, just like a light bulb is not a more powerful candle.”
