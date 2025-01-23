@@ -33,8 +33,13 @@ Keep Up 是一个文章收藏和分享平台，帮助用户整理和分享有价
 - 保留已存在代理的状态和统计数据
 - 新代理默认状态为active
 
-生产环境：
+
+
+
 ```bash
+# 本地开发：
+curl --location --request POST 'http://localhost:8000/router/get'
+# 生产环境：
 curl --location --request POST 'https://keep-up-backend.vercel.app/router/get'
 ```
 
@@ -55,8 +60,8 @@ curl --location --request POST 'https://keep-up-backend.vercel.app/router/proxy_
 可以通过调用 `/router/test` 接口来测试配置的代理是否正常工作:
 实际测试的代理地址在.env文件的 `PROXY_LIST` 中
 
-生产环境：
 ```bash
+# 生产环境：
 curl --location --request POST 'https://keep-up-backend.vercel.app/router/test'
 ```
 

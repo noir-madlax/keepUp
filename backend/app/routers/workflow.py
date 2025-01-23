@@ -90,6 +90,7 @@ async def process_summary_content(request_id: int, languages: list[str]) -> list
             try:
                 openrouter_summary = await OpenRouterService.get_summary(
                     content=request.get('content'),
+                    request_id=request_id,
                     article_id=article['id'],
                     lang=lang
                 )

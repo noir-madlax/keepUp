@@ -4,6 +4,7 @@ from app.config import settings
 from app.utils.logger import logger
 from app.repositories.prompt_repository import PromptRepository
 from app.repositories.supabase import SupabaseService
+from app.repositories.llm_records_repository import LLMRecordsRepository
 
 class OpenRouterService:
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -31,12 +32,14 @@ class OpenRouterService:
             return None
 
     @staticmethod
-    async def call_openrouter_api(prompt: str, content: str) -> Optional[Dict[str, Any]]:
+    async def call_openrouter_api(prompt: str, content: str, request_id: int, lang: str) -> Optional[Dict[str, Any]]:
         """调用 OpenRouter API
         
         Args:
             prompt: 提示词
             content: 需要总结的内容
+            request_id: 请求ID
+            lang: 语言代码
             
         Returns:
             Optional[Dict[str, Any]]: API 返回的原始响应
@@ -44,12 +47,15 @@ class OpenRouterService:
         Raises:
             Exception: API调用失败时抛出异常
         """
+        response_data = None
+        error_msg = None
+        
         try:
             headers = {
                 "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}"
             }
             
-            data = {
+            request_data = {
                 "model": OpenRouterService.MODEL,
                 "messages": [
                     {
@@ -78,7 +84,7 @@ class OpenRouterService:
                 response = await client.post(
                     OpenRouterService.API_URL,
                     headers=headers,
-                    json=data,
+                    json=request_data,
                     timeout=60.0
                 )
                 
@@ -91,14 +97,14 @@ class OpenRouterService:
                     error_message = error_info.get('message', 'Unknown error')
                     metadata = error_info.get('metadata', {})
                     
-                    error_detail = (
+                    error_msg = (
                         f"OpenRouter API调用失败: \n"
                         f"错误码: {error_code}\n"
                         f"错误信息: {error_message}\n"
                         f"元数据: {metadata}"
                     )
-                    logger.error(error_detail)
-                    raise Exception(error_detail)
+                    logger.error(error_msg)
+                    raise Exception(error_msg)
                 
                 # 检查响应状态码
                 if response.status_code == 200:
@@ -110,8 +116,21 @@ class OpenRouterService:
                     raise Exception(error_msg)
                 
         except Exception as e:
-            logger.error(f"OpenRouter API调用异常: {str(e)}")
+            error_msg = str(e)
+            logger.error(f"OpenRouter API调用异常: {error_msg}")
             raise e
+            
+        finally:
+            # 无论成功失败都记录调用结果
+            await LLMRecordsRepository.create_record(
+                request_id=request_id,
+                provider="openrouter",
+                model=OpenRouterService.MODEL,
+                prompt_type=f"summary_{lang}",
+                input_content=request_data,  # 存储完整的请求数据
+                output_content=response_data,  # 存储完整的响应数据
+                error_message=error_msg
+            )
 
     @staticmethod
     def validate_api_response(response: Optional[Dict[str, Any]]) -> Optional[str]:
@@ -272,7 +291,7 @@ class OpenRouterService:
             raise e
 
     @staticmethod
-    async def get_summary(content: str, article_id: int, lang: str) -> Optional[str]:
+    async def get_summary(content: str, request_id: int, article_id: int, lang: str) -> Optional[str]:
         """获取内容总结的主方法
         
         Args:
@@ -289,7 +308,7 @@ class OpenRouterService:
             raise Exception("获取提示词失败")
             
         # 2. 调用API
-        api_response = await OpenRouterService.call_openrouter_api(prompt, content)
+        api_response = await OpenRouterService.call_openrouter_api(prompt, content, request_id, lang)
         
         # 3. 预处理响应
         processed_response = OpenRouterService.preprocess_api_response(api_response)
