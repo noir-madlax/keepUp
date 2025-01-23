@@ -5,6 +5,7 @@ from app.utils.logger import logger
 from app.repositories.prompt_repository import PromptRepository
 from app.repositories.supabase import SupabaseService
 from app.repositories.llm_records_repository import LLMRecordsRepository
+from app.utils.decorators import retry_decorator
 
 class OpenRouterService:
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -32,6 +33,7 @@ class OpenRouterService:
             return None
 
     @staticmethod
+    @retry_decorator()
     async def call_openrouter_api(prompt: str, content: str, request_id: int, lang: str) -> Optional[Dict[str, Any]]:
         """调用 OpenRouter API
         
@@ -67,11 +69,13 @@ class OpenRouterService:
                         "content": [
                             {
                                 "type": "text",
-                                "text": prompt
+                                "text": prompt,
+                                "cache_control": {"type": "ephemeral"}
                             },
                             {
                                 "type": "text",
-                                "text": content
+                                "text": content,
+                                "cache_control": {"type": "ephemeral"}
                             }
                         ]
                     }
