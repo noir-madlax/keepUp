@@ -13,7 +13,6 @@ from pytubefix import Channel
 from app.utils.decorators import retry_decorator
 from app.repositories.proxy import proxy_repository
 import time
-import os
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
@@ -24,9 +23,6 @@ class YouTubeFetcher(ContentFetcher):
         #         'http': settings.PROXY_URL,
         #         'https': settings.PROXY_URL
         #     }
-        # 全局禁用 SSL 验证（慎用！）
-        os.environ['CURL_CA_BUNDLE'] = ''  # 禁用证书验证
-        requests.packages.urllib3.disable_warnings()  # 禁用警告
     
     def can_handle(self, url: str) -> bool:
         """检查是否是 YouTube URL"""
