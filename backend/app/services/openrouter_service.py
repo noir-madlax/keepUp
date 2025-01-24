@@ -137,17 +137,18 @@ class OpenRouterService:
             )
 
     @staticmethod
-    def validate_api_response(response: Optional[Dict[str, Any]]) -> Optional[str]:
+    def validate_api_response(response: Optional[Dict[str, Any]], lang: str) -> Optional[str]:
         """验证API响应的有效性并提取内容
         
         Args:
             response: API的原始响应
+            lang: 语言代码 ('zh' 或 'en')
             
         Returns:
             Optional[str]: 提取的内容摘要，验证失败返回None
             
         Raises:
-            ValueError: 当摘要内容少于100个单词时抛出异常
+            ValueError: 当内容长度不足时抛出异常
         """
         try:
             if not response:
@@ -162,12 +163,23 @@ class OpenRouterService:
                 logger.error("API响应中未找到content内容")
                 return None
             
-            # 计算单词数量（按空格分割）
-            word_count = len(content.split())
-            if word_count < 100:
-                error_msg = f"摘要内容过短，当前单词数: {word_count}，最少需要100个单词"
-                logger.error(error_msg)
-                raise ValueError(error_msg)
+            # 根据语言类型计算内容长度
+            if lang == 'zh':
+                # 计算中文字符数（去除空白字符）
+                char_count = len([c for c in content if not c.isspace()])
+                min_length = 100  # 中文最少200字
+                if char_count < min_length:
+                    error_msg = f"摘要内容过短，当前字数: {char_count}，最少需要{min_length}字"
+                    logger.error(error_msg)
+                    raise ValueError(error_msg)
+            else:
+                # 计算英文单词数
+                word_count = len(content.split())
+                min_length = 100  # 英文最少100词
+                if word_count < min_length:
+                    error_msg = f"摘要内容过短，当前单词数: {word_count}，最少需要{min_length}个单词"
+                    logger.error(error_msg)
+                    raise ValueError(error_msg)
                 
             return content
             
@@ -320,7 +332,7 @@ class OpenRouterService:
             raise Exception("预处理API响应失败")
         
         # 4. 验证响应
-        summary_content = OpenRouterService.validate_api_response(processed_response)
+        summary_content = OpenRouterService.validate_api_response(processed_response, lang)
         if not summary_content:
             raise Exception("验证API响应失败")
             
