@@ -77,7 +77,7 @@ class YouTubeFetcher(ContentFetcher):
                 # 使用代理获取字幕
                 if settings.USE_PROXY:
                     proxies = await self.get_proxy()
-                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies)
+                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies,verify=False)
                 else:
                     transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
                 if not transcript_list:
@@ -134,7 +134,7 @@ class YouTubeFetcher(ContentFetcher):
                 if settings.USE_PROXY:
                     proxies = await self.get_proxy()
                     logger.info("使用代理获取页面内容,proxies: %s", proxies)
-                    response = requests.get(url, proxies=proxies)
+                    response = requests.get(url, proxies=proxies,verify=False)
                 else:
                     response = requests.get(url)
                 response.raise_for_status()
@@ -184,7 +184,7 @@ class YouTubeFetcher(ContentFetcher):
             try:
                 if settings.USE_PROXY and proxies:
                     logger.info("使用代理获取作者头像")
-                    yt = YouTube(url, proxies=proxies)
+                    yt = YouTube(url, proxies=proxies,verify=False)
                 else:
                     logger.info("不使用代理获取作者头像")
                     yt = YouTube(url)
