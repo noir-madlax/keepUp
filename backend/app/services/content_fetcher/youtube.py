@@ -77,7 +77,7 @@ class YouTubeFetcher(ContentFetcher):
                 # 使用代理获取字幕
                 if settings.USE_PROXY:
                     proxies = await self.get_proxy()
-                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies,verify=False)
+                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies)
                 else:
                     transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
                 if not transcript_list:
