@@ -16,7 +16,10 @@ import time
 import ssl
 
 # 取消 SSL 证书验证
-# ssl._create_default_https_context = ssl._create_unverified_context
+
+# 创建一个全局的 requests session 并禁用 SSL 验证
+session = requests.Session()
+session.verify = False
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
