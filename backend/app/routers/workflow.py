@@ -453,12 +453,12 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
     """接收请求并立即返回"""
     try:
         
-        # 1. 检查URL是否重复
-        if await SupabaseService.check_url_exists(request.original_url):
-            return {
-                "success": False,
-                "message": "URL已经存在"
-            }
+        # 1. 检查URL是否重复 1-24日，暂时去掉
+        # if await SupabaseService.check_url_exists(request.original_url):
+        #     return {
+        #         "success": False,
+        #         "message": "URL已经存在"
+        #     }
         
         # 2. 创建请求记录
         try:
