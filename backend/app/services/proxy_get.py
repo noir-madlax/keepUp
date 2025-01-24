@@ -22,7 +22,7 @@ class ProxyGetter:
             params = {
                 "mode": "direct",
                 "page": 1,
-                "page_size": 25
+                "page_size": 100
             }
             
             response = requests.get(

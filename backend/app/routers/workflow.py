@@ -119,21 +119,21 @@ async def process_summary_content(request_id: int, languages: list[str]) -> list
                 chapters=request.get('chapters')
             )
             
-            coze_response = await call_coze_and_parse(
-                parse_request.url, 
-                parse_request.content, 
-                parse_request.chapters,
-                workflow_id,
-                request_id
-            )
+            # coze_response = await call_coze_and_parse(
+            #     parse_request.url, 
+            #     parse_request.content, 
+            #     parse_request.chapters,
+            #     workflow_id,
+            #     request_id
+            # )
             
-            await process_coze_result(
-                coze_response, 
-                request_id, 
-                request.get('parsed_url'),
-                article,
-                lang
-            )
+            # await process_coze_result(
+            #     coze_response, 
+            #     request_id, 
+            #     request.get('parsed_url'),
+            #     article,
+            #     lang
+            # )
             
             msg = f"{lang} 内容处理完成"
             await RequestLogger.info(request_id, Steps.SUMMARY_PROCESS, msg)

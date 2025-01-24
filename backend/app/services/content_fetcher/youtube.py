@@ -129,6 +129,7 @@ class YouTubeFetcher(ContentFetcher):
                 # 获取页面内容
                 if settings.USE_PROXY:
                     proxies = await self.get_proxy()
+                    logger.info("使用代理获取页面内容,proxies: %s", proxies)
                     response = requests.get(url, proxies=proxies)
                 else:
                     response = requests.get(url)
@@ -229,7 +230,7 @@ class YouTubeFetcher(ContentFetcher):
         try:
             logger.info(f"开始获取YouTube视频章节信息: {url}")
             success = False
-            
+
             # 设置代理
             if settings.USE_PROXY:
                 logger.info("使用代理获取章节信息")
