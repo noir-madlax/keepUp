@@ -49,7 +49,7 @@ async def proxy_tester_db():
             test_url=settings.YOUTUBE_TEST_URL
         )
         
-        results = await tester.run_tests()
+        results = await tester.run_tests(max_workers=20)
         return results
         
     except Exception as e:
