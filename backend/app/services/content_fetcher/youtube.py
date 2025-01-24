@@ -28,7 +28,8 @@ class YouTubeFetcher(ContentFetcher):
         """检查是否是 YouTube URL"""
         youtube_patterns = [
             r'youtube\.com/watch\?v=[\w-]+',
-            r'youtu\.be/[\w-]+'
+            r'youtu\.be/[\w-]+',
+            r'youtube\.com/live/[\w-]+'  # 2024-03-19: 添加对直播链接的支持
         ]
         return any(re.search(pattern, url) for pattern in youtube_patterns)
     
@@ -38,6 +39,7 @@ class YouTubeFetcher(ContentFetcher):
             r'youtube\.com/watch\?v=([\w-]+)',  # 标准 YouTube URL
             r'youtu\.be/([\w-]+)',              # 短 URL
             r'youtube\.com/embed/([\w-]+)',      # 嵌入式 URL
+            r'youtube\.com/live/([\w-]+)'        # 2024-03-19: 添加对直播链接的支持
         ]
         
         for pattern in patterns:
