@@ -16,7 +16,7 @@ import time
 import ssl
 
 # 取消 SSL 证书验证
-ssl._create_default_https_context = ssl._create_unverified_context
+# ssl._create_default_https_context = ssl._create_unverified_context
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
