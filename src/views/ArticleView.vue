@@ -46,15 +46,10 @@
           <p class="animate-bounce">{{ t('home.earlyAccess.feedback') }}</p>
           <!-- 联系方式图标 -->
           <div class="relative contact-info-container group">
-            <img 
-              :src="getContactImage('ContactMe.PNG')" 
-              alt="Contact Us" 
-              class="w-10 h-10 cursor-pointer hover:opacity-80 transition-all duration-300 transform hover:scale-110"
-              @click.stop="showContactInfo = !showContactInfo"
-            />
+           
             <!-- Hover弹出框 - 修改为group-hover显示 -->
             <div 
-              class="absolute right-0 top-full mt-2 bg-white p-4 rounded-lg shadow-lg z-50 w-[400px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2"
+              class="absolute right-[-400px] top-full -mt-10 bg-white p-4 rounded-lg shadow-lg z-50 w-[400px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-0"
               @click.stop
             >
               <img 

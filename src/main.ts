@@ -41,8 +41,15 @@ if (import.meta.env.PROD) {
     // 清理旧版本的缓存数据
     const clearCache = async () => {
       try {
+        // 2024-03-21: 修复版本更新时登录态丢失的问题
+        // 保护 Supabase 认证相关的数据
+        const preserveKeys = [
+          'auth-token', 
+          'user-preferences',
+          ...Object.keys(localStorage).filter(key => key.startsWith('sb-'))  // 保护所有 Supabase 相关的键
+        ]
+
         // 清理 localStorage 中的非关键数据
-        const preserveKeys = ['auth-token', 'user-preferences']
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
           if (key && !preserveKeys.includes(key)) {
@@ -50,8 +57,13 @@ if (import.meta.env.PROD) {
           }
         }
 
-        // 清理 sessionStorage
-        sessionStorage.clear()
+        // 清理 sessionStorage 中的非认证数据
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i)
+          if (key && !key.startsWith('sb-')) {  // 保留 Supabase 相关的 session 数据
+            sessionStorage.removeItem(key)
+          }
+        }
 
         // 如果支持 Cache API，清理旧的缓存
         if ('caches' in window) {
@@ -66,7 +78,10 @@ if (import.meta.env.PROD) {
 
         // 如果是版本更新（非首次访问），刷新页面以加载新资源
         if (storedVersion) {
-          window.location.reload()
+          // 确保在清理完成后再刷新
+          setTimeout(() => {
+            window.location.reload()
+          }, 100)
         }
       } catch (error) {
         console.error('清理缓存失败:', error)

@@ -635,7 +635,8 @@ const submitRequest = async () => {
     }
 
     if (!validateUrl(requestUrl.value)) return
-    if (!await checkDuplicate(requestUrl.value)) return
+    // 1月24日-注释掉重复检查
+    // if (!await checkDuplicate(requestUrl.value)) return
 
     // 验证语言选择...
 
