@@ -13,13 +13,8 @@ from pytubefix import Channel
 from app.utils.decorators import retry_decorator
 from app.repositories.proxy import proxy_repository
 import time
-import ssl
+import urllib3
 
-# 取消 SSL 证书验证
-
-# 创建一个全局的 requests session 并禁用 SSL 验证
-session = requests.Session()
-session.verify = False
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
@@ -80,6 +75,13 @@ class YouTubeFetcher(ContentFetcher):
                 # 使用代理获取字幕
                 if settings.USE_PROXY:
                     proxies = await self.get_proxy()
+
+                    # 创建一个全局的 requests session 并禁用 SSL 验证
+                    urllib3.disable_warnings()
+                    # 创建一个全局的 requests session 并禁用 SSL 验证
+                    session = requests.Session()
+                    session.verify = False
+
                     transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies)
                 else:
                     transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
