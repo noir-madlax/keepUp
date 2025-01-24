@@ -1,28 +1,40 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from app.services.proxy_tester import ProxyTester
 from app.services.proxy_tester1 import ProxyTester1
 from app.services.proxy_get import ProxyGetter
 from app.config import settings
 from app.utils.logger import logger
+from typing import List
 
 router = APIRouter()
 
-@router.post("/router/test")
-async def test_proxies():
-    """测试所有配置的代理"""
+async def test_proxies_background(proxies: List[str]):
+    """后台执行代理测试"""
     try:
-        proxy_list = settings.proxy_list
-        if not proxy_list:
-            raise HTTPException(status_code=400, detail="未配置代理列表")
-            
         tester = ProxyTester(
-            proxies=proxy_list,
+            proxies=proxies,
             timeout=settings.PROXY_TEST_TIMEOUT,
             test_url=settings.YOUTUBE_TEST_URL
         )
+        await tester.run_tests()
+    except Exception as e:
+        logger.error(f"后台代理测试失败: {str(e)}", exc_info=True)
+
+@router.post("/router/test")
+async def test_proxies_endpoint(proxies: List[str], background_tasks: BackgroundTasks):
+    """测试代理列表"""
+    try:
+        if not proxies:
+            raise HTTPException(status_code=400, detail="未提供代理列表")
         
-        results = await tester.run_tests()
-        return results
+        # 将测试任务添加到后台任务
+        background_tasks.add_task(test_proxies_background, proxies)
+        
+        return {
+            "status": "success",
+            "message": f"已开始测试 {len(proxies)} 个代理",
+            "total": len(proxies)
+        }
         
     except Exception as e:
         logger.error(f"代理测试失败: {str(e)}", exc_info=True)
