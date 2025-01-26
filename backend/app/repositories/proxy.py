@@ -3,6 +3,7 @@ from app.utils.logger import logger
 from datetime import datetime
 from .supabase import SupabaseService
 import time
+import random
 
 class ProxyRepository:
     @classmethod
@@ -11,19 +12,33 @@ class ProxyRepository:
         try:
             client = SupabaseService.get_client()
             
-            # 随机获取一个活跃的代理
+            # 使用 id 来随机获取，因为 id 是连续的
+            # 先获取最大和最小 id
             result = client.table("keep_proxies")\
-                .select("id", "proxy_url")\
+                .select("id")\
                 .eq("is_active", True)\
-                .order('random()')\
-                .limit(1)\
                 .execute()
             
             if not result.data:
                 logger.warning("没有可用的代理")
                 return None
+            
+            # 从可用的代理中随机选择一个 id
+            proxy_ids = [proxy['id'] for proxy in result.data]
+            random_id = random.choice(proxy_ids)
+            
+            # 获取随机选择的代理
+            result = client.table("keep_proxies")\
+                .select("id", "proxy_url")\
+                .eq("id", random_id)\
+                .single()\
+                .execute()
                 
-            proxy = result.data[0]
+            if not result.data:
+                logger.warning("没有可用的代理")
+                return None
+                
+            proxy = result.data
             proxy_id, proxy_url = proxy['id'], proxy['proxy_url']
             
             # 更新最后使用时间
