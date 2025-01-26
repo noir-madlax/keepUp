@@ -15,5 +15,11 @@
     "env": {
         "PYTHONUNBUFFERED": "1",
         "LOG_LEVEL": "DEBUG"
-    }
+    },
+    "crons": [
+        {
+            "path": "/router/get",
+            "schedule": "0 0 * * *"
+        }
+    ]
 }
