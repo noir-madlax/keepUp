@@ -9,7 +9,7 @@ import asyncio
 class ProxyGetter:
     def __init__(self):
         self.api_token = settings.WEBSHARE_API_TOKEN
-        self.base_url = "https://proxy.webshare.io/api/v2/proxy/list"
+        self.base_url = "https://proxy.webshare.io/api/v2/proxy/list/"
         self.headers = {
             "Authorization": f"Token {self.api_token}"
         }
@@ -19,14 +19,23 @@ class ProxyGetter:
         从Webshare获取代理列表
         """
         try:
-            params = {"page": page}
+            params = {
+                "mode": "direct",
+                "page": page,
+                "page_size": 100
+            }
+            
             response = requests.get(
                 self.base_url,
                 headers=self.headers,
                 params=params
             )
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            # 打印返回的数据结构
+            logger.debug(f"API返回数据: {data}")
+            return data
+            
         except Exception as e:
             logger.error(f"获取代理列表失败: {str(e)}", exc_info=True)
             raise
@@ -35,18 +44,37 @@ class ProxyGetter:
         """
         格式化代理列表为标准格式
         """
-        return [f"http://{proxy['username']}:{proxy['password']}@{proxy['proxy_address']}:{proxy['ports']['http']}"
-                for proxy in proxy_data]
+        formatted_proxies = []
+        for proxy in proxy_data:
+            try:
+                # 打印单个代理数据
+                logger.debug(f"处理代理数据: {proxy}")
+                # 使用 get 方法安全获取数据
+                username = proxy.get('username')
+                password = proxy.get('password')
+                address = proxy.get('proxy_address')
+                port = proxy.get('port')  # 假设直接是port而不是ports字典
+                
+                if all([username, password, address, port]):
+                    proxy_url = f"http://{username}:{password}@{address}:{port}"
+                    formatted_proxies.append(proxy_url)
+                else:
+                    logger.warning(f"代理数据不完整: {proxy}")
+                    
+            except Exception as e:
+                logger.error(f"格式化代理失败: {str(e)}", exc_info=True)
+                continue
+                
+        return formatted_proxies
 
     async def trigger_proxy_test(self, proxies: List[str]):
         """
         触发代理测试
         """
         try:
-            # 异步触发代理测试
             response = requests.post(
-                "https://keep-up-backend.vercel.app/router/test",  # 根据实际部署环境修改
-                json={"proxies": proxies}
+                "https://keep-up-backend.vercel.app/router/test",
+                json=proxies  # 直接发送列表，不要包装成字典
             )
             response.raise_for_status()
             logger.info(f"成功触发代理测试，代理数量: {len(proxies)}")

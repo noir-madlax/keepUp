@@ -113,5 +113,57 @@ class ProxyRepository:
         except Exception as e:
             logger.error(f"批量更新代理记录失败: {str(e)}", exc_info=True)
             raise
+        
+    @classmethod
+    async def update_proxy_status(cls, proxy_url: str, success: bool, response_time: float = None):
+        """更新代理状态"""
+        try:
+            client = SupabaseService.get_client()
+            proxy_url = proxy_url.replace('http://', '')
+            
+            if success:
+                # 先获取当前代理的成功次数
+                current = client.table("keep_proxies")\
+                    .select("success_count")\
+                    .eq("proxy_url", proxy_url)\
+                    .single()\
+                    .execute()
+                    
+                new_success_count = current.data["success_count"] + 1
+                
+                # 成功时更新
+                data = {
+                    "success_count": client.table("keep_proxies").select("success_count").single().execute().data["success_count"] + 1,
+                    "success_count": new_success_count,
+                    "response_time": response_time,
+                    "updated_at": "now()"
+                }
+                client.table("keep_proxies")\
+                    .update(data)\
+                    .eq("proxy_url", proxy_url)\
+                    .execute()
+            else:
+                # 获取当前失败次数
+                current = client.table("keep_proxies")\
+                    .select("fail_count")\
+                    .eq("proxy_url", proxy_url)\
+                    .single()\
+                    .execute()
+                    
+                new_fail_count = current.data["fail_count"] + 1
+                
+                # 失败时更新
+                data = {
+                    "fail_count": new_fail_count,
+                    "is_active": new_fail_count < 5,  # 失败5次后禁用
+                    "updated_at": "now()"
+                }
+                client.table("keep_proxies")\
+                    .update(data)\
+                    .eq("proxy_url", proxy_url)\
+                    .execute()
+                
+        except Exception as e:
+            logger.error(f"更新代理状态失败: {str(e)}", exc_info=True)
 
 proxy_repository = ProxyRepository() 
