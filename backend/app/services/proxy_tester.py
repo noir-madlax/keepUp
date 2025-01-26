@@ -4,6 +4,7 @@ from app.config import settings
 from app.utils.logger import logger
 from app.repositories.proxy import proxy_repository
 from typing import List, Dict
+from bs4 import BeautifulSoup
 import time
 
 class ProxyTester:
@@ -24,6 +25,13 @@ class ProxyTester:
                 timeout=self.timeout,
                 verify=False
             )
+
+            # 使用 BeautifulSoup 解析页面
+            soup = BeautifulSoup(response.text, 'html.parser')
+            title = soup.find('meta', {'name': 'title'})
+            
+            if not title or not title.get('content'):
+                raise ValueError("无法获取视频标题")
             response.raise_for_status()
             elapsed = time.time() - start_time
             
