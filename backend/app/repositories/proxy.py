@@ -148,7 +148,6 @@ class ProxyRepository:
                 
                 # 成功时更新
                 data = {
-                    "success_count": client.table("keep_proxies").select("success_count").single().execute().data["success_count"] + 1,
                     "success_count": new_success_count,
                     "response_time": response_time,
                     "updated_at": "now()"
