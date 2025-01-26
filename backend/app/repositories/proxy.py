@@ -71,7 +71,7 @@ class ProxyRepository:
                     new_fail_count = proxy.get("fail_count", 0) + 1
                     data = {
                         "fail_count": new_fail_count,
-                        "is_active": new_fail_count < 5,  # 失败5次后禁用
+                        "is_active": False, 
                         "updated_at": "now()"
                     }
                 
