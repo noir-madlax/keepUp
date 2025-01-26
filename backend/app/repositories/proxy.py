@@ -113,7 +113,7 @@ class ProxyRepository:
         except Exception as e:
             logger.error(f"批量更新代理记录失败: {str(e)}", exc_info=True)
             raise
-        
+
     @classmethod
     async def update_proxy_status(cls, proxy_url: str, success: bool, response_time: float = None):
         """更新代理状态"""
@@ -155,7 +155,7 @@ class ProxyRepository:
                 # 失败时更新
                 data = {
                     "fail_count": new_fail_count,
-                    "is_active": new_fail_count < 5,  # 失败5次后禁用
+                    "is_active": new_fail_count < 2,  # 失败2次后禁用
                     "updated_at": "now()"
                 }
                 client.table("keep_proxies")\
