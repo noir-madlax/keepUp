@@ -7,15 +7,15 @@ import time
 class ProxyRepository:
     @classmethod
     async def get_available_proxy(cls) -> Optional[Dict[str, str]]:
-        """获取一个可用的代理"""
+        """获取一个随机可用的代理"""
         try:
             client = SupabaseService.get_client()
             
-            # 按ID顺序获取代理
+            # 随机获取一个活跃的代理
             result = client.table("keep_proxies")\
                 .select("id", "proxy_url")\
                 .eq("is_active", True)\
-                .order("id", desc=False)\
+                .order('random()')\
                 .limit(1)\
                 .execute()
             
