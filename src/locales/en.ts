@@ -236,7 +236,9 @@ export default {
     },
     questionMark: 'Question',
     toolbar: {
-      hint: '🎉Early Access - AI Chat 🎉 Ask further questions about SELECTED text:'
+      hint: '🎉Ask further questions about the summary:',
+      selected_hint: '🎉Ask further questions about the selected text:',
+      hover_hint: 'Select text to ask AI questions'
     },
     errors: {
       userNotLoggedIn: 'Please login first',

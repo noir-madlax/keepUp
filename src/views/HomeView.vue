@@ -3,18 +3,18 @@
   <div class="min-h-screen">
     
   <!-- 网络状态提示 - 保留原有的离线提示，添加弱网提示 -->
-  <div v-if="!isOnline" 
-      class="bg-yellow-50 p-4">
-      <div class="flex items-center justify-center text-yellow-700">
-        <span>{{ t('home.network.offline') }}</span>
+      <div v-if="!isOnline" 
+          class="bg-yellow-50 p-4">
+          <div class="flex items-center justify-center text-yellow-700">
+            <span>{{ t('home.network.offline') }}</span>
+          </div>
       </div>
-  </div>
-  <div v-else-if="isSlowConnection" 
-      class="bg-blue-50 p-4">
-      <div class="flex items-center justify-center text-blue-700">
-        <span>{{ t('home.network.weak') }}</span>
+      <div v-else-if="isSlowConnection" 
+          class="bg-blue-50 p-4">
+          <div class="flex items-center justify-center text-blue-700">
+            <span>{{ t('home.network.weak') }}</span>
+          </div>
       </div>
-   </div>
 
     <!-- 顶部导航栏 -->
   <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
@@ -162,18 +162,27 @@
                   type="text"
                   v-model="requestUrl"
                   :placeholder="t('summarize.urlPlaceholder')"
-                  class="w-full sm:flex-grow pl-12 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100"
+                  class="w-full sm:flex-grow pl-12 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100"
                   @click="handlePaste"
-                  @keyup.enter="() => submitRequest(requestUrl)"
+                  @keyup.enter="handleNewUploadClick('url')"
+                  @focus="isInputFocused = true"
+                  @blur="isInputFocused = false"
+                />
+                <!-- 添加回车图标，只在输入框激活时显示 -->
+                <img 
+                  v-if="isInputFocused"
+                  src="/images/icons/enter.svg" 
+                  alt="Press Enter" 
+                  class="absolute right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 opacity-100 transition-opacity duration-200"
                 />
               </div>
               
-              <!-- 上传按钮 暂时hidden  -->
-              <div class=" hidden w-[80px] sm:w-[100px] self-center sm:self-auto sm:flex-shrink-0 sm:mr-2 mt-2 sm:mt-0">
+              <!-- 上传按钮 - 隐藏但保留功能 -->
+              <div class="hidden w-[80px] sm:w-[100px] self-center sm:self-auto sm:flex-shrink-0 sm:mr-2 mt-2 sm:mt-0">
                 <ArticleRequestForm 
                   ref="articleRequestFormRef"
                   @refresh="handleArticleRefresh"
-                  @click="() => submitRequest(requestUrl.value)"
+                  @click="() => submitRequest(requestUrl)"
                   @uploadSuccess="handleUploadSuccess"
                 />
               </div>
@@ -181,104 +190,24 @@
           </div>
         </div>
 
-          <!-- 我的上传区域 -->
-          <my-uploads-section 
-            ref="myUploadsRef"
-            @upload="submitRequest"
-          />
-
-          <!-- 发现区域 暂时都不要了-->
-          <div class="hidden mb-8">
-            <!-- 发现标题 -->
-            <h2 class="text-xl mb-4">{{ t('home.filter.discover') }}</h2>
-          </div>
-          <!-- 渠道筛选区域 暂时都不要了-->
-          <div class="hidden mb-8">
-            <!-- 渠道标题 -->
-            <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.channelTitle') }}</h2>
-            <!-- 渠道按钮容器 -->
-            <div class="flex flex-wrap gap-2">
-            <!-- 修改渠道按钮 这里的YouTube', 'Apple Podcast', 'Spotify', 'webpage'是和articels表中的channel字段数据一致-->
-              <button 
-                v-for="channel in ['YouTube', 'Apple Podcast', 'Spotify', 'webpage']"
-                :key="channel"
-                @click="toggleChannel(channel)"
-                class="px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200 flex items-center gap-2"
-                :class="selectedChannels.includes(channel) ? 
-                  'bg-blue-50 border-blue-400 text-blue-400' : 
-                  'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
-              >
-                <!-- 渠道图标 -->
-                <img 
-                  :src="`/images/icons/${getChannelIcon(channel)}`" 
-                  :alt="channel"
-                  class="w-4 h-4"
-                />
-                <!-- 渠道名称 -->
-                {{ t(`home.channels.${getChannelKey(channel)}`) }}
-              </button>
-            </div>
-          </div>
-
-          <!-- 2024-03-15: 只有登录用户才显示作者筛选区域 -->
-          <div v-if="authStore.isAuthenticated" class="mb-8" v-show="false">
-            <h2 class="text-sm text-gray-600 mb-2">{{ t('home.filter.authorTitle') }}</h2>
-            <div class="flex flex-wrap gap-3">
-              <!-- 修改加载状态判断 -->
-              <template v-if="isLoadingAuthors">
-                <div v-for="n in 4" :key="n" 
-                  class="h-8 w-24 bg-gray-100 animate-pulse rounded-[2px]">
-                </div>
-              </template>
-
-              <template v-else>
-                <!-- 作者列表部分 -->
-                <template v-for="(author, index) in displayedAuthors" :key="author.id">
-                  <button
-                    @click="toggleAuthor(author)"
-                    class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-[2px] border transition-colors duration-200"
-                    :class="selectedAuthors.includes(author.id) ? 
-                      'bg-blue-50 border-blue-400 text-blue-400' : 
-                      'bg-gray-50 border-gray-300 text-gray-300 hover:border-gray-400 hover:text-gray-400'"
-                  >
-                    <img 
-                      v-if="author.icon" 
-                      :src="author.icon" 
-                      :alt="author.name"
-                      class="w-5 h-5 rounded-full"
-                      loading="lazy"
-                    />
-                    {{ author.name }}
-                  </button>
-                </template>
-              </template>
-
-              <!-- 作者展开/收起按钮 -->
-              <button 
-                v-if="authors.length > defaultDisplayCount"
-                @click="toggleExpand"
-                class="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700"
-              >
-                <span>{{ isExpanded ? t('home.filter.collapse') : t('home.filter.expand') }}</span>
-                <svg 
-                  class="w-4 h-4 transition-transform duration-200"
-                  :class="{ 'transform rotate-180': isExpanded }"
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-            </div>
-          </div>
           <!-- 文章列表区域的容器结构 -->
           <div class="articles-section">
-            <!-- 文章标题 -->
-            <div class="h-[28px] mb-[10px]">
+            <!-- 文章标题和上传按钮 -->
+            <div class="flex justify-between items-center mb-[10px]">
               <h2 class="font-['PingFang_SC'] text-[20px] font-semibold leading-[28px] text-[#000000]">
                 {{ t('home.articles.title') }}
               </h2>
+              
+              <!-- 隐藏但保留功能的上传按钮 -->
+              <div class="hidden flex items-center gap-2">
+                <button 
+                  @click="handleNewUploadClick('url')"
+                  class="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  <img src="/images/icons/upload.svg" alt="Upload" class="w-5 h-5" />
+                  {{ t('upload.button.newUpload') }}
+                </button>
+              </div>
             </div>
             
             <!-- 文章卡片网格容器 -->
@@ -286,58 +215,45 @@
               <!-- 实际文章列表 -->
               <ArticleCard
                 v-for="article in filteredArticles"
-                :key="article.id"
+                :key="'requestId' in article ? article.requestId : article.id"
                 :article="article"
+                @delete="deleteRequest"
               />
 
-              <!-- 加载状态显示骨架图 - 调整为3个且只在加载更多时显示 -->
-              <template v-if="isLoading && currentPage > 1">
-                <div v-for="n in 3" :key="n" 
-                  class="article-card bg-white rounded-lg shadow-md animate-pulse"
+              <!-- 加载状态显示骨架图 -->
+              <template v-if="isLoading">
+                <div v-for="n in 27" :key="n" 
+                  class="card-container"
                 >
-                  <!-- 封面图骨架 - 保持16:9比例 -->
-                  <div class="aspect-video bg-gray-200 rounded-t-lg"></div>
-                  
-                  <!-- 内容区域 -->
-                  <div class="p-4 space-y-4">
-                    <!-- 标题骨架 - 两行 -->
-                    <div class="space-y-2">
-                      <div class="h-5 bg-gray-200 rounded w-full"></div>
-                      <div class="h-5 bg-gray-200 rounded w-2/3"></div>
-                    </div>
-                    
-                    <!-- 底部信息骨架 -->
-                    <div class="flex items-center justify-between">
-                      <!-- 作者信息 -->
-                      <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
-                        <div class="h-4 bg-gray-200 rounded w-20"></div>
+                  <!-- 骨架屏内容 -->
+                  <div class="flex flex-col h-full w-full gap-3">
+                    <!-- 上半部分 -->
+                    <div class="flex justify-between gap-3">
+                      <!-- 左侧标题骨架 -->
+                      <div class="flex flex-col gap-2 flex-1">
+                        <div class="h-6 bg-gray-200 rounded w-4/5"></div>
+                        <div class="h-6 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-6 bg-gray-200 rounded w-2/3"></div>
                       </div>
-                      <!-- 日期 -->
-                      <div class="h-4 bg-gray-200 rounded w-16"></div>
+                      <!-- 右侧图片骨架 -->
+                      <div class="w-[120px] h-[120px] bg-gray-200 rounded-xl flex-shrink-0"></div>
                     </div>
-                  </div>
-                </div>
-              </template>
 
-              <!-- 初始加载时的骨架图 -->
-              <template v-if="isLoading && currentPage === 1">
-                <div v-for="n in pageSize" :key="n" 
-                  class="article-card bg-white rounded-lg shadow-md animate-pulse"
-                >
-                  <!-- 与上面相同的骨架结构 -->
-                  <div class="aspect-video bg-gray-200 rounded-t-lg"></div>
-                  <div class="p-4 space-y-4">
-                    <div class="space-y-2">
-                      <div class="h-5 bg-gray-200 rounded w-full"></div>
-                      <div class="h-5 bg-gray-200 rounded w-2/3"></div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 bg-gray-200 rounded-full"></div>
+                    <!-- 分割线 -->
+                    <div class="h-[1px] bg-gray-200 w-full"></div>
+
+                    <!-- 底部信息骨架 -->
+                    <div class="flex justify-between items-center">
+                      <!-- 左侧作者信息骨架 -->
+                      <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 bg-gray-200 rounded-full"></div>
                         <div class="h-4 bg-gray-200 rounded w-20"></div>
                       </div>
-                      <div class="h-4 bg-gray-200 rounded w-16"></div>
+                      <!-- 右侧日期和渠道骨架 -->
+                      <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 bg-gray-200 rounded"></div>
+                        <div class="h-4 bg-gray-200 rounded w-20"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -415,27 +331,125 @@ import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
 import LoginModal from '../components/LoginModal.vue'
-import type { Article } from '../types/article'
+import type { Article as ArticleType, ArticleRequest, OptimisticCard, KeepArticleView, KeepArticleRequest, Author, DbArticleRequestInsert, ArticleStatus } from '../types/article'
 import AuthorSelect from '../components/AuthorSelect.vue'
 import ArticleForm from '../components/ArticleForm.vue'
-import { getChannelIcon } from '../utils/channel'
+import { getChannelIcon } from '../utils/icons'
 import ArticleRequestForm from '../components/ArticleRequestForm.vue'
 import { useI18n } from 'vue-i18n'
 import LanguageSwitch from '../components/LanguageSwitch.vue'
 import PullToRefresh from '../components/PullToRefresh.vue'
 import localforage from 'localforage'
-import MyUploadsSection from '../components/MyUploadsSection.vue'
-import { trackEvent } from '@/utils/analytics'
+import { trackEvent, type EventType } from '../utils/analytics'
+import type { Database } from '../types/supabase'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
 const showUploadModal = ref(false)
+const selectedTag = ref<string>('all')
+const selectedChannels = ref<string[]>([])
+const selectedAuthors = ref<number[]>([])
+const requestUrl = ref('')
 
 // 预定义的标签
 const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微', '视频']
 
-const articles = ref<Article[]>([])
-const selectedTag = ref('all')
+// 添加类型定义
+interface Author {
+  id: number
+  name: string
+  icon?: string
+}
+
+interface ArticleBase {
+  id: string
+  title: string
+  cover_image_url?: string
+  channel?: string
+  publish_date?: string
+  created_at: string
+  tags?: string[]
+  author_id?: number
+  author?: Author
+}
+
+interface Article extends ArticleBase {
+  is_author: boolean
+  status: 'processed'
+  content: string
+  original_link: string
+}
+
+interface ArticleRequest {
+  id: string
+  url: string
+  status: 'processing' | 'processed' | 'failed'
+  created_at: string
+  error_message?: string
+  original_url: string
+  platform?: string
+  requestId?: string
+  article_id?: string
+}
+
+interface OptimisticCard {
+  id: string
+  url: string
+  original_url: string
+  created_at: string
+  status: 'processing'
+  platform?: string
+  requestId: string
+}
+
+interface ArticleView {
+  article_id: string
+  created_at: string
+  is_author: boolean
+  article: ArticleBase & {
+    content?: string | null
+    original_link?: string | null
+  }
+}
+
+interface KeepArticleView {
+  article_id: string
+  created_at: string
+  is_author: boolean
+  article: {
+    id: string
+    title: string
+    cover_image_url?: string
+    channel?: string
+    created_at: string
+    tags?: string[]
+    publish_date?: string
+    author_id?: number
+    content?: string | null
+    original_link?: string | null
+    author?: Author
+  }
+}
+
+interface KeepArticleRequest {
+  id: string
+  url: string
+  status: 'processing' | 'processed' | 'failed'
+  created_at: string
+  error_message?: string
+  original_url: string
+  platform?: string
+  article_id?: string
+  user_id: string
+}
+
+type DbClient = SupabaseClient<Database>
+
+// 修改变量定义
+const articles = ref<(ArticleType | ArticleRequest)[]>([])
+const optimisticCards = ref<OptimisticCard[]>([])
+const authors = ref<Author[]>([])
 
 // 用预定义的标签替代动态计算的标签
 const tags = computed(() => PREDEFINED_TAGS)
@@ -466,18 +480,216 @@ const hasFilters = computed(() => {
          selectedAuthors.value.length > 0
 })
 
-// 修改 fetchArticles 函数
-const fetchArticles = async (isRefresh = false) => {
+// 添加轮询相关的变量
+const POLL_INTERVAL = 15000  // 15秒轮询一次
+let pollTimer: NodeJS.Timeout | null = null
+
+// 修改轮询控制函数
+const startPolling = () => {
+  if (pollTimer) return
+  
+  pollTimer = setInterval(async () => {
+    try {
+      // 获取所有处理中的请求ID
+      const processingIds = [
+        ...articles.value
+          .filter(article => 'status' in article && article.status === 'processing')
+          .map(article => 'requestId' in article ? article.requestId : null),
+        ...optimisticCards.value.map(card => card.requestId)
+      ].filter(Boolean) as string[]
+
+      if (processingIds.length === 0) {
+        stopPolling()
+        return
+      }
+
+      // 查询这些请求的最新状态
+      const { data: updatedRequests } = await supabase
+        .from('keep_article_requests')
+        .select('*')
+        .in('id', processingIds)
+
+      if (!updatedRequests) return
+
+      // 更新状态
+      let hasProcessedItems = false
+      updatedRequests.forEach(request => {
+        if (request.status === 'processed') {
+          hasProcessedItems = true
+          // 移除对应的乐观更新卡片
+          optimisticCards.value = optimisticCards.value.filter(
+            card => card.requestId !== request.id
+          )
+          // 移除对应的处理中文章
+          articles.value = articles.value.filter(
+            article => !('requestId' in article) || article.requestId !== request.id
+          )
+        } else if (request.status === 'failed') {
+          // 对于失败的请求，更新现有的请求状态
+          const index = articles.value.findIndex(
+            article => 'requestId' in article && article.requestId === request.id
+          )
+          if (index !== -1) {
+            articles.value[index] = {
+              ...articles.value[index],
+              status: 'failed',
+              error_message: request.error_message
+            }
+          }
+          // 移除对应的乐观更新卡片
+          optimisticCards.value = optimisticCards.value.filter(
+            card => card.requestId !== request.id
+          )
+        }
+      })
+
+      // 只有当有处理完成的项目时，才刷新文章列表获取新的文章
+      if (hasProcessedItems) {
+        // 获取最新的已处理文章
+        const { data: newArticles } = await (supabase as DbClient)
+          .from('keep_article_views')
+          .select(`
+            article_id,
+            created_at,
+            is_author,
+            article:keep_articles(
+              id,
+              title,
+              cover_image_url,
+              channel,
+              created_at,
+              tags,
+              publish_date,
+              author_id,
+              content,
+              original_link,
+              author:keep_authors(id, name, icon)
+            )
+          `)
+          .eq('user_id', authStore.user?.id)
+          .order('created_at', { ascending: false })
+          .limit(pageSize)
+
+        if (newArticles) {
+          // 处理新文章数据
+          const validNewArticles = (newArticles as KeepArticleView[]).map(view => ({
+            ...view.article,
+            is_author: view.is_author,
+            status: 'processed' as const,
+            content: view.article?.content || '',
+            original_link: view.article?.original_link || ''
+          })).filter((article): article is ArticleType => 
+            article !== null && 
+            typeof article.is_author === 'boolean' && 
+            article.status === 'processed' &&
+            typeof article.content === 'string' &&
+            typeof article.original_link === 'string'
+          )
+
+          // 保留现有的处理中和失败状态的请求
+          const existingRequests = articles.value.filter(
+            article => 'status' in article && article.status !== 'processed'
+          )
+
+          // 合并新文章和现有的请求
+          articles.value = [...existingRequests, ...validNewArticles]
+        }
+      }
+    } catch (error) {
+      console.error('轮询更新失败:', error)
+    }
+  }, POLL_INTERVAL)
+}
+
+const stopPolling = () => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
+}
+
+// 修改 addOptimisticCard 函数
+const addOptimisticCard = async (url: string) => {
+  // 先立即添加乐观更新卡片
+  const now = new Date().toISOString()
+  const id = `temp-${now}`
+  const card: OptimisticCard = {
+    id,
+    url,
+    original_url: url,
+    created_at: now,
+    status: 'processing',
+    requestId: id,
+    platform: getPlatformFromUrl(url)
+  }
+  optimisticCards.value = [card, ...optimisticCards.value]
+  
+  // 开始轮询
+  startPolling()
+
   try {
-    // 重置页码
+    // 异步检查是否存在相同URL的请求
+    const { data: existingRequest } = await supabase
+      .from('keep_article_requests')
+      .select('*')
+      .or(`url.eq.${url},original_url.eq.${url}`)
+      .single()
+
+    if (existingRequest) {
+      // 如果已存在请求，移除乐观更新卡片
+      optimisticCards.value = optimisticCards.value.filter(c => c.id !== id)
+
+      // 如果是处理中状态，添加到文章列表
+      if (existingRequest.status === 'processing') {
+        const request = {
+          id: existingRequest.id,
+          url: existingRequest.original_url,
+          status: existingRequest.status,
+          created_at: existingRequest.created_at,
+          error_message: existingRequest.error_message,
+          original_url: existingRequest.original_url,
+          platform: existingRequest.platform,
+          article_id: existingRequest.article_id,
+          requestId: existingRequest.id
+        } as ArticleRequest
+
+        articles.value = [request, ...articles.value]
+      }
+    }
+  } catch (error) {
+    console.error('检查已存在请求失败:', error)
+  }
+}
+
+// 从URL判断平台
+const getPlatformFromUrl = (url: string): string => {
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    return 'youtube'
+  }
+  if (url.includes('open.spotify.com')) {
+    return 'spotify'
+  }
+  if (url.includes('podcasts.apple.com')) {
+    return 'apple'
+  }
+  return 'webpage'
+}
+
+// 添加新的状态来追踪是否已经加载过处理中和失败的请求
+const hasLoadedRequests = ref(false)
+
+// 修改 fetchArticles 函数
+const fetchArticles = async (isRefresh: boolean = false) => {
+  try {
     if (isRefresh) {
       currentPage.value = 1
+      hasLoadedRequests.value = false  // 重置请求加载状态
     }
 
     isLoading.value = true
 
     // 构建查询
-    const query = supabase
+    const { data: views, error } = await (supabase as DbClient)
       .from('keep_article_views')
       .select(`
         article_id,
@@ -492,6 +704,8 @@ const fetchArticles = async (isRefresh = false) => {
           tags,
           publish_date,
           author_id,
+          content,
+          original_link,
           author:keep_authors(id, name, icon)
         )
       `)
@@ -499,26 +713,73 @@ const fetchArticles = async (isRefresh = false) => {
       .order('created_at', { ascending: false })
       .range((currentPage.value - 1) * pageSize, currentPage.value * pageSize - 1)
 
-    // 添加筛选条件
-    if (selectedTag.value !== 'all') {
-      query.contains('article.tags', [selectedTag.value])
-    }
-
-    const { data: views, error } = await query
-
     if (error) throw error
 
-    // 处理结果,提取文章信息
-    const validArticles = views
-      ?.map(view => ({
-        ...view.article,
-        is_author: view.is_author
-      }))
-      .filter(article => article !== null)
+    // 只在首次加载或刷新时获取处理中和失败的请求
+    let requests: any[] = []
+    if (!hasLoadedRequests.value) {
+      const { data: requestsData } = await (supabase as DbClient)
+        .from('keep_article_requests')
+        .select('*')
+        .eq('user_id', authStore.user?.id)
+        .in('status', ['processing', 'failed'] as ArticleStatus[])
+        .order('created_at', { ascending: false })
+      
+      requests = requestsData || []
+      hasLoadedRequests.value = true  // 标记已加载请求
+    }
 
-    // 更新文章列表
-    articles.value = isRefresh || hasFilters.value ? validArticles : [...articles.value, ...validArticles]
+    // 处理文章数据
+    const validArticles = ((views || []) as KeepArticleView[]).map(view => ({
+      ...view.article,
+      is_author: view.is_author,
+      status: 'processed' as const,
+      content: view.article?.content || '',
+      original_link: view.article?.original_link || ''
+    })).filter((article): article is ArticleType => 
+      article !== null && 
+      typeof article.is_author === 'boolean' && 
+      article.status === 'processed' &&
+      typeof article.content === 'string' &&
+      typeof article.original_link === 'string'
+    )
+
+    // 修改请求的类型处理
+    const typedRequests = requests.map(request => ({
+      id: request.id,
+      url: request.original_url,
+      status: request.status || 'processing',
+      created_at: request.created_at || new Date().toISOString(),
+      error_message: request.error_message,
+      original_url: request.original_url,
+      platform: request.platform,
+      article_id: request.article_id,
+      requestId: request.id
+    } as ArticleRequest))
     
+    // 合并文章列表
+    if (isRefresh) {
+      // 如果是刷新，则完全替换现有列表
+      articles.value = [...typedRequests, ...validArticles]
+    } else if (currentPage.value === 1) {
+      // 如果是第一页，包含处理中和失败的请求
+      articles.value = [...typedRequests, ...validArticles]
+    } else {
+      // 如果是加载更多，只添加新的文章
+      articles.value = [...articles.value, ...validArticles]
+    }
+    
+    // 更新乐观更新卡片
+    optimisticCards.value = optimisticCards.value.filter(opt => {
+      // 检查是否有对应的请求已经存在
+      const hasMatchingRequest = articles.value.some(article => 
+        'original_url' in article && 
+        (article.original_url === opt.original_url || article.url === opt.original_url)
+      )
+      // 如果存在匹配的请求，移除乐观更新卡片
+      return !hasMatchingRequest
+    })
+
     // 更新是否还有更多数据
     hasMore.value = hasFilters.value ? false : validArticles.length === pageSize
 
@@ -535,32 +796,65 @@ const fetchArticles = async (isRefresh = false) => {
   }
 }
 
-// 修改筛选逻辑以适应的数据结构
+// 修改 filteredArticles 计算属性
 const filteredArticles = computed(() => {
-  let result = articles.value
+  let result = [...optimisticCards.value, ...articles.value]
 
   // 标签筛选
   if (selectedTag.value !== 'all') {
     result = result.filter(article => 
-      article.tags && article.tags.includes(selectedTag.value)
+      'tags' in article && Array.isArray(article.tags) && article.tags.includes(selectedTag.value)
     )
   }
 
   // 渠道筛选
   if (selectedChannels.value.length > 0) {
     result = result.filter(article => 
-      article.channel && selectedChannels.value.includes(article.channel)
+      'channel' in article && typeof article.channel === 'string' && selectedChannels.value.includes(article.channel)
     )
   }
 
   // 作者筛选
   if (selectedAuthors.value.length > 0) {
     result = result.filter(article => 
-      article.author_id && selectedAuthors.value.includes(article.author_id)
+      'author_id' in article && typeof article.author_id === 'number' && selectedAuthors.value.includes(article.author_id)
     )
   }
 
   return result
+})
+
+// 修改删除请求的方法
+const deleteRequest = async (requestId: string) => {
+  try {
+    const { error } = await supabase
+      .from('keep_article_requests')
+      .delete()
+      .eq('id', requestId)
+
+    if (error) throw error
+
+    // 从列表中移除该项
+    articles.value = articles.value.filter(article => 
+      !('requestId' in article) || article.requestId !== requestId
+    )
+    
+    // 同时清理对应的乐观更新卡片
+    optimisticCards.value = optimisticCards.value.filter(opt => 
+      opt.requestId !== requestId
+    )
+    
+    ElMessage.success(t('upload.message.deleteSuccess'))
+  } catch (error) {
+    console.error('删除请求失败:', error)
+    ElMessage.error(t('upload.message.deleteFailed'))
+  }
+}
+
+// 修改组件卸载时的清理
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+  stopPolling()
 })
 
 // 添加 loading 状态
@@ -752,7 +1046,7 @@ onMounted(async () => {
   }
 })
 
-const articleForm = ref<Partial<Article>>({
+const articleForm = ref<Partial<ArticleType>>({
   title: '',
   content: '',
   author_id: undefined,
@@ -878,17 +1172,6 @@ const submitArticle = async () => {
     ElMessage.error(t('error.submitArticleFailed'))
   }
 }
-
-// 添作者相关状态
-interface Author {
-  id: number;
-  name: string;
-  icon?: string;
-}
-
-const authors = ref<Author[]>([])
-const selectedChannels = ref<string[]>([])
-const selectedAuthors = ref<number[]>([])
 
 // 切换道选择
 const toggleChannel = (channel: string) => {
@@ -1086,7 +1369,6 @@ const handleRefresh = async () => {
   await fetchArticles(true) // 传入 true 表示刷新
 }
 
-const requestUrl = ref('')
 const articleRequestFormRef = ref<InstanceType<typeof ArticleRequestForm> | null>(null)
 
 // 添加贴板处理函数
@@ -1103,29 +1385,16 @@ const handlePaste = async () => {
 const pendingUrl = ref('')
 
 // 修改 submitRequest 函数
-const submitRequest = async (url?: string, type: 'url' | 'web' | 'file' = 'url') => {
-  // 2024-03-14: 添加类型参数处理
-  // 如果没有传入url，则使用输入框的值
-  let uploadUrl = url || requestUrl.value
-  
+const submitRequest = (url?: string) => {
+  if (!url) return
   
   if (!authStore.isAuthenticated) {
-    // 保存URL到localStorage
-    localStorage.setItem('pendingUploadUrl', uploadUrl)
+    localStorage.setItem('pendingUploadUrl', url)
     showLoginModal.value = true
     return
   }
-  
-  // 确保用户已完全登录
-  if (!authStore.user) {
-    await authStore.loadUser()
-  }
-  
-  // 已登录则根据类型打开对应的modal
-  if (articleRequestFormRef.value) {
-    // 2024-03-14: 根据类型调用不同的打开方式
-    articleRequestFormRef.value.openModalWithUrl(uploadUrl, type)
-  }
+
+  showUploadModal.value = true
 }
 
 // 添加刷新处理函数
@@ -1136,31 +1405,21 @@ const handleUploadRefresh = () => {
 }
 
 // 添加新的处理函数
-const handleArticleRefresh = async (event?: { type: string }) => {
-  // 如果是上传成功触发的刷新
-  if (event?.type === 'upload') {
-    // 刷新我的上传区域
-    if (myUploadsRef.value) {
-      await myUploadsRef.value.fetchUserArticles()
-    }
-  }
-  // 刷新文章列表
-  await fetchArticles()
+const handleArticleRefresh = async () => {
+  await fetchArticles(true)
 }
 
-// 添加处理上传成功的方法
+// 修改 handleUploadSuccess 函数
 const handleUploadSuccess = (url: string) => {
-  // 添加乐观更新卡片
-  if (myUploadsRef.value) {
-    myUploadsRef.value.addOptimisticCard(url)
-  }
+  // 移除 async/await，直接调用
+  addOptimisticCard(url)
 }
 
 // 添加 ref 定义
 const myUploadsRef = ref<InstanceType<typeof MyUploadsSection> | null>(null)
 
 // 在相关方法中添加追踪
-const handleArticleClick = (article: Article) => {
+const handleArticleClick = (article: ArticleType) => {
   trackEvent('article_click_from_home', {
     articleId: article.id,
     title: article.title
@@ -1202,6 +1461,27 @@ const getContactImage = (imageName: string): string => {
     return '' // 返回空字符串或默认图片路径
   }
 }
+
+// 添加 handleNewUploadClick 函数
+const handleNewUploadClick = (type: 'url' | 'web' | 'file' = 'url') => {
+  if (!authStore.isAuthenticated) {
+    showLoginModal.value = true
+    return
+  }
+
+  if (type === 'url') {
+    if (requestUrl.value) {
+      if (articleRequestFormRef.value) {
+        articleRequestFormRef.value.openModalWithUrl(requestUrl.value)
+      }
+    } else {
+      showUploadModal.value = true
+    }
+  }
+}
+
+// 添加输入框焦点状态
+const isInputFocused = ref(false)
 </script>
 
 <style scoped>
@@ -1276,6 +1556,43 @@ const getContactImage = (imageName: string): string => {
   gap: 28px;
   width: 100%;
   margin: 0 auto;
+}
+
+/* 添加骨架屏卡片样式 */
+.card-container {
+  display: flex;
+  width: 100%;
+  min-width: 340px;
+  max-width: 450px;
+  height: 190px;
+  padding: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: 12px;
+  border: 1px solid #F2F2F2;
+  background: #FFF;
+  box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.10);
+}
+
+@media (min-width: 400px) {
+  .card-container .w-[120px] {
+    width: 190px;
+  }
+}
+
+/* 添加骨架屏动画 */
+.bg-gray-200 {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
 }
 </style>
 

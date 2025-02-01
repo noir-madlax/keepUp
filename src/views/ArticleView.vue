@@ -296,62 +296,86 @@
             >
               <!-- 文章内容 -->
               <article class="prose prose-sm md:prose-lg max-w-none">
-                <!-- 如果sections存在，则渲染sections -->
-                <template v-if="sections.length">
-                  <!-- 遍历sections，渲染每个section -->
+                <!-- 2024-03-20 14:30: 添加文章内容hover提示 -->
+                <div 
+                  class="relative group"
+                  @mouseenter="handleContentHover"
+                  @mouseleave="handleContentLeave"
+                >
+                  <!-- 添加提示框 -->
                   <div 
-                    v-for="section in displaySections" 
-                    :key="section.id"
-                    class="mb-8"
-                    :data-section-type="section.section_type"
-                    :id="'section-' + section.section_type"
+                    v-if="showHoverHint"
+                    class="fixed text-white px-3 py-1.5 rounded text-sm whitespace-nowrap
+                           opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                           pointer-events-none z-[1000] bg-black/75"
+                    :style="{
+                      left: hintPosition.x + 'px',
+                      top: hintPosition.y + 'px',
+                      transform: 'translate(-50%, -100%)'
+                    }"
                   >
-                    <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
-                    
-                    <!-- 根据不同的小节类型使用不同的渲染方式 -->
-                    <template v-if="section.section_type === '思维导图'">
-                      <div class="flex items-center gap-2">
-                            <span 
-                              @click="handlePreviewMindmap" 
-                              class="text-blue-500 hover:text-blue-600 cursor-pointer text-sm flex items-center"
-                            >
-                              <i class="el-icon-zoom-in mr-1"></i>
-                              {{ t('article.preview.enlarge') }}
-                            </span>
-                          </div>
-                        <mind-map 
-                          :content="section.content" 
-                          @preview="url => previewImageUrl = url"
-                        />
-
-                    </template>
-                    <template v-else-if="section.section_type === '结构图'">
-                      <!-- 结构图组件 --> 
-                      <mermaid :content="section.content" />
-                    </template>
-                    <template v-else>
-                      <!-- 使用问题标记包装markdown内容 -->
-                      <div class="relative">
-                        <div v-html="renderSectionContent(section)"></div>
-                        <!-- 添加section级别的问题标记 -->
-                        <template v-if="getSectionQuestionCount(section.id)">
-                          <div class="absolute right-0 top-0">
-                            <QuestionMark 
-                              :count="getSectionQuestionCount(section.id)"
-                              :mark-id="section.id.toString()"
-                              :show-question-mark="false"
-                            >
-                              <span class="text-gray-400 text-sm">{{ t('chat.questionMark') }}</span>
-                            </QuestionMark>
-                          </div>
-                        </template>
-                      </div>
-                    </template>
+                    {{ t('chat.toolbar.hover_hint') }}
+                    <div class="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-full
+                              border-8 border-transparent border-t-black/75"></div>
                   </div>
-                </template>
-                <div v-else>  
-                  <!-- 如果sections不存在，则渲染markdown内容 -->
-                  <div v-html="markdownContent"></div>
+
+                  <!-- 如果sections存在，则渲染sections -->
+                  <template v-if="sections.length">
+                    <!-- 遍历sections，渲染每个section -->
+                    <div 
+                      v-for="section in displaySections" 
+                      :key="section.id"
+                      class="mb-8"
+                      :data-section-type="section.section_type"
+                      :id="'section-' + section.section_type"
+                    >
+                      <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
+                      
+                      <!-- 根据不同的小节类型使用不同的渲染方式 -->
+                      <template v-if="section.section_type === '思维导图'">
+                        <div class="flex items-center gap-2">
+                              <span 
+                                @click="handlePreviewMindmap" 
+                                class="text-blue-500 hover:text-blue-600 cursor-pointer text-sm flex items-center"
+                              >
+                                <i class="el-icon-zoom-in mr-1"></i>
+                                {{ t('article.preview.enlarge') }}
+                              </span>
+                            </div>
+                          <mind-map 
+                            :content="section.content" 
+                            @preview="url => previewImageUrl = url"
+                          />
+
+                      </template>
+                      <template v-else-if="section.section_type === '结构图'">
+                        <!-- 结构图组件 --> 
+                        <mermaid :content="section.content" />
+                      </template>
+                      <template v-else>
+                        <!-- 使用问题标记包装markdown内容 -->
+                        <div class="relative">
+                          <div v-html="renderSectionContent(section)"></div>
+                          <!-- 添加section级别的问题标记 -->
+                          <template v-if="getSectionQuestionCount(section.id)">
+                            <div class="absolute right-0 top-0">
+                              <QuestionMark 
+                                :count="getSectionQuestionCount(section.id)"
+                                :mark-id="section.id.toString()"
+                                :show-question-mark="false"
+                              >
+                                <span class="text-gray-400 text-sm">{{ t('chat.questionMark') }}</span>
+                              </QuestionMark>
+                            </div>
+                          </template>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                  <div v-else>  
+                    <!-- 如果sections不存在，则渲染markdown内容 -->
+                    <div v-html="markdownContent"></div>
+                  </div>
                 </div>
               </article>
             </div>
@@ -536,6 +560,53 @@ import { trackEvent } from '@/utils/analytics'
 // 将 i18n 相关初始化移前面
 const { t, locale } = useI18n()
 const chatStore = useChatStore()
+
+// 2024-03-20 15:30: 简化hover提示，每次进入文章都显示一次
+const showHoverHint = ref(false) // 改为默认不显示
+const hintPosition = ref({ x: 0, y: 0 })
+let hoverTimer: number | null = null // 添加计时器
+
+// 处理文章内容hover
+const handleContentHover = (event: MouseEvent) => {
+  // 清除之前的计时器
+  if (hoverTimer) {
+    clearTimeout(hoverTimer)
+  }
+
+  // 设置2秒后显示提示
+  hoverTimer = window.setTimeout(() => {
+    if (!showHoverHint.value) {
+      showHoverHint.value = true
+      // 获取鼠标位置
+      const x = event.clientX
+      const y = event.clientY - 10 // 向上偏移10px，避免遮挡文字
+
+      // 更新提示框位置
+      hintPosition.value = { x, y }
+
+      // 3秒后自动隐藏提示
+      setTimeout(() => {
+        showHoverHint.value = false
+      }, 3000)
+    }
+  }, 2000) // 2秒延迟
+}
+
+// 添加鼠标移出事件处理
+const handleContentLeave = () => {
+  // 清除计时器
+  if (hoverTimer) {
+    clearTimeout(hoverTimer)
+    hoverTimer = null
+  }
+}
+
+// 组件卸载时清理
+onUnmounted(() => {
+  if (hoverTimer) {
+    clearTimeout(hoverTimer)
+  }
+})
 
 const route = useRoute()
 const router = useRouter()
