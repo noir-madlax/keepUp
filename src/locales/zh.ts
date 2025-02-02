@@ -119,7 +119,8 @@ export default {
       submitSuccess: '提交成功，内容正在处理中，预计2分钟左右完成',
       submitFailed: '提交失败，请重试',
       maxSelectionsExceeded: '最多只能选择3个语言选项',
-      onlyForMedia: '只支持视频和播客类型的内容'
+      onlyForMedia: '只支持视频和播客类型的内容',
+      submitting: '正在处理您的请求，请稍候...'
     },
     summaryLanguageTitle: '选择总结语言',
     summaryLanguageTitleNote: '(根据原文总结出最核心的要点)',

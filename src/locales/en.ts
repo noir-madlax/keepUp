@@ -119,7 +119,8 @@ export default {
       submitSuccess: 'Submitted successfully, content will be available IN 2 MINUTES ',
       submitFailed: 'Submission failed, please try again',
       maxSelectionsExceeded: 'You can select up to 3 language options',
-      onlyForMedia: 'Only available for video and podcast content'
+      onlyForMedia: 'Only available for video and podcast content',
+      submitting: 'Processing your request, please wait...'
     },
     summaryLanguageTitle: 'Select the language of the Summary Text:',
     subtitleLanguageTitle: 'Select the language of the Full Transcript:',

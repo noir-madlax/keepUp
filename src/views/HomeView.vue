@@ -184,6 +184,7 @@
                   @refresh="handleArticleRefresh"
                   @click="() => submitRequest(requestUrl)"
                   @uploadSuccess="handleUploadSuccess"
+                  @clearInput="handleClearInput"
                 />
               </div>
             </div>
@@ -1462,26 +1463,50 @@ const getContactImage = (imageName: string): string => {
   }
 }
 
-// 添加 handleNewUploadClick 函数
+// 修改 handleNewUploadClick 函数
 const handleNewUploadClick = (type: 'url' | 'web' | 'file' = 'url') => {
   if (!authStore.isAuthenticated) {
     showLoginModal.value = true
     return
   }
 
+  // 2024-03-20: 添加特权用户判断
+  const isPrivilegedUser = authStore.user?.id === '40568d0d-cd39-4bbe-8cba-634e9484b5cc'
+
   if (type === 'url') {
     if (requestUrl.value) {
-      if (articleRequestFormRef.value) {
-        articleRequestFormRef.value.openModalWithUrl(requestUrl.value)
+      if (isPrivilegedUser) {
+        // 特权用户保持原有的modal显示
+        if (articleRequestFormRef.value) {
+          articleRequestFormRef.value.openModalWithUrl(requestUrl.value)
+        }
+      } else {
+        // 普通用户直接提交，默认英文
+        if (articleRequestFormRef.value) {
+          articleRequestFormRef.value.quickSubmit(requestUrl.value)
+        }
       }
     } else {
-      showUploadModal.value = true
+      // 如果没有URL，特权用户显示modal，普通用户不做操作
+      if (isPrivilegedUser) {
+        showUploadModal.value = true
+      }
     }
   }
 }
 
 // 添加输入框焦点状态
 const isInputFocused = ref(false)
+
+// 添加处理函数
+const handleClearInput = () => {
+  requestUrl.value = ''
+  // 移除输入框焦点
+  const inputElement = document.querySelector('input[type="text"]') as HTMLInputElement
+  if (inputElement) {
+    inputElement.blur()
+  }
+}
 </script>
 
 <style scoped>
