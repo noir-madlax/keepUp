@@ -235,7 +235,9 @@ export default {
     },
     questionMark: '问题',
     toolbar: {
-      hint: '🎉Early Access - 抢先体验AI问答 ： 选中文字后,进一步提问了解更多'
+      hint: '🎉进一步提问了解更多：',
+      selected_hint: '🎉针对选中内容提问：',
+      hover_hint: '选中文字即可向AI提问'
     },
     errors: {
       userNotLoggedIn: '用户未登录',
