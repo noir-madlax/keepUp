@@ -1471,7 +1471,7 @@ const handleNewUploadClick = (type: 'url' | 'web' | 'file' = 'url') => {
   }
 
   // 2024-03-20: 添加特权用户判断
-  const isPrivilegedUser = authStore.user?.id === '40568d0d-cd39-4bbe-8cba-634e9484b5c'
+  const isPrivilegedUser = authStore.user?.id === '40568d0d-cd39-4bbe-8cba-634e9484b5cc'
 
   if (type === 'url') {
     if (requestUrl.value) {
