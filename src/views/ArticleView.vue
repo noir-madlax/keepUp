@@ -300,6 +300,7 @@
                 <div 
                   class="relative group"
                   @mouseenter="handleContentHover"
+                  @mousemove="handleMouseMove"
                   @mouseleave="handleContentLeave"
                 >
                   <!-- 添加提示框 -->
@@ -307,7 +308,7 @@
                     v-if="showHoverHint"
                     class="fixed text-white px-3 py-1.5 rounded text-sm whitespace-nowrap
                            opacity-0 group-hover:opacity-100 transition-opacity duration-300
-                           pointer-events-none z-[1000] bg-black/75"
+                           pointer-events-none z-[1000] bg-blue-500/90"
                     :style="{
                       left: hintPosition.x + 'px',
                       top: hintPosition.y + 'px',
@@ -316,7 +317,7 @@
                   >
                     {{ t('chat.toolbar.hover_hint') }}
                     <div class="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-full
-                              border-8 border-transparent border-t-black/75"></div>
+                              border-8 border-transparent border-t-blue-500/90"></div>
                   </div>
 
                   <!-- 如果sections存在，则渲染sections -->
@@ -560,45 +561,79 @@ import { trackEvent } from '@/utils/analytics'
 // 将 i18n 相关初始化移前面
 const { t, locale } = useI18n()
 const chatStore = useChatStore()
+const route = useRoute()  // 移到最前面
+const router = useRouter()
+const authStore = useAuthStore()
+const articleStore = useArticleStore()
 
-// 2024-03-20 15:30: 简化hover提示，每次进入文章都显示一次
-const showHoverHint = ref(false) // 改为默认不显示
+// 2024-03-20 16:30: 优化hover提示位置，使用当前鼠标位置
+const showHoverHint = ref(false)
 const hintPosition = ref({ x: 0, y: 0 })
-let hoverTimer: number | null = null // 添加计时器
+let hoverTimer: number | null = null
+let hideTimer: number | null = null
+let hasShownInCurrentPage = false
+let lastMouseEvent: MouseEvent | null = null // 添加记录最后鼠标事件
+
+// 处理鼠标移动
+const handleMouseMove = (event: MouseEvent) => {
+  lastMouseEvent = event
+  // 如果正在显示提示，实时更新位置
+  if (showHoverHint.value) {
+    hintPosition.value = {
+      x: event.clientX,
+      y: event.clientY - 30
+    }
+  }
+}
 
 // 处理文章内容hover
 const handleContentHover = (event: MouseEvent) => {
+  // 如果当前页面已经显示过，则不再显示
+  if (hasShownInCurrentPage) return
+
+  lastMouseEvent = event
+
   // 清除之前的计时器
   if (hoverTimer) {
     clearTimeout(hoverTimer)
   }
+  if (hideTimer) {
+    clearTimeout(hideTimer)
+  }
 
   // 设置2秒后显示提示
   hoverTimer = window.setTimeout(() => {
-    if (!showHoverHint.value) {
+    if (lastMouseEvent) {
       showHoverHint.value = true
-      // 获取鼠标位置
-      const x = event.clientX
-      const y = event.clientY - 10 // 向上偏移10px，避免遮挡文字
-
-      // 更新提示框位置
-      hintPosition.value = { x, y }
-
-      // 3秒后自动隐藏提示
-      setTimeout(() => {
-        showHoverHint.value = false
-      }, 3000)
+      hasShownInCurrentPage = true
+      
+      // 使用最后记录的鼠标位置
+      hintPosition.value = {
+        x: lastMouseEvent.clientX,
+        y: lastMouseEvent.clientY - 30
+      }
     }
-  }, 2000) // 2秒延迟
+
+    // 2秒后强制隐藏
+    hideTimer = window.setTimeout(() => {
+      showHoverHint.value = false
+    }, 2000)
+  }, 2000)
 }
 
 // 添加鼠标移出事件处理
 const handleContentLeave = () => {
-  // 清除计时器
+  lastMouseEvent = null
+  // 清除所有计时器
   if (hoverTimer) {
     clearTimeout(hoverTimer)
     hoverTimer = null
   }
+  if (hideTimer) {
+    clearTimeout(hideTimer)
+    hideTimer = null
+  }
+  showHoverHint.value = false
 }
 
 // 组件卸载时清理
@@ -606,17 +641,20 @@ onUnmounted(() => {
   if (hoverTimer) {
     clearTimeout(hoverTimer)
   }
+  if (hideTimer) {
+    clearTimeout(hideTimer)
+  }
 })
 
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
+// 监听路由变化，重置显示状态
+watch(() => route.params.id, () => {
+  hasShownInCurrentPage = false
+})
+
 const article = ref<Article | null>(null)
 const sections = ref<ArticleSection[]>([])
 const showEditModal = ref(false)
 const editForm = ref<Partial<Article>>({})
-
-const articleStore = useArticleStore()
 
 // 2024-03-20: 添加联系方式显示状态
 const showContactInfo = ref(false)
