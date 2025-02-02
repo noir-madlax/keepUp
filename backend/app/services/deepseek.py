@@ -7,15 +7,15 @@ from app.utils.sse import SSEMessage
 
 class DeepseekService:
     def __init__(self):
-        self.api_key = settings.DEEPSEEK_API_KEY
-        self.api_url = "https://api.deepseek.com/v1/chat/completions"
+        self.api_key = settings.OPENROUTER_API_KEY
+        self.api_url = "https://openrouter.ai/api/v1/chat/completions"
         
     async def chat_stream(self, context: Dict) -> AsyncGenerator[str, None]:
         """流式调用 Deepseek API"""
         try:
             # 构建请求数据
             request_data = {
-                "model": "deepseek-chat",
+                "model": "deepseek/deepseek-chat",
                 "messages": [
                     {
                         "role": "system",
