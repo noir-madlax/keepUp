@@ -359,8 +359,8 @@
 
 <script setup lang="ts">
 // 导入必要的依赖
-import { ref, watch, onUnmounted, nextTick, computed } from 'vue'
-import { ElMessage, ElLoading } from 'element-plus'
+import { ref, watch, onUnmounted, nextTick, computed, h } from 'vue'
+import { ElMessage, ElLoading, ElNotification } from 'element-plus'
 import { supabase } from '../supabaseClient'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -505,6 +505,7 @@ const emit = defineEmits<{
   (e: 'refresh', payload: { type: string, requestId?: string }): void
   (e: 'click'): void
   (e: 'uploadSuccess', url: string): void
+  (e: 'clearInput'): void
 }>()
 
 /**
@@ -712,10 +713,6 @@ const openModalWithUrl = (url: string, type: 'url' | 'web' | 'file' = 'url') => 
   }
 }
 
-// 暴露方法给父组件
-defineExpose({
-  openModalWithUrl
-})
 
 // 修改 handleManual 方法
 const handleManual = () => {
@@ -946,6 +943,141 @@ const resetForm = () => {
   isDragging.value = false
   isFileProcessing.value = false
 }
+
+// 2024-03-20: 修改快速提交方法，使用 notification 替代全屏 loading
+const quickSubmit = async (url: string) => {
+  if (!authStore.isAuthenticated) {
+    ElMessage.warning(t('common.pleaseLogin'))
+    return
+  }
+
+  if (!validateUrl(url)) return
+
+  // 创建带进度条的通知
+  const notification = ElNotification({
+    title: t('summarize.title'),
+    message: h('div', { style: 'margin: 10px 0;' }, [
+      h('p', { style: 'margin-bottom: 10px;' }, t('summarize.messages.submitting')),
+      h('div', { class: 'progress-bar' }, [
+        h('div', { 
+          class: 'progress-bar-inner',
+          style: {
+            width: '0%',
+            height: '2px',
+            background: 'var(--el-color-primary)',
+            transition: 'width 0.3s ease-in-out'
+          }
+        })
+      ])
+    ]),
+    duration: 0,
+    showClose: false,
+    position: 'top-right'
+  })
+
+  try {
+    isSubmitting.value = true
+    
+    // 模拟上传进度
+    let progress = 0
+    const progressInterval = setInterval(() => {
+      progress += 5
+      if (progress <= 90) {
+        const progressBar = document.querySelector('.progress-bar-inner') as HTMLElement
+        if (progressBar) {
+          progressBar.style.width = `${progress}%`
+        }
+      }
+    }, 100)
+    
+    // 发送请求，默认使用英文
+    const response = await fetch('/api/workflow/process', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        original_url: url,
+        summary_languages: ['en'],
+        subtitle_languages: ['na'],
+        detailed_languages: ['na'],
+        user_id: authStore.user?.id
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(await response.text())
+    }
+
+    const data = await response.json()
+    
+    if (!data.success) {
+      throw new Error(data.message || t('summarize.messages.submitFailed'))
+    }
+
+    // 完成进度条
+    clearInterval(progressInterval)
+    const progressBar = document.querySelector('.progress-bar-inner') as HTMLElement
+    if (progressBar) {
+      progressBar.style.width = '100%'
+    }
+
+    // 延迟一小段时间后关闭通知
+    setTimeout(() => {
+      notification.close()
+    }, 500)
+
+    // 请求成功后，再触发乐观更新
+    emit('uploadSuccess', url)
+    // 2024-03-20: 添加清空输入框事件
+    emit('clearInput')
+    ElMessage.success(t('summarize.messages.submitSuccess'))
+    emit('refresh', { type: 'upload' })
+    
+  } catch (error) {
+    // 出错时关闭通知
+    notification.close()
+    ElMessage.error(error instanceof Error ? error.message : t('summarize.messages.submitFailed'))
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// 添加样式
+const styles = `
+<style>
+.progress-bar {
+  width: 100%;
+  height: 2px;
+  background: var(--el-border-color-lighter);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  background: var(--el-color-primary);
+  transition: width 0.3s ease-in-out;
+}
+
+.el-notification {
+  min-width: 300px;
+}
+</style>
+`
+
+// 将样式添加到文档中
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style')
+  styleElement.innerHTML = styles
+  document.head.appendChild(styleElement)
+}
+
+// 2024-03-20: 合并所有需要暴露的方法到一个 defineExpose 
+defineExpose({
+  openModalWithUrl,
+  quickSubmit
+})
 </script>
 
 <style scoped>
