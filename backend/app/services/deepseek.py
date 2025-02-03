@@ -15,14 +15,14 @@ class DeepseekService:
         try:
             # 构建请求数据
             request_data = {
-                "model": "deepseek/deepseek-chat",
+                "model": "qwen/qwen-turbo",
                 "messages": [
                     {
                         "role": "system",
                         "content": context["prompt"]
                     }
                 ],
-                "temperature": 0.3,
+                "temperature": 0.1,
                 "max_tokens": 1000,
                 "timeout": 30,  
                  "provider": {
