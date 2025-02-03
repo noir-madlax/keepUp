@@ -22,8 +22,17 @@ class DeepseekService:
                         "content": context["prompt"]
                     }
                 ],
-                "temperature": 0.7,
+                "temperature": 0.3,
                 "max_tokens": 1000,
+                "timeout": 30,  
+                 "provider": {
+                    "order": [
+                      "Fireworks",
+                      "DeepInfra",
+                      "Together"
+                    ],
+                    "allow_fallbacks": False
+                },
                 "stream": True  # 启用流式响应
             }
             
