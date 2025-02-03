@@ -28,8 +28,7 @@ class DeepseekService:
                  "provider": {
                     "order": [
                       "Fireworks",
-                      "DeepInfra",
-                      "Together"
+                      "DeepInfra"
                     ],
                     "allow_fallbacks": True
                 },
