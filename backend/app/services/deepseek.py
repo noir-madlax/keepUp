@@ -30,7 +30,7 @@ class DeepseekService:
                       "Fireworks",
                       "DeepInfra"
                     ],
-                    "allow_fallbacks": False
+                    "allow_fallbacks": True
                 },
                 "stream": True  # 启用流式响应，发版本更新3下
             }
