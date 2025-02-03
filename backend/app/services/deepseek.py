@@ -31,7 +31,7 @@ class DeepseekService:
                       "DeepInfra",
                       "Together"
                     ],
-                    "allow_fallbacks": False
+                    "allow_fallbacks": True
                 },
                 "stream": True  # 启用流式响应
             }
