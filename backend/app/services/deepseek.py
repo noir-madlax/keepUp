@@ -74,6 +74,10 @@ class DeepseekService:
                                         event_type="deepseek"
                                     )
                             except json.JSONDecodeError:
+                                logger.error(f"Deepseek API JSON解析失败，原始数据为: {line}")
+                                continue
+                            except KeyError as e:
+                                logger.error(f"Deepseek API 返回数据结构异常: {str(e)}, 数据: {data}")
                                 continue
                     
         except Exception as e:
