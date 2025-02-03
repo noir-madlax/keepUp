@@ -48,6 +48,9 @@ class OpenRouterService:
             
         Raises:
             Exception: API调用失败时抛出异常
+            
+        Note:
+            2024-03-14: 第三次重试时使用beta模型
         """
         response_data = None
         error_msg = None
@@ -57,8 +60,13 @@ class OpenRouterService:
                 "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}"
             }
             
+            # 2024-03-14: 第三次重试时使用beta模型
+            current_retry = OpenRouterService.call_openrouter_api.get_retry_count()
+            model = "anthropic/claude-3.5-sonnet:beta" if current_retry >= 2 else OpenRouterService.MODEL
+            logger.info(f"当前重试次数: {current_retry}, 使用模型: {model}")
+            
             request_data = {
-                "model": OpenRouterService.MODEL,
+                "model": model,
                 "messages": [
                     {
                         "role": "user",
@@ -69,18 +77,24 @@ class OpenRouterService:
                         "content": [
                             {
                                 "type": "text",
-                                "text": prompt,
-                                "cache_control": {"type": "ephemeral"}
+                                "text": prompt
                             },
                             {
                                 "type": "text",
-                                "text": content,
-                                "cache_control": {"type": "ephemeral"}
+                                "text": content
                             }
                         ]
                     }
                 ],
                 "max_tokens": 1500,
+                 "timeout": 30,  
+                 "provider": {
+                    "order": [
+                      "Amazon Bedrock",
+                      "Google"
+                    ],
+                    "allow_fallbacks": False
+                },
                 "temperature": 0.1
             }
             
@@ -96,15 +110,21 @@ class OpenRouterService:
                 
                 # 检查错误响应
                 if 'error' in response_data:
+                    # 2024-03-14: 添加完整的响应数据日志
+                    logger.error(f"API完整响应数据: {response_data}")
+                    
                     error_info = response_data['error']
                     error_code = error_info.get('code', 0)
                     error_message = error_info.get('message', 'Unknown error')
                     metadata = error_info.get('metadata', {})
+                    # 2024-03-14: 添加provider信息到错误日志
+                    provider = response_data.get('provider', 'Unknown provider')
                     
                     error_msg = (
                         f"OpenRouter API调用失败: \n"
                         f"错误码: {error_code}\n"
                         f"错误信息: {error_message}\n"
+                        f"Provider: {provider}\n"
                         f"元数据: {metadata}"
                     )
                     logger.error(error_msg)
@@ -307,6 +327,92 @@ class OpenRouterService:
             raise e
 
     @staticmethod
+    async def translate_and_save_summary(article_id: int, summary_content: str) -> None:
+        """将英文总结翻译成中文并保存
+        
+        Args:
+            article_id: 文章ID
+            summary_content: 英文总结内容
+            
+        Note:
+            2024-03-14: 新增自动翻译功能
+        """
+        try:
+            # 构造翻译的system prompt
+            system_prompt = """你是一位专业的翻译专家，擅长将英文准确流畅地翻译成中文。请遵循以下要求：
+
+1. 保持原文的格式结构完全不变，包括markdown格式、缩进、换行等
+2. 准确传达原文的专业术语和技术内容
+3. 保持原文的段落结构和标题层级
+4. 对于数字、日期、百分比等内容保持原样
+5. 翻译时要注意上下文连贯性，使用恰当的中文表达
+6. 保持专业性的同时确保中文表达通顺自然
+7. 对于专有名词，第一次出现时可以保留英文原文，后续使用中文译名
+
+请将以下内容翻译成中文："""
+
+            # 调用deepseek进行翻译
+            headers = {
+                "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}"
+            }
+            
+            request_data = {
+                "model": "deepseek/deepseek-chat",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": system_prompt
+                    },
+                    {
+                        "role": "user",
+                        "content": summary_content
+                    }
+                ],
+                "max_tokens": 3000,
+                "temperature": 0.1,
+                "provider": {
+                    "order": [
+                      "Fireworks",
+                      "DeepInfra"
+                    ],
+                    "allow_fallbacks": True
+                }
+            }
+            
+            # 调用deepseek进行翻译
+            logger.info(f"开始调用翻译API，使用模型: {request_data['model']}")
+            logger.info(f"翻译内容长度: {len(summary_content)} 字符")
+            
+            async with httpx.AsyncClient() as client:
+                try:
+                    response = await client.post(
+                        "https://openrouter.ai/api/v1/chat/completions",
+                        headers=headers,
+                        json=request_data,
+                        timeout=30.0
+                    )
+                    logger.info(f"翻译API响应状态码: {response.status_code}")
+                    logger.info(f"翻译API原始响应: {response.text}")
+                    
+                    response_data = response.json()
+                    logger.info(f"翻译API响应数据: {response_data}")
+                    
+                    if response.status_code == 200 and 'choices' in response_data:
+                        translated_content = response_data['choices'][0]['message']['content']
+                        logger.info(f"翻译成功，翻译后内容长度: {len(translated_content)} 字符")
+                        # 保存中文翻译结果
+                        await OpenRouterService.save_summary_result(article_id, translated_content, 'zh')
+                        logger.info(f"英文总结已成功翻译并保存为中文版本: article_id={article_id}")
+                    else:
+                        logger.error(f"翻译API调用失败: {response_data}")
+                except Exception as e:
+                    logger.error(f"翻译API请求过程中发生错误: {str(e)}", exc_info=True)
+                    
+        except Exception as e:
+            # 翻译失败不影响主流程
+            logger.error(f"翻译英文总结到中文时发生错误: {str(e)}")
+
+    @staticmethod
     async def get_summary(content: str, request_id: int, article_id: int, lang: str) -> Optional[str]:
         """获取内容总结的主方法
         
@@ -338,5 +444,9 @@ class OpenRouterService:
             
         # 5. 保存结果
         await OpenRouterService.save_summary_result(article_id, summary_content, lang)
+            
+        # 6. 如果是英文总结，则自动翻译成中文并保存
+        if lang == 'en':
+            await OpenRouterService.translate_and_save_summary(article_id, summary_content)
             
         return summary_content 

@@ -4,7 +4,7 @@ from functools import wraps
 from typing import Type, Tuple
 
 def retry_decorator(
-    max_retries: int = 2,           # 最大重试次数
+    max_retries: int = 3,           # 最大重试次数
     base_delay: float = 1,          # 基础延迟时间(秒)
     max_delay: float = 6,          # 最大延迟时间(秒)
     exceptions: Tuple[Type[Exception], ...] = (Exception,)  # 需要重试的异常类型
@@ -25,11 +25,16 @@ def retry_decorator(
             pass
     """
     def decorator(func):
+        # 使用闭包变量存储重试次数
+        retry_count = {'value': 0}
+        
         @wraps(func)
         async def wrapper(*args, **kwargs):
             retries = 0
             while True:
                 try:
+                    # 更新闭包变量
+                    retry_count['value'] = retries
                     return await func(*args, **kwargs)
                 except exceptions as e:
                     retries += 1
@@ -45,6 +50,8 @@ def retry_decorator(
                     )
                     
                     await asyncio.sleep(delay)
-                    
+        
+        # 添加获取重试次数的方法
+        wrapper.get_retry_count = lambda: retry_count['value']
         return wrapper
     return decorator

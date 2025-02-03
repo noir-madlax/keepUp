@@ -1372,13 +1372,16 @@ const handleRefresh = async () => {
 
 const articleRequestFormRef = ref<InstanceType<typeof ArticleRequestForm> | null>(null)
 
-// 添加贴板处理函数
+// 修改剪贴板处理函数
 const handlePaste = async () => {
   try {
-    const text = await navigator.clipboard.readText()
-    requestUrl.value = text
+    const text = await navigator.clipboard.readText();
+    // 最简单的URL判断：包含http或https，且包含至少一个点号
+    if (text.includes('http') && text.includes('.')) {
+      requestUrl.value = text.trim();
+    }
   } catch (err) {
-    console.error('Failed to read clipboard:', err)
+    console.error('Failed to read clipboard:', err);
   }
 }
 
