@@ -117,7 +117,7 @@
           </div>
           
           <!-- 使用isAIInitialLoading来控制骨架屏 -->
-          <div v-if="chatStore.isAIInitialLoading" class="flex justify-start">
+          <div v-if="chatStore.isAIInitialLoading" class="flex justify-start mt-3">
             <div class="flex items-start max-w-[98%]">
               <!-- AI头像骨架屏 -->
               <div class="w-[24px] h-[24px] mr-2 flex-shrink-0 mt-1 rounded bg-gray-200 animate-pulse"></div>

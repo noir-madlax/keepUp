@@ -23,11 +23,11 @@ export default defineConfig({
     proxy: {
       '/api': {
         // 本地前端调用目标后端服务
-        //  target: 'https://keep-up-backend.vercel.app',
-         // agent: new HttpsProxyAgent('http://127.0.0.1:7890'),
+        // target: 'https://keep-up-backend.vercel.app',
+        //  agent: new HttpsProxyAgent('http://127.0.0.1:7890'),
         // 生产环境配置
-        target: process.env.NODE_ENV === 'production'
-        ? 'https://keep-up-backend.vercel.app'
+           target: process.env.NODE_ENV === 'production'
+         ? 'https://keep-up-backend.vercel.app'
          : 'http://localhost:8000',
         // 本地前端调用本地后端
         //target: 'http://localhost:8000', 
