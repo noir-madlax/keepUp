@@ -8,47 +8,56 @@
       maxWidth: 'calc(100vw - 40px)'
     }"
   >
-    <!-- 2024-03-19 16:30: 修改为水平布局 -->
+    <!-- 2024-03-25 16:30: 区分移动端和桌面端显示 -->
     <div class="flex items-center gap-3 overflow-x-auto pb-2 -mb-2">
-      <!-- 2024-03-20 11:30: 根据选中状态显示不同提示文字 -->
-      <div class="shrink-0 px-1 py-1.5 rounded-lg text-blue-600 font-medium text-sm">
-        {{ hasSelectedText ? t('chat.toolbar.selected_hint') : t('chat.toolbar.hint') }}
-      </div>
+      <!-- 移动端只显示基础提示 -->
+      <template v-if="isMobile">
+        <div class="shrink-0 px-1 py-1.5 rounded-lg text-blue-600 font-medium text-sm">
+          {{ t('chat.toolbar.hint') }}
+        </div>
+      </template>
 
-      <!-- 2024-03-20 11:30: 只在选中文字时显示按钮组 -->
-      <template v-if="hasSelectedText">
-        <!-- 展开说说按钮 - 蓝色气泡 -->
-        <button
-          @click="handleChatAction('EXPAND')"
-          class="bubble-button shrink-0"
-          :class="{ 'disabled-button': chatStore.isAIResponding }"
-          :disabled="chatStore.isAIResponding"
-        >
-          <img src="/images/icons/expand.svg" alt="Expand" class="w-4 h-4" />
-          <span>{{ t('chat.actions.expand') }}</span>
-        </button>
+      <!-- 桌面端保持原有功能 -->
+      <template v-else>
+        <div class="shrink-0 px-1 py-1.5 rounded-lg text-blue-600 font-medium text-sm">
+          {{ hasSelectedText ? t('chat.toolbar.selected_hint') : t('chat.toolbar.hint') }}
+        </div>
 
-        <!-- 给出原文按钮 - 绿色气泡 -->
-        <button
-          @click="handleChatAction('ORIGINAL')"
-          class="bubble-button shrink-0"
-          :class="{ 'disabled-button': chatStore.isAIResponding }"
-          :disabled="chatStore.isAIResponding"
-        >
-          <img src="/images/icons/original.svg" alt="Original" class="w-4 h-4" />
-          <span>{{ t('chat.actions.original') }}</span>
-        </button>
+        <!-- 只在选中文字时显示按钮组 -->
+        <template v-if="hasSelectedText">
+          <!-- 展开说说按钮 - 蓝色气泡 -->
+          <button
+            @click="handleChatAction('EXPAND')"
+            class="bubble-button shrink-0"
+            :class="{ 'disabled-button': chatStore.isAIResponding }"
+            :disabled="chatStore.isAIResponding"
+          >
+            <img src="/images/icons/expand.svg" alt="Expand" class="w-4 h-4" />
+            <span>{{ t('chat.actions.expand') }}</span>
+          </button>
 
-        <!-- 解释一下按钮 - 紫色气泡 -->
-        <button
-          @click="handleChatAction('EXPLAIN')"
-          class="bubble-button shrink-0"
-          :class="{ 'disabled-button': chatStore.isAIResponding }"
-          :disabled="chatStore.isAIResponding"
-        >
-          <img src="/images/icons/explain.svg" alt="Explain" class="w-4 h-4" />
-          <span>{{ t('chat.actions.explain_selection') }}</span>
-        </button>
+          <!-- 给出原文按钮 - 绿色气泡 -->
+          <button
+            @click="handleChatAction('ORIGINAL')"
+            class="bubble-button shrink-0"
+            :class="{ 'disabled-button': chatStore.isAIResponding }"
+            :disabled="chatStore.isAIResponding"
+          >
+            <img src="/images/icons/original.svg" alt="Original" class="w-4 h-4" />
+            <span>{{ t('chat.actions.original') }}</span>
+          </button>
+
+          <!-- 解释一下按钮 - 紫色气泡 -->
+          <button
+            @click="handleChatAction('EXPLAIN')"
+            class="bubble-button shrink-0"
+            :class="{ 'disabled-button': chatStore.isAIResponding }"
+            :disabled="chatStore.isAIResponding"
+          >
+            <img src="/images/icons/explain.svg" alt="Explain" class="w-4 h-4" />
+            <span>{{ t('chat.actions.explain_selection') }}</span>
+          </button>
+        </template>
       </template>
     </div>
   </div>
@@ -56,7 +65,7 @@
 
 <script setup lang="ts">
 import { useChatStore } from '../../stores/chat'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PromptType } from '../../types/chat'
 
@@ -69,23 +78,36 @@ const { t } = useI18n()
 const chatStore = useChatStore()
 const hasSelectedText = ref(false)
 
-// 检查选中文本
+// 2024-03-25 16:30: 添加移动端检测
+const isMobile = computed(() => window.innerWidth < 768)
+
+// 2024-03-25 16:30: 修改文本选择监听逻辑
 const checkSelectedText = () => {
+  // 移动端不检查文本选择
+  if (isMobile.value) {
+    hasSelectedText.value = false
+    return
+  }
+  
   const selection = window.getSelection()
   const selectedText = selection?.toString().trim()
   hasSelectedText.value = !!selectedText
 }
 
-// 监听文本选择事件
+// 监听文本选择事件 - 只在桌面端添加监听
 onMounted(() => {
-  document.addEventListener('selectionchange', checkSelectedText)
-  // 初始检查
-  checkSelectedText()
+  if (!isMobile.value) {
+    document.addEventListener('selectionchange', checkSelectedText)
+    // 初始检查
+    checkSelectedText()
+  }
 })
 
 // 清理事件监听
 onUnmounted(() => {
-  document.removeEventListener('selectionchange', checkSelectedText)
+  if (!isMobile.value) {
+    document.removeEventListener('selectionchange', checkSelectedText)
+  }
 })
 
 // A组动作 - 聊天相关

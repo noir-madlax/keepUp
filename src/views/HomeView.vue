@@ -48,7 +48,7 @@
         </div>
 
      <!-- 2024-03-19: Early Access横幅 - 仅在桌面端显示在导航栏中 -->
-     <div class="hidden sm:block bg-white py-2 text-center text-pink-500 font-medium relative mx-4">
+     <div class="hidden sm:block bg-white py-2 text-center text-pink-500 font-medium relative -ml-40">
         <div 
           class="cursor-pointer"
           @mouseenter="!feedbackStore.disableHoverEffect && feedbackStore.showForm()"
@@ -152,9 +152,10 @@
                   type="text"
                   v-model="requestUrl"
                   :placeholder="t('summarize.urlPlaceholder')"
-                  :class="['w-full sm:flex-grow pl-10 sm:pl-12 pr-10 sm:pr-12 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300', 
+                  :class="['w-full sm:flex-grow pl-12 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300', 
                     { 'input-highlight': isHighlighted }]"
                   @focus="handleInputFocus"
+                  @click="handleInputClick"
                   @blur="handleInputBlur"
                   @keyup.enter="handleNewUploadClick('url')"
                 />
@@ -1439,13 +1440,20 @@ const articleRequestFormRef = ref<InstanceType<typeof ArticleRequestForm> | null
 // 修改剪贴板处理函数
 const handlePaste = async () => {
   try {
-    const text = await navigator.clipboard.readText();
+    // 检查剪贴板API是否可用
+    if (!navigator.clipboard) {
+      console.warn('Clipboard API not available')
+      return
+    }
+    
+    const text = await navigator.clipboard.readText()
     // 最简单的URL判断：包含http或https，且包含至少一个点号
     if (text.includes('http') && text.includes('.')) {
-      requestUrl.value = text.trim();
+      requestUrl.value = text.trim()
     }
   } catch (err) {
-    console.error('Failed to read clipboard:', err);
+    console.error('Failed to read clipboard:', err)
+    // 静默失败，不影响用户体验
   }
 }
 
@@ -1612,16 +1620,32 @@ const handleAddIconClick = () => {
 }
 
 // 2024-03-22: 修改输入框焦点处理函数
-const handleInputFocus = () => {
+const handleInputFocus = async () => {
   isInputFocused.value = true
-  // 只在桌面端尝试粘贴
+  // 只在桌面端执行粘贴操作
   if (!('ontouchstart' in window)) {
-    handlePaste()
+    try {
+      await handlePaste()
+    } catch (error) {
+      console.error('Failed to paste:', error)
+    }
   }
 }
 
 const handleInputBlur = () => {
   isInputFocused.value = false
+}
+
+// 2024-03-22: 添加输入框点击处理函数
+const handleInputClick = async () => {
+  // 只在移动端执行粘贴操作
+  if ('ontouchstart' in window) {
+    try {
+      await handlePaste()
+    } catch (error) {
+      console.error('Failed to paste on mobile:', error)
+    }
+  }
 }
 
 // 在 script setup 部分添加处理函数

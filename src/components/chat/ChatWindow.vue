@@ -63,7 +63,9 @@
         ref="messageListRef"
         class="messages-container pt-4 px-6"
         @wheel.prevent="handleChatScroll"
-        @touchmove.prevent="handleChatScroll"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
+        @touchend="handleTouchEnd"
       >
         <!-- 1. 有消息时的显示 -->
         <template v-if="chatStore.currentSession?.messages?.length">
@@ -315,25 +317,104 @@ watch(
   { deep: true }
 )
 
-// 添加滚动处理函数
-const handleChatScroll = (event: WheelEvent | TouchEvent) => {
+// 2024-03-25 18:30: 添加触摸相关变量
+const touchStartY = ref(0)
+const isTouchingChat = ref(false)
+
+// 2024-03-25 18:30: 处理触摸开始
+const handleTouchStart = (event: TouchEvent) => {
+  // 记录开始触摸的位置
+  touchStartY.value = event.touches[0].clientY
+  
+  // 检查触摸是否在聊天窗口内
+  const target = event.target as HTMLElement
+  const chatWindow = messageListRef.value
+  
+  if (chatWindow && (chatWindow === target || chatWindow.contains(target))) {
+    isTouchingChat.value = true
+    // 立即阻止事件冒泡和默认行为，停止文章的惯性滚动
+    event.stopPropagation()
+    event.preventDefault()
+    
+    // 2024-03-25 19:30: 添加额外处理确保滚动响应
+    document.body.style.overscrollBehavior = 'none'
+  } else {
+    isTouchingChat.value = false
+  }
+}
+
+// 2024-03-25 18:30: 处理触摸移动
+const handleTouchMove = (event: TouchEvent) => {
+  if (!messageListRef.value || !isTouchingChat.value) return
+  
+  // 立即阻止默认行为和冒泡
+  event.preventDefault()
+  event.stopPropagation()
+  
+  const container = messageListRef.value
+  const { scrollTop, scrollHeight, clientHeight } = container
+  
+  // 计算触摸移动距离
+  const currentY = event.touches[0].clientY
+  const deltaY = touchStartY.value - currentY
+  touchStartY.value = currentY
+  
+  const newScrollTop = scrollTop + deltaY
+  
+  // 检查是否在可滚动范围内
+  if (newScrollTop >= 0 && newScrollTop <= scrollHeight - clientHeight) {
+    container.scrollTop = newScrollTop
+  } else if (newScrollTop < 0 || newScrollTop > scrollHeight - clientHeight) {
+    // 如果已经到达边界，允许事件冒泡
+    isTouchingChat.value = false
+    // 2024-03-25 19:30: 恢复默认滚动行为
+    document.body.style.overscrollBehavior = 'auto'
+  }
+  
+  // 更新自动滚动标志
+  shouldAutoScroll.value = isAtBottom()
+}
+
+// 2024-03-25 19:30: 添加触摸结束处理
+const handleTouchEnd = () => {
+  if (isTouchingChat.value) {
+    // 恢复默认滚动行为
+    document.body.style.overscrollBehavior = 'auto'
+    isTouchingChat.value = false
+  }
+}
+
+// 2024-03-25 20:30: 优化桌面端滚动处理
+const handleChatScroll = (event: WheelEvent) => {
+  if (!messageListRef.value) return
+  
   // 确保事件不会传播到父元素
   event.stopPropagation()
   
-  // 根据事件类型处理滚动
-  if (event instanceof WheelEvent) {
-    if (messageListRef.value) {
-      // 手动控制滚动
-      messageListRef.value.scrollTop += event.deltaY
-      // 更新自动滚动标志
-      shouldAutoScroll.value = isAtBottom()
-    }
-  } else if (event instanceof TouchEvent) {
-    // 触摸事件的处理保持不变
-    if (messageListRef.value) {
-      shouldAutoScroll.value = isAtBottom()
-    }
+  const container = messageListRef.value
+  const { scrollTop, scrollHeight, clientHeight } = container
+  
+  // 计算新的滚动位置
+  const deltaY = event.deltaY
+  let newScrollTop = scrollTop + deltaY
+  
+  // 优化边界处理
+  if (newScrollTop < 0) {
+    // 到达顶部时，允许一点弹性效果
+    newScrollTop = 0
+  } else if (newScrollTop > scrollHeight - clientHeight) {
+    // 到达底部时，允许一点弹性效果
+    newScrollTop = scrollHeight - clientHeight
   }
+  
+  // 使用 scrollTo 来获得更平滑的滚动效果
+  container.scrollTo({
+    top: newScrollTop,
+    behavior: 'auto'  // 使用 auto 而不是 smooth 以保持响应性
+  })
+  
+  // 更新自动滚动标志
+  shouldAutoScroll.value = isAtBottom()
 }
 
 // 开始调整大小
