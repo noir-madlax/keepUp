@@ -1,17 +1,18 @@
 <template>
   <div 
-    class="fixed right-0 top-0 bg-white p-8 rounded-l-lg shadow-lg z-[9999] w-[360px] border-l border-t border-b border-gray-200"
+    class="fixed right-0 top-0 bg-white p-8 rounded-l-lg shadow-lg z-[9999] w-[360px] border-l border-t border-b border-gray-200 max-h-[100vh] overflow-y-auto"
     :class="{ 
       'translate-x-full': !isVisible,
       'translate-x-0': isVisible 
     }"
     @click.stop
   >
-    <!-- 关闭按钮 -->
-    <div class="flex justify-end -mt-4 -mr-4">
+    <!-- 标题和关闭按钮容器 -->
+    <div class="flex items-center mb-4 -mt-4 relative">
+      <h3 class="text-2xl font-bold text-gray-900 w-full text-center">Quick Feedback</h3>
       <button 
         @click="handleClose"
-        class="text-gray-400 hover:text-gray-600 transition-colors"
+        class="text-gray-400 hover:text-gray-600 transition-colors absolute right-[-12px] top-[2px]"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -19,13 +20,10 @@
       </button>
     </div>
 
-    <!-- 表单标题 -->
-    <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Quick Feedback</h3>
-
     <!-- 表单内容 -->
-    <form @submit.prevent="handleSubmit" class="space-y-6">
+    <form @submit.prevent="handleSubmit" class="space-y-3">
       <!-- 问题1 -->
-      <div class="space-y-3">
+      <div class="space-y-2">
         <p class="text-base font-medium text-gray-800">Do you need our product?</p>
         <div class="flex justify-center gap-16 items-center">
           <label class="inline-flex items-center cursor-pointer">
@@ -40,7 +38,7 @@
       </div>
 
       <!-- 问题2 -->
-      <div class="space-y-3">
+      <div class="space-y-2">
         <p class="text-base font-medium text-gray-800">Are you satisfied with our summary?</p>
         <div class="flex justify-center gap-16 items-center">
           <label class="inline-flex items-center cursor-pointer">
@@ -55,7 +53,7 @@
       </div>
 
       <!-- 问题3 -->
-      <div class="space-y-3">
+      <div class="space-y-2">
         <p class="text-base font-medium text-gray-800">May we contact you?</p>
         <div class="flex justify-center gap-16 items-center">
           <label class="inline-flex items-center cursor-pointer">
@@ -74,7 +72,7 @@
         type="submit"
         :disabled="!isFormComplete || feedbackStore.submitting"
         :class="[
-          'w-full py-2.5 px-4 rounded-md font-medium text-base shadow-sm transition-all',
+          'w-full py-2.5 px-4 rounded-md font-medium text-sm shadow-sm transition-all',
           isFormComplete && !feedbackStore.submitting
             ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:from-pink-600 hover:to-purple-600 cursor-pointer' 
             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -85,7 +83,7 @@
     </form>
 
     <!-- 联系方式图片 -->
-    <div class="mt-4 -mx-8 pb-4">
+    <div class="-mt-0 -mx-0">
       <img 
         :src="getContactImage('ContactMe.PNG')" 
         alt="Contact Details" 
