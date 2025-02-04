@@ -48,7 +48,7 @@ export default {
           discount: 'Premium Discounts'
         }
       },
-      feedback: 'Dear early adopters,your feedback matters and shapes our future📨'
+      feedback: 'Dear early adopters, your feedback matters and shapes our future📨'
     }
   },
   article: {

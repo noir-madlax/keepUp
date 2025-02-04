@@ -19,69 +19,61 @@
     <!-- 顶部导航栏 -->
   <header class="fixed top-0 left-0 right-0 bg-white z-40 w-full">
       <!-- 导航栏内容容器 -->
-      <div class="flex justify-between items-center px-4 h-[90px] min-w-[378px] max-w-[1440px] mx-auto">
+      <div class="flex justify-between items-center px-4 h-[90px] min-w-[320px] max-w-[1440px] mx-auto">
         <!-- 左侧Logo和标题容器 -->
-        <div class="flex flex-col">
+        <div class="flex flex-col flex-shrink-0">
           <div class="flex items-center gap-2">
             <!-- 网站Logo图片 -->
             <img 
               src="/images/icons/logo.svg" 
               alt="Keep Up Logo" 
-              class="w-[48px] h-[48px] flex-shrink-0" 
+              class="w-[36px] h-[36px] sm:w-[48px] sm:h-[48px] flex-shrink-0" 
             />
             <!-- 网站标题文本 -->
-            <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2">
+            <h1 class="text-[16px] sm:text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2 whitespace-nowrap">
               {{ t('home.title') }}
               <!-- 2024-03-19: 添加beta标记 -->
-              <span class="px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
+              <span class="hidden sm:inline-block px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
                 BETA
               </span>
             </h1>
           </div>
           <!-- 2024-03-22: 添加介绍文字 -->
-          <p class="mt-1 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium animate-pulse">
-            Quick video & audio digest - no rewatching
+          <p class="mt-1 text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium animate-pulse whitespace-nowrap">
+            <!-- 移动端显示简短文案 -->
+            <span class="sm:hidden">Quick video & audio digest </span>
+            <!-- 桌面端显示完整文案 -->
+            <span class="hidden sm:inline">Quick video & audio digest - no rewatching</span>
           </p>
         </div>
 
-
-
-     <!-- 2024-03-19: 中间的Early Access横幅 -->
-     <div class="bg-white py-2 text-center text-pink-500 font-medium relative">
+     <!-- 2024-03-19: Early Access横幅 - 仅在桌面端显示在导航栏中 -->
+     <div class="hidden sm:block bg-white py-2 text-center text-pink-500 font-medium relative mx-4">
         <div 
           class="cursor-pointer"
-          @mouseenter="showFeedbackForm = true"
+          @mouseenter="!feedbackStore.disableHoverEffect && feedbackStore.showForm()"
+          @click="feedbackStore.showForm()"
         >
-          <p class="animate-bounce">{{ t('home.earlyAccess.feedback') }}</p>
-          <!-- 反馈表单 -->
-          <FeedbackForm 
-            :is-visible="showFeedbackForm"
-            @close="showFeedbackForm = false"
-            @submit="handleFeedbackSubmit"
-          />
+          <p class="animate-bounce text-base">
+            {{ t('home.earlyAccess.feedback') }}
+          </p>
         </div>
       </div>
-      
-      
-
         
-        <!-- 右侧导航元素容器 - 增加右侧padding并调整gap -->
-        <div class="flex items-center gap-3 pr-2">
-          <!-- 语言切换组件 先不要了 -->
-         <!-- <language-switch/> -->
-      
+        <!-- 右侧导航元素容器 -->
+        <div class="flex items-center gap-1 pl-2">
           <!-- 已登录用户信息区域 -->
           <template v-if="authStore.isAuthenticated">
             <!-- 用户头像 -->
             <img 
               :src="authStore.user?.user_metadata?.avatar_url || '/images/icons/avatar.svg'" 
               :alt="authStore.user?.email || 'User Avatar'" 
-              class="w-[32px] h-[32px] rounded-full"
+              class="w-[24px] h-[24px] rounded-full flex-shrink-0"
             />
             <!-- 登出按钮 - 增加最小宽度确保文字完整显示 -->
             <button 
               @click="handleLogout" 
-              class="text-gray-600 hover:text-gray-800 min-w-[64px] h-[32px] text-center"
+              class="text-gray-600 hover:text-gray-800 min-w-[48px] sm:min-w-[64px] h-[32px] text-center text-sm sm:text-base whitespace-nowrap"
             >
               {{ t('home.nav.logout') }}
             </button>
@@ -120,52 +112,48 @@
     <pull-to-refresh class="mt-[0px]" :onRefresh="handleRefresh">
       <div class="px-4 sm:px-8 py-6 overflow-x-hidden">
         <!-- 修改容器最大宽度并确保居中 -->
-        <div class="max-w-screen-2xl mx-auto w-full">
-          <!-- 修改上传框的外边距 -->
-          <div class="flex flex-wrap items-center gap-4 mb-6 p-4 sm:p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200">
-            <!-- 标题和图标容器 -->
-            <div class="flex items-center gap-4 w-full sm:w-auto mb-2 sm:mb-0">
-              
-              <!-- 标题 - 优化字体大小和响应式显示 -->
-              <h3 class="hidden text-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap flex items-center gap-2">
+        <div class="max-w-screen-2xl mx-auto w-full px-2 sm:px-0">
+          <!-- 修改上传框的外边距和响应式布局 -->
+          <div class="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-6 bg-white rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200">
+            <!-- 标题和图标容器 - 移动端隐藏标题，保留图标 -->
+            <div class="flex items-center gap-2 sm:gap-4 w-full sm:w-auto mb-2 sm:mb-0">
+              <!-- 标题 - 仅在桌面端显示 -->
+              <h3 class="hidden ext-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                 </svg>
                 {{ t('summarize.title') }}
               </h3>
               
-              <!-- 4个渠道图标 - 优化响应式显示 -->
-              <div class="flex items-center gap-3 ml-auto sm:ml-4">
-                <!-- 修改渠道图标icon的命名要和svg的文件一样-->  
+              <!-- 渠道图标 - 移动端和桌面端分别处理 -->
+              <div class="flex items-center gap-2 sm:gap-3 ml-0 sm:ml-4">
                 <img 
                   v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'web']"
                   :key="channel"
                   :src="`/images/icons/${channel}.svg`"
                   :alt="channel"
-                  class="w-5 h-5 sm:w-6 sm:h-6"
+                  class="w-4 h-4 sm:w-6 sm:h-6"
                   :title="t(`home.channels.${channel}`)"
                 />
               </div>
             </div>
 
             <!-- URL输入框和上传按钮容器 -->
-            <div class="flex flex-col sm:flex-1 w-full sm:flex-row items-center gap-4">
-              
+            <div class="flex flex-col sm:flex-1 w-full sm:flex-row items-center gap-2 sm:gap-4">
               <!-- 文章URL输入框 -->
-              <div class="relative flex-grow">
+              <div class="relative flex-grow w-full">
                 <img 
                   src="/images/icons/add.svg" 
                   alt="Add" 
-                  class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 cursor-pointer"
+                  class="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 cursor-pointer"
                   @click="handleAddIconClick"
                 />
                 <input
                   type="text"
                   v-model="requestUrl"
                   :placeholder="t('summarize.urlPlaceholder')"
-                  :class="['w-full sm:flex-grow pl-12 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300', 
+                  :class="['w-full sm:flex-grow pl-10 sm:pl-12 pr-10 sm:pr-12 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300', 
                     { 'input-highlight': isHighlighted }]"
-                  @click="handlePaste"
                   @focus="handleInputFocus"
                   @blur="handleInputBlur"
                   @keyup.enter="handleNewUploadClick('url')"
@@ -175,7 +163,9 @@
                   v-if="isInputFocused"
                   src="/images/icons/enter.svg" 
                   alt="Press Enter" 
-                  class="absolute right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 opacity-100 transition-opacity duration-200"
+                  class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 opacity-100 transition-opacity duration-200 cursor-pointer hover:scale-110 transition-transform"
+                  @click.prevent="handleNewUploadClick('url')"
+                  @touchstart.prevent="handleNewUploadClick('url')"
                 />
               </div>
               
@@ -371,6 +361,24 @@
         @refresh="fetchArticles"
       />
     </Teleport>
+
+    <!-- 2024-03-24: 添加移动端固定在右下角的反馈按钮 -->
+    <div 
+      class="sm:hidden fixed bottom-12 right-0 z-[1002] cursor-pointer"
+      @click="feedbackStore.showForm()"
+    >
+      <div class="bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full px-4 py-2 shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center w-[90px] h-[36px]">
+        <span class="text-sm font-medium whitespace-nowrap">Feedback</span>
+      </div>
+    </div>
+
+    <!-- 2024-03-24: 添加反馈表单组件 -->
+    <FeedbackForm 
+      :is-visible="feedbackStore.showFeedbackForm"
+      @close="feedbackStore.closeFeedbackForm"
+      @submit="handleFeedbackSubmit"
+      class="z-[1003]"
+    />
   </div>
 </template>
 <script setup lang="ts">
@@ -394,6 +402,7 @@ import { trackEvent, type EventType } from '../utils/analytics'
 import type { Database } from '../types/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import FeedbackForm from '@/components/feedback/FeedbackForm.vue'
+import { useFeedbackStore } from '../stores/feedback'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -1573,7 +1582,7 @@ const handleLoginModalClose = () => {
 }
 
 // 添加反馈表单相关的状态和方法
-const showFeedbackForm = ref(false)
+const feedbackStore = useFeedbackStore()
 
 // 处理反馈表单提交
 const handleFeedbackSubmit = (formData: {
@@ -1582,6 +1591,7 @@ const handleFeedbackSubmit = (formData: {
   allowContact: boolean
 }) => {
   console.log('Feedback submitted:', formData)
+  feedbackStore.closeFeedbackForm()
   // TODO: 这里后续会添加发送到后端的逻辑
 }
 
@@ -1604,7 +1614,10 @@ const handleAddIconClick = () => {
 // 2024-03-22: 修改输入框焦点处理函数
 const handleInputFocus = () => {
   isInputFocused.value = true
-  handlePaste() // 在获得焦点时也尝试粘贴
+  // 只在桌面端尝试粘贴
+  if (!('ontouchstart' in window)) {
+    handlePaste()
+  }
 }
 
 const handleInputBlur = () => {

@@ -17,57 +17,53 @@
         leave-to-class="opacity-0 transform translate-y-2"
       >
         <!-- 导航样式A -->
-        <div v-if="!showNavB" class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto relative" style="max-width: min(100%, 1440px);">
-          <!-- 导航栏内容容器 - 添加点击事件和cursor-pointer样式 -->
-          <div 
-            class="flex items-center gap-2 cursor-pointer" 
-            @click="router.push('/')"
-          >
-            <!-- 网站Logo图片 -->
-          <img 
-            src="/images/icons/logo.svg" 
-            alt="Keep Up Logo" 
-            class="w-[48px] h-[48px] flex-shrink-0" 
-          />
-          <!-- 网站标题文本 -->
-          <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2">
-            {{ t('home.title') }}
-            <!-- 2024-03-19: 添加beta标记 -->
-            <span class="px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
-              BETA
-            </span>
-          </h1>
-              
+        <div v-if="!showNavB" class="flex justify-between items-center px-4 h-[90px] min-w-[320px] max-w-[1440px] mx-auto relative" style="max-width: min(100%, 1440px);">
+          <!-- 左侧Logo和标题容器 -->
+          <div class="flex flex-col flex-shrink-0">
+            <!-- 2024-03-24: 添加点击返回首页功能 -->
+            <div 
+              class="flex items-center gap-2 cursor-pointer" 
+              @click="router.push('/')"
+            >
+              <!-- 网站Logo图片 -->
+              <img 
+                src="/images/icons/logo.svg" 
+                alt="Keep Up Logo" 
+                class="w-[36px] h-[36px] sm:w-[48px] sm:h-[48px] flex-shrink-0" 
+              />
+              <!-- 网站标题文本 -->
+              <h1 class="text-[16px] sm:text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2 whitespace-nowrap">
+                {{ t('home.title') }}
+                <!-- 2024-03-19: 添加beta标记 -->
+                <span class="hidden sm:inline-block px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
+                  BETA
+                </span>
+              </h1>
+            </div>
+            <!-- 2024-03-22: 添加介绍文字 -->
+            <p class="mt-1 text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium animate-pulse whitespace-nowrap">
+              <!-- 移动端显示简短文案 -->
+              <span class="sm:hidden">Quick video & audio digest</span>
+              <!-- 桌面端显示完整文案 -->
+              <span class="hidden sm:inline">Quick video & audio digest - no rewatching</span>
+            </p>
+          </div>
+
+          <!-- 2024-03-19: Early Access横幅 - 仅在桌面端显示在导航栏中 -->
+          <div class="hidden sm:block bg-white py-2 text-center text-pink-500 font-medium relative mx-4">
+            <div 
+              class="cursor-pointer"
+              @mouseenter="!feedbackStore.disableHoverEffect && feedbackStore.showForm()"
+              @click="feedbackStore.showForm()"
+            >
+              <p class="animate-bounce text-base">
+                {{ t('home.earlyAccess.feedback') }}
+              </p>
+            </div>
           </div>
           
-     <!-- 2024-03-19: Early Access横幅 -->
-     <div class="bg-white py-2 text-center text-pink-500 font-medium relative group">
-        <div class="flex items-center justify-center gap-2">
-          <!-- 只保留mouseenter触发 -->
-          <p 
-            class="animate-bounce cursor-pointer feedback-text"
-            @mouseenter="showFeedbackForm = true"
-          >
-            {{ t('home.earlyAccess.feedback') }}
-          </p>
-        </div>
-
-        <!-- 反馈表单 -->
-        <div 
-          class="feedback-form-container"
-          :class="{ 'visible': showFeedbackForm }"
-        >
-          <FeedbackForm 
-            :is-visible="showFeedbackForm"
-            @close="handleFeedbackClose"
-            @submit="handleFeedbackSubmit"
-          />
-        </div>
-      </div>
-      
-          
-          <!-- 右侧导航元素容器 - 增加右侧padding并调整gap -->
-          <div class="flex items-center gap-3 pr-2">
+          <!-- 右侧导航元素容器 -->
+          <div class="flex items-center gap-1 pl-2">
             <!-- 语言切换组件 -->
             <language-switch/>
         
@@ -77,12 +73,12 @@
               <img 
                 :src="authStore.user?.user_metadata?.avatar_url || '/images/icons/avatar.svg'" 
                 :alt="authStore.user?.email || 'User Avatar'" 
-                class="w-[32px] h-[32px] rounded-full"
+                class="w-[24px] h-[24px] rounded-full flex-shrink-0"
               />
               <!-- 登出按钮 -->
               <button 
                 @click="handleLogout"
-                class="text-gray-600 hover:text-gray-800 min-w-[64px] h-[32px] text-center"
+                class="text-gray-600 hover:text-gray-800 min-w-[48px] sm:min-w-[64px] h-[32px] text-center text-sm sm:text-base whitespace-nowrap"
               >
                 {{ t('home.nav.logout') }}
               </button>
@@ -442,6 +438,24 @@
       class="z-[10001]"
     />
 
+    <!-- 2024-03-24: 添加移动端固定在右下角的反馈按钮 -->
+    <div 
+      class="sm:hidden fixed bottom-32 right-0 z-[1002] cursor-pointer"
+      @click="feedbackStore.showForm()"
+    >
+      <div class="bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full px-4 py-2 shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center w-[90px] h-[36px]">
+        <span class="text-sm font-medium whitespace-nowrap">Feedback</span>
+      </div>
+    </div>
+
+    <!-- 2024-03-24: 添加反馈表单组件 -->
+    <FeedbackForm 
+      :is-visible="feedbackStore.showFeedbackForm"
+      @close="feedbackStore.closeFeedbackForm"
+      @submit="handleFeedbackSubmit"
+      class="z-[1003]"
+    />
+
     <!-- 预览模态框 -->
     <div 
       v-if="showMindmapPreview"
@@ -562,6 +576,7 @@ import type { TextMark } from '@/utils/textPosition'
 import { useArticleStore } from '../stores/article'
 import { trackEvent } from '@/utils/analytics'
 import FeedbackForm from '../components/feedback/FeedbackForm.vue'
+import { useFeedbackStore } from '../stores/feedback'
 
 
 // 将 i18n 相关初始化移前面
@@ -571,6 +586,7 @@ const route = useRoute()  // 移到最前面
 const router = useRouter()
 const authStore = useAuthStore()
 const articleStore = useArticleStore()
+const feedbackStore = useFeedbackStore()
 
 // 2024-03-20 16:30: 优化hover提示位置，使用当前鼠标位置
 const showHoverHint = ref(false)
@@ -1814,6 +1830,12 @@ const handleLoginModalClose = () => {
 
 // 在 setup 中添加
 const showFeedbackForm = ref(false)
+const disableHoverEffect = ref(false)
+
+const handleFeedbackFormClose = () => {
+  showFeedbackForm.value = false
+  disableHoverEffect.value = true
+}
 
 const handleFeedbackSubmit = (data: any) => {
   console.log('Feedback submitted:', data)

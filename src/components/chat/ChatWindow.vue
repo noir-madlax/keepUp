@@ -108,7 +108,7 @@
                 </div>
                 <!-- 2024-03-21 17:45: 使用与导航栏相同的用户头像获取方式 -->
                 <img 
-                  :src="authStore.user?.user_metadata?.avatar_url"
+                  :src="authStore.user?.user_metadata?.avatar_url || '/images/icons/avatar.svg'" 
                   alt="User Avatar" 
                   class="w-[24px] h-[24px] ml-2 flex-shrink-0 mt-1 rounded-full" 
                 />
