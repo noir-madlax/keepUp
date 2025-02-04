@@ -5,7 +5,7 @@
     :class="{ 'chat-open': chatStore.chatWindowState === 'expanded' }"
   >
     <!-- 顶部导航栏 -->
-    <header class="fixed top-0 left-0 right-0 bg-white z-[999] w-full">
+    <header class="fixed top-0 left-0 right-0 bg-white z-[1001] w-full">
       <!-- 使用transition组件包裹两个导航样式 -->
       <transition 
         mode="out-in"
@@ -43,22 +43,25 @@
      <!-- 2024-03-19: Early Access横幅 -->
      <div class="bg-white py-2 text-center text-pink-500 font-medium relative group">
         <div class="flex items-center justify-center gap-2">
-          <p class="animate-bounce">{{ t('home.earlyAccess.feedback') }}</p>
-          <!-- 联系方式图标 -->
-          <div class="relative contact-info-container group">
-           
-            <!-- Hover弹出框 - 修改为group-hover显示 -->
-            <div 
-              class="absolute right-[-400px] top-full -mt-10 bg-white p-4 rounded-lg shadow-lg z-50 w-[400px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-0"
-              @click.stop
-            >
-              <img 
-                :src="getContactImage('ContactMe.PNG')" 
-                alt="Contact Details" 
-                class="w-full h-auto hover:scale-105 transition-transform duration-300"
-              />
-            </div>
-          </div>
+          <!-- 只保留mouseenter触发 -->
+          <p 
+            class="animate-bounce cursor-pointer feedback-text"
+            @mouseenter="showFeedbackForm = true"
+          >
+            {{ t('home.earlyAccess.feedback') }}
+          </p>
+        </div>
+
+        <!-- 反馈表单 -->
+        <div 
+          class="feedback-form-container"
+          :class="{ 'visible': showFeedbackForm }"
+        >
+          <FeedbackForm 
+            :is-visible="showFeedbackForm"
+            @close="handleFeedbackClose"
+            @submit="handleFeedbackSubmit"
+          />
         </div>
       </div>
       
@@ -72,8 +75,8 @@
             <template v-if="authStore.isAuthenticated">
               <!-- 用户头像 -->
               <img 
-                :src="authStore.user?.user_metadata?.avatar_url" 
-                alt="User Avatar" 
+                :src="authStore.user?.user_metadata?.avatar_url || '/images/icons/avatar.svg'" 
+                :alt="authStore.user?.email || 'User Avatar'" 
                 class="w-[32px] h-[32px] rounded-full"
               />
               <!-- 登出按钮 -->
@@ -433,8 +436,10 @@
     <!-- 登录模态框 -->
     <login-modal 
       v-if="showLoginModal" 
-      @close="showLoginModal = false"
+      @close="handleLoginModalClose"
       @success="handleLoginSuccess"
+      :allowClose="authStore.isAuthenticated"
+      class="z-[10001]"
     />
 
     <!-- 预览模态框 -->
@@ -507,7 +512,7 @@
     </div>
 
     <!-- 更多内容 Modal -->
-    <div class="z-[1001]">
+    <div class="z-[1002]">
       <more-content-modal
         v-model="showMoreContentModal"
         :article-id="article?.id"
@@ -556,6 +561,7 @@ import type { ChatSession } from '../types/chat'
 import type { TextMark } from '@/utils/textPosition'
 import { useArticleStore } from '../stores/article'
 import { trackEvent } from '@/utils/analytics'
+import FeedbackForm from '../components/feedback/FeedbackForm.vue'
 
 
 // 将 i18n 相关初始化移前面
@@ -947,6 +953,13 @@ const recordArticleView = async (userId: string, articleId: number) => {
 
 // 修改组件挂载时的事件监听
 onMounted(async () => {
+  // 2024-03-21: 先检查登录状态
+  await authStore.loadUser()
+  if (!authStore.isAuthenticated) {
+    showLoginModal.value = true
+    return
+  }
+
   // 2024-01-20 13:30: 设置当前文章ID
   if (route.params.id) {
     chatStore.setCurrentArticle(Number(route.params.id))
@@ -1666,10 +1679,25 @@ watch(() => chatStore.lastCreatedSession, async (newSession) => {
 })
 
 // 处理登录成功
-const handleLoginSuccess = () => {
+const handleLoginSuccess = async () => {
   showLoginModal.value = false
-  // 2024-01-09: 移除登录成功提示,避免重复提示
-  // ElMessage.success(t('auth.loginSuccess')) // 删除这行
+  
+  try {
+    // 重新加载用户信息
+    await authStore.loadUser()
+    if (!authStore.user?.id) {
+      console.error('[handleLoginSuccess] User information not loaded properly')
+      return
+    }
+    
+    // 加载文章数据
+    await fetchArticle()
+    await fetchArticleMarks()
+    
+  } catch (error) {
+    console.error('[handleLoginSuccess] Error:', error)
+    ElMessage.error(t('error.loginFailed'))
+  }
 }
 
 // 添加处理刷新锚点的方法
@@ -1774,6 +1802,32 @@ const handleScrollToBottom = () => {
 // 2024-03-20: 添加获取联系方式图片的函数
 const getContactImage = (imageName: string): string => {
   return `/images/covers/${imageName}`
+}
+
+// 添加handleLoginModalClose函数
+const handleLoginModalClose = () => {
+  // 2024-03-21: 只有在已登录状态下才允许关闭登录框
+  if (authStore.isAuthenticated) {
+    showLoginModal.value = false
+  }
+}
+
+// 在 setup 中添加
+const showFeedbackForm = ref(false)
+
+const handleFeedbackSubmit = (data: any) => {
+  console.log('Feedback submitted:', data)
+  showFeedbackForm.value = false
+  ElMessage.success(t('feedback.submitSuccess'))
+}
+
+// 添加反馈表单相关的处理函数
+const handleFeedbackHover = () => {
+  showFeedbackForm.value = true
+}
+
+const handleFeedbackClose = () => {
+  showFeedbackForm.value = false
 }
 </script>
 
@@ -2082,6 +2136,75 @@ img {
   
   .section-tabs button {
     padding: 0.375rem 1rem; /* 移动端减小按钮内部padding */
+  }
+}
+
+/* 添加反馈表单相关样式 */
+.contact-info-container {
+  position: relative;
+  z-index: 1001;
+}
+
+/* 移除不需要的按钮样式 */
+.contact-info-container button,
+.contact-info-container button:hover,
+.contact-info-container button svg,
+.contact-info-container button:hover svg {
+  all: unset;
+}
+
+/* 确保反馈表单在正确的位置，从右边滑出 */
+.feedback-form-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 360px;
+  z-index: 1002;
+  background-color: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.feedback-form-container.visible {
+  transform: translateX(0);
+}
+
+/* 优化反馈文字样式 */
+.feedback-text {
+  position: relative;
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.feedback-text:hover {
+  transform: translateY(-1px);
+  text-shadow: 0 2px 4px rgba(236, 72, 153, 0.2);
+  color: #db2777; /* pink-600 */
+}
+
+/* 优化动画效果 */
+.animate-bounce {
+  animation: bounce 1s infinite;
+  animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-10%);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .feedback-form-container {
+    width: 100%;
   }
 }
 </style>

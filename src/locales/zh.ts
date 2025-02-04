@@ -2,279 +2,287 @@ export default {
   home: {
     title: 'Keep Up',
     nav: {
-      login: '登录',
-      logout: '退出',
-      upload: '手动上传'
+      login: 'Login',
+      logout: 'Logout', 
+      upload: 'Manual Upload'
     },
     filter: {
       discover: 'Discover Articles by Tag',
-      myUpload: '最近上传',
-      all: '全部',
-      channelTitle: '频道选择（多选）',
-      authorTitle: '作者选择（多选）',
-      expand: '展开更多',
-      collapse: '收起'
+      myUpload: 'Recent Uploads',
+      all: 'All',
+      channelTitle: 'Select Channels (Multiple)',
+      authorTitle: 'Select Authors (Multiple)',
+      expand: 'Show More',
+      collapse: 'Show Less'
     },
     channels: {
-      wechat: '微信',
+      wechat: 'WeChat',
       youtube: 'YouTube',
-      applePodcast: '苹果播客',
-      spotify: 'Spotify',
-      xiaoyuzhou: '小宇宙',
-      pdf: 'PDF',
-      webpage: '网页'
+      xiaoyuzhou: 'XiaoYuZhou',
+      pdf: 'PDF', 
+      webpage: 'Web Page',
+      applePodcast: 'Apple Podcast',
+      spotify: 'Spotify'
     },
     pullToRefresh: {
-      pullDown: '下拉刷新',
-      release: '释放刷新',
-      refreshing: '刷新中...',
-      success: '刷新完成'
+      pullDown: 'Pull to refresh',
+      release: 'Release to refresh',
+      refreshing: 'Refreshing...',
+      success: 'Refresh complete'
     },
     network: {
-      offline: '当前处于离线状态',
-      weak: '网络信号较弱'
+      offline: 'Currently offline',
+      weak: 'Weak network connection'
     },
     articles: {
-      title: '总结'
+      title: 'Summaries'
     },
     earlyAccess: {
-      title: '🎉抢先体验 Keep Up 享专属权益',
+      title: '🎉Early Access - Experience Keep Up Now!',
       card: {
-        title: 'Early Access 特权',
+        title: 'Early Access Privileges',
         privileges: {
-          aiSummary: '抢先体验全新AI总结',
-          priorityAccess: '享受功能优先使用权',
-          feedback: '专属的用户反馈渠道',
-          discount: '享有未来高级功能折扣'
+          aiSummary: 'Unlimited Summaries',
+          priorityAccess: 'Free AI Chat',
+          feedback: 'VIP Feedback Channel',
+          discount: 'Premium Discounts'
         }
       },
-      feedback: '您的反馈对我们很重要 --> 📨'
+      feedback: 'Dear early adopters,your feedback matters and shapes our future📨'
     }
   },
   article: {
-    viewOriginal: '查看原内容',
-    share: "分享",
-    copySuccess: "链接已复制",
+    viewOriginal: 'View Original',
+    share: "Share",
+    copySuccess: "Link copied",
     sections: {
-      title: '小节类型选择',
+      title: 'Section Types',
       types: {
-        '总结': '总结',
-        '人物介绍': '人物介绍',
-        '背景': '背景',
-        '名词解释': '名词解释',
-        '分段提纲': '分段提纲',
-        'QA环节': 'QA环节',
-        '金句': '金句',
-        '分段详述': '分段详述',
-        '引用（测试）': '引用（测试）',
-        '结构图': '结构图',
-        '案例（测试）': '案例（测试）',
-        '原文字幕': '原文字幕',
-        '翻译字幕（测试）': '翻译字幕',
-        '彩蛋': '彩蛋',
-        '思维导图': '思维导图',
-        '要点总结': '要点总结',
-        '典型案例': '典型案例'
+        '总结': 'Summary',
+        '背景': 'Background',
+        '人物介绍': 'Characters',
+        '名词解释': 'Terms',
+        '分段提纲': 'Section Outline',
+        'QA环节': 'Q&A',
+        '金句': 'Quotes',
+        '分段详述': 'Section Details',
+        '引用（测试）': 'References (Test)',
+        '结构图': 'Structure',
+        '案例（测试）': 'Cases (Test)',
+        '原文字幕': 'Original Subtitles',
+        '翻译字幕（测试）': 'Translated Subtitles',
+        '彩蛋': 'Easter Eggs',
+        '思维导图': 'Mind Map',
+        '要点总结': 'Key Points',
+        '典型案例': 'Typical Cases'
       }
     },
     fallbackLanguage: {
-      zh: '中文',
-      en: '英文',
-      message: '当前查看的是{language}版本，',
-      getOtherLanguage: '点击获取其他语言版本'
+      zh: 'Chinese',
+      en: 'English',
+      message: 'You are viewing the {language} version,',
+      getOtherLanguage: 'click to get summary in other languages'
     },
     preview: {
-      enlarge: '放大显示'
+      enlarge: 'Enlarge View'
     },
-    id: '文章ID',
-    originalUrl: '原始链接',
-    getOtherLanguage: '获取其他语言内容',
-    fetchSectionsError: '获取文章内容状态失败'
+    id: 'Article ID',
+    originalUrl: 'Original URL',
+    getOtherLanguage: 'Get Content in Other Languages',
+    fetchSectionsError: 'Failed to fetch article sections status'
   },
   summarize: {
-    title: '总结',
-    title_early: '🎉Early Access🎉  抢先体验AI总结',
-    manualupload:'手工',
-    urlPlaceholder: '在此输入YouTube/播客链接获取总结',
-    languageTitle: '选择输出语言',
+    title: 'Summarize',
+    title_early: '🎉Early Access🎉  AI Summary',
+    manualupload:'Manual',
+    urlPlaceholder: 'Place any Youtube or Podcast link here to summarize',
+    languageTitle: 'Select Output Languages',
     languages: {
-      zh: '中文',
-      en: '英文',
-      na: '暂不需要'
+      zh: 'Chinese',
+      en: 'English',
+      na: 'Not Now'
     },
     buttons: {
-      cancel: '取消',
-      confirm: '确定',
-      processing: '处理中...',
-      submitting: '提交中...'
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+      processing: 'Processing...',
+      submitting: 'Submitting...'
     },
     messages: {
-      urlRequired: '请输入URL',
-      invalidUrl: '请输入有效的URL地址',
-      duplicateUrl: '该链接已经提交过了',
-      duplicateUrlAutoRedirect: '该文章已存在，2秒后将自动跳转到文章页面...',
-      click: '点击',
-      toViewExistingArticle: '查看已有文章',
-      languageRequired: '请选择一种输出语言',
-      submitSuccess: '提交成功，内容正在处理中，预计2分钟左右完成',
-      submitFailed: '提交失败，请重试',
-      maxSelectionsExceeded: '最多只能选择3个语言选项',
-      onlyForMedia: '只支持视频和播客类型的内容',
-      submitting: '正在处理您的请求，请稍候...'
+      urlRequired: 'Please enter URL',
+      invalidUrl: 'Please enter a valid URL',
+      duplicateUrl: 'This URL has already been submitted',
+      duplicateUrlAutoRedirect: 'This article already exists, redirecting to the article page in 2 seconds...',
+      click: 'click',
+      toViewExistingArticle: 'to view existing article',
+      languageRequired: 'Please select at least one output language',
+      submitSuccess: 'Submitted successfully, content will be available IN 2 MINUTES ',
+      submitFailed: 'Submission failed, please try again',
+      maxSelectionsExceeded: 'You can select up to 3 language options',
+      onlyForMedia: 'Only available for video and podcast content',
+      submitting: 'Processing your request, please wait...'
     },
-    summaryLanguageTitle: '选择总结语言',
-    summaryLanguageTitleNote: '(根据原文总结出最核心的要点)',
-    subtitleLanguageTitle: '选择字幕语言',
-    subtitleLanguageTitleNote: '(从原始内容中提取全文字幕)',
-    detailedLanguageTitle: '选择分段详述语言',
-    detailedLanguageTitleNote: '(详细叙述原文每个分段的内容)',
-    switchToUrl: '上传链接',
-    switchToFile: '上传文件',
-    dragAndDrop: '拖拽文件到这里',
-    or: '或',
-    browseFiles: '浏览文件',
-    supportedFormats: '支持的格式',
-    maxSize: '最大大小',
-    removeFile: '移除文件',
-    fileRequired: '请选择文件',
-    fileTooLarge: '文件大小不能超过10MB',
-    invalidFileType: '不支持的文件类型，请上传DOC、PDF或TXT文件',
-    filePlaceholder: '选择或拖拽文件上传',
-    moreContent: '更多内容',
-    alreadyExists: '已存在',
-    supplementSuccess: '提交成功，内容将在2分钟后可见',
-    fileSummaryLanguageTitle: '选择总结语言',
-    fileSummaryLanguageTitleNote: '(从文件中总结出核心要点)',
-    uploadProgress: '上传进度: {progress}%',
-    uploadComplete: '上传完成',
-    uploadFailed: '上传失败',
-    fileProcessing: '文件处理中: {progress}%',
-    fileProcessingComplete: '文件处理完成',
-    fileProcessingFailed: '文件处理失败',
-    summaryLanguageRequired: '请至少选择一种总结语言'
+    summaryLanguageTitle: 'Select the language of the Summary Text:',
+    subtitleLanguageTitle: 'Select the language of the Full Transcript:',
+    summaryLanguageTitleNote: '(Summarize the most core points)',
+    subtitleLanguageTitleNote: '(Extract the full text subtitles)',
+    detailedLanguageTitleNote: '(Detail the content of each section)',
+    detailedLanguageTitle: 'Select the language of the Section Details:',
+    switchToUrl: 'Upload URL',
+    switchToFile: 'Upload File',
+    dragAndDrop: 'Drag and drop file here',
+    or: 'or',
+    browseFiles: 'Browse Files',
+    supportedFormats: 'Supported formats',
+    maxSize: 'Max size',
+    removeFile: 'Remove file',
+    fileRequired: 'Please select a file',
+    fileTooLarge: 'File size cannot exceed 10MB',
+    invalidFileType: 'Invalid file type. Please upload DOC, PDF, or TXT files',
+    filePlaceholder: 'Select or drag a file to upload',
+    moreContent: 'More Content',
+    alreadyExists: 'Already Exists',
+    supplementSuccess: 'Submitted successfully, content will be available in 2 minutes',
+    fileSummaryLanguageTitle: 'Select Summary Language',
+    fileSummaryLanguageTitleNote: '(Summarize the core points from the file)',
+    uploadProgress: 'Upload Progress: {progress}%',
+    uploadComplete: 'Upload Complete',
+    uploadFailed: 'Upload Failed',
+    fileProcessing: 'File Processing: {progress}%',
+    fileProcessingComplete: 'File Processing Complete',
+    fileProcessingFailed: 'File Processing Failed',
+    summaryLanguageRequired: 'Please select at least one summary language'
   },
   common: {
-    retry: '重试',
-    loading: '加载中...',
-    scrollToLoadMore: '滚动加载更多',
-    noMoreData: '没有更多数据了',
-    pleaseLogin: '请先登录后再操作',
-    edit: '编辑文章',
-    cancel: '取消',
-    save: '保存',
-    close: '关闭',
-    preview: '预览思维导图',
-    processing: '处理中',
-    askAI: '询问AI',
-    more: '更多',
-    loginToViewMore: '暂无内容，上传视频或登录后即可查看AI生成的摘要'
+    retry: 'Retry',
+    loading: 'Loading...',
+    scrollToLoadMore: 'Scroll to load more',
+    noMoreData: 'No more data',
+    pleaseLogin: 'Please login first',
+    edit: 'Edit Article',
+    cancel: 'Cancel',
+    save: 'Save',
+    close: 'Close',
+    preview: 'Preview Mind Map',
+    processing: 'Processing',
+    askAI: 'Ask AI',
+    more: 'More',
+    loginToViewMore: 'Paste a link to see summaries in 2 minutes'
   },
   upload: {
     card: {
-      uploadFile: '点击上传链接',
-      supportedPlatforms: '支持Youtube视频、Apple和Spotify的播客',
-      uploadWeb: '点击总结网页',
-      webLink: '任何网页的URL链接',
-      uploadDoc: '点击总结文档',
-      supportedFiles: '支持10mb内的Doc、PDF、Txt文档',
+      uploadFile: 'Click to Upload Link',
+      uploadWeb: 'Click to input Web Url',
+      supportedPlatforms: 'Support Podcast and Youtube links',
+      webLink: 'Any web page URL',
+      uploadDoc: 'Click to Upload Files',
+      supportedFiles: 'Support Doc/PDF/Txt files up to 10MB',
       fallback: {
-        noTitle: '无标题',
-        unknownAuthor: '未知作者',
-        unknownDate: '未知日期',
-        unknownChannel: '未知频道',
-        unknownTime: '未知时间',
-        noLink: '无链接',
-        justNow: '刚刚',
-        minutesAgo: '{count}分钟前',
-        hoursAgo: '{count}小时前',
-        daysAgo: '{count}天前',
-        uploaded: '上传于 ',
-        processing: '处理中...',
-        failed: '处理失败',
-        rejected: '已拒绝',
-        pending: '等待处理',
-        unknownStatus: '未知状态'
+        noTitle: 'No Title',
+        unknownAuthor: 'Unknown Author',
+        unknownDate: 'Unknown Date',
+        unknownChannel: 'Unknown Channel',
+        unknownTime: 'Unknown Time',
+        noLink: 'No Link',
+        justNow: 'Just now',
+        minutesAgo: '{count} minutes ago',
+        hoursAgo: '{count} hours ago',
+        daysAgo: '{count} days ago',
+        uploaded: 'Uploaded ',
+        processing: 'Processing...',
+        failed: 'Processing Failed',
+        rejected: 'Rejected',
+        pending: 'Pending',
+        unknownStatus: 'Unknown Status',
+        unknownPlatform: 'Unknown Platform'
       },
       error: {
-        videoInfo: '无法获取视频信息',
-        subtitle: '无法获取字幕内容',
-        unknown: '其他原因'
+        videoInfo: 'Failed to get video information',
+        subtitle: 'Failed to get subtitle content',
+        unknown: 'Unknown error'
       },
       action: {
-        delete: '删除'
+        delete: 'Delete'
       }
     },
     message: {
-      deleteSuccess: '删除成功',
-      deleteFailed: '删除失败'
+      deleteSuccess: 'Deleted successfully',
+      deleteFailed: 'Failed to delete'
     }
   },
   chat: {
     actions: {
-      explain: '解释含义',
-      elaborate: '展开详述',
-      question: '自由提问',
-      structure: '内容结构图',
-      overview: '分段提纲',
-      quotes: '金句',
-      xmind: '思维导图',
-      expand: '展开说说',
-      original: '给出原文',
-      explain_selection: '解释一下',
-      expand_prompt: '请详细展开解释这段内容，包含更多具体细。',
-      original_prompt: '请提供这段内容在原文中的完整原文，并标注出重要的关键词和短语。',
-      explain_selection_prompt: '请根据文章上下文，解释这段内容中的专业术语和难懂概念。'
+      explain: 'Explain Meaning',
+      elaborate: 'Elaborate Details',
+      question: 'Ask Question',
+      structure: 'Content Structure',
+      overview: 'Section Outline',
+      quotes: 'Key Quotes',
+      xmind: 'Mind Map',
+      expand: 'Elaborate',
+      original: 'Show Original',
+      explain_selection: 'Explain This',
+      expand_prompt: 'Please explain this content in detail, including more specific details based on the original context.',
+      original_prompt: 'Please check my input content above.And provide the complete original text and highlight important keywords.',
+      explain_selection_prompt: 'Please explain the specific meaning of this content based on the original context.'
     },
     input: {
-      placeholder: '需要我为您做些什么？'
+      placeholder: 'How can I help you today?'
     },
     window: {
-      title: 'AI 助手',
-      sessionSelect: '选择会话',
-      startChat: '开始对话...',
-      send: '发送'
+      title: 'AI Assistant',
+      sessionSelect: 'Select Session',
+      startChat: 'Start chatting...',
+      send: 'Send'
     },
-    questionMark: '问题',
+    questionMark: 'Question',
     toolbar: {
-      hint: '🎉进一步提问了解更多：',
-      selected_hint: '🎉针对选中内容提问：',
-      hover_hint: '选中文字即可向AI提问'
+      hint: '🎉Ask further questions about the summary:',
+      selected_hint: '🎉Ask further questions about the selected text:',
+      hover_hint: 'Select text to ask AI questions'
     },
     errors: {
-      userNotLoggedIn: '用户未登录',
-      createSessionFailed: '创建会话失败',
-      createOrGetSessionFailed: '无法创建或获取会话',
-      sessionNotFound: '未找到会话',
-      invalidSessionData: '会话数据无效',
-      loadSessionFailed: '加载会话失败，请重试',
-      noCurrentArticle: '没有当前文章ID',
-      initSessionFailed: '初始化会话失败',
-      sendMessageFailed: '发送消息失败，请重试',
-      loadSessionListFailed: '加载会话列表失败',
-      reloadMessageFailed: '重新加载消息失败，请刷新页面重试',
-      aiResponseFailed: 'AI 响应加载失败，正在重试...'
+      userNotLoggedIn: 'Please login first',
+      createSessionFailed: 'Failed to create session',
+      createOrGetSessionFailed: 'Failed to create or get session',
+      sessionNotFound: 'Session not found',
+      invalidSessionData: 'Invalid session data',
+      loadSessionFailed: 'Failed to load session, please try again',
+      noCurrentArticle: 'No current article ID',
+      initSessionFailed: 'Failed to initialize session',
+      sendMessageFailed: 'Failed to send message, please try again',
+      loadSessionListFailed: 'Failed to load session list',
+      reloadMessageFailed: 'Failed to reload message, please refresh the page',
+      aiResponseFailed: 'AI response loading failed, retrying...'
     }
   },
   auth: {
-    loginSuccess: '登录成功',
-    logoutSuccess: '已退出登录',
-    logoutError: '退出失败',
-    loginRequired: '请先登录',
-    logoutSuccessMessage: '已退出登录',
-    logoutFailedMessage: '退出失败，请重试'
+    login: {
+      title: 'Login',
+      subtitle: 'Choose a login method to continue',
+      githubButton: 'Login with GitHub',
+      googleButton: 'Login with Google',
+      error: 'Login failed, please try again'
+    },
+    loginSuccess: 'Login successful',
+    logoutSuccess: 'Logout successful',
+    logoutError: 'Logout failed',
+    loginRequired: 'Please login first',
+    logoutSuccessMessage: 'Logged out successfully',
+    logoutFailedMessage: 'Logout failed, please try again'
   },
   error: {
-    updateFailed: '更新失败，请重试',
-    systemError: '系统错误，请稍后重试',
-    articleFetchFailed: '获取文章失败',
-    updateSuccess: '更新成功',
-    requiredFields: '标题、内容和作者为必填项',
-    getAuthorsFailed: '获取作者列表失败',
-    loginFirst: '请登录',
-    submitArticleFailed: '系统错误，请稍后重试',
-    requiredArticleFields: '标题、内容和作者为必填项',
-    getArticleDetailsFailed: '获取文章详情失败',
-    dateFormatError: '日期格式化错误',
-    fetchArticleListFailed: '获取文章列表失败，请稍后重试'
+    updateFailed: 'Update failed, please try again',
+    systemError: 'System error, please try again later',
+    articleFetchFailed: 'Failed to fetch article',
+    updateSuccess: 'Update successful',
+    requiredFields: 'Title, content and author are required',
+    getAuthorsFailed: 'Failed to get authors list',
+    loginFirst: 'Please login',
+    submitArticleFailed: 'System error, please try again later',
+    requiredArticleFields: 'Title, content and author are required',
+    getArticleDetailsFailed: 'Failed to get article details',
+    dateFormatError: 'Date format error',
+    fetchArticleListFailed: 'Failed to get article list, please try again later'
   }
 } 

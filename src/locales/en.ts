@@ -48,7 +48,7 @@ export default {
           discount: 'Premium Discounts'
         }
       },
-      feedback: 'Your feedback matters-->📨'
+      feedback: 'Dear early adopters,your feedback matters and shapes our future📨'
     }
   },
   article: {
@@ -257,6 +257,13 @@ export default {
     }
   },
   auth: {
+    login: {
+      title: 'Login',
+      subtitle: 'Choose a login method to continue',
+      githubButton: 'Login with GitHub',
+      googleButton: 'Login with Google',
+      error: 'Login failed, please try again'
+    },
     loginSuccess: 'Login successful',
     logoutSuccess: 'Logout successful',
     logoutError: 'Logout failed',

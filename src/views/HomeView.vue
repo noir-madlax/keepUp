@@ -17,50 +17,48 @@
       </div>
 
     <!-- 顶部导航栏 -->
-  <header class="fixed top-0 left-0 right-0 bg-white z-50 w-full">
+  <header class="fixed top-0 left-0 right-0 bg-white z-40 w-full">
       <!-- 导航栏内容容器 -->
-      <div class="flex justify-between items-center px-4 h-[70px] min-w-[378px] max-w-[1440px] mx-auto">
+      <div class="flex justify-between items-center px-4 h-[90px] min-w-[378px] max-w-[1440px] mx-auto">
         <!-- 左侧Logo和标题容器 -->
-        <div class="flex items-center gap-2">
-          <!-- 网站Logo图片 -->
-          <img 
-            src="/images/icons/logo.svg" 
-            alt="Keep Up Logo" 
-            class="w-[48px] h-[48px] flex-shrink-0" 
-          />
-          <!-- 网站标题文本 -->
-          <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2">
-            {{ t('home.title') }}
-            <!-- 2024-03-19: 添加beta标记 -->
-            <span class="px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
-              BETA
-            </span>
-          </h1>
-        </div>
-     <!-- 2024-03-19: Early Access横幅 -->
-     <div class="bg-white py-2 text-center text-pink-500 font-medium relative group">
-        <div class="flex items-center justify-center gap-2">
-          <p class="animate-bounce">{{ t('home.earlyAccess.feedback') }}</p>
-          <!-- 联系方式图标 -->
-          <div class="relative contact-info-container group">
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <!-- 网站Logo图片 -->
             <img 
-              :src="getContactImage('ContactMe.PNG')" 
-              alt="Contact Us" 
-              class="hidden w-10 h-10 cursor-pointer hover:opacity-80 transition-all duration-300 transform hover:scale-110"
-              @click.stop="showContactInfo = !showContactInfo"
+              src="/images/icons/logo.svg" 
+              alt="Keep Up Logo" 
+              class="w-[48px] h-[48px] flex-shrink-0" 
             />
-            <!-- Hover弹出框 - 修改为group-hover显示 -->
-            <div 
-            class="absolute right-[-400px] top-full -mt-10 bg-white p-4 rounded-lg shadow-lg z-50 w-[400px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-0"
-            @click.stop
-            >
-              <img 
-                :src="getContactImage('ContactMe.PNG')" 
-                alt="Contact Details" 
-                class="w-full h-auto hover:scale-105 transition-transform duration-300"
-              />
-            </div>
+            <!-- 网站标题文本 -->
+            <h1 class="text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2">
+              {{ t('home.title') }}
+              <!-- 2024-03-19: 添加beta标记 -->
+              <span class="px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
+                BETA
+              </span>
+            </h1>
           </div>
+          <!-- 2024-03-22: 添加介绍文字 -->
+          <p class="mt-1 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium animate-pulse">
+            Quick video & audio digest - no rewatching
+          </p>
+        </div>
+
+
+
+     <!-- 2024-03-19: 中间的Early Access横幅 -->
+     <div class="bg-white py-2 text-center text-pink-500 font-medium relative">
+        <div 
+          class="cursor-pointer"
+          @mouseenter="showFeedbackForm = true"
+        >
+          <p class="animate-bounce">{{ t('home.earlyAccess.feedback') }}</p>
+          <!-- 反馈表单 -->
+          <FeedbackForm 
+            :is-visible="showFeedbackForm"
+            @close="showFeedbackForm = false"
+            @submit="handleFeedbackSubmit"
+          />
         </div>
       </div>
       
@@ -69,15 +67,15 @@
         
         <!-- 右侧导航元素容器 - 增加右侧padding并调整gap -->
         <div class="flex items-center gap-3 pr-2">
-          <!-- 语言切换组件 -->
-          <language-switch/>
+          <!-- 语言切换组件 先不要了 -->
+         <!-- <language-switch/> -->
       
           <!-- 已登录用户信息区域 -->
           <template v-if="authStore.isAuthenticated">
             <!-- 用户头像 -->
             <img 
-              :src="authStore.user?.user_metadata?.avatar_url" 
-              alt="User Avatar" 
+              :src="authStore.user?.user_metadata?.avatar_url || '/images/icons/avatar.svg'" 
+              :alt="authStore.user?.email || 'User Avatar'" 
               class="w-[32px] h-[32px] rounded-full"
             />
             <!-- 登出按钮 - 增加最小宽度确保文字完整显示 -->
@@ -112,12 +110,14 @@
     <!-- 登录模态框 -->
     <login-modal 
       v-if="showLoginModal" 
-      @close="showLoginModal = false"
+      @close="handleLoginModalClose" 
       @success="handleLoginSuccess"
+      :allowClose="authStore.isAuthenticated"
+      class="z-50"
     />
 
     <!-- 主要内容区域 -->
-    <pull-to-refresh class="mt-[-20px]" :onRefresh="handleRefresh">
+    <pull-to-refresh class="mt-[0px]" :onRefresh="handleRefresh">
       <div class="px-4 sm:px-8 py-6 overflow-x-hidden">
         <!-- 修改容器最大宽度并确保居中 -->
         <div class="max-w-screen-2xl mx-auto w-full">
@@ -138,7 +138,7 @@
               <div class="flex items-center gap-3 ml-auto sm:ml-4">
                 <!-- 修改渠道图标icon的命名要和svg的文件一样-->  
                 <img 
-                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'web', 'file']"
+                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'web']"
                   :key="channel"
                   :src="`/images/icons/${channel}.svg`"
                   :alt="channel"
@@ -156,17 +156,19 @@
                 <img 
                   src="/images/icons/add.svg" 
                   alt="Add" 
-                  class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5"
+                  class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 cursor-pointer"
+                  @click="handleAddIconClick"
                 />
                 <input
                   type="text"
                   v-model="requestUrl"
                   :placeholder="t('summarize.urlPlaceholder')"
-                  class="w-full sm:flex-grow pl-12 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100"
+                  :class="['w-full sm:flex-grow pl-12 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300', 
+                    { 'input-highlight': isHighlighted }]"
                   @click="handlePaste"
+                  @focus="handleInputFocus"
+                  @blur="handleInputBlur"
                   @keyup.enter="handleNewUploadClick('url')"
-                  @focus="isInputFocused = true"
-                  @blur="isInputFocused = false"
                 />
                 <!-- 添加回车图标，只在输入框激活时显示 -->
                 <img 
@@ -214,12 +216,55 @@
             <!-- 文章卡片网格容器 -->
             <div class="articles-grid">
               <!-- 实际文章列表 -->
-              <ArticleCard
-                v-for="article in filteredArticles"
-                :key="'requestId' in article ? article.requestId : article.id"
-                :article="article"
-                @delete="deleteRequest"
-              />
+              <template v-if="filteredArticles.length > 0">
+                <ArticleCard
+                  v-for="article in filteredArticles"
+                  :key="'requestId' in article ? article.requestId : article.id"
+                  :article="article"
+                  @delete="deleteRequest"
+                />
+              </template>
+
+              <!-- 2024-03-24: 添加空状态下的兜底卡片 -->
+              <template v-else-if="authStore.isAuthenticated && !isLoading">
+                <div class="empty-article-card" @click="handleEmptyCardClick">
+                  <!-- 上半部分：标题和图片区域 -->
+                  <div class="flex justify-between gap-3">
+                    <!-- 左侧标题区域 -->
+                    <div class="flex flex-col gap-2 flex-1">
+                      <div class="text-xl font-semibold text-gray-900">
+                        Upload your first summary
+                      </div>
+                      <div class="text-base text-gray-500 mt-1">
+                        Support YouTube, Spotify, Apple Podcast 
+                      </div>
+                    </div>
+                    <!-- 右侧图片区域 -->
+                    <div class="w-[120px] h-[120px] bg-gray-50 rounded-xl flex items-center justify-center">
+                      <img src="/images/icons/upload.svg" alt="Link" class="w-12 h-12">
+                    </div>
+                  </div>
+
+                  <!-- 分割线 -->
+                  <div class="divider"></div>
+
+                  <!-- 底部图标区域 -->
+                  <div class="card-bottom">
+                    <!-- 左侧留空 -->
+                    <div class="author-info">
+                    </div>
+
+                    <!-- 右侧渠道图标 -->
+                    <div class="channel-date">
+                      <div class="flex items-center gap-2">
+                        <img src="/images/icons/youtube.svg" alt="Youtube" class="channel-icon">
+                        <img src="/images/icons/apple-podcast.svg" alt="Apple" class="channel-icon">
+                        <img src="/images/icons/spotify.svg" alt="Spotify" class="channel-icon">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
 
               <!-- 加载状态显示骨架图 -->
               <template v-if="isLoading">
@@ -275,7 +320,11 @@
           
           <!-- 没有更多数据的提示 -->
           <div v-if="!isLoading && (!hasMore || !authStore.isAuthenticated)" class="text-center py-4 text-gray-500">
-            {{ authStore.isAuthenticated ? t('common.noMoreData') : t('common.loginToViewMore') }}
+            {{ authStore.isAuthenticated 
+              ? (filteredArticles.length === 0 
+                ? 'Paste a link to see summaries in 2 minutes'
+                : t('common.noMoreData')) 
+              : t('common.loginToViewMore') }}
           </div>
         </div>
     </pull-to-refresh>
@@ -344,6 +393,7 @@ import localforage from 'localforage'
 import { trackEvent, type EventType } from '../utils/analytics'
 import type { Database } from '../types/supabase'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import FeedbackForm from '@/components/feedback/FeedbackForm.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -977,9 +1027,14 @@ const handleLoginSuccess = async () => {
 onMounted(async () => {
   console.log('[onMounted] Component mounting, auth status:', authStore.isAuthenticated)
   
-  // 2024-03-15: 先加载用户信息
+  // 2024-03-21: 先检查登录状态，未登录则显示登录框
   await authStore.loadUser()
   console.log('[onMounted] User loaded, new auth status:', authStore.isAuthenticated)
+  
+  if (!authStore.isAuthenticated) {
+    showLoginModal.value = true
+    return
+  }
   
   // 如果用户已登录，初始化作者相关状态
   if (authStore.isAuthenticated) {
@@ -1439,13 +1494,11 @@ const handleCategoryChange = (category: string) => {
 // 添加showContactInfo状态
 const showContactInfo = ref(false)
 
-// 添加点击外部关闭联系方式弹窗
+// 修改点击外部关闭联系方式弹窗的逻辑
 onMounted(() => {
   const handleClickOutside = (event: MouseEvent) => {
     const target = event.target as HTMLElement
-    if (!target.closest('.contact-info-container')) {
-      showContactInfo.value = false
-    }
+    // 移除自动关闭逻辑
   }
   
   document.addEventListener('click', handleClickOutside)
@@ -1508,6 +1561,71 @@ const handleClearInput = () => {
   const inputElement = document.querySelector('input[type="text"]') as HTMLInputElement
   if (inputElement) {
     inputElement.blur()
+  }
+}
+
+// 在script setup部分添加handleLoginModalClose函数
+const handleLoginModalClose = () => {
+  // 2024-03-21: 只有在已登录状态下才允许关闭登录框
+  if (authStore.isAuthenticated) {
+    showLoginModal.value = false
+  }
+}
+
+// 添加反馈表单相关的状态和方法
+const showFeedbackForm = ref(false)
+
+// 处理反馈表单提交
+const handleFeedbackSubmit = (formData: {
+  needProduct: boolean
+  satisfiedSummary: boolean
+  allowContact: boolean
+}) => {
+  console.log('Feedback submitted:', formData)
+  // TODO: 这里后续会添加发送到后端的逻辑
+}
+
+// 2024-03-22: 添加输入框高亮动画
+const isHighlighted = ref(false)
+const showAnimatedPlaceholder = ref(true)
+
+// 2024-03-22: 添加点击图标的处理函数
+const handleAddIconClick = () => {
+  isHighlighted.value = true
+  showAnimatedPlaceholder.value = false
+  
+  // 重置高亮状态
+  setTimeout(() => {
+    isHighlighted.value = false
+    showAnimatedPlaceholder.value = true
+  }, 600)
+}
+
+// 2024-03-22: 修改输入框焦点处理函数
+const handleInputFocus = () => {
+  isInputFocused.value = true
+  handlePaste() // 在获得焦点时也尝试粘贴
+}
+
+const handleInputBlur = () => {
+  isInputFocused.value = false
+}
+
+// 在 script setup 部分添加处理函数
+const handleEmptyCardClick = async () => {
+  // 1. 触发输入框高亮动画
+  handleAddIconClick();
+  
+  // 2. 获取焦点并触发粘贴
+  const inputElement = (window?.document?.querySelector('input[type="text"]') as HTMLInputElement | null);
+  if (inputElement) {
+    inputElement.focus();
+    handlePaste();
+  }
+  
+  // 3. 如果有有效URL，触发上传
+  if (requestUrl.value && (requestUrl.value.startsWith('http://') || requestUrl.value.startsWith('https://'))) {
+    handleNewUploadClick('url');
   }
 }
 </script>
@@ -1621,6 +1739,123 @@ const handleClearInput = () => {
   50% {
     opacity: .5;
   }
+}
+
+/* 2024-03-21: 添加登录modal的z-index样式 */
+:deep(.login-modal) {
+  z-index: 9999;
+}
+
+/* 2024-03-21: 确保其他fixed元素的z-index低于modal */
+.fixed {
+  z-index: 40;
+}
+
+/* 添加反馈表单容器样式 */
+.feedback-container {
+  display: inline-block;
+  position: relative;
+}
+
+/* 2024-03-22: 添加输入框高亮动画 */
+.input-highlight {
+  animation: highlight 0.6s ease-out;
+}
+
+@keyframes highlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+    border-color: #3B82F6;
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    border-color: #3B82F6;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    border-color: #E5E7EB;
+  }
+}
+
+/* 2024-03-22: 添加placeholder文字动画 */
+input::placeholder {
+  transition: opacity 0.3s ease;
+}
+
+input.input-highlight::placeholder {
+  animation: placeholderPulse 0.6s ease-in-out;
+}
+
+@keyframes placeholderPulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+/* 添加空状态卡片样式 */
+.empty-article-card {
+  display: flex;
+  width: 100%;
+  min-width: 340px;
+  max-width: 450px;
+  height: 190px;
+  padding: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: 12px;
+  border: 1px solid #F2F2F2;
+  background: #FFF;
+  box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.10);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.empty-article-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.empty-article-card .divider {
+  width: 100%;
+  height: 0;
+  border-top: 1px solid #EEE;
+  margin: 0;
+}
+
+.empty-article-card .card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 24px;
+}
+
+.empty-article-card .author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.empty-article-card .channel-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+}
+
+.empty-article-card .channel-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 </style>
 
