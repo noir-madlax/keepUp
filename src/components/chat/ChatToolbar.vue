@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="fixed z-[999]"
+    class="fixed z-[1003]"
     :class="{ 'opacity-50 pointer-events-none': disabled }"
     :style="{
       left: '40px',
