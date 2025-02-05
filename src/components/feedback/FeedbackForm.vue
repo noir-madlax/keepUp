@@ -82,14 +82,6 @@
       </button>
     </form>
 
-    <!-- 联系方式图片 -->
-    <div class="-mt-0 -mx-0">
-      <img 
-        :src="getContactImage('ContactMe.PNG')" 
-        alt="Contact Details" 
-        class="w-full h-auto"
-      />
-    </div>
   </div>
 </template>
 
