@@ -2,20 +2,6 @@
   <!-- 根容器 -->
   <div class="min-h-screen">
     
-  <!-- 网络状态提示 - 保留原有的离线提示，添加弱网提示 -->
-      <div v-if="!isOnline" 
-          class="bg-yellow-50 p-4">
-          <div class="flex items-center justify-center text-yellow-700">
-            <span>{{ t('home.network.offline') }}</span>
-          </div>
-      </div>
-      <div v-else-if="isSlowConnection" 
-          class="bg-blue-50 p-4">
-          <div class="flex items-center justify-center text-blue-700">
-            <span>{{ t('home.network.weak') }}</span>
-          </div>
-      </div>
-
     <!-- 顶部导航栏 -->
   <header class="fixed top-0 left-0 right-0 bg-white z-40 w-full">
       <!-- 导航栏内容容器 -->
@@ -43,19 +29,21 @@
             <!-- 移动端显示简短文案 -->
             <span class="sm:hidden">Quick video & audio digest </span>
             <!-- 桌面端显示完整文案 -->
-            <span class="hidden sm:inline">Quick video & audio digest - no rewatching</span>
+            <span class="hidden sm:inline">Quick video & audio digest</span>
           </p>
         </div>
 
      <!-- 2024-03-19: Early Access横幅 - 仅在桌面端显示在导航栏中 -->
-     <div class="hidden sm:block bg-white py-2 text-center text-pink-500 font-medium relative -ml-40">
-        <div 
-          class="cursor-pointer"
-          @mouseenter="!feedbackStore.disableHoverEffect && feedbackStore.showForm()"
+     <div class="hidden sm:block bg-white py-2 text-center text-pink-500 font-medium relative -ml-20">
+      <div 
+          class="cursor-pointer group"
           @click="feedbackStore.showForm()"
         >
-          <p class="animate-bounce text-base">
-            {{ t('home.earlyAccess.feedback') }}
+          <p class="text-base animate-bounce  text-pink-500 ">
+            <span class="">📨 Dear early adopters, </span>
+            <span class="text-blue-500 font-medium group-hover:text-blue-600 transition-colors">Click here</span>
+            <span class=""> to share your feedback and shape our future!</span>
+            <span class="ml-1 inline-block animate-bounce">📨</span>
           </p>
         </div>
       </div>
@@ -128,12 +116,11 @@
               <!-- 渠道图标 - 移动端和桌面端分别处理 -->
               <div class="flex items-center gap-2 sm:gap-3 ml-0 sm:ml-4">
                 <img 
-                  v-for="(channel, index) in ['youtube', 'apple-podcast', 'spotify', 'web']"
+                  v-for="(channel) in ['youtube', 'apple-podcast', 'spotify', 'web']"
                   :key="channel"
                   :src="`/images/icons/${channel}.svg`"
                   :alt="channel"
                   class="w-4 h-4 sm:w-6 sm:h-6"
-                  :title="t(`home.channels.${channel}`)"
                 />
               </div>
             </div>
@@ -142,17 +129,12 @@
             <div class="flex flex-col sm:flex-1 w-full sm:flex-row items-center gap-2 sm:gap-4">
               <!-- 文章URL输入框 -->
               <div class="relative flex-grow w-full">
-                <img 
-                  src="/images/icons/add.svg" 
-                  alt="Add" 
-                  class="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 cursor-pointer"
-                  @click="handleAddIconClick"
-                />
+
                 <input
                   type="text"
                   v-model="requestUrl"
                   :placeholder="t('summarize.urlPlaceholder')"
-                  :class="['w-full sm:flex-grow pl-12 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300', 
+                  :class="['w-full sm:flex-grow pl-3 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300', 
                     { 'input-highlight': isHighlighted }]"
                   @focus="handleInputFocus"
                   @click="handleInputClick"
@@ -199,7 +181,6 @@
                   class="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                 >
                   <img src="/images/icons/upload.svg" alt="Upload" class="w-5 h-5" />
-                  {{ t('upload.button.newUpload') }}
                 </button>
               </div>
             </div>
@@ -217,14 +198,14 @@
               </template>
 
               <!-- 2024-03-24: 添加空状态下的兜底卡片 -->
-              <template v-else-if="authStore.isAuthenticated && !isLoading">
+              <template v-else-if="!isLoading">
                 <div class="empty-article-card" @click="handleEmptyCardClick">
                   <!-- 上半部分：标题和图片区域 -->
                   <div class="flex justify-between gap-3">
                     <!-- 左侧标题区域 -->
                     <div class="flex flex-col gap-2 flex-1">
                       <div class="text-xl font-semibold text-gray-900">
-                        Upload your first summary
+                        {{ 'Paste your first link'}}
                       </div>
                       <div class="text-base text-gray-500 mt-1">
                         Support YouTube, Spotify, Apple Podcast 
@@ -232,7 +213,7 @@
                     </div>
                     <!-- 右侧图片区域 -->
                     <div class="w-[120px] h-[120px] bg-gray-50 rounded-xl flex items-center justify-center">
-                      <img src="/images/icons/upload.svg" alt="Link" class="w-12 h-12">
+                      <img :src="'/images/icons/upload.svg'" alt="Link" class="w-12 h-12">
                     </div>
                   </div>
 
@@ -241,9 +222,6 @@
 
                   <!-- 底部图标区域 -->
                   <div class="card-bottom">
-                    <!-- 左侧留空 -->
-                    <div class="author-info">
-                    </div>
 
                     <!-- 右侧渠道图标 -->
                     <div class="channel-date">
@@ -309,50 +287,10 @@
             </div>
           </div>
           
-          <!-- 没有更多数据的提示 -->
-          <div v-if="!isLoading && (!hasMore || !authStore.isAuthenticated)" class="text-center py-4 text-gray-500">
-            {{ authStore.isAuthenticated 
-              ? (filteredArticles.length === 0 
-                ? 'Paste a link to see summaries in 2 minutes'
-                : t('common.noMoreData')) 
-              : t('common.loginToViewMore') }}
-          </div>
         </div>
     </pull-to-refresh>
 
 
-    <!-- 网络状态提示 -->
-    <div 
-      v-if="!isOnline" 
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    >
-      <div 
-        class="bg-white p-6 rounded-lg shadow-lg w-[600px] max-h-[90vh] overflow-y-auto"
-        @click.stop
-      >
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold">{{ t('home.network.offline') }}</h2>
-          <button class="text-gray-500">
-            <i class="el-icon-close"></i>
-          </button>
-        </div>
-
-        <div class="flex justify-center items-center mb-4">
-          <div 
-            class="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin"
-          ></div>
-        </div>
-
-        <div class="mt-6 flex justify-end space-x-3">
-          <button 
-            @click="checkConnection" 
-            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            {{ t('common.retry') }}
-          </button>
-        </div>
-      </div>
-    </div>
 
     <!-- 将 modal 移到 pull-to-refresh 外部 -->
     <Teleport to="body">
@@ -383,25 +321,17 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted, onActivated, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, onActivated, nextTick } from 'vue'
 import ArticleCard from '../components/ArticleCard.vue'
-import UploadCard from '../components/UploadCard.vue'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
 import LoginModal from '../components/LoginModal.vue'
-import type { Article as ArticleType, ArticleRequest, OptimisticCard, KeepArticleView, KeepArticleRequest, Author, DbArticleRequestInsert, ArticleStatus } from '../types/article'
-import AuthorSelect from '../components/AuthorSelect.vue'
-import ArticleForm from '../components/ArticleForm.vue'
-import { getChannelIcon } from '../utils/icons'
+import type { Article as ArticleType, ArticleStatus } from '../types/article'
 import ArticleRequestForm from '../components/ArticleRequestForm.vue'
 import { useI18n } from 'vue-i18n'
-import LanguageSwitch from '../components/LanguageSwitch.vue'
 import PullToRefresh from '../components/PullToRefresh.vue'
 import localforage from 'localforage'
-import { trackEvent, type EventType } from '../utils/analytics'
-import type { Database } from '../types/supabase'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import FeedbackForm from '@/components/feedback/FeedbackForm.vue'
 import { useFeedbackStore } from '../stores/feedback'
 
@@ -413,33 +343,12 @@ const selectedChannels = ref<string[]>([])
 const selectedAuthors = ref<number[]>([])
 const requestUrl = ref('')
 
-// 预定义的标签
-const PREDEFINED_TAGS = ['24小时', '博客', '论文', '微', '视频']
 
 // 添加类型定义
 interface Author {
   id: number
   name: string
   icon?: string
-}
-
-interface ArticleBase {
-  id: string
-  title: string
-  cover_image_url?: string
-  channel?: string
-  publish_date?: string
-  created_at: string
-  tags?: string[]
-  author_id?: number
-  author?: Author
-}
-
-interface Article extends ArticleBase {
-  is_author: boolean
-  status: 'processed'
-  content: string
-  original_link: string
 }
 
 interface ArticleRequest {
@@ -464,16 +373,6 @@ interface OptimisticCard {
   requestId: string
 }
 
-interface ArticleView {
-  article_id: string
-  created_at: string
-  is_author: boolean
-  article: ArticleBase & {
-    content?: string | null
-    original_link?: string | null
-  }
-}
-
 interface KeepArticleView {
   article_id: string
   created_at: string
@@ -493,27 +392,12 @@ interface KeepArticleView {
   }
 }
 
-interface KeepArticleRequest {
-  id: string
-  url: string
-  status: 'processing' | 'processed' | 'failed'
-  created_at: string
-  error_message?: string
-  original_url: string
-  platform?: string
-  article_id?: string
-  user_id: string
-}
 
-type DbClient = SupabaseClient<Database>
 
 // 修改变量定义
 const articles = ref<(ArticleType | ArticleRequest)[]>([])
 const optimisticCards = ref<OptimisticCard[]>([])
 const authors = ref<Author[]>([])
-
-// 用预定义的标签替代动态计算的标签
-const tags = computed(() => PREDEFINED_TAGS)
 
 // 分页相关的状态
 const pageSize = 18 // 每加载的文章数量
@@ -559,6 +443,7 @@ const startPolling = () => {
         ...optimisticCards.value.map(card => card.requestId)
       ].filter(Boolean) as string[]
 
+      // 2024-03-24: 如果没有处理中的请求，停止轮询并返回
       if (processingIds.length === 0) {
         stopPolling()
         return
@@ -574,7 +459,17 @@ const startPolling = () => {
 
       // 更新状态
       let hasProcessedItems = false
-      updatedRequests.forEach(request => {
+      const typedRequests = updatedRequests as unknown as {
+        id: string
+        original_url: string
+        status: ArticleStatus
+        created_at: string
+        error_message?: string
+        platform?: string
+        article_id?: string
+      }[]
+      
+      typedRequests.forEach(request => {
         if (request.status === 'processed') {
           hasProcessedItems = true
           // 移除对应的乐观更新卡片
@@ -591,11 +486,14 @@ const startPolling = () => {
             article => 'requestId' in article && article.requestId === request.id
           )
           if (index !== -1) {
-            articles.value[index] = {
+            const failedRequest = {
               ...articles.value[index],
-              status: 'failed',
-              error_message: request.error_message
-            }
+              status: 'failed' as const,
+              error_message: request.error_message,
+              url: (articles.value[index] as ArticleRequest).url,
+              original_url: (articles.value[index] as ArticleRequest).original_url
+            } as ArticleRequest
+            articles.value[index] = failedRequest
           }
           // 移除对应的乐观更新卡片
           optimisticCards.value = optimisticCards.value.filter(
@@ -607,7 +505,7 @@ const startPolling = () => {
       // 只有当有处理完成的项目时，才刷新文章列表获取新的文章
       if (hasProcessedItems) {
         // 获取最新的已处理文章
-        const { data: newArticles } = await (supabase as DbClient)
+        const { data: newArticles } = await supabase
           .from('keep_article_views')
           .select(`
             article_id,
@@ -633,7 +531,7 @@ const startPolling = () => {
 
         if (newArticles) {
           // 处理新文章数据
-          const validNewArticles = (newArticles as KeepArticleView[]).map(view => ({
+          const validNewArticles = ((newArticles || []) as unknown as KeepArticleView[]).map(view => ({
             ...view.article,
             is_author: view.is_author,
             status: 'processed' as const,
@@ -649,7 +547,8 @@ const startPolling = () => {
 
           // 保留现有的处理中和失败状态的请求
           const existingRequests = articles.value.filter(
-            article => 'status' in article && article.status !== 'processed'
+            article => 'status' in article && 
+            (article.status === 'processing' || article.status === 'failed')  // 2024-03-24: 明确保留失败状态
           )
 
           // 合并新文章和现有的请求
@@ -701,17 +600,27 @@ const addOptimisticCard = async (url: string) => {
       optimisticCards.value = optimisticCards.value.filter(c => c.id !== id)
 
       // 如果是处理中状态，添加到文章列表
-      if (existingRequest.status === 'processing') {
+      const typedRequest = existingRequest as unknown as {
+        id: string
+        original_url: string
+        status: ArticleStatus
+        created_at: string
+        error_message?: string
+        platform?: string
+        article_id?: string
+      }
+      
+      if (typedRequest.status === 'processing') {
         const request = {
-          id: existingRequest.id,
-          url: existingRequest.original_url,
-          status: existingRequest.status,
-          created_at: existingRequest.created_at,
-          error_message: existingRequest.error_message,
-          original_url: existingRequest.original_url,
-          platform: existingRequest.platform,
-          article_id: existingRequest.article_id,
-          requestId: existingRequest.id
+          id: typedRequest.id,
+          url: typedRequest.original_url,
+          status: typedRequest.status,
+          created_at: typedRequest.created_at,
+          error_message: typedRequest.error_message,
+          original_url: typedRequest.original_url,
+          platform: typedRequest.platform,
+          article_id: typedRequest.article_id,
+          requestId: typedRequest.id
         } as ArticleRequest
 
         articles.value = [request, ...articles.value]
@@ -736,21 +645,24 @@ const getPlatformFromUrl = (url: string): string => {
   return 'webpage'
 }
 
-// 添加新的状态来追踪是否已经加载过处理中和失败的请求
-const hasLoadedRequests = ref(false)
 
 // 修改 fetchArticles 函数
 const fetchArticles = async (isRefresh: boolean = false) => {
+  // 添加登录状态检查
+  if (!authStore.isAuthenticated) {
+    console.log('[fetchArticles] User not authenticated, skipping fetch')
+    return
+  }
+
   try {
     if (isRefresh) {
       currentPage.value = 1
-      hasLoadedRequests.value = false  // 重置请求加载状态
     }
 
     isLoading.value = true
 
     // 构建查询
-    const { data: views, error } = await (supabase as DbClient)
+    const { data: views, error } = await supabase 
       .from('keep_article_views')
       .select(`
         article_id,
@@ -776,10 +688,10 @@ const fetchArticles = async (isRefresh: boolean = false) => {
 
     if (error) throw error
 
-    // 只在首次加载或刷新时获取处理中和失败的请求
+    // 修改：每次刷新或第一页加载时都获取处理中和失败的请求
     let requests: any[] = []
-    if (!hasLoadedRequests.value) {
-      const { data: requestsData } = await (supabase as DbClient)
+    if (isRefresh || currentPage.value === 1) {
+      const { data: requestsData } = await supabase 
         .from('keep_article_requests')
         .select('*')
         .eq('user_id', authStore.user?.id)
@@ -787,11 +699,10 @@ const fetchArticles = async (isRefresh: boolean = false) => {
         .order('created_at', { ascending: false })
       
       requests = requestsData || []
-      hasLoadedRequests.value = true  // 标记已加载请求
     }
 
     // 处理文章数据
-    const validArticles = ((views || []) as KeepArticleView[]).map(view => ({
+    const validArticles = ((views || []) as unknown as KeepArticleView[]).map(view => ({
       ...view.article,
       is_author: view.is_author,
       status: 'processed' as const,
@@ -819,11 +730,8 @@ const fetchArticles = async (isRefresh: boolean = false) => {
     } as ArticleRequest))
     
     // 合并文章列表
-    if (isRefresh) {
-      // 如果是刷新，则完全替换现有列表
-      articles.value = [...typedRequests, ...validArticles]
-    } else if (currentPage.value === 1) {
-      // 如果是第一页，包含处理中和失败的请求
+    if (isRefresh || currentPage.value === 1) {
+      // 如果是刷新或第一页，包含处理中和失败的请求
       articles.value = [...typedRequests, ...validArticles]
     } else {
       // 如果是加载更多，只添加新的文章
@@ -861,26 +769,6 @@ const fetchArticles = async (isRefresh: boolean = false) => {
 const filteredArticles = computed(() => {
   let result = [...optimisticCards.value, ...articles.value]
 
-  // 标签筛选
-  if (selectedTag.value !== 'all') {
-    result = result.filter(article => 
-      'tags' in article && Array.isArray(article.tags) && article.tags.includes(selectedTag.value)
-    )
-  }
-
-  // 渠道筛选
-  if (selectedChannels.value.length > 0) {
-    result = result.filter(article => 
-      'channel' in article && typeof article.channel === 'string' && selectedChannels.value.includes(article.channel)
-    )
-  }
-
-  // 作者筛选
-  if (selectedAuthors.value.length > 0) {
-    result = result.filter(article => 
-      'author_id' in article && typeof article.author_id === 'number' && selectedAuthors.value.includes(article.author_id)
-    )
-  }
 
   return result
 })
@@ -918,58 +806,6 @@ onUnmounted(() => {
   stopPolling()
 })
 
-// 添加 loading 状态
-const isLoadingAuthors = ref(true)
-
-// 改作者获取函数
-const fetchAuthors = async () => {
-  try {
-    console.log('[fetchAuthors] Starting to fetch authors')
-    isLoadingAuthors.value = true
-
-    // 1. 先从 IndexedDB 获取缓存数据
-    const cachedAuthors = await localforage.getItem('authors-cache')
-    if (cachedAuthors) {
-      console.log('[fetchAuthors] Found cached authors:', cachedAuthors)
-      authors.value = cachedAuthors as Author[]
-      isLoadingAuthors.value = false
-    }
-
-    // 2. 如果离线且有缓存，直接返回
-    if (!navigator.onLine && cachedAuthors) {
-      console.log('[fetchAuthors] Offline mode, using cached data')
-      return
-    }
-
-    console.log('[fetchAuthors] Fetching authors from API')
-    // 3. 从 API 获取数据
-    const { data, error } = await supabase
-      .from('keep_authors')
-      .select('id, name, icon')
-      .order('name')
-
-    if (error) {
-      console.error('[fetchAuthors] API error:', error)
-      throw error
-    }
-
-    console.log('[fetchAuthors] Received authors from API:', data)
-    if (data && data.length > 0) {
-      // 4. 更新 IndexedDB 缓存和状态
-      await localforage.setItem('authors-cache', data)
-      authors.value = data
-    } else {
-      console.warn('[fetchAuthors] No authors data received from API')
-    }
-    
-  } catch (error) {
-    console.error('[fetchAuthors] Error:', error)
-    ElMessage.error(t('error.getAuthorsFailed'))
-  } finally {
-    console.log('[fetchAuthors] Completed, setting isLoadingAuthors to false')
-    isLoadingAuthors.value = false
-  }
-}
 
 // 修改登录成功的处理函数
 const handleLoginSuccess = async () => {
@@ -988,33 +824,13 @@ const handleLoginSuccess = async () => {
     
     console.log('[handleLoginSuccess] Loading data after login')
     // 2024-03-15: 登录成功后初始化作者相关状态
-    isLoadingAuthors.value = true
 
     try {
-      // 先恢复缓存的状态
-      const [savedSelectedAuthors, savedExpanded] = await Promise.all([
-        localforage.getItem('selected-authors'),
-        localforage.getItem('authors-expanded')
-      ])
-
-      if (savedSelectedAuthors) {
-        selectedAuthors.value = savedSelectedAuthors as number[]
-      }
-      if (savedExpanded !== null) {
-        isExpanded.value = savedExpanded as boolean
-      }
-
-      // 获取文章和作者数据
       await Promise.all([
-        fetchArticles(),
-        fetchAuthors(),
-        updateCacheTimestamp()
+        fetchArticles()
       ])
 
-      // 刷新我的上传区域
-      if (myUploadsRef.value) {
-        await myUploadsRef.value.fetchUserArticles()
-      }
+      
     } catch (error) {
       console.error('[handleLoginSuccess] Error loading data:', error)
       ElMessage.error(t('error.loginFailed'))
@@ -1037,43 +853,27 @@ const handleLoginSuccess = async () => {
 onMounted(async () => {
   console.log('[onMounted] Component mounting, auth status:', authStore.isAuthenticated)
   
-  // 2024-03-21: 先检查登录状态，未登录则显示登录框
+  // 先检查登录状态
   await authStore.loadUser()
   console.log('[onMounted] User loaded, new auth status:', authStore.isAuthenticated)
   
   if (!authStore.isAuthenticated) {
     showLoginModal.value = true
+    // 未登录时直接返回，不执行后续数据获取
     return
   }
   
-  // 如果用户已登录，初始化作者相关状态
-  if (authStore.isAuthenticated) {
-    console.log('[onMounted] User is authenticated, initializing author data')
-    isLoadingAuthors.value = true
+  // 只在登录状态下执行数据获取
+  console.log('[onMounted] User is authenticated, initializing data')
 
-    try {
-      // 先恢复缓存的状态
-      const [savedSelectedAuthors, savedExpanded] = await Promise.all([
-        localforage.getItem('selected-authors'),
-        localforage.getItem('authors-expanded')
-      ])
-
-      if (savedSelectedAuthors) {
-        selectedAuthors.value = savedSelectedAuthors as number[]
-      }
-      if (savedExpanded !== null) {
-        isExpanded.value = savedExpanded as boolean
-      }
-
-      // 获取文章和作者数据
-      await Promise.all([
-        fetchArticles(),
-        fetchAuthors(),
-        updateCacheTimestamp()
-      ])
-    } catch (error) {
-      console.error('[onMounted] Error loading data:', error)
-    }
+  try {
+    // 获取文章和作者数据
+    await Promise.all([
+      fetchArticles()
+    ])
+  } catch (error) {
+    console.error('[onMounted] Error loading data:', error)
+  } finally {
   }
   
   // 预加载常用资源
@@ -1096,45 +896,14 @@ onMounted(async () => {
   // 检查是否有待处理的URL
   const pendingUrl = localStorage.getItem('pendingUploadUrl')
   if (pendingUrl && authStore.isAuthenticated) {
-    // 确保用户信息已加载
-    if (!authStore.user) {
-      await authStore.loadUser()
-    }
-    
     // 等待组件完全挂载
     await nextTick()
     
     // 如果用户已登录且组件已挂载，则打开上传modal
-    if (articleRequestFormRef.value && authStore.isAuthenticated) {
-      articleRequestFormRef.value.openModalWithUrl(pendingUrl)
-      localStorage.removeItem('pendingUploadUrl')
-    }
   }
 })
 
-const articleForm = ref<Partial<ArticleType>>({
-  title: '',
-  content: '',
-  author_id: undefined,
-  tags: [],
-  channel: '',
-  publish_date: null,
-  original_link: null
-})
 
-const selectTag = (tag: string): void => {
-  selectedTag.value = tag
-  resetPageState() // 重置并新获取数据
-}
-
-const handleUpload = () => {
-  if (!authStore.isAuthenticated) {
-    ElMessage.warning(t('error.loginFirst'))
-    showLoginModal.value = true
-    return
-  }
-  showUploadModal.value = true
-}
 
 const handleLogout = async () => {
   try {
@@ -1149,8 +918,6 @@ const handleLogout = async () => {
     hasMore.value = true
     isLoading.value = false
     
-    // 清理缓存
-    await clearCache()
     
     // 执行登出
     await authStore.signOut()
@@ -1162,255 +929,13 @@ const handleLogout = async () => {
   }
 }
 
-const resetForm = () => {
-  articleForm.value = {
-    title: '',
-    content: '',
-    author_id: undefined,
-    tags: [],
-    channel: '',
-    publish_date: null,
-    original_link: null
-  }
 
-  // 提交成功后清除稿
-  localStorage.removeItem('articleFormDraft')
-}
 
-// 在组顶部定义 formRef
-const formRef = ref<InstanceType<typeof ArticleForm> | null>(null)
-
-const submitArticle = async () => {
-  try {
-    if (!authStore.isAuthenticated) {
-      ElMessage.warning(t('error.loginFirst'))
-      showLoginModal.value = true
-      return
-    }
-
-    if (!articleForm.value.title || !articleForm.value.content || !articleForm.value.author_id) {
-      ElMessage.error(t('error.requiredArticleFields'))
-      return
-    }
-    
-    const submitData = {
-      title: articleForm.value.title,
-      content: articleForm.value.content,
-      author_id: articleForm.value.author_id,
-      tags: articleForm.value.tags || [],
-      channel: articleForm.value.channel || '',
-      publish_date: articleForm.value.publish_date,
-      original_link: articleForm.value.original_link,
-      user_id: authStore.user?.id
-    }
-
-    // 提交文章基本信息
-    const { data, error } = await supabase
-      .from('keep_articles')
-      .insert([submitData])
-      .select()
-      .single()
-
-    if (error) throw error
-
-    if (formRef.value) {
-      // 提交小节内容
-      const sectionsData = formRef.value.getSectionsData()
-      if (sectionsData.length > 0) {
-        const { error: sectionsError } = await supabase
-          .from('keep_article_sections')
-          .insert(sectionsData.map(section => ({
-            ...section,
-            article_id: data.id
-          })))
-
-        if (sectionsError) throw sectionsError
-      }
-    }
-
-    ElMessage.success(t('error.updateSuccess'))
-
-    showUploadModal.value = false
-    resetForm()
-    await fetchArticles()
-  } catch (error) {
-    console.error('提交文章时出错:', error)
-    ElMessage.error(t('error.submitArticleFailed'))
-  }
-}
-
-// 切换道选择
-const toggleChannel = (channel: string) => {
-  const index = selectedChannels.value.indexOf(channel)
-  if (index === -1) {
-    selectedChannels.value.push(channel)
-  } else {
-    selectedChannels.value.splice(index, 1)
-  }
-  resetPageState() // 重置并重新获取数据
-}
-
-// 切换作者选择
-const toggleAuthor = async (author: Author) => {
-  const index = selectedAuthors.value.indexOf(author.id)
-  if (index === -1) {
-    selectedAuthors.value.push(author.id)
-  } else {
-    selectedAuthors.value.splice(index, 1)
-  }
-  // 保存选择状态
-  await localforage.setItem('selected-authors', selectedAuthors.value)
-  resetPageState() // 重置并重新获取数据
-}
 
 const { t } = useI18n()
 
-// 修改 getChannelKey 函数
-const getChannelKey = (channel: string): string => {
-  const keyMap: Record<string, string> = {
-    'YouTube': 'youtube',
-    'Apple Podcast': 'applePodcast',
-    'Spotify': 'spotify',
-    'webpage': 'webpage'
-  }
-  return keyMap[channel] || channel.toLowerCase()
-}
 
-// 使用计算属性来根据屏幕大小返回不同的显示数量
-const defaultDisplayCount = computed(() => {
-  // 使用 window.innerWidth 获取当前视口度
-  const width = window.innerWidth
-  
-  // >= 1280px (xl): 显示16个 (4行)
-  if (width >= 1280) return 16
-  // >= 1024px (lg): 显示6个 (3行)
-  if (width >= 1024) return 6
-  // >= 768px (md): 显示4个 (2行)
-  if (width >= 768) return 4
-  // < 768px: 显示4个 (2行)
-  return 4
-})
 
-const isExpanded = ref(false)
-
-// 修改展开/收起处理
-const toggleExpand = async () => {
-  isExpanded.value = !isExpanded.value
-  // 保存展开状态
-  await localforage.setItem('authors-expanded', isExpanded.value)
-}
-
-// 监听窗口大小变化
-onMounted(() => {
-  const handleResize = () => {
-    // 果当前显示的作者数量大于新的默认显示数量，则收起列表
-    if (!isExpanded.value && displayedAuthors.value.length > defaultDisplayCount.value) {
-      isExpanded.value = false
-    }
-  }
-
-  window.addEventListener('resize', handleResize)
-  
-  // 组件卸载时移事件监听
-  onUnmounted(() => {
-    window.removeEventListener('resize', handleResize)
-  })
-})
-
-// 计算要显示作者列表
-const displayedAuthors = computed(() => {
-  return isExpanded.value ? authors.value : authors.value.slice(0, defaultDisplayCount.value)
-})
-
-// 添加网络状态检测
-const isSlowConnection = computed(() => {
-  if ('connection' in navigator) {
-    const conn = (navigator as any).connection
-    return conn.effectiveType === '2g' || conn.effectiveType === 'slow-2g'
-  }
-  return false
-})
-
-// 监听网络状态变化
-onMounted(() => {
-  if ('connection' in navigator) {
-    (navigator as any).connection.addEventListener('change', () => {
-      // 网络状态变化时重新获取数据
-      if (isOnline.value && !isSlowConnection.value) {
-        fetchArticles()
-      }
-    })
-  }
-})
-
-// 网络状态检测
-const isOnline = ref(navigator.onLine)
-
-// 查网络连接
-const checkConnection = async () => {
-  try {
-    await fetch('/api/health-check')
-    isOnline.value = true
-  } catch (error) {
-    isOnline.value = false
-  }
-}
-
-// 监听网络状态变化
-onMounted(() => {
-  window.addEventListener('online', () => {
-    isOnline.value = true
-    fetchArticles()
-  })
-  
-  window.addEventListener('offline', () => {
-    isOnline.value = false
-  })
-})
-
-onUnmounted(() => {
-  window.removeEventListener('online', () => {})
-  window.removeEventListener('offline', () => {})
-})
-
-// 添加清理缓存的函数
-const clearCache = async () => {
-  try {
-    await localforage.removeItem('articles-cache')
-    await localforage.removeItem('authors-cache')
-    await localforage.removeItem('selected-authors')
-    await localforage.removeItem('authors-expanded')
-  } catch (error) {
-    console.error('清理缓存失败:', error)
-  }
-}
-
-// 在组件卸载清理过期缓存
-onUnmounted(async () => {
-  // 清理超过24小时的缓存
-  const cacheTime = await localforage.getItem('cache-timestamp')
-  if (cacheTime && Date.now() - (cacheTime as number) > 24 * 60 * 60 * 1000) {
-    await clearCache()
-  }
-})
-
-// 在数据更新时记存时间
-const updateCacheTimestamp = async () => {
-  await localforage.setItem('cache-timestamp', Date.now())
-}
-
-// 添加 getChannelIcon 函数
-const getChannelIcon = (channel: string): string => {
-  const iconMap: Record<string, string> = {
-    'YouTube': 'youtube.svg',
-    'youtube': 'youtube.svg',
-    'Apple Podcast': 'apple-podcast.svg',
-    'Spotify': 'spotify.svg',
-    'spotify': 'spotify.svg',
-    'webpage': 'web.svg'
-  }
-  return iconMap[channel] || ''
-}
 
 // 添加滚动加载处理函数
 const handleScroll = () => {
@@ -1457,8 +982,6 @@ const handlePaste = async () => {
   }
 }
 
-// 添加临时存储url的变量
-const pendingUrl = ref('')
 
 // 修改 submitRequest 函数
 const submitRequest = (url?: string) => {
@@ -1473,12 +996,6 @@ const submitRequest = (url?: string) => {
   showUploadModal.value = true
 }
 
-// 添加刷新处理函数
-const handleUploadRefresh = () => {
-  if (myUploadsRef.value) {
-    myUploadsRef.value.fetchUserArticles()
-  }
-}
 
 // 添加新的处理函数
 const handleArticleRefresh = async () => {
@@ -1491,50 +1008,6 @@ const handleUploadSuccess = (url: string) => {
   addOptimisticCard(url)
 }
 
-// 添加 ref 定义
-const myUploadsRef = ref<InstanceType<typeof MyUploadsSection> | null>(null)
-
-// 在相关方法中添加追踪
-const handleArticleClick = (article: ArticleType) => {
-  trackEvent('article_click_from_home', {
-    articleId: article.id,
-    title: article.title
-  })
-}
-
-const handleCategoryChange = (category: string) => {
-  trackEvent('category_change', {
-    category: category
-  })
-}
-
-// 添加showContactInfo状态
-const showContactInfo = ref(false)
-
-// 修改点击外部关闭联系方式弹窗的逻辑
-onMounted(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    const target = event.target as HTMLElement
-    // 移除自动关闭逻辑
-  }
-  
-  document.addEventListener('click', handleClickOutside)
-  
-  onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside)
-  })
-})
-
-// 2024-03-19: 添加图片处理函数
-const getContactImage = (imageName: string): string => {
-  try {
-    // 尝试使用动态导入
-    return new URL(`/public/images/covers/${imageName}`, import.meta.url).href
-  } catch (error) {
-    console.error('Error loading image:', error)
-    return '' // 返回空字符串或默认图片路径
-  }
-}
 
 // 修改 handleNewUploadClick 函数
 const handleNewUploadClick = (type: 'url' | 'web' | 'file' = 'url') => {
@@ -1609,6 +1082,7 @@ const showAnimatedPlaceholder = ref(true)
 
 // 2024-03-22: 添加点击图标的处理函数
 const handleAddIconClick = () => {
+  // 触发placeholder文字高亮动画
   isHighlighted.value = true
   showAnimatedPlaceholder.value = false
   
@@ -1617,6 +1091,12 @@ const handleAddIconClick = () => {
     isHighlighted.value = false
     showAnimatedPlaceholder.value = true
   }, 600)
+
+  // 获取输入框元素并聚焦
+  const inputElement = document.querySelector('input[type="text"]') as HTMLInputElement
+  if (inputElement) {
+    inputElement.focus()
+  }
 }
 
 // 2024-03-22: 修改输入框焦点处理函数
@@ -1759,7 +1239,7 @@ const handleEmptyCardClick = async () => {
 }
 
 @media (min-width: 400px) {
-  .card-container .w-[120px] {
+  .card-container [class*="w-[120px]"] {
     width: 190px;
   }
 }
@@ -1795,44 +1275,29 @@ const handleEmptyCardClick = async () => {
 }
 
 /* 2024-03-22: 添加输入框高亮动画 */
-.input-highlight {
-  animation: highlight 0.6s ease-out;
+.input-highlight::placeholder {
+  animation: textHighlight 1s ease-out;
+  color: #3B82F6;
 }
 
-@keyframes highlight {
+@keyframes textHighlight {
   0% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
-    border-color: #3B82F6;
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-    border-color: #3B82F6;
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-    border-color: #E5E7EB;
-  }
-}
-
-/* 2024-03-22: 添加placeholder文字动画 */
-input::placeholder {
-  transition: opacity 0.3s ease;
-}
-
-input.input-highlight::placeholder {
-  animation: placeholderPulse 0.6s ease-in-out;
-}
-
-@keyframes placeholderPulse {
-  0% {
-    opacity: 0.5;
+    opacity: 0.3;
+    transform: scale(1);
   }
   50% {
     opacity: 1;
+    transform: scale(1.5);
   }
   100% {
-    opacity: 0.5;
+    opacity: 0.3;
+    transform: scale(1);
   }
+}
+
+/* 2024-03-22: 修改placeholder文字动画 */
+input::placeholder {
+  transition: all 0.3s ease;
 }
 
 /* 添加空状态卡片样式 */

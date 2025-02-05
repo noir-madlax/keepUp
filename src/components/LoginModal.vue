@@ -8,8 +8,7 @@
       @click.stop
     >
       <div class="text-center mb-6">
-        <h2 class="text-2xl font-bold">Sign In</h2>
-        <p class="text-gray-600 mt-2">Sign in or create an account</p>
+        <h2 class="text-2xl font-bold">Sign in / Sign up</h2>
       </div>
 
       <!-- 邮箱登录表单 -->

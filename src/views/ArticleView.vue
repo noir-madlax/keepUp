@@ -50,14 +50,16 @@
           </div>
 
           <!-- 2024-03-19: Early Access横幅 - 仅在桌面端显示在导航栏中 -->
-          <div class="hidden sm:block bg-white py-2 text-center text-pink-500 font-medium relative mx-4">
+          <div class="hidden sm:block bg-white py-2 text-center text-pink-500 font-medium relative -ml-20">
             <div 
               class="cursor-pointer"
-              @mouseenter="!feedbackStore.disableHoverEffect && feedbackStore.showForm()"
               @click="feedbackStore.showForm()"
             >
-              <p class="animate-bounce text-base">
-                {{ t('home.earlyAccess.feedback') }}
+              <p class="text-base animate-bounce text-pink-500">
+                <span class="">📨 Dear early adopters, </span>
+                <span class="text-blue-500 font-medium group-hover:text-blue-600 transition-colors">Click here</span>
+                <span class=""> to share your feedback and shape our future!</span>
+                <span class="ml-1 inline-block animate-bounce">📨</span>
               </p>
             </div>
           </div>
