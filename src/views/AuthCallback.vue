@@ -1,6 +1,6 @@
 <template>
   <div class="flex items-center justify-center min-h-screen">
-    <p>登录中...</p>
+    <p>Signing in...</p>
   </div>
 </template>
 
@@ -8,32 +8,45 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { supabase } from '../supabaseClient'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 onMounted(async () => {
   try {
-    // 设置一个超时，确保不会永远停留在这个页面
+    // First handle the auth state change
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError) throw sessionError
+
+    // Check if this is a password reset callback
+    const type = new URLSearchParams(window.location.search).get('type')
+    if (type === 'recovery') {
+      // PKCE流程下不需要在此处理密码重置
+      await router.push('/reset-password')
+      return
+    }
+
+    // Set a timeout to ensure we don't stay on this page forever
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('认证超时')), 5000)
+      setTimeout(() => reject(new Error('Authentication timeout')), 5000)
     })
 
-    // 等待 supabase 处理认证回调
+    // Wait for supabase to handle auth callback
     const authPromise = authStore.handleAuthCallback()
     
-    // 使用 Promise.race 确保不会永远等待
+    // Use Promise.race to ensure we don't wait forever
     await Promise.race([authPromise, timeoutPromise])
     
-    console.log('认证回调处理成功，准备跳转首页')
+    console.log('Auth callback handled successfully, preparing to redirect')
     
-  } catch (error) {
-    console.error('认证处理出错:', error)
-  } finally {
-    // 无论如何都重定向到首页
-    console.log('开始跳转到首页')
+    // Normal login flow, redirect to home page
     await router.push('/')
-    console.log('跳转完成')
+  } catch (error) {
+    console.error('Auth handling error:', error)
+    // On error, also redirect to home page
+    await router.push('/')
   }
 })
 </script> 

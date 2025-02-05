@@ -1,9 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { defineAsyncComponent } from 'vue'
-import HomeView from '../views/HomeView.vue'
+
 import AdminLayout from '../views/admin/AdminLayout.vue'
 import RequestsView from '../views/admin/RequestsView.vue'
-import ArticleView from '../views/ArticleView.vue'
 import AuthCallback from '../views/AuthCallback.vue'
 import { trackEvent } from '@/utils/analytics'
 
@@ -44,6 +42,11 @@ const router = createRouter({
       path: '/auth/callback',
       name: 'auth-callback',
       component: AuthCallback
+    },
+    {
+      path: '/reset-password',
+      name: 'ResetPassword',
+      component: () => import('../views/ResetPasswordView.vue')
     }
   ]
 })

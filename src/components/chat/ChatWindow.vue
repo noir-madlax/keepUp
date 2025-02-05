@@ -209,7 +209,6 @@
 import { ref, computed, onMounted, onUnmounted, watch, defineExpose } from 'vue'
 import { useChatStore } from '../../stores/chat'
 import { useAuthStore } from '../../stores/auth'
-import { Loading, ArrowRight } from '@element-plus/icons-vue'
 import { format } from 'date-fns'
 import type { ChatSession } from '../../types/chat'
 import { marked } from 'marked'
@@ -217,7 +216,6 @@ import { marked } from 'marked'
 const chatStore = useChatStore()
 const authStore = useAuthStore()
 const messageInput = ref('')
-const isMobile = computed(() => window.innerWidth < 768)
 const selectedSessionId = ref('')
 
 // 2024-01-21 15:10: 定义默认展开高度常量
