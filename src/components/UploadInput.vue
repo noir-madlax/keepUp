@@ -8,12 +8,14 @@
       @keyup.enter="handleNewUploadClick('url')"
       @focus="handleInputFocus"
       @blur="handleInputBlur"
+      @touchend.prevent="handleTouchEnd"
     />
     <img 
       src="/images/icons/enter.svg" 
       alt="Press Enter" 
-      :class="enterIconClass"
+      :class="[enterIconClass, 'cursor-pointer touch-manipulation']"
       @click="handleNewUploadClick('url')"
+      @touchend.prevent="handleNewUploadClick('url')"
     />
   </div>
 </template>
@@ -48,12 +50,20 @@ watch(localUrl, (newVal) => {
   emit('update:modelValue', newVal)
 })
 
+// 处理移动端触摸结束事件
+const handleTouchEnd = (event: TouchEvent) => {
+  // 防止触发其他事件
+  event.preventDefault()
+  // 聚焦输入框
+  const input = event.target as HTMLInputElement
+  input.focus()
+}
+
 // 处理函数
 const handleInputFocus = async () => {
   isHighlighted.value = true
-  if (!('ontouchstart' in window)) {
-    await handlePaste()
-  }
+  // 移除设备类型判断，在所有设备上尝试粘贴
+  await handlePaste()
 }
 
 const handleInputBlur = () => {
@@ -88,4 +98,24 @@ const handleNewUploadClick = (type: 'url') => {
 defineExpose({
   handleNewUploadClick
 })
-</script> 
+</script>
+
+<style scoped>
+/* 增加移动端的交互体验 */
+input {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 确保点击区域足够大 */
+img {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 10px;
+}
+
+/* 禁用移动端的双击缩放 */
+* {
+  touch-action: manipulation;
+}
+</style> 

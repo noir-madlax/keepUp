@@ -21,15 +21,11 @@
             <!-- 网站标题文本 -->
             <h1 class="text-[16px] sm:text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2 whitespace-nowrap">
               {{ t('home.title') }}
-              <span class="hidden sm:inline-block px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
+              <span class="inline-block px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
                 BETA
               </span>
             </h1>
           </div>
-          <!-- 仅在移动端显示介绍文字 -->
-          <p class="sm:hidden mt-1 text-xs bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium animate-pulse whitespace-nowrap">
-            Quick video & audio summary
-          </p>
         </div>
 
      <!-- 2024-03-19: Early Access横幅 - 仅在桌面端显示在导航栏中 -->
@@ -112,7 +108,7 @@
           <div class="text-center mb-8">
             <h2 class="text-3xl sm:text-4xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
               Quick Video & Audio Summary
-              <span class="inline-block px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
+              <span class="hidden sm:inline-block px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
                 BETA
               </span>
             </h2>
