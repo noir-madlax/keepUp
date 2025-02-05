@@ -114,7 +114,7 @@
             </h2>
             <div class="max-w-2xl mx-auto space-y-4">
               <p class="text-lg sm:text-xl text-gray-700">
-                Transform long videos and podcasts into concise summaries
+                Transform long videos and podcasts into concise summaries！
               </p>
               <div class="flex flex-wrap justify-center gap-6 mt-6">
                 <!-- 产品特点 -->
