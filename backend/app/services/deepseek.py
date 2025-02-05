@@ -32,7 +32,7 @@ class DeepseekService:
                     ],
                     "allow_fallbacks": True
                 },
-                "stream": True  # 启用流式响应，发版本更新8下
+                "stream": True  # 启用流式响应，发版本更新9下
             }
             
             # 添加历史消息
