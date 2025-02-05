@@ -292,14 +292,7 @@
 
 
 
-    <!-- 将 modal 移到 pull-to-refresh 外部 -->
-    <Teleport to="body">
-      <article-request-form-modal 
-        v-if="showUploadModal"
-        @close="showUploadModal = false"
-        @refresh="fetchArticles"
-      />
-    </Teleport>
+ 
 
     <!-- 2024-03-24: 添加移动端固定在右下角的反馈按钮 -->
     <div 
@@ -876,19 +869,6 @@ onMounted(async () => {
   } finally {
   }
   
-  // 预加载常用资源
-  const preloadLinks = [
-    '/images/icons/logo.svg',
-    // 其他常用资源...
-  ]
-  
-  preloadLinks.forEach(link => {
-    const preload = document.createElement('link')
-    preload.rel = 'preload'
-    preload.href = link
-    preload.as = link.endsWith('.svg') ? 'image' : 'script'
-    document.head.appendChild(preload)
-  })
 
   // 添加滚动监听
   window.addEventListener('scroll', handleScroll)

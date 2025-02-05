@@ -3,7 +3,6 @@
   <router-link 
     v-if="article.status === 'processed'" 
     :to="`/article/${article.id}`"
-    class="card-container"
     custom
     v-slot="{ navigate }"
   >
@@ -129,11 +128,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { format, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const router = useRouter()
 
 // 2024-03-19: 更新 Props 类型定义
 interface Props {
@@ -261,28 +258,27 @@ const getAuthorName = () => {
 }
 
 const getTitle = () => {
-  if (!props.article.title || props.article.title.trim() === '') {
-    return t('upload.card.fallback.noTitle')
-  }
-  return props.article.title
+  return props.article.title || t('upload.card.fallback.noTitle')
 }
 
 // 2024-03-19: 添加上传时间处理函数
-const getUploadTimeText = (date: string) => {
-  const now = new Date()
-  const uploadDate = new Date(date)
+const getUploadTimeText = (date: string | undefined) => {
+  if (!date) return t('upload.card.fallback.unknownDate')
   
-  const minutesDiff = differenceInMinutes(now, uploadDate)
+  const now = new Date()
+  const uploadTime = new Date(date)
+  
+  const minutesDiff = differenceInMinutes(now, uploadTime)
   if (minutesDiff < 60) {
     return t('upload.card.time.minutes', { minutes: minutesDiff })
   }
   
-  const hoursDiff = differenceInHours(now, uploadDate)
+  const hoursDiff = differenceInHours(now, uploadTime)
   if (hoursDiff < 24) {
     return t('upload.card.time.hours', { hours: hoursDiff })
   }
   
-  const daysDiff = differenceInDays(now, uploadDate)
+  const daysDiff = differenceInDays(now, uploadTime)
   return t('upload.card.time.days', { days: daysDiff })
 }
 
@@ -356,7 +352,6 @@ const truncateUrl = (url?: string): string => {
   line-height: 24px;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
   white-space: normal;
   text-overflow: ellipsis;
 }
