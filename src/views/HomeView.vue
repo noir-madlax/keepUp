@@ -2,6 +2,9 @@
   <!-- 根容器 -->
   <div class="min-h-screen">
     
+    <!-- 加载状态显示 -->
+    <LoadingSpinner v-if="isLoading" />
+
     <!-- 顶部导航栏 -->
   <header class="fixed top-0 left-0 right-0 bg-white z-40 w-full">
       <!-- 导航栏内容容器 -->
@@ -18,18 +21,14 @@
             <!-- 网站标题文本 -->
             <h1 class="text-[16px] sm:text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2 whitespace-nowrap">
               {{ t('home.title') }}
-              <!-- 2024-03-19: 添加beta标记 -->
               <span class="hidden sm:inline-block px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
                 BETA
               </span>
             </h1>
           </div>
-          <!-- 2024-03-22: 添加介绍文字 -->
-          <p class="mt-1 text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium animate-pulse whitespace-nowrap">
-            <!-- 移动端显示简短文案 -->
-            <span class="sm:hidden">Quick video & audio digest </span>
-            <!-- 桌面端显示完整文案 -->
-            <span class="hidden sm:inline">Quick video & audio digest</span>
+          <!-- 仅在移动端显示介绍文字 -->
+          <p class="sm:hidden mt-1 text-xs bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium animate-pulse whitespace-nowrap">
+            Quick video & audio summary
           </p>
         </div>
 
@@ -96,203 +95,182 @@
       class="z-50"
     />
 
-    <!-- 主要内容区域 -->
-    <pull-to-refresh class="mt-[0px]" :onRefresh="handleRefresh">
-      <div class="px-4 sm:px-8 py-6 overflow-x-hidden">
-        <!-- 修改容器最大宽度并确保居中 -->
-        <div class="max-w-screen-2xl mx-auto w-full px-2 sm:px-0">
-          <!-- 修改上传框的外边距和响应式布局 -->
-          <div class="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-6 bg-white rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200">
-            <!-- 标题和图标容器 - 移动端隐藏标题，保留图标 -->
-            <div class="flex items-center gap-2 sm:gap-4 w-full sm:w-auto mb-2 sm:mb-0">
-              <!-- 标题 - 仅在桌面端显示 -->
-              <h3 class="hidden ext-xl sm:text-2xl font-bold text-gray-800 whitespace-nowrap items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 sm:h-8 sm:w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                </svg>
-                {{ t('summarize.title') }}
-              </h3>
-              
-              <!-- 渠道图标 - 移动端和桌面端分别处理 -->
-              <div class="flex items-center gap-2 sm:gap-3 ml-0 sm:ml-4">
-                <img 
-                  v-for="(channel) in ['youtube', 'apple-podcast', 'spotify', 'web']"
-                  :key="channel"
-                  :src="`/images/icons/${channel}.svg`"
-                  :alt="channel"
-                  class="w-4 h-4 sm:w-6 sm:h-6"
-                />
+    <!-- 添加 ArticleRequestForm 组件到顶层 -->
+    <ArticleRequestForm 
+      ref="articleRequestFormRef" hidden
+      @refresh="handleArticleRefresh"
+      @uploadSuccess="handleUploadSuccess"
+      @clearInput="handleClearInput"
+    />
+
+    <!-- 只在非加载状态下显示主要内容 -->
+    <template v-if="!isLoading">
+      <!-- 主要内容区域 - 新用户布局 -->
+      <template v-if="isNewUser">
+        <div class="flex flex-col items-center justify-center min-h-screen px-4 pt-[90px]">
+          <!-- 产品标语和特点 -->
+          <div class="text-center mb-8">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center justify-center gap-2">
+              Quick Video & Audio Summary
+              <span class="inline-block px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
+                BETA
+              </span>
+            </h2>
+            <div class="max-w-2xl mx-auto space-y-4">
+              <p class="text-lg sm:text-xl text-gray-700">
+                Transform long videos and podcasts into concise summaries
+              </p>
+              <div class="flex flex-wrap justify-center gap-6 mt-6">
+                <!-- 产品特点 -->
+                <div class="flex items-center gap-2">
+                  <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Quick Summaries</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Multiple Platforms</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>AI Chat & Analysis</span>
+                </div>
               </div>
             </div>
+          </div>
 
-            <!-- URL输入框和上传按钮容器 -->
-            <div class="flex flex-col sm:flex-1 w-full sm:flex-row items-center gap-2 sm:gap-4">
-              <!-- 文章URL输入框 -->
-              <div class="relative flex-grow w-full">
+          <!-- 新用户 平台图标 -->
+          <div class="flex justify-center items-center gap-6 mb-6">
+            <img 
+              v-for="channel in ['youtube', 'apple-podcast', 'spotify']"
+              :key="channel"
+              :src="`/images/icons/${channel}.svg`"
+              :alt="channel"
+              class="w-8 h-8 sm:w-10 sm:h-10 transform hover:scale-110 transition-all duration-300"
+            />
+          </div>
 
-                <input
-                  type="text"
-                  v-model="requestUrl"
-                  :placeholder="t('summarize.urlPlaceholder')"
-                  :class="['w-full sm:flex-grow pl-3 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300', 
-                    { 'input-highlight': isHighlighted }]"
-                  @focus="handleInputFocus"
-                  @click="handleInputClick"
-                  @blur="handleInputBlur"
-                  @keyup.enter="handleNewUploadClick('url')"
-                />
-                <!-- 添加回车图标，只在输入框激活时显示 -->
-                <img 
-                  v-if="isInputFocused"
-                  src="/images/icons/enter.svg" 
-                  alt="Press Enter" 
-                  class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 opacity-100 transition-opacity duration-200 cursor-pointer hover:scale-110 transition-transform"
-                  @click.prevent="handleNewUploadClick('url')"
-                  @touchstart.prevent="handleNewUploadClick('url')"
-                />
-              </div>
-              
-              <!-- 上传按钮 - 隐藏但保留功能 -->
-              <div class="hidden w-[80px] sm:w-[100px] self-center sm:self-auto sm:flex-shrink-0 sm:mr-2 mt-2 sm:mt-0">
-                <ArticleRequestForm 
-                  ref="articleRequestFormRef"
-                  @refresh="handleArticleRefresh"
-                  @click="() => submitRequest(requestUrl)"
-                  @uploadSuccess="handleUploadSuccess"
-                  @clearInput="handleClearInput"
-                />
-              </div>
-            </div>
+          <!-- 新用户上传条 -->
+          <div class="w-full max-w-3xl mx-auto px-4">
+            <UploadInput
+              v-model="requestUrl"
+              container-class="relative"
+              input-class="w-full h-12 sm:h-14 px-6 pr-14 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white text-gray-800 placeholder-gray-400 transition-all duration-300 text-base sm:text-lg"
+              enter-icon-class="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 opacity-80 hover:opacity-100 transition-all duration-200 cursor-pointer"
+              @submit="handleSubmit"
+              @showLogin="showLoginModal = true"
+            />
           </div>
         </div>
+      </template>
 
-          <!-- 文章列表区域的容器结构 -->
-          <div class="articles-section">
-            <!-- 文章标题和上传按钮 -->
-            <div class="flex justify-between items-center mb-[10px]">
-              <h2 class="font-['PingFang_SC'] text-[20px] font-semibold leading-[28px] text-[#000000]">
-                {{ t('home.articles.title') }}
-              </h2>
-              
-              <!-- 隐藏但保留功能的上传按钮 -->
-              <div class="hidden flex items-center gap-2">
-                <button 
-                  @click="handleNewUploadClick('url')"
-                  class="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  <img src="/images/icons/upload.svg" alt="Upload" class="w-5 h-5" />
-                </button>
+      <!-- 主要内容区域 - 老用户布局 -->
+      <template v-else>
+        <pull-to-refresh class="mt-[20px]" :onRefresh="handleRefresh">
+          <div class="px-4 sm:px-8 py-2 overflow-x-hidden">
+            <div class="max-w-screen-2xl mx-auto w-full px-2 sm:px-0">
+              <div class="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200">
+                <div class="flex items-center gap-4 w-full">
+                  <div class="flex items-center gap-2 sm:gap-3">
+                    <img 
+                      v-for="channel in ['youtube', 'apple-podcast', 'spotify']"
+                      :key="channel"
+                      :src="`/images/icons/${channel}.svg`"
+                      :alt="channel"
+                      class="w-4 h-4 sm:w-6 sm:h-6"
+                    />
+                  </div>
+
+                  <p class="text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium animate-pulse whitespace-nowrap">
+                    Quick video & audio summary
+                  </p>
+                </div>
+
+                <div class="relative flex-grow w-full">
+                  <UploadInput
+                    v-model="requestUrl"
+                    container-class="relative flex-grow w-full"
+                    input-class="w-full sm:flex-grow pl-3 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300"
+                    enter-icon-class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 opacity-100 transition-opacity duration-200 cursor-pointer hover:scale-110 transition-transform"
+                    @submit="handleSubmit"
+                    @showLogin="showLoginModal = true"
+                  />
+                </div>
+              </div>
+      <!-- 文字区域- 老用户布局  -->
+              <div class="articles-section">
+                <div class="flex justify-between items-center mb-[10px]">
+                  <!-- 文章标题 -->
+                  <h2 class="font-['PingFang_SC'] text-[20px] font-semibold leading-[28px] text-[#000000]">
+                    {{ t('home.articles.title') }}
+                  </h2>
+                  
+                </div>
+                <!-- 文章列表 -->
+                <div class="articles-grid">
+                  <template v-if="filteredArticles.length > 0">
+                    <ArticleCard
+                      v-for="article in filteredArticles"
+                      :key="'requestId' in article ? article.requestId : article.id"
+                      :article="article"
+                      @delete="deleteRequest"
+                    />
+                  </template>
+
+                 
+                  <!-- 加载状态 -->
+                  <template v-if="isLoading">
+                    <div v-for="n in 27" :key="n" 
+                      class="card-container"
+                    >
+                      <div class="flex flex-col h-full w-full gap-3">
+                        <div class="flex justify-between gap-3">
+                          <div class="flex flex-col gap-2 flex-1">
+                            <div class="h-6 bg-gray-200 rounded w-4/5"></div>
+                            <div class="h-6 bg-gray-200 rounded w-3/4"></div>
+                            <div class="h-6 bg-gray-200 rounded w-2/3"></div>
+                          </div>
+                          <div class="w-[120px] h-[120px] bg-gray-200 rounded-xl flex-shrink-0"></div>
+                        </div>
+
+                        <div class="h-[1px] bg-gray-200 w-full"></div>
+
+                        <div class="flex justify-between items-center">
+                          <div class="flex items-center gap-2">
+                            <div class="w-5 h-5 bg-gray-200 rounded-full"></div>
+                            <div class="h-4 bg-gray-200 rounded w-20"></div>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <div class="w-5 h-5 bg-gray-200 rounded"></div>
+                            <div class="h-4 bg-gray-200 rounded w-20"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+
+              <!-- 加载更多 -->
+              <div v-if="authStore.isAuthenticated && (isLoading || hasMore)" class="text-center py-4">
+                <div v-if="isLoading" class="flex justify-center items-center space-x-2">
+                  <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  <span class="text-gray-500">Loading more...</span>
+                </div>
+                <div v-else-if="hasMore" class="text-gray-500">
+                  Scroll to load more
+                </div>
               </div>
             </div>
-            
-            <!-- 文章卡片网格容器 -->
-            <div class="articles-grid">
-              <!-- 实际文章列表 -->
-              <template v-if="filteredArticles.length > 0">
-                <ArticleCard
-                  v-for="article in filteredArticles"
-                  :key="'requestId' in article ? article.requestId : article.id"
-                  :article="article"
-                  @delete="deleteRequest"
-                />
-              </template>
-
-              <!-- 2024-03-24: 添加空状态下的兜底卡片 -->
-              <template v-else-if="!isLoading">
-                <div class="empty-article-card" @click="handleEmptyCardClick">
-                  <!-- 上半部分：标题和图片区域 -->
-                  <div class="flex justify-between gap-3">
-                    <!-- 左侧标题区域 -->
-                    <div class="flex flex-col gap-2 flex-1">
-                      <div class="text-xl font-semibold text-gray-900">
-                        {{ 'Paste your first link'}}
-                      </div>
-                      <div class="text-base text-gray-500 mt-1">
-                        Support YouTube, Spotify, Apple Podcast 
-                      </div>
-                    </div>
-                    <!-- 右侧图片区域 -->
-                    <div class="w-[120px] h-[120px] bg-gray-50 rounded-xl flex items-center justify-center">
-                      <img :src="'/images/icons/upload.svg'" alt="Link" class="w-12 h-12">
-                    </div>
-                  </div>
-
-                  <!-- 分割线 -->
-                  <div class="divider"></div>
-
-                  <!-- 底部图标区域 -->
-                  <div class="card-bottom">
-
-                    <!-- 右侧渠道图标 -->
-                    <div class="channel-date">
-                      <div class="flex items-center gap-2">
-                        <img src="/images/icons/youtube.svg" alt="Youtube" class="channel-icon">
-                        <img src="/images/icons/apple-podcast.svg" alt="Apple" class="channel-icon">
-                        <img src="/images/icons/spotify.svg" alt="Spotify" class="channel-icon">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </template>
-
-              <!-- 加载状态显示骨架图 -->
-              <template v-if="isLoading">
-                <div v-for="n in 27" :key="n" 
-                  class="card-container"
-                >
-                  <!-- 骨架屏内容 -->
-                  <div class="flex flex-col h-full w-full gap-3">
-                    <!-- 上半部分 -->
-                    <div class="flex justify-between gap-3">
-                      <!-- 左侧标题骨架 -->
-                      <div class="flex flex-col gap-2 flex-1">
-                        <div class="h-6 bg-gray-200 rounded w-4/5"></div>
-                        <div class="h-6 bg-gray-200 rounded w-3/4"></div>
-                        <div class="h-6 bg-gray-200 rounded w-2/3"></div>
-                      </div>
-                      <!-- 右侧图片骨架 -->
-                      <div class="w-[120px] h-[120px] bg-gray-200 rounded-xl flex-shrink-0"></div>
-                    </div>
-
-                    <!-- 分割线 -->
-                    <div class="h-[1px] bg-gray-200 w-full"></div>
-
-                    <!-- 底部信息骨架 -->
-                    <div class="flex justify-between items-center">
-                      <!-- 左侧作者信息骨架 -->
-                      <div class="flex items-center gap-2">
-                        <div class="w-5 h-5 bg-gray-200 rounded-full"></div>
-                        <div class="h-4 bg-gray-200 rounded w-20"></div>
-                      </div>
-                      <!-- 右侧日期和渠道骨架 -->
-                      <div class="flex items-center gap-2">
-                        <div class="w-5 h-5 bg-gray-200 rounded"></div>
-                        <div class="h-4 bg-gray-200 rounded w-20"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </template>
-            </div>
           </div>
-
-          <!-- 加载状态提示 -->
-          <div v-if="authStore.isAuthenticated && (isLoading || hasMore)" class="text-center py-4">
-            <div v-if="isLoading" class="flex justify-center items-center space-x-2">
-              <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <span class="text-gray-500">{{ t('common.loading') }}</span>
-            </div>
-            <div v-else-if="hasMore" class="text-gray-500">
-              {{ t('common.scrollToLoadMore') }}
-            </div>
-          </div>
-          
-        </div>
-    </pull-to-refresh>
-
-
-
- 
+        </pull-to-refresh>
+      </template>
+    </template>
 
     <!-- 2024-03-24: 添加移动端固定在右下角的反馈按钮 -->
     <div 
@@ -327,6 +305,8 @@ import PullToRefresh from '../components/PullToRefresh.vue'
 import localforage from 'localforage'
 import FeedbackForm from '@/components/feedback/FeedbackForm.vue'
 import { useFeedbackStore } from '../stores/feedback'
+import UploadInput from '../components/UploadInput.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -575,8 +555,11 @@ const addOptimisticCard = async (url: string) => {
     requestId: id,
     platform: getPlatformFromUrl(url)
   }
+  
+  // 添加乐观更新卡片
   optimisticCards.value = [card, ...optimisticCards.value]
   
+  // 由于添加了卡片，isNewUser 计算属性会自动更新，触发界面切换
   // 开始轮询
   startPolling()
 
@@ -640,19 +623,14 @@ const getPlatformFromUrl = (url: string): string => {
 
 
 // 修改 fetchArticles 函数
-const fetchArticles = async (isRefresh: boolean = false) => {
-  // 添加登录状态检查
-  if (!authStore.isAuthenticated) {
-    console.log('[fetchArticles] User not authenticated, skipping fetch')
-    return
-  }
-
+const fetchArticles = async (isRefresh = false) => {
+  if (!authStore.isAuthenticated) return
+  
   try {
+    isLoading.value = true
     if (isRefresh) {
       currentPage.value = 1
     }
-
-    isLoading.value = true
 
     // 构建查询
     const { data: views, error } = await supabase 
@@ -805,35 +783,19 @@ const handleLoginSuccess = async () => {
   showLoginModal.value = false
   
   try {
-    console.log('[handleLoginSuccess] Starting login success handling')
-    // 等待用户信息完全加载
     await authStore.loadUser()
     
-    // 确保用户信息已加载完成
     if (!authStore.user?.id) {
       console.error('[handleLoginSuccess] User information not loaded properly')
       return
     }
     
-    console.log('[handleLoginSuccess] Loading data after login')
-    // 2024-03-15: 登录成功后初始化作者相关状态
-
-    try {
-      await Promise.all([
-        fetchArticles()
-      ])
-
-      
-    } catch (error) {
-      console.error('[handleLoginSuccess] Error loading data:', error)
-      ElMessage.error(t('error.loginFailed'))
-      return
-    }
+    await fetchArticles()
     
-    // 最后处理待上传的URL
+    // 处理待上传的URL
     const pendingUrl = localStorage.getItem('pendingUploadUrl')
     if (pendingUrl && articleRequestFormRef.value && authStore.isAuthenticated) {
-      articleRequestFormRef.value.openModalWithUrl(pendingUrl)
+      articleRequestFormRef.value.quickSubmit(pendingUrl)
       localStorage.removeItem('pendingUploadUrl')
     }
   } catch (error) {
@@ -884,7 +846,6 @@ onMounted(async () => {
 })
 
 
-
 const handleLogout = async () => {
   try {
     console.log('[handleLogout] Starting logout process')
@@ -908,8 +869,6 @@ const handleLogout = async () => {
     ElMessage.error(t('auth.logoutFailedMessage'))
   }
 }
-
-
 
 
 const { t } = useI18n()
@@ -942,40 +901,6 @@ const handleRefresh = async () => {
 
 const articleRequestFormRef = ref<InstanceType<typeof ArticleRequestForm> | null>(null)
 
-// 修改剪贴板处理函数
-const handlePaste = async () => {
-  try {
-    // 检查剪贴板API是否可用
-    if (!navigator.clipboard) {
-      console.warn('Clipboard API not available')
-      return
-    }
-    
-    const text = await navigator.clipboard.readText()
-    // 最简单的URL判断：包含http或https，且包含至少一个点号
-    if (text.includes('http') && text.includes('.')) {
-      requestUrl.value = text.trim()
-    }
-  } catch (err) {
-    console.error('Failed to read clipboard:', err)
-    // 静默失败，不影响用户体验
-  }
-}
-
-
-// 修改 submitRequest 函数
-const submitRequest = (url?: string) => {
-  if (!url) return
-  
-  if (!authStore.isAuthenticated) {
-    localStorage.setItem('pendingUploadUrl', url)
-    showLoginModal.value = true
-    return
-  }
-
-  showUploadModal.value = true
-}
-
 
 // 添加新的处理函数
 const handleArticleRefresh = async () => {
@@ -984,45 +909,14 @@ const handleArticleRefresh = async () => {
 
 // 修改 handleUploadSuccess 函数
 const handleUploadSuccess = (url: string) => {
-  // 移除 async/await，直接调用
   addOptimisticCard(url)
+  // 清空输入框
+  handleClearInput()
+  // 开始轮询更新状态
+  startPolling()
 }
 
 
-// 修改 handleNewUploadClick 函数
-const handleNewUploadClick = (type: 'url' | 'web' | 'file' = 'url') => {
-  if (!authStore.isAuthenticated) {
-    showLoginModal.value = true
-    return
-  }
-
-  // 2024-03-20: 添加特权用户判断
-  const isPrivilegedUser = authStore.user?.id === '40568d0d-cd39-4bbe-8cba-634e9484b5cc'
-
-  if (type === 'url') {
-    if (requestUrl.value) {
-      if (isPrivilegedUser) {
-        // 特权用户保持原有的modal显示
-        if (articleRequestFormRef.value) {
-          articleRequestFormRef.value.openModalWithUrl(requestUrl.value)
-        }
-      } else {
-        // 普通用户直接提交，默认英文
-        if (articleRequestFormRef.value) {
-          articleRequestFormRef.value.quickSubmit(requestUrl.value)
-        }
-      }
-    } else {
-      // 如果没有URL，特权用户显示modal，普通用户不做操作
-      if (isPrivilegedUser) {
-        showUploadModal.value = true
-      }
-    }
-  }
-}
-
-// 添加输入框焦点状态
-const isInputFocused = ref(false)
 
 // 添加处理函数
 const handleClearInput = () => {
@@ -1056,73 +950,21 @@ const handleFeedbackSubmit = (formData: {
   // TODO: 这里后续会添加发送到后端的逻辑
 }
 
-// 2024-03-22: 添加输入框高亮动画
-const isHighlighted = ref(false)
-const showAnimatedPlaceholder = ref(true)
 
-// 2024-03-22: 添加点击图标的处理函数
-const handleAddIconClick = () => {
-  // 触发placeholder文字高亮动画
-  isHighlighted.value = true
-  showAnimatedPlaceholder.value = false
-  
-  // 重置高亮状态
-  setTimeout(() => {
-    isHighlighted.value = false
-    showAnimatedPlaceholder.value = true
-  }, 600)
-
-  // 获取输入框元素并聚焦
-  const inputElement = document.querySelector('input[type="text"]') as HTMLInputElement
-  if (inputElement) {
-    inputElement.focus()
+// 在 script setup 部分添加
+const isNewUser = computed(() => {
+  // 在加载状态下返回 null，避免显示任何布局
+  if (isLoading.value) {
+    return null
   }
-}
+  return articles.value.length === 0 && optimisticCards.value.length === 0
+})
 
-// 2024-03-22: 修改输入框焦点处理函数
-const handleInputFocus = async () => {
-  isInputFocused.value = true
-  // 只在桌面端执行粘贴操作
-  if (!('ontouchstart' in window)) {
-    try {
-      await handlePaste()
-    } catch (error) {
-      console.error('Failed to paste:', error)
-    }
-  }
-}
-
-const handleInputBlur = () => {
-  isInputFocused.value = false
-}
-
-// 2024-03-22: 添加输入框点击处理函数
-const handleInputClick = async () => {
-  // 只在移动端执行粘贴操作
-  if ('ontouchstart' in window) {
-    try {
-      await handlePaste()
-    } catch (error) {
-      console.error('Failed to paste on mobile:', error)
-    }
-  }
-}
-
-// 在 script setup 部分添加处理函数
-const handleEmptyCardClick = async () => {
-  // 1. 触发输入框高亮动画
-  handleAddIconClick();
-  
-  // 2. 获取焦点并触发粘贴
-  const inputElement = (window?.document?.querySelector('input[type="text"]') as HTMLInputElement | null);
-  if (inputElement) {
-    inputElement.focus();
-    handlePaste();
-  }
-  
-  // 3. 如果有有效URL，触发上传
-  if (requestUrl.value && (requestUrl.value.startsWith('http://') || requestUrl.value.startsWith('https://'))) {
-    handleNewUploadClick('url');
+// 修改 handleSubmit 函数
+const handleSubmit = (url: string) => {
+  if (articleRequestFormRef.value) {
+    articleRequestFormRef.value.quickSubmit(url)
+    handleClearInput()
   }
 }
 </script>
@@ -1338,6 +1180,34 @@ input::placeholder {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+}
+
+/* 添加新的样式 */
+.channel-icon {
+  @apply w-6 h-6 transition-transform duration-300;
+}
+
+.channel-icon:hover {
+  @apply transform scale-110;
+}
+
+/* 添加新的样式 */
+input::placeholder {
+  color: #9CA3AF;
+}
+
+input:focus::placeholder {
+  color: #6B7280;
+}
+
+/* 输入框聚焦时的阴影效果 */
+input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 平台图标悬停效果 */
+img.transform:hover {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
 }
 </style>
 

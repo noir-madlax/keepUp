@@ -6,6 +6,7 @@ import router from './router'
 import i18n from './i18n'
 import { initAnalytics } from './utils/analytics'
 import { RouteLocationNormalized } from 'vue-router'
+import { useAuthStore } from './stores/auth'
 
 // 导入 tailwind 基础样式
 import './assets/tailwind.css'
@@ -15,13 +16,22 @@ import './assets/markdown.css'
 import 'element-plus/dist/index.css'
 
 const app = createApp(App)
+const pinia = createPinia()
+app.use(pinia)
 
-app.use(createPinia())
+// 2024-03-24 17:30: 在应用启动时预加载用户状态
+const authStore = useAuthStore(pinia)
+await authStore.loadUser()
+
 app.use(router)
 app.use(i18n)
 
 // 添加全局路由守卫
-router.beforeEach((to: RouteLocationNormalized, from: RouteLocationNormalized) => {
+router.beforeEach(async (to: RouteLocationNormalized, from: RouteLocationNormalized) => {
+  // 确保用户状态已加载
+  if (!authStore.isInitialized) {
+    await authStore.loadUser()
+  }
   console.log(`路由变化: 从 ${from.fullPath} 到 ${to.fullPath}`)
   return true
 })

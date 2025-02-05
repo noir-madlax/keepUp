@@ -8,9 +8,12 @@ import { identifyUser, updateUserProperties } from '@/utils/analytics'
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const isAuthenticated = computed(() => !!user.value)
+  const isInitialized = ref(false)
 
   const loadUser = async () => {
     try {
+      if (isInitialized.value) return
+
       // 1. 先获取 session
       const { data: { session } } = await supabase.auth.getSession()
       
@@ -18,27 +21,26 @@ export const useAuthStore = defineStore('auth', () => {
         // 2. 如果 session 中有用户信息，直接使用
         user.value = session.user
         // 加载用户信息后设置用户身份
-        if (user.value) {
-          identifyUser(user.value.id, {
-            email: user.value.email,
-            name: user.value.user_metadata?.full_name
-          })
-        }
+        identifyUser(user.value.id, {
+          email: user.value.email,
+          name: user.value.user_metadata?.full_name
+        })
       } else {
         // 3. 没有 session 才调用 getUser
         const { data: { user: currentUser } } = await supabase.auth.getUser()
         user.value = currentUser
-        // 加载用户信息后设置用户身份
-        if (user.value) {
-          identifyUser(user.value.id, {
-            email: user.value.email,
-            name: user.value.user_metadata?.full_name
+        if (currentUser) {
+          identifyUser(currentUser.id, {
+            email: currentUser.email,
+            name: currentUser.user_metadata?.full_name
           })
         }
       }
     } catch (error) {
       console.error('Error loading user:', error)
       user.value = null
+    } finally {
+      isInitialized.value = true
     }
   }
 
@@ -107,6 +109,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user,
     isAuthenticated,
+    isInitialized,
     loadUser,
     signInWithGithub,
     signInWithGoogle,

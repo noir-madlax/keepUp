@@ -1031,7 +1031,7 @@ const quickSubmit = async (url: string) => {
     emit('uploadSuccess', url)
     // 2024-03-20: 添加清空输入框事件
     emit('clearInput')
-    ElMessage.success(t('summarize.messages.submitSuccess'))
+
     emit('refresh', { type: 'upload' })
     
   } catch (error) {

@@ -3,9 +3,12 @@
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center login-modal"
     @click="allowClose && $emit('close')"
   >
+    <LoadingSpinner v-if="isLoading" variant="modal" />
+    
     <div 
       class="bg-white p-6 rounded-lg shadow-lg w-[400px]"
       @click.stop
+      v-if="!isLoading"
     >
       <div class="text-center mb-6">
         <h2 class="text-2xl font-bold">Sign in / Sign up</h2>
@@ -108,6 +111,7 @@ import { ref } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { ElMessage } from 'element-plus'
 import { supabase } from '../supabaseClient'
+import LoadingSpinner from './LoadingSpinner.vue'
 
 const props = defineProps<{
   allowClose?: boolean
@@ -116,7 +120,7 @@ const props = defineProps<{
 const authStore = useAuthStore()
 const emit = defineEmits(['close', 'success'])
 
-// 邮箱登录相关状态
+const isLoading = ref(false)
 const email = ref('')
 const password = ref('')
 const showPasswordRules = ref(false)
@@ -125,6 +129,7 @@ const showPassword = ref(false)
 // 邮箱登录处理方法
 const handleEmailAuth = async () => {
   try {
+    isLoading.value = true
     // 先尝试登录
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.value,
@@ -164,7 +169,10 @@ const handleEmailAuth = async () => {
     // 登录成功
     emit('success')
   } catch (error: any) {
-    ElMessage.error(error.message)
+    console.error('Auth error:', error)
+    ElMessage.error('Authentication failed')
+  } finally {
+    isLoading.value = false
   }
 }
 

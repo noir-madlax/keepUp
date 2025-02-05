@@ -4,7 +4,7 @@
     class="min-h-screen bg-white overflow-x-hidden w-full"
     :class="{ 'chat-open': chatStore.chatWindowState === 'expanded' }"
   >
-    <!-- 顶部导航栏 -->
+    <!-- 顶部导航栏 - 始终显示 -->
     <header class="fixed top-0 left-0 right-0 bg-white z-[1001] w-full">
       <!-- 使用transition组件包裹两个导航样式 -->
       <transition 
@@ -43,9 +43,9 @@
             <!-- 2024-03-22: 添加介绍文字 -->
             <p class="mt-1 text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium animate-pulse whitespace-nowrap">
               <!-- 移动端显示简短文案 -->
-              <span class="sm:hidden">Quick video & audio digest</span>
+              <span class="sm:hidden">Quick video & audio summary</span>
               <!-- 桌面端显示完整文案 -->
-              <span class="hidden sm:inline">Quick video & audio digest - no rewatching</span>
+              <span class="hidden sm:inline">Quick video & audio summary</span>
             </p>
           </div>
 
@@ -163,7 +163,11 @@
       <div class="h-[1px] hidden bg-[#E5E5E5] w-full"></div>
     </header>
 
-    <template v-if="article">
+    <!-- 加载状态显示 -->
+    <LoadingSpinner v-if="isLoading || !article" />
+
+    <!-- 主要内容区域 -->
+    <div v-if="!isLoading && article">
       <!-- 添加语言提示横幅 -->
       <div 
         v-if="showLanguageAlert"
@@ -384,10 +388,6 @@
           </div>
         </div>
       </div>
-    </template>
-
-    <div v-else class="text-center py-8">
-      <p>{{ t('common.loading') }}</p>
     </div>
 
     <!-- 编辑模态框 -->
@@ -579,6 +579,7 @@ import { useArticleStore } from '../stores/article'
 import { trackEvent } from '@/utils/analytics'
 import FeedbackForm from '../components/feedback/FeedbackForm.vue'
 import { useFeedbackStore } from '../stores/feedback'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 
 // 将 i18n 相关初始化移前面
@@ -589,6 +590,8 @@ const router = useRouter()
 const authStore = useAuthStore()
 const articleStore = useArticleStore()
 const feedbackStore = useFeedbackStore()
+
+const isLoading = ref(false)  // 添加 loading 状态
 
 // 2024-03-20 16:30: 优化hover提示位置，使用当前鼠标位置
 const showHoverHint = ref(false)
@@ -744,6 +747,7 @@ const canEdit = computed(() => {
 // 获取文章和小节内容
 const fetchArticle = async () => {
   try {
+    isLoading.value = true
     // 获取文章基本信息
     const { data: articleData, error: articleError } = await supabase
       .from('keep_articles')
@@ -803,6 +807,8 @@ const fetchArticle = async () => {
   } catch (error) {
     console.error(t('error.getArticleDetailsFailed'), error)
     ElMessage.error(t('error.articleFetchFailed'))
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -971,43 +977,52 @@ const recordArticleView = async (userId: string, articleId: number) => {
 
 // 修改组件挂载时的事件监听
 onMounted(async () => {
-  // 2024-03-21: 先检查登录状态
-  await authStore.loadUser()
-  if (!authStore.isAuthenticated) {
-    showLoginModal.value = true
-    return
-  }
+  try {
+    // 确保用户状态已加载
+    if (!authStore.isInitialized) {
+      await authStore.loadUser()
+    }
 
-  // 2024-01-20 13:30: 设置当前文章ID
-  if (route.params.id) {
-    chatStore.setCurrentArticle(Number(route.params.id))
-  }
-  
-  // 2024-01-20 12:30: 确保打开新文章时聊天窗口是最小化的
-  chatStore.chatWindowState = 'minimized'
-  
-  // 添加页面滚动事件监听
-  window.addEventListener('scroll', handleScroll)
-  
-  // 添加tabs滚动事件监听
-  const container = tabsContainerRef.value
-  if (container) {
-    container.addEventListener('scroll', handleTabsScroll)
-  }
-  
-  // 初始检查
-  handleScroll()
-  handleTabsScroll()
-  
-  // 加载用户信息和文章数据
-  await authStore.loadUser()
-  await fetchArticle()
-  await fetchArticleMarks()
+    // 如果未登录，显示登录框并返回
+    if (!authStore.isAuthenticated) {
+      showLoginModal.value = true
+      return
+    }
 
-  // 记录文章访问
-  const userStore = useAuthStore()
-  if (article.value?.id && userStore.user?.id) {
-    await recordArticleView(userStore.user.id, article.value.id)
+    isLoading.value = true
+    
+    // 2024-01-20 13:30: 设置当前文章ID
+    if (route.params.id) {
+      chatStore.setCurrentArticle(Number(route.params.id))
+    }
+    
+    // 2024-01-20 12:30: 确保打开新文章时聊天窗口是最小化的
+    chatStore.chatWindowState = 'minimized'
+    
+    // 加载文章数据
+    await Promise.all([
+      fetchArticle(),
+      fetchArticleMarks()
+    ])
+
+    // 添加页面滚动事件监听
+    window.addEventListener('scroll', handleScroll)
+    
+    // 添加tabs滚动事件监听
+    const container = tabsContainerRef.value
+    if (container) {
+      container.addEventListener('scroll', handleTabsScroll)
+    }
+    
+    // 初始检查
+    handleScroll()
+    handleTabsScroll()
+
+  } catch (error) {
+    console.error('Error in component mount:', error)
+    ElMessage.error(t('error.loadingFailed'))
+  } finally {
+    isLoading.value = false
   }
 })
 
