@@ -94,7 +94,9 @@ export default defineConfig({
     emptyOutDir: true,
     // 2024-03-20: 添加构建报告
     reportCompressedSize: true,
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
+    // 2025-02-05: 添加 target 配置
+    target: 'esnext'
   },
   optimizeDeps: {
     include: [
