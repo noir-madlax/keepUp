@@ -156,7 +156,7 @@
             <UploadInput
               v-model="requestUrl"
               container-class="relative"
-              input-class="w-full h-12 sm:h-14 px-6 pr-14 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white text-gray-800 placeholder-gray-400 transition-all duration-300 text-base sm:text-lg"
+              input-class="w-full h-12 sm:h-14 px-6 pr-14 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-gray-100 text-gray-800 placeholder-gray-400 transition-all duration-300 text-base sm:text-lg"
               enter-icon-class="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 opacity-80 hover:opacity-100 transition-all duration-200 cursor-pointer"
               @submit="handleSubmit"
               @showLogin="showLoginModal = true"
