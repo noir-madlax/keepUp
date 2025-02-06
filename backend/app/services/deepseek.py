@@ -15,7 +15,7 @@ class DeepseekService:
         try:
             # 构建请求数据
             request_data = {
-                "model": "qwen/qwen-turbo",
+                "model": "google/gemini-2.0-flash-001",
                 "messages": [
                     {
                         "role": "system",
@@ -25,14 +25,7 @@ class DeepseekService:
                 "temperature": 0.1,
                 "max_tokens": 1000,
                 "timeout": 30,  
-                 "provider": {
-                    "order": [
-                      "Fireworks",
-                      "DeepInfra"
-                    ],
-                    "allow_fallbacks": True
-                },
-                "stream": True  # 启用流式响应，发版本更新12下
+                "stream": True  # 启用流式响应，发版本更新14下
             }
             
             # 添加历史消息
