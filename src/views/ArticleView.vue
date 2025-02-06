@@ -938,33 +938,26 @@ const handleScroll = () => {
 // 添加记录用户对文章访问
 const recordArticleView = async (userId: string, articleId: number) => {
   try {
-    // 直接使用upsert更新访问记录，无需额外查询
-    const { error: upsertError } = await supabase
+    // 2024-03-25: 直接使用upsert更新访问记录和计数
+    const { error } = await supabase
       .from('keep_article_views')
       .upsert({
         user_id: userId,
         article_id: articleId,
-        // 2024-03-25: 修复created_at的使用，只在首次访问时设置
         last_viewed_at: new Date().toISOString(),
-        // 使用数据库函数增加访问次数
-        view_count: supabase.rpc('increment_view_count', { 
-          p_user_id: userId, 
-          p_article_id: articleId 
-        }),
-        // 通过比较用户ID判断是否是作者
         is_author: article.value?.user_id === userId
       }, {
         onConflict: 'user_id,article_id',
-        // 只更新最后访问时间和访问次数
         ignoreDuplicates: false
       })
 
-    if (upsertError) {
-      throw upsertError
+    if (error) {
+      console.error('更新访问记录失败:', error)
+      throw error
     }
   } catch (error) {
     console.error('记录文章访问失败:', error)
-    throw error // 让调用者处理错误
+    throw error
   }
 }
 
