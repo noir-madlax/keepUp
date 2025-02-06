@@ -197,9 +197,9 @@ export default {
         unknownPlatform: 'Unknown Platform'
       },
       error: {
-        videoInfo: 'Failed to get video information',
-        subtitle: 'Failed to get subtitle content',
-        unknown: 'Unknown error'
+        videoInfo: 'Failed to get video info',
+        subtitle: 'Failed to get transcript',
+        unknown: 'Failed to process your link'
       },
       action: {
         delete: 'Delete'

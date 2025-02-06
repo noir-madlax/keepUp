@@ -199,7 +199,7 @@ export default {
       error: {
         videoInfo: 'Failed to get video information',
         subtitle: 'Failed to get subtitle content',
-        unknown: 'Unknown error'
+        unknown: 'Failed to process your link'
       },
       action: {
         delete: 'Delete'

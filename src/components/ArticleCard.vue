@@ -75,9 +75,16 @@
         
         <!-- 失败状态 -->
         <div v-else-if="article.status === 'failed'" class="failed-text">
-          <div class="error-title">Processing Failed</div>
+          <div class="error-title">{{ getErrorMessage }}</div>
+          <!-- 失败状态下的URL显示 -->
+          <div 
+            class="url-text-failed cursor-pointer hover:text-blue-500" 
+            @click="handleUrlClick"
+          >
+            {{ truncateUrl(article.original_url) || t('upload.card.fallback.noLink') }}
+          </div>
           <div class="error-text">
-            {{ getErrorMessage }}
+            Sorry! We'll fix this & email you ASAP. Your early support means a lot!
           </div>
         </div>
 
@@ -89,8 +96,9 @@
           </div>
         </div>
 
-        <!-- URL显示移到这里 -->
+        <!-- URL显示 (仅对非失败状态显示) -->
         <div 
+          v-if="article.status !== 'failed'"
           class="url-text-new cursor-pointer hover:text-blue-500" 
           @click="handleUrlClick"
         >
@@ -383,7 +391,7 @@ const truncateUrl = (url?: string): string => {
   width: 100%;
   min-width: 340px;
   max-width: 450px;
-  height: 190px;
+  min-height: 190px;
   padding: 12px;
   flex-direction: column;
   align-items: flex-start;
@@ -551,7 +559,8 @@ const truncateUrl = (url?: string): string => {
 .failed-text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 4px; /* 减小整体间距 */
+  padding-bottom: 4px;
 }
 
 .error-title {
@@ -559,7 +568,8 @@ const truncateUrl = (url?: string): string => {
   font-family: "PingFang SC";
   font-size: 16px;
   font-weight: 600;
-  line-height: 24px;
+  line-height: 20px; /* 减小行高 */
+  margin-bottom: 2px; /* 微调与URL的间距 */
 }
 
 .unknown-text {
@@ -603,7 +613,7 @@ const truncateUrl = (url?: string): string => {
   font-family: "PingFang SC";
   font-size: 14px;
   font-weight: 400;
-  line-height: 20px;
+  line-height: 18px; /* 减小行高 */
 }
 
 .url-text-new {
@@ -649,5 +659,19 @@ const truncateUrl = (url?: string): string => {
 /* 隐藏上传时间 */
 .upload-time {
   display: none;
+}
+
+/* 2024-03-26: 添加失败状态下URL的特殊样式 */
+.url-text-failed {
+  font-size: 12px;
+  color: #999;
+  /* 移除margin设置，统一使用gap控制 */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2; /* 减小行高 */
+  font-family: "PingFang SC";
+  font-weight: 400;
 }
 </style>

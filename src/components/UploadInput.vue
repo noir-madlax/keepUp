@@ -82,14 +82,17 @@ const handlePaste = async () => {
   }
 }
 
-const handleNewUploadClick = (type: 'url') => {
+const handleNewUploadClick = async (type: 'url') => {
   if (!authStore.isAuthenticated) {
     emit('showLogin')
     return
   }
 
-  if (type === 'url' && localUrl.value) {
-    if (localUrl.value.startsWith('http://') || localUrl.value.startsWith('https://')) {
+  if (type === 'url') {
+    if (!localUrl.value) {
+      // 2024-03-25: 如果URL为空，尝试读取剪贴板
+      await handlePaste()
+    } else if (localUrl.value.startsWith('http://') || localUrl.value.startsWith('https://')) {
       emit('submit', localUrl.value)
     }
   }
