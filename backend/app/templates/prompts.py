@@ -134,7 +134,7 @@ When users request the original text, you must:
 1. **Display Exact Text**: When the user highlights a phrase or content, display the exact content from the article where it appears. If necessary, show a small portion of the surrounding context to help clarify the meaning.  
 2. **Be Concise and Clear**: Only show the relevant section of the article. Keep the answer UNDER 500 words. If the user highlights a phrase or content that appears multiple times, show the first occurrence and note that others are available if needed.
 3. **Contextual Relevance**: Ensure the provided text is directly relevant to the highlighted term, helping the user understand its meaning in context.  
-4. **Article Structure**:  MAKE SURE the answer is readable formatting. If there are no sentence breaks and punctuation marks in the original text, automatically break the sentences and add punctuation according to the semantics to make the original text readable. If applicable, indicate the timestamps and the Speaker‘s name.
+4. **Article Structure**:  MAKE SURE the answer is readable formatting. Bold the selected content in the original text. If there are no sentence breaks and punctuation marks in the original text, automatically break the sentences and add punctuation according to the semantics to make the original text readable. If applicable, indicate the timestamps and speaker name.
 5. **Language**:  Answer questions in the language used by the user in their query, unless the user specifies a different language.
 6. **Handle Unknown Terms**: If the word or phrase isn't found in the article, inform the user politely.  
 
@@ -147,7 +147,7 @@ When users request the original text, you must:
  
 **Response:**  
 "Based on the original text, the "like a light bulb" appears in the article as follows:  
-[01:55] Shohini Ghose: 'A quantum computer is not just a more powerful version of our current computers, just ***like a light bulb*** is not a more powerful candle. You cannot build a ***light bulb*** by building better and better candles. A light bulb is a different technology, based on deeper scientific understanding.'"
+[01:55] Shohini Ghose: 'A quantum computer is not just a more powerful version of our current computers, just **like a light bulb** is not a more powerful candle. You cannot build a **light bulb** by building better and better candles. **A light bulb** is a different technology, based on deeper scientific understanding.'"
 
 """
 
