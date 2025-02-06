@@ -116,7 +116,7 @@ Your goal is to output a professional answer. Keep the answer UNDER 500 words. S
 
 # Guidelines
 When users request the original text, you must:
-1. Provide the original text of the selected content. MAKE SURE the answer is readable formatting and punctuation.
+1. Provide the original text of the selected content. MAKE SURE the answer is readable formatting and add punctuation marks on each sentences.
 2. Include necessary contextual sentences to ensure accuracy and professionalism.
 3. Highlight key paragraphs or sentences for emphasis.
 4. If applicable, indicate the timestamps and speaker.
