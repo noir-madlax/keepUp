@@ -644,6 +644,9 @@ const submitRequest = async () => {
     // 先触发乐观更新
     emit('uploadSuccess', requestUrl.value)
 
+    // 2024-03-25: 从URL识别平台
+    const platform = getPlatformFromUrl(requestUrl.value)
+
     // 发送请求并等待响应
     const response = await fetch('/api/workflow/process', {
       method: 'POST',
@@ -655,7 +658,8 @@ const submitRequest = async () => {
         summary_languages: summaryLanguages.value,
         subtitle_languages: subtitleLanguages.value,
         detailed_languages: detailedLanguages.value,
-        user_id: authStore.user?.id
+        user_id: authStore.user?.id,
+        platform: platform  // 添加平台信息
       })
     })
 
@@ -953,7 +957,9 @@ const quickSubmit = async (url: string) => {
 
   if (!validateUrl(url)) return
 
-  // 创建带进度条的通知
+  let progressInterval: NodeJS.Timeout | null = null
+  
+  // 创建模拟上传进度条，右侧通知栏
   const notification = ElNotification({
     title: t('summarize.title'),
     message: h('div', { style: 'margin: 10px 0;' }, [
@@ -980,7 +986,7 @@ const quickSubmit = async (url: string) => {
     
     // 模拟上传进度
     let progress = 0
-    const progressInterval = setInterval(() => {
+    progressInterval = setInterval(() => {
       progress += 5
       if (progress <= 90) {
         const progressBar = document.querySelector('.progress-bar-inner') as HTMLElement
@@ -989,6 +995,9 @@ const quickSubmit = async (url: string) => {
         }
       }
     }, 100)
+    
+    // 2024-03-25: 从URL识别平台
+    const platform = getPlatformFromUrl(url)
     
     // 发送请求，默认使用英文
     const response = await fetch('/api/workflow/process', {
@@ -1001,7 +1010,8 @@ const quickSubmit = async (url: string) => {
         summary_languages: ['en'],
         subtitle_languages: ['na'],
         detailed_languages: ['na'],
-        user_id: authStore.user?.id
+        user_id: authStore.user?.id,
+        platform: platform  // 添加平台信息
       })
     })
 
@@ -1016,7 +1026,9 @@ const quickSubmit = async (url: string) => {
     }
 
     // 完成进度条
-    clearInterval(progressInterval)
+    if (progressInterval) {
+      clearInterval(progressInterval)
+    }
     const progressBar = document.querySelector('.progress-bar-inner') as HTMLElement
     if (progressBar) {
       progressBar.style.width = '100%'
@@ -1029,15 +1041,31 @@ const quickSubmit = async (url: string) => {
 
     // 请求成功后，再触发乐观更新
     emit('uploadSuccess', url)
-    // 2024-03-20: 添加清空输入框事件
     emit('clearInput')
-
     emit('refresh', { type: 'upload' })
     
   } catch (error) {
-    // 出错时关闭通知
-    notification.close()
-    ElMessage.error(error instanceof Error ? error.message : t('summarize.messages.submitFailed'))
+    // 完成进度条
+    if (progressInterval) {
+      clearInterval(progressInterval)
+    }
+    const progressBar = document.querySelector('.progress-bar-inner') as HTMLElement
+    if (progressBar) {
+      progressBar.style.width = '100%'
+    }
+
+    // 延迟一小段时间后关闭通知
+    setTimeout(() => {
+      notification.close()
+    }, 500)
+
+    // 2024-03-27: 错误时也触发更新，让错误状态在卡片中显示
+    emit('uploadSuccess', url)
+    emit('clearInput')
+    emit('refresh', { type: 'upload' })
+
+    // 去掉错误提示，用错误卡片展示报错
+   // ElMessage.error(error instanceof Error ? error.message : t('summarize.messages.submitFailed'))
   } finally {
     isSubmitting.value = false
   }
@@ -1078,6 +1106,20 @@ defineExpose({
   openModalWithUrl,
   quickSubmit
 })
+
+// 从URL判断平台
+const getPlatformFromUrl = (url: string): string => {
+  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+    return 'youtube'
+  }
+  if (url.includes('open.spotify.com')) {
+    return 'spotify'
+  }
+  if (url.includes('podcasts.apple.com')) {
+    return 'apple'
+  }
+  return 'webpage'
+}
 </script>
 
 <style scoped>

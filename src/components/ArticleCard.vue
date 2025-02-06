@@ -64,16 +64,29 @@
     <div class="card-top">
       <!-- 左侧状态区域 -->
       <div class="processing-status">
-        <span class="processing-text">{{ getStatusText }}</span>
-        
-        <!-- 处理中状态显示进度条 -->
-        <div v-if="article.status === 'processing'" class="progress-bar">
-          <div class="progress-fill"></div>
+        <!-- 处理中状态 -->
+        <div v-if="article.status === 'processing'" class="processing-text">
+          <div>Processing...</div>
+          <div class="estimate-time">Est. 3 minutes</div>
+          <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: `${progress}%`, left: 0 }"></div>
+          </div>
         </div>
         
-        <!-- 失败状态显示错误信息 -->
-        <div v-if="article.status === 'failed'" class="error-text">
-          {{ getErrorMessage }}
+        <!-- 失败状态 -->
+        <div v-else-if="article.status === 'failed'" class="failed-text">
+          <div class="error-title">Processing Failed</div>
+          <div class="error-text">
+            {{ getErrorMessage }}
+          </div>
+        </div>
+
+        <!-- 未知状态 -->
+        <div v-else class="unknown-text">
+          <div>Unknown Status</div>
+          <div class="error-text">
+            {{ t('upload.card.error.unknown') }}
+          </div>
         </div>
 
         <!-- URL显示移到这里 -->
@@ -85,7 +98,7 @@
         </div>
       </div>
       
-      <!-- 右侧封面 -->
+      <!-- 右侧封面 兜底图-->
       <div class="cover-container">
         <img 
           src="/images/covers/article_default.png" 
@@ -126,7 +139,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { format, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns'
 import { useI18n } from 'vue-i18n'
 
@@ -157,6 +170,59 @@ const props = defineProps<Props>()
 
 // 2024-03-19: 添加 emit 定义
 const emit = defineEmits(['delete'])
+
+// 2024-03-25: 添加进度状态管理
+const progress = ref(0)
+let progressTimer: ReturnType<typeof setInterval> | null = null
+
+// 处理进度条逻辑
+const startProgress = () => {
+  // 重置进度
+  progress.value = 0
+  
+  // 清理可能存在的旧定时器
+  if (progressTimer) {
+    clearInterval(progressTimer)
+  }
+  
+  // 计算每次增加的进度
+  // 150秒完成，每200ms更新一次，总共需要更新750次
+  // 100% / 750 ≈ 0.133% 每次增加的进度
+  const increment = 0.133
+  
+  progressTimer = setInterval(() => {
+    if (progress.value < 100) {
+      progress.value = Math.min(100, progress.value + increment)
+    } else {
+      // 达到100%时清理定时器
+      if (progressTimer) {
+        clearInterval(progressTimer)
+        progressTimer = null
+      }
+    }
+  }, 200) // 每200ms更新一次
+}
+
+// 监听处理状态变化
+watch(() => props.article.status, (newStatus) => {
+  if (newStatus === 'processing') {
+    startProgress()
+  } else {
+    // 状态改变时清理定时器
+    if (progressTimer) {
+      clearInterval(progressTimer)
+      progressTimer = null
+    }
+  }
+}, { immediate: true })
+
+// 组件卸载时清理
+onUnmounted(() => {
+  if (progressTimer) {
+    clearInterval(progressTimer)
+    progressTimer = null
+  }
+})
 
 const handleClick = (event: MouseEvent, navigate?: () => void) => {
   if (!navigate || !props.article.id) return
@@ -194,6 +260,7 @@ const getErrorMessage = computed(() => {
     return t('upload.card.error.subtitle')
   }
   
+  // 如果没有匹配到具体错误类型，返回未知错误
   return t('upload.card.error.unknown')
 })
 
@@ -237,8 +304,11 @@ const getPlatformIcon = (platform: string | undefined) => {
   
   const iconMap: Record<string, string> = {
     'youtube': 'youtube.svg',
+    'YouTube': 'youtube.svg',
     'spotify': 'spotify.svg',
+    'Spotify': 'spotify.svg',
     'apple': 'apple-podcast.svg',
+    'Apple Podcast': 'apple-podcast.svg',
     'webpage': 'web.svg'
   }
   return iconMap[platform.toLowerCase()] || 'default.svg'
@@ -472,6 +542,41 @@ const truncateUrl = (url?: string): string => {
   font-size: 16px;
   font-weight: 600;
   line-height: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 2024-03-26: 添加失败状态样式 */
+.failed-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.error-title {
+  color: #333;
+  font-family: "PingFang SC";
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.unknown-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #666;
+  font-family: "PingFang SC";
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.estimate-time {
+  font-size: 14px;
+  color: #666;
+  font-weight: 400;
 }
 
 .progress-bar {
@@ -481,26 +586,16 @@ const truncateUrl = (url?: string): string => {
   background: #F0F0F0;
   position: relative;
   overflow: hidden;
+  margin-top: 8px;
 }
 
 .progress-fill {
-  width: 50%;
   height: 100%;
   background: #1890FF;
   border-radius: 2px;
   position: absolute;
-  left: 0;
   top: 0;
-  animation: progress 2s infinite linear;
-}
-
-@keyframes progress {
-  0% {
-    left: -50%;
-  }
-  100% {
-    left: 100%;
-  }
+  transition: width 0.3s ease-in-out;
 }
 
 .error-text {

@@ -605,10 +605,10 @@ const addOptimisticCard = async (url: string) => {
 
 // 从URL判断平台
 const getPlatformFromUrl = (url: string): string => {
-  if (url.includes('youtube.com') || url.includes('youtu.be')) {
+  if (url.includes('youtube') || url.includes('youtu.be')) {
     return 'youtube'
   }
-  if (url.includes('open.spotify.com')) {
+  if (url.includes('spotify')) {
     return 'spotify'
   }
   if (url.includes('podcasts.apple.com')) {
@@ -726,7 +726,7 @@ const fetchArticles = async (isRefresh = false) => {
 
   } catch (error) {
     console.error('获取文章列表失败:', error)
-    ElMessage.error('获取文章列表失败，请稍后重试')
+    ElMessage.error('get article list failed ,please try again later')
   } finally {
     isLoading.value = false
   }

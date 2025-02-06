@@ -189,7 +189,7 @@ class OpenRouterService:
                 char_count = len([c for c in content if not c.isspace()])
                 min_length = 100  # 中文最少200字
                 if char_count < min_length:
-                    error_msg = f"摘要内容过短，当前字数: {char_count}，最少需要{min_length}字"
+                    error_msg = f"Summary content too short, current character count: {char_count}, minimum required: {min_length} characters"
                     logger.error(error_msg)
                     raise ValueError(error_msg)
             else:
@@ -197,7 +197,7 @@ class OpenRouterService:
                 word_count = len(content.split())
                 min_length = 100  # 英文最少100词
                 if word_count < min_length:
-                    error_msg = f"摘要内容过短，当前单词数: {word_count}，最少需要{min_length}个单词"
+                    error_msg = f"Summary content too short, current word count: {word_count}, minimum required: {min_length} words"
                     logger.error(error_msg)
                     raise ValueError(error_msg)
                 

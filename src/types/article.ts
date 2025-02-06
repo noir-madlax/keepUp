@@ -25,6 +25,7 @@ export interface Article extends ArticleBase {
   status: 'processed'
   content: string
   original_link: string
+  user_id?: string
 }
 
 export interface ArticleRequest {

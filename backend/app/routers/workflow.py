@@ -41,14 +41,14 @@ async def process_summary_content(request_id: int, languages: list[str]) -> list
     # 获取请求信息
     request = await SupabaseService.get_article_request(request_id)
     if not request:
-        error_msg = "找不到请求记录"
+        error_msg = "Request record not found"
         await RequestLogger.error(request_id, Steps.SUMMARY_PROCESS, error_msg, Exception(error_msg))
         return [error_msg]
         
     # 获取文章信息
     article = await SupabaseService.get_article_by_request_id(request_id)
     if not article:
-        error_msg = "找不到文章记录"
+        error_msg = "Article record not found"
         await RequestLogger.error(request_id, Steps.SUMMARY_PROCESS, error_msg, Exception(error_msg))
         return [error_msg]
     
@@ -140,10 +140,10 @@ async def process_summary_content(request_id: int, languages: list[str]) -> list
             results.append(msg)
             
         except Exception as e:
-            error_msg = f"{lang} 语言处理失败"
+            error_msg = f"{lang} language processing failed"
             await RequestLogger.error(request_id, Steps.SUMMARY_PROCESS, error_msg, e)
             results.append(error_msg)
-            logger.error(f"处理失败: {error_msg}, {e}")
+            logger.error(f"Processing failed: {error_msg}, {e}")
             continue
     
     return results
@@ -158,21 +158,21 @@ async def process_subtitle_content(request_id: int, languages: list[str]) -> lis
         await RequestLogger.info(
             request_id,
             Steps.SUBTITLE_PROCESS,
-            "字幕处理已跳过"
+            "Subtitle processing skipped"
         )
-        return ["字幕处理已跳过"]
+        return ["Subtitle processing skipped"]
     
     # 获取请求信息
     request = await SupabaseService.get_article_request(request_id)
     if not request:
-        error_msg = "找不到请求记录"
+        error_msg = "Request record not found"
         await RequestLogger.error(request_id, Steps.SUBTITLE_PROCESS, error_msg, Exception(error_msg))
         return [error_msg]
         
     # 获取文章信息
     article = await SupabaseService.get_article_by_request_id(request_id)
     if not article:
-        error_msg = "找不到文章记录"
+        error_msg = "Article record not found"
         await RequestLogger.error(request_id, Steps.SUBTITLE_PROCESS, error_msg, Exception(error_msg))
         return [error_msg]
     
@@ -211,7 +211,7 @@ async def process_subtitle_content(request_id: int, languages: list[str]) -> lis
             results.append(msg)
             
         except Exception as e:
-            error_msg = f"{lang} 字幕处理失败"
+            error_msg = f"{lang} subtitle processing failed"
             await RequestLogger.error(request_id, Steps.SUBTITLE_PROCESS, error_msg, e)
             results.append(error_msg)
             continue
@@ -227,21 +227,21 @@ async def process_detailed_content(request_id: int, languages: list[str]) -> lis
         await RequestLogger.info(
             request_id,
             Steps.DETAILED_PROCESS,
-            "分段详述处理已跳过"
+            "Detailed processing skipped"
         )
-        return ["分段详述处理已跳过"]
+        return ["Detailed processing skipped"]
     
     # 获取请求信息
     request = await SupabaseService.get_article_request(request_id)
     if not request:
-        error_msg = "找不到请求记录"
+        error_msg = "Request record not found"
         await RequestLogger.error(request_id, Steps.DETAILED_PROCESS, error_msg, Exception(error_msg))
         return [error_msg]
         
     # 获取文章信息
     article = await SupabaseService.get_article_by_request_id(request_id)
     if not article:
-        error_msg = "找不到文章记录"
+        error_msg = "Article record not found"
         await RequestLogger.error(request_id, Steps.DETAILED_PROCESS, error_msg, Exception(error_msg))
         return [error_msg]
     
@@ -280,7 +280,7 @@ async def process_detailed_content(request_id: int, languages: list[str]) -> lis
             results.append(msg)
             
         except Exception as e:
-            error_msg = f"{lang} 分段详述处理失败"
+            error_msg = f"{lang} detailed content processing failed"
             await RequestLogger.error(request_id, Steps.DETAILED_PROCESS, error_msg, e)
             results.append(error_msg)
             continue
@@ -362,7 +362,7 @@ async def process_article_task(request: FetchRequest):
             video_info = await service.get_video_info(request.parsed_url)
             
             if not video_info:
-                error_msg = "无法获取视频信息"
+                error_msg = "Unable to get video information"
                 await RequestLogger.error(
                     request.id,
                     Steps.VIDEO_INFO_FETCH,
@@ -420,7 +420,7 @@ async def process_article_task(request: FetchRequest):
         async with RequestLogger.step_context(request.id, Steps.CONTENT_FETCH):
             content = await service.fetch_content(request.parsed_url)
             if not content:
-                error_msg = "无法获取字幕内容"
+                error_msg = "Unable to get subtitle content"
                 await RequestLogger.error(
                     request.id,
                     Steps.CONTENT_FETCH,
@@ -522,7 +522,7 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
             result = await resolver.resolve(request.original_url)
             
             if not result:
-                error_msg = "无法解析URL或找不到对应的YouTube内容"
+                error_msg = "Unable to parse URL"
                 await RequestLogger.error(
                     request.id,
                     Steps.URL_RESOLVE,

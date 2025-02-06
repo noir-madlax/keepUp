@@ -145,7 +145,7 @@ class WebPageFetcher(ContentFetcher):
         
         # 3. 如果上述方法没有提取到足够的内容，使用备选方案
         if len(main_content) < 3:
-            logger.info("使用备选方案提取内容...")
+            logger.info("Using alternative method to extract content...")
             paragraphs = soup.find_all('p')
             
             valid_paragraphs = []
@@ -181,7 +181,7 @@ class WebPageFetcher(ContentFetcher):
             return content
             
         except Exception as e:
-            logger.error(f"获取网页内容失败: {str(e)}")
+            logger.error(f"Failed to fetch webpage content: {str(e)}")
             return None
     
     @retry_decorator()

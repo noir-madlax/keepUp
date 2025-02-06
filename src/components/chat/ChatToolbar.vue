@@ -49,6 +49,7 @@
 
           <!-- 解释一下按钮 - 紫色气泡 -->
           <button
+            v-if="false"
             @click="handleChatAction('EXPLAIN')"
             class="bubble-button shrink-0"
             :class="{ 'disabled-button': chatStore.isAIResponding }"

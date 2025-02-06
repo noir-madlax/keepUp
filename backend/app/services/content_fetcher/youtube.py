@@ -63,7 +63,7 @@ class YouTubeFetcher(ContentFetcher):
             # 提取视频 ID
             video_id = self.extract_video_id(url)
             if not video_id:
-                logger.error(f"无法从 URL 提取视频 ID: {url}")
+                logger.error(f"Failed to extract video ID from URL: {url}")
                 return None
             
             start_time = time.time()
@@ -77,7 +77,7 @@ class YouTubeFetcher(ContentFetcher):
                 else:
                     transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
                 if not transcript_list:
-                    raise ValueError("未获取到视频字幕transcript_list")
+                    raise ValueError("No video transcript found")
                 success = True
             finally:
                 # 更新代理状态
@@ -106,7 +106,7 @@ class YouTubeFetcher(ContentFetcher):
             final_content = "\n".join(readable_text)
             
             if not final_content:
-                raise ValueError("未获取到视频字幕final_content")
+                raise ValueError("No video transcript content found")
             
             logger.info(f"成功格式化视频字幕，总行数: {len(readable_text)}")
 
@@ -139,7 +139,7 @@ class YouTubeFetcher(ContentFetcher):
                 # 提取标题
                 title = soup.find('meta', {'name': 'title'})['content']
                 if not title:
-                    raise ValueError("未获取到视频标题")
+                    raise ValueError("No video title found")
                 success = True
             finally:
                 # 更新代理状态

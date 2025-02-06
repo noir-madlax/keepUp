@@ -366,9 +366,13 @@
                           <template v-if="getSectionQuestionCount(section.id)">
                             <div class="absolute right-0 top-0">
                               <QuestionMark 
-                                :count="getSectionQuestionCount(section.id)"
                                 :mark-id="section.id.toString()"
+                                :article-id="Number(route.params.id)"
+                                :section-type="section.section_type"
+                                :mark-content="''"
+                                :position="{}"
                                 :show-question-mark="false"
+                                :count="getSectionQuestionCount(section.id)"
                               >
                                 <span class="text-gray-400 text-sm">{{ t('chat.questionMark') }}</span>
                               </QuestionMark>
@@ -561,8 +565,8 @@ import { ElMessage } from 'element-plus'
 import ArticleForm from '../components/ArticleForm.vue'
 import LanguageSwitch from '../components/LanguageSwitch.vue'
 import type { Article } from '../types/article'
-import type { ArticleSection, SectionType, ViewType } from '../types/section'
-import { ALL_SECTION_TYPES, DEFAULT_SELECTED_SECTIONS, getLocalizedSectionType } from '../types/section'
+import type { ArticleSection } from '../types/section'
+import { ALL_SECTION_TYPES,getLocalizedSectionType } from '../types/section'
 import { useI18n } from 'vue-i18n'
 import MindMap from '../components/MindMap.vue'
 import Mermaid from '../components/Mermaid.vue'
@@ -573,7 +577,7 @@ import ChatToolbar from '../components/chat/ChatToolbar.vue'
 import ChatWindow from '../components/chat/ChatWindow.vue'
 import QuestionMark from '../components/chat/QuestionMark.vue'
 import { TextPositionHelper } from '@/utils/textPosition'
-import type { ChatSession } from '../types/chat'
+import type { ChatSession, Position } from '../types/chat'
 import type { TextMark } from '@/utils/textPosition'
 import { useArticleStore } from '../stores/article'
 import { trackEvent } from '@/utils/analytics'
@@ -683,15 +687,6 @@ const sections = ref<ArticleSection[]>([])
 const showEditModal = ref(false)
 const editForm = ref<Partial<Article>>({})
 
-// 2024-03-20: 添加联系方式显示状态
-const showContactInfo = ref(false)
-
-// 根据当前语言获取可用的节类型
-const availableSectionTypes = computed(() => {
-  // 2024-01-16: 只返回文章中实际存在的section类型
-  const existingSectionTypes = new Set(sections.value.map(section => section.section_type))
-  return ALL_SECTION_TYPES.filter(type => existingSectionTypes.has(type))
-})
 
 // 根据选中的小节筛选显示内容
 const displaySections = computed(() => {
@@ -709,21 +704,6 @@ const displaySections = computed(() => {
     })
 })
 
-// 切换小节显示状态
-const toggleSection = (sectionType: SectionType) => {
-  // 2024-01-16: 修改为只实现滚动定位功能，移除选中状态切换
-  const element = document.getElementById('section-' + sectionType)
-  if (element) {
-    const headerHeight = 71 // header的固定高度
-    const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-    
-    // 平滑滚动到目标位置，考虑header高度和一些额外的空间
-    window.scrollTo({
-      top: elementPosition - headerHeight - 20,
-      behavior: 'smooth'
-    })
-  }
-}
 
 const markdownContent = computed(() => {
   return article.value?.content ? marked(article.value.content) : ''
@@ -739,44 +719,43 @@ const formatDate = (date: string | null) => {
   }
 }
 
-const canEdit = computed(() => {
-  return authStore.isAuthenticated && 
-         article.value?.user_id === authStore.user?.id
-})
 
 // 获取文章和小节内容
 const fetchArticle = async () => {
   try {
     isLoading.value = true
-    // 获取文章基本信息
-    const { data: articleData, error: articleError } = await supabase
-      .from('keep_articles')
-      .select(`
-        *,
-        user_id,
-        author:keep_authors(id, name, icon)
-      `)
-      .eq('id', route.params.id)
-      .single()
+    
+    // 并行执行文章信息和小节内容的查询
+    const [articleResult, sectionsResult] = await Promise.all([
+      // 获取文章基本信息
+      supabase
+        .from('keep_articles')
+        .select(`
+          *,
+          user_id,
+          author:keep_authors(id, name, icon)
+        `)
+        .eq('id', route.params.id)
+        .single(),
+        
+      // 获取当前语言的文章小节内容
+      supabase
+        .from('keep_article_sections')
+        .select('*')
+        .eq('article_id', route.params.id)
+        .eq('language', locale.value)
+        .order('sort_order')
+    ])
 
-    if (articleError) throw articleError
-
-    // 2024-01-20 13:30: 设置当前文章ID
+    if (articleResult.error) throw articleResult.error
+    
+    // 设置当前文章ID
     if (route.params.id) {
       chatStore.setCurrentArticle(Number(route.params.id))
     }
 
-    // 获取当前语言的文章小节内容
-    let { data: sectionsData, error: sectionsError } = await supabase
-      .from('keep_article_sections')
-      .select('*')
-      .eq('article_id', route.params.id)
-      .eq('language', locale.value)
-      .order('sort_order')
-
-    if (sectionsError) throw sectionsError
-
-    // 如果当前语言没有内容,尝试获取另一种语言的内容
+    // 如果当前语言没有内容,获取另一种语言的内容
+    let sectionsData = sectionsResult.data
     if (!sectionsData?.length) {
       const fallbackLanguage = locale.value === 'zh' ? 'en' : 'zh'
       const { data: fallbackData, error: fallbackError } = await supabase
@@ -786,27 +765,30 @@ const fetchArticle = async () => {
         .eq('language', fallbackLanguage)
         .order('sort_order')
 
-      if (!fallbackError && fallbackData?.length) {
-        sectionsData = fallbackData
-        // 设置提示相关变量
-        showLanguageAlert.value = true
-        contentLanguage.value = fallbackLanguage
-      }
-    } else {
-      // 如果获取到当前语言的内容，确保提示不显示
-      showLanguageAlert.value = false
+      if (fallbackError) throw fallbackError
+      sectionsData = fallbackData
     }
 
-    article.value = articleData
+    // 更新数据
+    article.value = articleResult.data
     sections.value = sectionsData || []
 
+    // 异步记录访问信息，不阻塞主流程
+    if (authStore.user?.id && route.params.id) {
+      recordArticleView(authStore.user.id, Number(route.params.id))
+        .catch(error => console.error('记录访问失败:', error))
+    }
+
+    // 记录访问事件
     trackEvent('article_view', {
-      articleId: route.params.id,
-      title: articleData.title
+      article_id: route.params.id,
+      title: article.value?.title,
+      channel: article.value?.channel
     })
+
   } catch (error) {
-    console.error(t('error.getArticleDetailsFailed'), error)
-    ElMessage.error(t('error.articleFetchFailed'))
+    console.error('获取文章失败:', error)
+    ElMessage.error(t('error.fetchFailed'))
   } finally {
     isLoading.value = false
   }
@@ -953,25 +935,36 @@ const handleScroll = () => {
   })
 }
 
-// 添加记录文章访问的方法
+// 添加记录用户对文章访问
 const recordArticleView = async (userId: string, articleId: number) => {
   try {
-    const response = await fetch('/api/article-views/record', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
+    // 直接使用upsert更新访问记录，无需额外查询
+    const { error: upsertError } = await supabase
+      .from('keep_article_views')
+      .upsert({
         user_id: userId,
-        article_id: articleId
+        article_id: articleId,
+        // 2024-03-25: 修复created_at的使用，只在首次访问时设置
+        last_viewed_at: new Date().toISOString(),
+        // 使用数据库函数增加访问次数
+        view_count: supabase.rpc('increment_view_count', { 
+          p_user_id: userId, 
+          p_article_id: articleId 
+        }),
+        // 通过比较用户ID判断是否是作者
+        is_author: article.value?.user_id === userId
+      }, {
+        onConflict: 'user_id,article_id',
+        // 只更新最后访问时间和访问次数
+        ignoreDuplicates: false
       })
-    })
 
-    if (!response.ok) {
-      throw new Error('请求失败')
+    if (upsertError) {
+      throw upsertError
     }
   } catch (error) {
     console.error('记录文章访问失败:', error)
+    throw error // 让调用者处理错误
   }
 }
 
@@ -1053,24 +1046,6 @@ const copyCurrentUrl = async () => {
   }
 }
 
-// 当鼠标悬停在文章链接上时预取文章内容
-const prefetchArticle = async (id: string) => {
-  try {
-    const { data } = await supabase
-      .from('keep_articles')
-      .select('*')
-      .eq('id', id)
-      .single()
-    
-    // 将数据存入缓存
-    if (data) {
-      const cache = await caches.open('articles-cache')
-      await cache.put(`/article/${id}`, new Response(JSON.stringify(data)))
-    }
-  } catch (error) {
-    console.error('预取文章失败:', error)
-  }
-}
 
 const showLoginModal = ref(false)
 
@@ -1156,27 +1131,8 @@ const position = ref({ x: 0, y: 0 })
 const isDragging = ref(false)
 const dragStart = ref({ x: 0, y: 0 })
 
-// 缩放控制
-const zoomIn = () => {
-  const newScale = scale.value * 1.2
-  if (newScale <= 5) {
-    scale.value = newScale
-    adjustPosition()
-  }
-}
 
-const zoomOut = () => {
-  const newScale = scale.value / 1.2
-  if (newScale >= 0.1) {
-    scale.value = newScale
-    adjustPosition()
-  }
-}
 
-const resetZoom = () => {
-  scale.value = 1
-  position.value = { x: 0, y: 0 }
-}
 
 // 拖动控制
 const startDrag = (e: MouseEvent) => {
@@ -1328,37 +1284,6 @@ const stopTouch = (e: TouchEvent) => {
   lastTouchDistance.value = 0
 }
 
-// 添加位置调整函数
-const adjustPosition = () => {
-  const container = containerRef.value
-  const img = container?.querySelector('img')
-  if (!container || !img) return
-
-  // 获取容器的实际尺寸
-  const containerWidth = container.clientWidth
-  const containerHeight = container.clientHeight
-  
-  // 计算图片缩放后的实际尺寸
-  const scaledWidth = img.naturalWidth * scale.value
-  const scaledHeight = img.naturalHeight * scale.value
-
-  // 如果图片尺寸小于容器，则居中显示
-  if (scaledWidth < containerWidth) {
-    position.value.x = Math.round((containerWidth - scaledWidth) / 2)
-  } else {
-    // 则限制拖动范围
-    const minX = Math.min(0, containerWidth - scaledWidth)
-    position.value.x = Math.max(minX, Math.min(0, position.value.x))
-  }
-
-  if (scaledHeight < containerHeight) {
-    position.value.y = Math.round((containerHeight - scaledHeight) / 2)
-  } else {
-    // 否则限制拖动范围
-    const minY = Math.min(0, containerHeight - scaledHeight)
-    position.value.y = Math.max(minY, Math.min(0, position.value.y))
-  }
-}
 
 // 添加移动端检测
 const isMobile = ref(window.innerWidth <= 768)
@@ -1515,32 +1440,6 @@ const handleTextSelection = () => {
   chatStore.showToolbar(position, selection.toString())
 }
 
-// 添加获取section级别问题数量的方法
-const getSectionQuestionCount = (sectionId: string) => {
-  // 这里需要实现获取section级别问题数量的逻辑
-  // 这里只是一个示例，实际实现需要根据你的需求来实现
-  return 0
-}
-
-// 添加处理 Ask AI 的方法
-const handleAskAI = async () => {
-  if (!authStore.isAuthenticated) {
-    showLoginModal.value = true
-    return
-  }
-  
-  if (!article.value?.id) {
-    ElMessage.error('文章信息不存在')
-    return
-  }
-  
-  try {
-    // 传入isAskAI参数，第三个变量为ture
-    await chatStore.createNewSession(article.value.id, undefined, true)
-  } catch (error) {
-    console.error('创建AI对话失败:', error)
-  }
-}
 
 // 添加获取文章标记的方法
 const articleMarks = ref<ChatSession[]>([])
@@ -1554,7 +1453,7 @@ const fetchArticleMarks = async () => {
     
     if (error) throw error
     if (data) {
-      articleMarks.value = data
+      articleMarks.value = data as ChatSession[]
     }
   } catch (error) {
     console.error('获取文章标记失败:', error)
@@ -1754,7 +1653,6 @@ const handleRefreshAnchors = async () => {
 }
 
 // 添加新的响应式变量
-const sectionTabsRef = ref<HTMLElement | null>(null)
 const tabsContainerRef = ref<HTMLElement | null>(null)
 const showGradientMask = ref(false)
 
@@ -1795,35 +1693,7 @@ watch(() => sections.value, () => {
   nextTick(checkOverflow)
 })
 
-// 添加 handleMoreSections 函数
-const handleMoreSections = () => {
-  const container = tabsContainerRef.value
-  if (container) {
-    const scrollStep = container.clientWidth * 0.8 // 滚动80%的可视区域宽度
-    const targetScroll = container.scrollLeft + scrollStep
-    
-    // 使用平滑滚动
-    container.scrollTo({
-      left: targetScroll,
-      behavior: 'smooth'
-    })
-  }
-}
 
-// 修改toggleChatWindow函数，添加登录检查
-const toggleChatWindow = () => {
-  // 2024-01-21 16:30: 添加登录检查
-  if (!authStore.isAuthenticated && chatStore.chatWindowState === 'minimized') {
-    ElMessage.warning(t('chat.loginRequired'))
-    showLoginModal.value = true
-    return
-  }
-  
-  chatStore.chatWindowState = chatStore.chatWindowState === 'expanded' ? 'minimized' : 'expanded'
-  if (chatStore.chatWindowState === 'expanded') {
-    windowHeight.value = DEFAULT_EXPANDED_HEIGHT
-  }
-}
 
 const chatWindowRef = ref<InstanceType<typeof ChatWindow> | null>(null)
 
@@ -1832,10 +1702,6 @@ const handleScrollToBottom = () => {
   chatWindowRef.value?.scrollToBottom(true)
 }
 
-// 2024-03-20: 添加获取联系方式图片的函数
-const getContactImage = (imageName: string): string => {
-  return `/images/covers/${imageName}`
-}
 
 // 添加handleLoginModalClose函数
 const handleLoginModalClose = () => {
@@ -1847,12 +1713,7 @@ const handleLoginModalClose = () => {
 
 // 在 setup 中添加
 const showFeedbackForm = ref(false)
-const disableHoverEffect = ref(false)
 
-const handleFeedbackFormClose = () => {
-  showFeedbackForm.value = false
-  disableHoverEffect.value = true
-}
 
 const handleFeedbackSubmit = (data: any) => {
   console.log('Feedback submitted:', data)
@@ -1860,14 +1721,17 @@ const handleFeedbackSubmit = (data: any) => {
   ElMessage.success(t('feedback.submitSuccess'))
 }
 
-// 添加反馈表单相关的处理函数
-const handleFeedbackHover = () => {
-  showFeedbackForm.value = true
+// 2024-03-24 22:30: 添加获取section问题标记数量的方法
+const getSectionQuestionCount = (sectionId: number) => {
+  if (!articleMarks.value) return 0
+  const currentSection = sections.value.find(s => s.id === sectionId)
+  if (!currentSection) return 0
+  return articleMarks.value.filter(mark => 
+    mark.section_type && 
+    mark.section_type === currentSection.section_type
+  ).length
 }
 
-const handleFeedbackClose = () => {
-  showFeedbackForm.value = false
-}
 </script>
 
 <style>
@@ -2023,8 +1887,7 @@ img {
   -webkit-user-drag: none;
   -khtml-user-drag: none;
   -moz-user-drag: none;
-  -o-user-drag: none;
-  user-drag: none;
+  -o-user-drag: none
 }
 
 /* 确保预览容器不会滚动 */

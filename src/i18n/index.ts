@@ -11,7 +11,8 @@ const getBrowserLanguage = () => {
 
 const i18n = createI18n({
   legacy: false,
-  locale: getBrowserLanguage(), // 使用浏览器语言作为初始语言
+ //locale: getBrowserLanguage(), // 使用浏览器语言作为初始语言
+  locale: 'en', // 强制使用英文
   fallbackLocale: 'en',
   messages: {
     en,
