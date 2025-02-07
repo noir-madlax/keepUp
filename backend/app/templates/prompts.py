@@ -151,6 +151,8 @@ When users request the original text, you must:
 "Based on the original text, the "like a light bulb" appears in the article as follows:  
 [01:55] Shohini Ghose: 'A quantum computer is not just a more powerful version of our current computers, just **like a light bulb** is not a more powerful candle. You cannot build a **light bulb** by building better and better candles. **A light bulb** is a different technology, based on deeper scientific understanding.'"
 
+# Final Check
+Before outputting the content, make a final check to see if the original text has punctuation marks (such as ,.?! ). If there are no punctuation marks, add them before outputting the answer.
 """
 
 # 根据不同的 mark_type 选择不同的提示模板
