@@ -14,11 +14,22 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       if (isInitialized.value) return
 
-      // 1. 先获取 session
+      // 2024-03-24: 检查 localStorage 中是否有有效的 token
+      const hasToken = Object.keys(localStorage).some(key => 
+        key.startsWith('sb-') && 
+        key.includes('auth-token')
+      )
+
+      if (!hasToken) {
+        console.log('[loadUser] No valid token found in localStorage')
+        user.value = null
+        return
+      }
+
+      // 获取 session
       const { data: { session } } = await supabase.auth.getSession()
       
       if (session?.user) {
-        // 2. 如果 session 中有用户信息，直接使用
         user.value = session.user
         // 加载用户信息后设置用户身份
         identifyUser(user.value.id, {
@@ -26,18 +37,11 @@ export const useAuthStore = defineStore('auth', () => {
           name: user.value.user_metadata?.full_name
         })
       } else {
-        // 3. 没有 session 才调用 getUser
-        const { data: { user: currentUser } } = await supabase.auth.getUser()
-        user.value = currentUser
-        if (currentUser) {
-          identifyUser(currentUser.id, {
-            email: currentUser.email,
-            name: currentUser.user_metadata?.full_name
-          })
-        }
+        console.log('[loadUser] No valid session found')
+        user.value = null
       }
     } catch (error) {
-      console.error('Error loading user:', error)
+      console.error('[loadUser] Error:', error)
       user.value = null
     } finally {
       isInitialized.value = true
@@ -76,9 +80,41 @@ export const useAuthStore = defineStore('auth', () => {
   })
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-    user.value = null
+    try {
+      console.log('[signOut] Starting signout process')
+      
+      // 1. 先清理 localStorage 中的 Supabase token
+      const supabaseKeys = Object.keys(localStorage).filter(key => key.startsWith('sb-'))
+      supabaseKeys.forEach(key => {
+        console.log(`[signOut] Removing localStorage key: ${key}`)
+        localStorage.removeItem(key)
+      })
+
+      // 2. 调用 Supabase 登出
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        if (error.message?.includes('Auth session missing')) {
+          console.log('[signOut] Session already missing, cleaning up state')
+          user.value = null
+          return
+        }
+        throw error
+      }
+      
+      // 3. 清理前端状态
+      user.value = null
+      
+      // 4. 重置初始化状态，确保下次需要重新加载用户信息
+      isInitialized.value = false
+      
+      console.log('[signOut] Signout completed successfully')
+    } catch (error) {
+      console.error('[signOut] Error:', error)
+      // 即使出错也要清理状态
+      user.value = null
+      isInitialized.value = false
+      throw error
+    }
   }
 
   const handleAuthCallback = async () => {

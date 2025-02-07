@@ -35,9 +35,9 @@
           @click="feedbackStore.showForm()"
         >
           <p class="text-base animate-bounce  text-pink-500 ">
-            <span class="">📨 Dear early adopters, </span>
+            <span class="">📨 </span>
             <span class="text-blue-500 font-medium group-hover:text-blue-600 transition-colors">Click here</span>
-            <span class=""> to share your feedback and shape our future!</span>
+            <span class=""> to provide feedback and help us improve!</span>
             <span class="ml-1 inline-block animate-bounce">📨</span>
           </p>
         </div>
@@ -113,28 +113,25 @@
               </span>
             </h2>
             <div class="max-w-2xl mx-auto space-y-4">
-              <p class="text-lg sm:text-xl text-gray-700">
-                Transform long videos and podcasts into concise summaries！
-              </p>
               <div class="flex flex-wrap justify-center gap-6 mt-6">
                 <!-- 产品特点 -->
                 <div class="flex items-center gap-2">
                   <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Quick Summaries</span>
+                  <span>Get Insights</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Ask Questions</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
                   <span>Multiple Platforms</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>AI Chat & Analysis</span>
                 </div>
               </div>
             </div>
@@ -846,21 +843,49 @@ const handleLogout = async () => {
   try {
     console.log('[handleLogout] Starting logout process')
     
-    // 2024-03-15: 先清空本地数据
-    articles.value = []
-    authors.value = []
-    selectedAuthors.value = []
-    selectedChannels.value = []
-    currentPage.value = 1
-    hasMore.value = true
-    isLoading.value = false
+    // 2024-03-24: 清空本地数据（无论如何都要执行）
+    const clearLocalState = () => {
+      articles.value = []
+      authors.value = []
+      selectedAuthors.value = []
+      selectedChannels.value = []
+      currentPage.value = 1
+      hasMore.value = true
+      isLoading.value = false
+      
+      // 清理其他可能的本地存储数据
+      localStorage.removeItem('pendingUploadUrl')
+      localStorage.removeItem('lastViewedArticle')
+      
+      // 停止所有轮询
+      if (typeof stopPolling === 'function') {
+        stopPolling()
+      }
+    }
     
+    clearLocalState()
     
     // 执行登出
-    await authStore.signOut()
+    try {
+      await authStore.signOut()
+    } catch (error: any) {
+      // 如果是 session missing，视为正常的登出状态
+      if (error.message?.includes('Auth session missing')) {
+        console.log('[handleLogout] Session already expired, treating as logged out')
+      } else {
+        // 其他错误才抛出
+        throw error
+      }
+    }
+    
+    // 不管是正常登出还是 session missing，都显示登出成功
     ElMessage.success(t('auth.logoutSuccessMessage'))
     
+    // 2024-03-24: 确保用户看到登出后的界面
+    showLoginModal.value = true
+    
   } catch (error) {
+    // 只有真正的错误才会到这里
     console.error('[handleLogout] Error:', error)
     ElMessage.error(t('auth.logoutFailedMessage'))
   }

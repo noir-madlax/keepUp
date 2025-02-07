@@ -84,7 +84,7 @@
             {{ truncateUrl(article.original_url) || t('upload.card.fallback.noLink') }}
           </div>
           <div class="error-text">
-            Sorry! We'll fix this & email you ASAP. Your early support means a lot!
+            We are aware of this issue and are working on it. You will receive an email once it's resolved.
           </div>
         </div>
 
@@ -260,16 +260,16 @@ const getErrorMessage = computed(() => {
   
   if (props.article.error_message.includes('video') || 
       props.article.error_message.includes('视频')) {
-    return t('upload.card.error.videoInfo')
+    return 'Processing Failed'
   }
   
   if (props.article.error_message.includes('subtitle') || 
       props.article.error_message.includes('字幕')) {
-    return t('upload.card.error.subtitle')
-  }
+        return 'Processing Failed'
+      }
   
   // 如果没有匹配到具体错误类型，返回未知错误
-  return t('upload.card.error.unknown')
+  return 'Processing Failed'
 })
 
 const getArticleImage = () => {

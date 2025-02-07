@@ -3,7 +3,7 @@
     <input
       type="text"
       v-model="localUrl"
-      :placeholder="'Paste link here(only YouTube・Apple・Spotify)'"
+      :placeholder="'Paste YouTube/Podcasts link here'"
       :class="[inputClass, { 'input-highlight': isHighlighted }]"
       @keyup.enter="handleNewUploadClick('url')"
       @focus="handleInputFocus"
