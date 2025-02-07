@@ -303,7 +303,6 @@ import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
-const showUploadModal = ref(false)
 const selectedTag = ref<string>('all')
 const selectedChannels = ref<string[]>([])
 const selectedAuthors = ref<number[]>([])

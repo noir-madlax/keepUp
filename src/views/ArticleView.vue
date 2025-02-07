@@ -56,9 +56,9 @@
               @click="feedbackStore.showForm()"
             >
               <p class="text-base animate-bounce text-pink-500">
-                <span class="">📨 Dear early adopters, </span>
+                <span class="">📨  </span>
                 <span class="text-blue-500 font-medium group-hover:text-blue-600 transition-colors">Click here</span>
-                <span class=""> to share your feedback and shape our future!</span>
+                <span class=""> to provide feedback and help us improve!</span>
                 <span class="ml-1 inline-block animate-bounce">📨</span>
               </p>
             </div>
