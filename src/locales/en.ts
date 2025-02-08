@@ -222,8 +222,8 @@ export default {
       expand: 'Elaborate',
       original: 'Show Original',
       explain_selection: 'Explain This',
-      expand_prompt: 'Please explain this content in detail, including more specific details based on the original context.',
-      original_prompt: 'Please check my input content above.And provide the complete original text and highlight important keywords.',
+      expand_prompt: 'Please elaborate this content in detail, including more specific examples.',
+      original_prompt: 'Please check my selected content above. Provide the original text with appropriate punctuation marks, and bold the selected content and highlight important keywords.',
       explain_selection_prompt: 'Please explain the specific meaning of this content based on the original context.'
     },
     input: {
