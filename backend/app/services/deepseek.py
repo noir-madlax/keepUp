@@ -25,7 +25,7 @@ class DeepseekService:
                 "temperature": 0.1,
                 "max_tokens": 1000,
                 "timeout": 30,  
-                "stream": True  # 启用流式响应，发版本更新19下
+                "stream": True  # 启用流式响应，发版本更新20下
             }
             
             # 添加历史消息
