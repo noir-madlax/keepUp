@@ -237,8 +237,8 @@ export default {
     },
     questionMark: 'Question',
     toolbar: {
-      hint: '🎉Ask further questions about the summary:',
-      selected_hint: '🎉Ask further questions about the selected text:',
+      hint: '🎉Ask follow up questions about the content:',
+      selected_hint: '🎉Ask follow up questions about the selected text:',
       hover_hint: 'Select text to ask AI questions'
     },
     errors: {
