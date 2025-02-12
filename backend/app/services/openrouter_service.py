@@ -60,13 +60,8 @@ class OpenRouterService:
                 "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}"
             }
             
-            # 2024-03-14: 第三次重试时使用beta模型
-            current_retry = OpenRouterService.call_openrouter_api.get_retry_count()
-            model = "anthropic/claude-3.5-sonnet:beta" if current_retry >= 2 else OpenRouterService.MODEL
-            logger.info(f"当前重试次数: {current_retry}, 使用模型: {model}")
-            
             request_data = {
-                "model": model,
+                "model": OpenRouterService.MODEL,
                 "messages": [
                     {
                         "role": "user",
@@ -87,8 +82,8 @@ class OpenRouterService:
                     }
                 ],
                 "max_tokens": 1500,
-                 "timeout": 30,  
-                 "provider": {
+                "timeout": 30,  
+                "provider": {
                     "order": [
                       "Amazon Bedrock",
                       "Google"
