@@ -40,7 +40,7 @@ async def test_proxies_endpoint(proxies: List[str], background_tasks: Background
         logger.error(f"代理测试失败: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
     
-@router.post("/router/get")
+@router.api_route("/router/get", methods=["GET", "POST"])
 async def get_proxies():
     """从Webshare获取最新的代理列表"""
     try:
