@@ -32,8 +32,6 @@ pnpm-debug.log*
 
 # Dist folder
 dist/
-mobile/
-
 # Cache folders
 .cache/
 
