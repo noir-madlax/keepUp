@@ -1,5 +1,5 @@
-fastapi==0.104.1
-uvicorn==0.24.0
+fastapi>=0.68.0
+uvicorn>=0.15.0
 httpx==0.23.1
 python-dotenv==1.0.0
 pydantic==2.5.1
@@ -11,7 +11,7 @@ requests==2.31.0
 pytubefix==7.4.0
 
 # 文件上传
-python-multipart==0.0.6
+python-multipart>=0.0.5
 python-docx==1.0.1  # 处理 Word 文档
 PyPDF2==3.0.1      # 处理 PDF 文件
 
