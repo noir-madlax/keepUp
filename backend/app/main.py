@@ -7,8 +7,22 @@ from app.config import settings
 from app.routers import chat
 from app.routers import article_views
 from app.routers import proxy
+from app.services.scheduler import SchedulerService
 
 app = FastAPI(title="Keep Up API")
+
+# 创建调度器实例
+scheduler = SchedulerService()
+
+@app.on_event("startup")
+async def startup_event():
+    """应用启动时启动调度器"""
+    scheduler.start()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """应用关闭时关闭调度器"""
+    scheduler.shutdown()
 
 # CORS 配置
 app.add_middleware(
