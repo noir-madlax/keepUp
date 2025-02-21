@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 // 2024-03-19: 暂时注释掉 PWA 相关配置
@@ -22,16 +22,13 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        // 本地前端调用目标后端服务
-        // target: 'https://keep-up-backend.vercel.app',
-        //  agent: new HttpsProxyAgent('http://127.0.0.1:7890'),
-        // 生产环境配置，自动判断是否是本地还是生产调用后端
-           target: process.env.NODE_ENV === 'production'
-         ? 'https://keep-up-backend.vercel.app'
-         : 'http://localhost:8000',
-
-        
+        target: loadEnv(process.env.NODE_ENV, process.cwd()).VITE_API_URL,
         changeOrigin: true,
+        // 根据环境变量决定是否使用代理
+        ...(loadEnv(process.env.NODE_ENV, process.cwd()).VITE_USE_PROXY === 'true' && 
+            loadEnv(process.env.NODE_ENV, process.cwd()).VITE_PROXY_URL
+          ? { agent: new HttpsProxyAgent(loadEnv(process.env.NODE_ENV, process.cwd()).VITE_PROXY_URL) }
+          : {}),
         rewrite: (path) => path.replace(/^\/api/, ''),
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
