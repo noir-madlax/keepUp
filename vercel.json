@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://keep-up-backend.vercel.app/:path*"
+      "destination": "${VERCEL_API_URL}/:path*"
     },
     {
       "source": "/(.*)",
