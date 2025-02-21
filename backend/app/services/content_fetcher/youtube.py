@@ -267,3 +267,7 @@ class YouTubeFetcher(ContentFetcher):
                     proxies['http'], 
                     success=success
                 )
+
+    async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
+        """获取 YouTube 作者信息"""
+        pass

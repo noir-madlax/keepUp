@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 from .base import ContentFetcher, VideoInfo
 from app.models.article import ArticleCreate
 from app.utils.logger import logger
@@ -53,3 +53,7 @@ class FileFetcher(ContentFetcher):
     async def get_chapters(self, url: str) -> Optional[str]:
         """获取文件章节信息 - 文件暂不支持章节"""
         return None 
+
+    async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
+        """获取文件作者信息"""
+        pass 

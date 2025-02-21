@@ -1,5 +1,5 @@
 from typing import Optional, Dict
-from .base import ContentFetcher, VideoInfo
+from .base import ContentFetcher, VideoInfo, AuthorInfo
 import re
 from app.utils.logger import logger
 
@@ -22,3 +22,7 @@ class XiaoYuZhouFetcher(ContentFetcher):
         """获取小宇宙章节信息"""
         logger.info(f"小宇宙章节信息获取暂未实现: {url}")
         return None
+
+    async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
+        """获取小宇宙播客作者信息"""
+        pass

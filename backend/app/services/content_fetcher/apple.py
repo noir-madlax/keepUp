@@ -32,7 +32,7 @@ class ApplePodcastFetcher(ContentFetcher):
         解析多种格式的日期字符串为datetime对象
         支持的格式:
         - 中文格式: "12月4日 2024"
-        - 英文相对格��: "1 DAY AGO 2024", "2 DAYS AGO 2024"
+        - 英文相对格式: "1 DAY AGO 2024", "2 DAYS AGO 2024"
         - 英文日期格式: "DEC 4 2024", "DECEMBER 4 2024"
         """
         try:
@@ -422,3 +422,7 @@ class ApplePodcastFetcher(ContentFetcher):
         except Exception as e:
             logger.error(f"获取作者头像URL失败: {str(e)}")
             return None
+
+    async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
+        """获取 Apple Podcast 作者信息"""
+        pass

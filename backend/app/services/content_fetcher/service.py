@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 from .youtube import YouTubeFetcher
 from .xiaoyuzhou import XiaoYuZhouFetcher
 from .base import VideoInfo
@@ -7,6 +7,7 @@ from .webpage import WebPageFetcher
 from .file import FileFetcher
 from app.utils.logger import logger
 from app.models.request import FetchRequest
+from app.models.author import AuthorInfo
 
 class ContentFetcherService:
     """内容获取服务"""
@@ -53,4 +54,15 @@ class ContentFetcherService:
             return None
         except Exception as e:
             logger.error(f"获取视频章节信息失败: {str(e)}", exc_info=True)
+            return None
+
+    async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
+        """获取作者信息"""
+        try:
+            for fetcher in self.fetchers:
+                if fetcher.can_handle(url):
+                    return await fetcher.get_author_info(url)
+            return None
+        except Exception as e:
+            logger.error(f"获取作者信息失败: {str(e)}", exc_info=True)
             return None 

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 from .base import ContentFetcher, VideoInfo
 from app.utils.logger import logger
 from app.models.article import ArticleCreate
@@ -287,4 +287,8 @@ class WebPageFetcher(ContentFetcher):
             
         except Exception as e:
             logger.error(f"获取网页章节信息失败: {str(e)}")
-            return None 
+            return None
+    
+    async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
+        """获取网页作者信息"""
+        pass 
