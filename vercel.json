@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "${VERCEL_API_URL}/:path*"
+      "destination": "http://3.216.98.136:8000/:path*"
     },
     {
       "source": "/(.*)",
