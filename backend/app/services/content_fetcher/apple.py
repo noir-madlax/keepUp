@@ -1,5 +1,5 @@
 from typing import Optional, Dict
-from .base import ContentFetcher, VideoInfo
+from .base import ContentFetcher, VideoInfo, AuthorInfo
 from app.models.article import ArticleCreate
 from app.config import settings
 import assemblyai as aai

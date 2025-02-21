@@ -1,5 +1,5 @@
 from typing import Optional, Dict, List
-from .base import ContentFetcher, VideoInfo
+from .base import ContentFetcher, VideoInfo, AuthorInfo
 from app.models.article import ArticleCreate
 import re
 from app.config import settings

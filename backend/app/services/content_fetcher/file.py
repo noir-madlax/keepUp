@@ -1,5 +1,5 @@
 from typing import Optional, Dict
-from .base import ContentFetcher, VideoInfo
+from .base import ContentFetcher, VideoInfo, AuthorInfo
 from app.models.article import ArticleCreate
 from app.utils.logger import logger
 from app.models.request import FetchRequest
