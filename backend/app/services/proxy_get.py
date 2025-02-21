@@ -1,10 +1,9 @@
 import requests
 from typing import List, Dict
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.utils.logger import logger
 from app.config import settings
-from app.repositories.supabase import SupabaseService
-import asyncio
+from app.repositories.proxy import proxy_repository
 
 class ProxyGetter:
     def __init__(self):
@@ -109,6 +108,9 @@ class ProxyGetter:
                     break
                     
                 page += 1
+            
+            # 更新所有代理的状态
+            await proxy_repository.inactive_history_proxies(total_proxies)
                 
             return {
                 "status": "success",

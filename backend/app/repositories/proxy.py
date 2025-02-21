@@ -180,4 +180,67 @@ class ProxyRepository:
         except Exception as e:
             logger.error(f"更新代理状态失败: {str(e)}", exc_info=True)
 
+    @classmethod
+    async def inactive_history_proxies(cls, current_proxies: List[str]):
+        """
+        将不在当前批次中且 id>1000 的所有代理标记为非活跃
+        分页获取所有代理并批量处理
+        """
+        try:
+            client = SupabaseService.get_client()
+            
+            # 处理当前代理URL格式，移除 http:// 前缀
+            current_proxies_processed = [proxy.replace('http://', '') for proxy in current_proxies]
+            logger.info(f"当前活跃代理数量: {len(current_proxies_processed)}")
+
+            # 分页获取所有 id>1000 的代理
+            all_proxies = []
+            page = 0
+            page_size = 1000
+            
+            while True:
+                result = client.table("keep_proxies")\
+                    .select("id", "proxy_url")\
+                    .gt("id", 1000)\
+                    .range(page * page_size, (page + 1) * page_size - 1)\
+                    .execute()
+                
+                if not result.data:
+                    break
+                    
+                all_proxies.extend(result.data)
+                page += 1
+            
+            logger.info(f"获取到的历史代理数量: {len(all_proxies)}")
+                
+            if not all_proxies:
+                logger.info("没有需要处理的历史代理")
+                return
+                
+            # 找出需要设置为非活跃的代理
+            proxies_to_inactive = [
+                proxy["id"] for proxy in all_proxies 
+                if proxy["proxy_url"] not in current_proxies_processed  # 使用处理后的代理列表比较
+            ]
+            
+            if not proxies_to_inactive:
+                logger.info("没有需要设置为非活跃的代理")
+                return
+            
+            logger.info(f"需要设置为非活跃的代理数量: {len(proxies_to_inactive)}")
+                
+            # 批量更新状态
+            batch_size = 100  # 每批处理100个
+            for i in range(0, len(proxies_to_inactive), batch_size):
+                batch = proxies_to_inactive[i:i + batch_size]
+                client.table("keep_proxies")\
+                    .update({"is_active": False})\
+                    .in_("id", batch)\
+                    .execute()
+                
+            logger.info(f"成功更新代理状态，设置了 {len(proxies_to_inactive)} 个代理为非活跃")
+            
+        except Exception as e:
+            logger.error(f"更新代理状态失败: {str(e)}", exc_info=True)
+
 proxy_repository = ProxyRepository() 
