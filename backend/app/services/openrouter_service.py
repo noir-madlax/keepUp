@@ -9,7 +9,7 @@ from app.utils.decorators import retry_decorator
 
 class OpenRouterService:
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
-    MODEL = "anthropic/claude-3.5-sonnet"
+    MODEL = "anthropic/claude-3.7-sonnet"
     
     @staticmethod
     async def get_prompt_data(lang: str) -> Optional[str]:
@@ -81,7 +81,7 @@ class OpenRouterService:
                         ]
                     }
                 ],
-                "max_tokens": 1500,
+                "max_tokens": 2000,
                 "timeout": 30,  
                 "provider": {
                     "order": [
