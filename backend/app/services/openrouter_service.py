@@ -81,8 +81,6 @@ class OpenRouterService:
                         ]
                     }
                 ],
-                "max_tokens": 2000,
-                "timeout": 30,  
                 "provider": {
                     "order": [
                       "Amazon Bedrock",
