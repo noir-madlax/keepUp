@@ -50,7 +50,10 @@ class YouTubeFetcher(ContentFetcher):
     
     async def get_proxy(self) -> Optional[Dict[str, str]]:
         if settings.USE_PROXY:
-            return await proxy_repository.get_available_proxy()
+            # 注释掉原来的代码，方便下次使用
+            # return await proxy_repository.get_available_proxy()
+            # 使用配置中的 PROXY_URL
+            return {"http": settings.PROXY_URL, "https": settings.PROXY_URL}
         return None
 
 
