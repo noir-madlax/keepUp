@@ -82,15 +82,15 @@ class YouTubeFetcher(ContentFetcher):
                 if not transcript_list:
                     raise ValueError("No video transcript found")
                 success = True
-            finally:
-                # 更新代理状态
-                if settings.USE_PROXY:
-                    response_time = time.time() - start_time
-                    await proxy_repository.update_proxy_status(
-                        proxies['http'], 
-                        success=success,
-                        response_time=response_time
-                    )
+            # finally:
+            #     # 更新代理状态
+            #     if settings.USE_PROXY:
+            #         response_time = time.time() - start_time
+            #         await proxy_repository.update_proxy_status(
+            #             proxies['http'], 
+            #             success=success,
+            #             response_time=response_time
+            #         )
 
             # 格式化字幕内容
             readable_text = []
@@ -144,15 +144,15 @@ class YouTubeFetcher(ContentFetcher):
                 if not title:
                     raise ValueError("No video title found")
                 success = True
-            finally:
-                # 更新代理状态
-                if settings.USE_PROXY:
-                    response_time = time.time() - start_time
-                    await proxy_repository.update_proxy_status(
-                        proxies['http'], 
-                        success=success,
-                        response_time=response_time
-                    )
+            # finally:
+            #     # 更新代理状态
+            #     if settings.USE_PROXY:
+            #         response_time = time.time() - start_time
+            #         await proxy_repository.update_proxy_status(
+            #             proxies['http'], 
+            #             success=success,
+            #             response_time=response_time
+            #         )
 
             # 提取描述
             description_meta = soup.find('meta', {'name': 'description'})
@@ -263,13 +263,13 @@ class YouTubeFetcher(ContentFetcher):
             logger.error(f"获取YouTube视频章节信息失败: {str(e)}", exc_info=True)
             return None
         
-        finally:
-            # 更新代理状态
-            if settings.USE_PROXY:
-                await proxy_repository.update_proxy_status(
-                    proxies['http'], 
-                    success=success
-                )
+        # finally:
+        #     # 更新代理状态
+        #     if settings.USE_PROXY:
+        #         await proxy_repository.update_proxy_status(
+        #             proxies['http'], 
+        #             success=success
+        #         )
 
     async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
         """获取 YouTube 作者信息"""
