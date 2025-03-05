@@ -1,5 +1,11 @@
 FROM python:3.11-slim
 
+# 复制证书到容器
+COPY ca-bright.crt /usr/local/share/ca-certificates/ca-bright.crt
+
+# 更新证书信任存储
+RUN update-ca-certificates
+
 WORKDIR /app
 
 COPY requirements.txt .
