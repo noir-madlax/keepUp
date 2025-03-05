@@ -13,17 +13,17 @@ from pytubefix import Channel
 from app.utils.decorators import retry_decorator
 from app.repositories.proxy import proxy_repository
 import time
+import os
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
         # 保留现有的代理配置
         self.proxies = None
-        # if settings.USE_PROXY and settings.PROXY_URL:
-        #     self.proxies = {
-        #         'http': settings.PROXY_URL,
-        #         'https': settings.PROXY_URL
-        #     }
-    
+        
+        # 设置证书环境变量 - 这可能会解决SSL问题
+        os.environ['REQUESTS_CA_BUNDLE'] = '/etc/ssl/certs/ca-certificates.crt'
+        os.environ['SSL_CERT_FILE'] = '/etc/ssl/certs/ca-certificates.crt'
+        
     def can_handle(self, url: str) -> bool:
         """检查是否是 YouTube URL"""
         youtube_patterns = [
