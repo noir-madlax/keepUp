@@ -36,7 +36,7 @@ class DeepseekService:
                 })
             
             # 记录请求数据
-            logger.info(f"Deepseek Request: {json.dumps(request_data, ensure_ascii=False)}")
+            # logger.info(f"Deepseek Request: {json.dumps(request_data, ensure_ascii=False)}")
             
             async with httpx.AsyncClient() as client:
                 async with client.stream(
