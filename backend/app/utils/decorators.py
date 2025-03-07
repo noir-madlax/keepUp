@@ -4,9 +4,9 @@ from functools import wraps
 from typing import Type, Tuple
 
 def retry_decorator(
-    max_retries: int = 3,           # 最大重试次数
+    max_retries: int = 5,           # 最大重试次数
     base_delay: float = 1,          # 基础延迟时间(秒)
-    max_delay: float = 6,          # 最大延迟时间(秒)
+    max_delay: float = 30,          # 最大延迟时间(秒)
     exceptions: Tuple[Type[Exception], ...] = (Exception,)  # 需要重试的异常类型
 ):
     """
