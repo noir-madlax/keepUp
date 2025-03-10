@@ -439,7 +439,7 @@ class OpenRouterService:
         await OpenRouterService.save_summary_result(article_id, summary_content, lang)
             
         # 6. 如果是英文总结，则自动翻译成中文并保存
-        if lang == 'en':
-            await OpenRouterService.translate_and_save_summary(article_id, summary_content)
+        # if lang == 'en':
+        #     await OpenRouterService.translate_and_save_summary(article_id, summary_content)
             
         return summary_content 
