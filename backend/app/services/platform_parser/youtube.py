@@ -30,13 +30,13 @@ class YouTubeParser(PlatformParser):
         if 'm.youtube.com' in url:
             pc_url = url.replace('m.youtube.com', 'www.youtube.com')
             logger.info(f"将手机端URL转换为PC端URL: {pc_url}")
-            return "youtube", url, pc_url
+            return "youtube", pc_url, url
         
         # 处理短链接
         if 'youtu.be' in url:
             video_id = re.search(r'youtu\.be/([\w-]+)', url).group(1)
             pc_url = f"https://www.youtube.com/watch?v={video_id}"
             logger.info(f"将短链接转换为标准URL: {pc_url}")
-            return "youtube", url, pc_url
+            return "youtube", pc_url, url
             
         return "youtube", url, url 
