@@ -284,7 +284,7 @@ class OpenRouterService:
             required_fields = ['choices', 'model', 'usage']
             for field in required_fields:
                 if field not in response:
-                    logger.error(f"API响应缺少必要字段: {field}")
+                    logger.error(f"API响应缺少必要字段: {field}，完整响应内容: {response}")
                     return None
             
             # 3. 检查并记录token使用情况
