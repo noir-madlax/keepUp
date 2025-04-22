@@ -1007,7 +1007,7 @@ const quickSubmit = async (url: string) => {
       },
       body: JSON.stringify({
         original_url: url,
-        summary_languages: ['en','zh'],
+        summary_languages: ['zh'],
         subtitle_languages: ['na'],
         detailed_languages: ['na'],
         user_id: authStore.user?.id,
