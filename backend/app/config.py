@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     # OpenRouter Configuration
     OPENROUTER_API_KEY: str
     
+    # Bedrock Configuration
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+
     # 代理配置
     USE_PROXY: bool = False
     PROXY_URL: Optional[str] = None
