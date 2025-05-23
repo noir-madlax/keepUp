@@ -13,7 +13,7 @@ from app.services.content_resolver import ContentResolver
 from app.services.request_logger import RequestLogger, Steps
 from app.utils.file_processor import process_file_content
 from ..repositories.article_views import ArticleViewsRepository
-from app.services.bedrock_service import BedrockService
+from app.services.openrouter_service import OpenRouterService
 
 import asyncio
 import json
@@ -88,7 +88,7 @@ async def process_summary_content(request_id: int, languages: list[str]) -> list
             )
             
             try:
-                openrouter_summary = await BedrockService.get_summary(
+                openrouter_summary = await OpenRouterService.get_summary(
                     content=request.get('content'),
                     request_id=request_id,
                     article_id=article['id'],
