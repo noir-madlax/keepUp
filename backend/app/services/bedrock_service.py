@@ -9,7 +9,7 @@ from app.repositories.llm_records_repository import LLMRecordsRepository
 from app.utils.decorators import retry_decorator
 
 class BedrockService:
-    MODEL = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    MODEL = "anthropic.claude-sonnet-4-20250514-v1:0"
     REGION = "us-west-2"
     
     @staticmethod
