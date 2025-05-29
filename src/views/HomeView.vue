@@ -490,7 +490,6 @@ const startPolling = () => {
               author:keep_authors(id, name, icon)
             )
           `)
-          .eq('user_id', authStore.user?.id)
           .order('created_at', { ascending: false })
           .limit(pageSize)
 
@@ -645,7 +644,6 @@ const fetchArticles = async (isRefresh = false) => {
           author:keep_authors(id, name, icon)
         )
       `)
-      .eq('user_id', authStore.user?.id)
       .order('created_at', { ascending: false })
       .range((currentPage.value - 1) * pageSize, currentPage.value * pageSize - 1)
 
@@ -657,7 +655,6 @@ const fetchArticles = async (isRefresh = false) => {
       const { data: requestsData } = await supabase 
         .from('keep_article_requests')
         .select('*')
-        .eq('user_id', authStore.user?.id)
         .in('status', ['processing', 'failed'] as ArticleStatus[])
         .order('created_at', { ascending: false })
       
