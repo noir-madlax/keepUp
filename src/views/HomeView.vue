@@ -1,5 +1,5 @@
 <template>
-  <!-- 根容器1 -->
+  <!-- 根容器2 -->
   <div class="min-h-screen">
     
     <!-- 加载状态显示 -->
