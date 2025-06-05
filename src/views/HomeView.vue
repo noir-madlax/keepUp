@@ -470,37 +470,33 @@ const startPolling = () => {
       // 只有当有处理完成的项目时，才刷新文章列表获取新的文章
       if (hasProcessedItems) {
         // 获取最新的已处理文章
-        const { data: newArticles } = await supabase
-          .from('keep_article_views')
+        const { data: newArticlesData } = await supabase
+          .from('keep_articles')
           .select(`
-            article_id,
+            id,
+            title,
+            cover_image_url,
+            channel,
             created_at,
-            is_author,
-            article:keep_articles(
-              id,
-              title,
-              cover_image_url,
-              channel,
-              created_at,
-              tags,
-              publish_date,
-              author_id,
-              content,
-              original_link,
-              author:keep_authors(id, name, icon)
-            )
+            tags,
+            publish_date,
+            author_id,
+            content,
+            original_link,
+            author:keep_authors(id, name, icon)
           `)
+          .eq('is_visible', true)
           .order('created_at', { ascending: false })
           .limit(pageSize)
 
-        if (newArticles) {
+        if (newArticlesData) {
           // 处理新文章数据
-          const validNewArticles = ((newArticles || []) as unknown as KeepArticleView[]).map(view => ({
-            ...view.article,
-            is_author: view.is_author,
+          const validNewArticles = (newArticlesData || []).map((article: any) => ({
+            ...article,
+            is_author: false, // 暂时设为false，避免业务逻辑影响
             status: 'processed' as const,
-            content: view.article?.content || '',
-            original_link: view.article?.original_link || ''
+            content: article.content || '',
+            original_link: article.original_link || ''
           })).filter((article): article is ArticleType => 
             article !== null && 
             typeof article.is_author === 'boolean' && 
@@ -624,26 +620,22 @@ const fetchArticles = async (isRefresh = false) => {
     }
 
     // 构建查询
-    const { data: views, error } = await supabase 
-      .from('keep_article_views')
+    const { data: articlesData, error } = await supabase 
+      .from('keep_articles')
       .select(`
-        article_id,
+        id,
+        title,
+        cover_image_url,
+        channel,
         created_at,
-        is_author,
-        article:keep_articles(
-          id,
-          title,
-          cover_image_url,
-          channel,
-          created_at,
-          tags,
-          publish_date,
-          author_id,
-          content,
-          original_link,
-          author:keep_authors(id, name, icon)
-        )
+        tags,
+        publish_date,
+        author_id,
+        content,
+        original_link,
+        author:keep_authors(id, name, icon)
       `)
+      .eq('is_visible', true)
       .order('created_at', { ascending: false })
       .range((currentPage.value - 1) * pageSize, currentPage.value * pageSize - 1)
 
@@ -662,12 +654,12 @@ const fetchArticles = async (isRefresh = false) => {
     }
 
     // 处理文章数据
-    const validArticles = ((views || []) as unknown as KeepArticleView[]).map(view => ({
-      ...view.article,
-      is_author: view.is_author,
+    const validArticles = (articlesData || []).map((article: any) => ({
+      ...article,
+      is_author: false, // 暂时设为false，避免业务逻辑影响
       status: 'processed' as const,
-      content: view.article?.content || '',
-      original_link: view.article?.original_link || ''
+      content: article.content || '',
+      original_link: article.original_link || ''
     })).filter((article): article is ArticleType => 
       article !== null && 
       typeof article.is_author === 'boolean' && 
