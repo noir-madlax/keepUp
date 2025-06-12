@@ -34,35 +34,12 @@
               <!-- 网站标题文本 -->
               <h1 class="text-[16px] sm:text-[20px] text-[#333333] font-[400] leading-6 font-['PingFang_SC'] flex items-center gap-2 whitespace-nowrap">
                 {{ t('home.title') }}
-                <!-- 2024-03-19: 添加beta标记 -->
-                <span class="hidden sm:inline-block px-1.5 py-0.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-full font-medium transform hover:scale-105 transition-transform">
-                  BETA
-                </span>
               </h1>
             </div>
-            <!-- 2024-03-22: 添加介绍文字 -->
-            <p class="mt-1 text-xs sm:text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium animate-pulse whitespace-nowrap">
-              <!-- 移动端显示简短文案 -->
-              <span class="sm:hidden">Quick video & audio summary</span>
-              <!-- 桌面端显示完整文案 -->
-              <span class="hidden sm:inline">Quick video & audio summary</span>
-            </p>
+
           </div>
 
-          <!-- 2024-03-19: Early Access横幅 - 仅在桌面端显示在导航栏中 -->
-          <div class="hidden sm:block bg-white py-2 text-center text-pink-500 font-medium relative -ml-20">
-            <div 
-              class="cursor-pointer"
-              @click="feedbackStore.showForm()"
-            >
-              <p class="text-base animate-bounce text-pink-500">
-                <span class="">📨  </span>
-                <span class="text-blue-500 font-medium group-hover:text-blue-600 transition-colors">Click here</span>
-                <span class=""> to provide feedback and help us improve!</span>
-                <span class="ml-1 inline-block animate-bounce">📨</span>
-              </p>
-            </div>
-          </div>
+
           
           <!-- 右侧导航元素容器 -->
           <div class="flex items-center gap-1 pl-2">
