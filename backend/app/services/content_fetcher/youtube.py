@@ -7,6 +7,7 @@ import re
 import time
 import asyncio
 import logging
+import os
 from typing import Optional, Dict, Any
 from datetime import datetime
 
@@ -176,10 +177,10 @@ class YouTubeFetcher(ContentFetcher):
             return None
     
     def _get_ydl_opts(self) -> Dict[str, Any]:
-        """获取 yt-dlp 配置选项 - 支持 bgutil PO Token provider"""
+        """获取 yt-dlp 配置选项 - 使用 bgutil Script 模式"""
         opts = {
-            'quiet': True,
-            'no_warnings': True,
+            'quiet': not settings.YOUTUBE_DEBUG,  # 根据调试配置决定是否安静
+            'no_warnings': not settings.YOUTUBE_DEBUG,  # 根据调试配置决定是否显示警告
             'extract_flat': False,
             'writeinfojson': False,
             'writethumbnail': False,
@@ -187,38 +188,62 @@ class YouTubeFetcher(ContentFetcher):
             'writeautomaticsub': False,
             'skip_download': True,  # 只获取信息，不下载视频
             'ignoreerrors': False,
-            # 配置推荐的客户端和 PO Token 支持
-            'extractor_args': {
-                'youtube': {
-                    'player_client': ['default', 'mweb'],  # 使用官方推荐的 mweb 客户端
-                }
-            }
         }
+        
+        # 如果启用调试模式，添加详细输出
+        if settings.YOUTUBE_DEBUG:
+            opts.update({
+                'verbose': True,  # 添加详细输出
+                'debug_printtraffic': True,  # 打印网络流量调试信息
+            })
+            logger.info("YouTube 调试模式已启用")
         
         # 配置代理
         if settings.USE_PROXY and settings.PROXY_URL:
             opts['proxy'] = settings.PROXY_URL
             logger.info("为 yt-dlp 配置代理: %s", settings.PROXY_URL)
         
-        # 检查 bgutil provider 是否可用
-        try:
-            import requests
-            import os
-            
-            # 优先使用环境变量中的 bgutil provider URL（docker-compose 环境）
-            bgutil_url = os.getenv('BGUTIL_PROVIDER_URL', 'http://localhost:4416')
-            
-            response = requests.get(f"{bgutil_url}/health", timeout=2)
-            if response.status_code == 200:
-                logger.info(f"bgutil PO Token provider 服务可用: {bgutil_url}")
-                # bgutil-ytdlp-pot-provider 插件会自动处理 PO Token
-                # 不需要手动配置，插件会自动与 provider 服务通信
+        # 配置 cookies
+        if settings.YOUTUBE_USE_COOKIES and settings.YOUTUBE_COOKIES_FILE:
+            if os.path.exists(settings.YOUTUBE_COOKIES_FILE):
+                opts['cookiefile'] = settings.YOUTUBE_COOKIES_FILE
+                logger.info(f"使用 cookies 文件: {settings.YOUTUBE_COOKIES_FILE}")
             else:
-                logger.warning(f"bgutil provider 服务不可用: {bgutil_url}，将使用默认配置")
-        except Exception as e:
-            logger.warning(f"无法连接到 bgutil provider: {str(e)}，将使用默认配置")
+                logger.warning(f"Cookies 文件不存在: {settings.YOUTUBE_COOKIES_FILE}")
         
-        logger.info("yt-dlp 配置完成，支持 PO Token 和 mweb 客户端")
+        # 配置 bgutil-ytdlp-pot-provider Script 模式
+        # 这个插件会自动检测 Node.js 并生成 PO Token，无需额外服务
+        try:
+            # 检查 Node.js 是否可用
+            import subprocess
+            result = subprocess.run(['node', '--version'], 
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                node_version = result.stdout.strip()
+                logger.info(f"检测到 Node.js: {node_version}")
+                logger.info("bgutil-ytdlp-pot-provider 将使用 Script 模式自动生成 PO Token")
+            else:
+                logger.warning("未检测到 Node.js，PO Token 生成可能受限")
+        except Exception as e:
+            logger.warning(f"Node.js 检测失败: {str(e)}，PO Token 生成可能受限")
+        
+        # 使用官方推荐的 mweb 客户端配置
+        # bgutil-ytdlp-pot-provider 插件会自动为 mweb 客户端生成 PO Token
+        opts['extractor_args'] = {
+            'youtube': {
+                'player_client': ['mweb'],  # 使用移动网页客户端
+                'player_skip': ['configs'],  # 跳过配置获取
+                # 插件会自动添加 po_token 参数，无需手动配置
+            }
+        }
+        
+        # 设置用户代理为移动浏览器
+        opts['http_headers'] = {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1'
+        }
+        
+        logger.info("yt-dlp 配置: 使用 mweb 客户端 + bgutil Script 模式 PO Token 支持")
+        
         return opts
 
     @retry_decorator()

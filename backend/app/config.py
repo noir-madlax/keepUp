@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     
     # YouTube 和 PO Token 配置
     YOUTUBE_DEBUG: bool = False
+    YOUTUBE_USE_COOKIES: bool = False
+    YOUTUBE_COOKIES_FILE: Optional[str] = None
     BGUTIL_PROVIDER_URL: Optional[str] = None
     PO_TOKEN_TTL: int = 6  # PO Token 缓存时间（小时）
     
