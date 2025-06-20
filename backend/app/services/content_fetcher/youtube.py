@@ -10,6 +10,7 @@ import logging
 import os
 from typing import Optional, Dict, Any
 from datetime import datetime
+from pathlib import Path
 
 import yt_dlp
 from yt_dlp.utils import DownloadError, ExtractorError
@@ -282,19 +283,228 @@ class YouTubeFetcher(ContentFetcher):
         try:
             opts = self._get_ydl_opts()
             
+            # 提取视频 ID 用于诊断
+            video_id = None
+            if 'youtube.com/watch?v=' in url:
+                video_id = url.split('v=')[1].split('&')[0]
+            elif 'youtu.be/' in url:
+                video_id = url.split('youtu.be/')[1].split('?')[0]
+            
+            logger.info(f"开始提取视频信息，视频ID: {video_id}")
+            
+            # 详细打印 yt-dlp 配置参数
+            logger.info("=== yt-dlp 详细配置参数 ===")
+            logger.info(f"代理设置: {opts.get('proxy', 'None')}")
+            logger.info(f"客户端配置: {opts.get('extractor_args', {})}")
+            logger.info(f"HTTP 头部: {opts.get('http_headers', {})}")
+            logger.info(f"安静模式: {opts.get('quiet', False)}")
+            logger.info(f"详细模式: {opts.get('verbose', False)}")
+            logger.info(f"调试流量: {opts.get('debug_printtraffic', False)}")
+            
+            # 环境检查
+            logger.info("=== 环境检查 ===")
+            
+            # 检查 Node.js
+            try:
+                import subprocess
+                node_result = subprocess.run(['node', '--version'], 
+                                           capture_output=True, text=True, timeout=5)
+                if node_result.returncode == 0:
+                    logger.info(f"✅ Node.js 版本: {node_result.stdout.strip()}")
+                else:
+                    logger.error("❌ Node.js 不可用")
+            except Exception as node_error:
+                logger.error(f"❌ Node.js 检查失败: {str(node_error)}")
+            
+            # 检查 bgutil 包
+            try:
+                bgutil_result = subprocess.run(['pip3', 'show', 'bgutil-ytdlp-pot-provider'], 
+                                             capture_output=True, text=True, timeout=5)
+                if bgutil_result.returncode == 0:
+                    logger.info("✅ bgutil-ytdlp-pot-provider 包已安装")
+                    # 提取版本信息
+                    for line in bgutil_result.stdout.split('\n'):
+                        if line.startswith('Version:'):
+                            logger.info(f"版本: {line.strip()}")
+                        elif line.startswith('Location:'):
+                            logger.info(f"位置: {line.strip()}")
+                else:
+                    logger.error("❌ bgutil-ytdlp-pot-provider 包未安装")
+            except Exception as bgutil_error:
+                logger.error(f"❌ bgutil 包检查失败: {str(bgutil_error)}")
+            
+            # 检查 yt-dlp 插件目录
+            try:
+                import site
+                site_packages = site.getsitepackages()
+                logger.info(f"Python site-packages 路径: {site_packages}")
+                
+                # 查找 yt_dlp_plugins 目录
+                for path in site_packages:
+                    plugins_path = Path(path) / 'yt_dlp_plugins'
+                    if plugins_path.exists():
+                        logger.info(f"✅ 找到 yt-dlp 插件目录: {plugins_path}")
+                        plugins = list(plugins_path.glob('*'))
+                        logger.info(f"插件目录内容: {[p.name for p in plugins]}")
+                        break
+                else:
+                    logger.warning("⚠️ 未找到 yt_dlp_plugins 目录")
+                    
+            except Exception as plugins_error:
+                logger.error(f"❌ 插件目录检查失败: {str(plugins_error)}")
+            
             with yt_dlp.YoutubeDL(opts) as ydl:
                 logger.info("使用 yt-dlp 提取视频信息")
-                info = ydl.extract_info(url, download=False)
-                return info
+                
+                # 检查 yt-dlp 版本
+                logger.info(f"yt-dlp 版本: {yt_dlp.version.__version__}")
+                
+                # 检查是否有 bgutil 插件相关的信息
+                try:
+                    # 尝试获取 YouTube extractor 的详细信息
+                    youtube_ie = ydl.get_info_extractor('Youtube')
+                    if youtube_ie:
+                        logger.info(f"YouTube extractor 类: {type(youtube_ie).__name__}")
+                        
+                        # 检查是否有 PO Token 相关的属性或方法
+                        po_token_methods = [method for method in dir(youtube_ie) if 'token' in method.lower()]
+                        if po_token_methods:
+                            logger.info(f"✅ YouTube extractor PO Token 方法: {po_token_methods}")
+                        else:
+                            logger.warning("⚠️ YouTube extractor 不支持 PO Token 生成")
+                            
+                        # 检查客户端配置
+                        if hasattr(youtube_ie, '_client_name'):
+                            logger.info(f"当前客户端名称: {getattr(youtube_ie, '_client_name', 'Unknown')}")
+                            
+                except Exception as extractor_error:
+                    logger.warning(f"无法获取 YouTube extractor 详细信息: {str(extractor_error)}")
+                
+                # 尝试先获取基本信息
+                try:
+                    logger.info("=== 开始第一次提取尝试 ===")
+                    info = ydl.extract_info(url, download=False)
+                    logger.info("✅ 成功获取视频基本信息")
+                    
+                    # 打印获取到的关键信息
+                    if info:
+                        logger.info(f"获取到的标题: {info.get('title', 'N/A')}")
+                        logger.info(f"获取到的作者: {info.get('uploader', 'N/A')}")
+                        logger.info(f"获取到的时长: {info.get('duration', 'N/A')}")
+                        
+                        # 检查是否有 PO Token 相关的信息
+                        info_str = str(info)
+                        if 'po_token' in info_str.lower():
+                            logger.info("✅ 响应中包含 PO Token 信息")
+                        else:
+                            logger.info("⚠️ 响应中未发现 PO Token 信息")
+                            
+                        if 'visitor_data' in info_str.lower():
+                            logger.info("✅ 响应中包含 Visitor Data 信息")
+                        else:
+                            logger.info("⚠️ 响应中未发现 Visitor Data 信息")
+                    
+                    return info
+                    
+                except Exception as extract_error:
+                    error_msg = str(extract_error)
+                    logger.error(f"=== 第一次提取失败 ===")
+                    logger.error(f"错误消息: {error_msg}")
+                    
+                    # 详细分析错误类型
+                    if "Failed to extract any player response" in error_msg:
+                        logger.error("🔍 检测到 'Failed to extract any player response' 错误")
+                        logger.error("这通常表示:")
+                        logger.error("1. PO Token 未生成或无效")
+                        logger.error("2. Visitor Data 缺失")
+                        logger.error("3. 客户端配置不正确")
+                        logger.error("4. IP 被 YouTube 标记")
+                        logger.error("5. bgutil 插件未正确工作")
+                        
+                        # 检查 bgutil 插件是否正常工作
+                        logger.info("=== 检查 bgutil 插件状态 ===")
+                        
+                        # 检查 yt-dlp 是否检测到 bgutil 插件
+                        logger.info("检查 yt-dlp 调试输出中的 bgutil 信息...")
+                        logger.info("如果看到类似 '[youtube] [pot] PO Token Providers: bgutil:...' 的信息，说明插件已加载")
+                        logger.info("如果看到 'bgutil:script-1.1.0 (external, unavailable)' 说明 Script 模式不可用")
+                        logger.info("如果看到 'bgutil:http-1.1.0 (external)' 说明 HTTP 模式可用")
+                        
+                    # 如果失败，尝试不同的客户端配置
+                    logger.info("=== 尝试使用备用配置 ===")
+                    
+                    # 备用配置：使用 web 客户端
+                    backup_opts = opts.copy()
+                    backup_opts['extractor_args'] = {
+                        'youtube': {
+                            'player_client': ['web'],
+                            'player_skip': ['configs'],
+                        }
+                    }
+                    
+                    logger.info("尝试使用 web 客户端配置")
+                    logger.info(f"备用配置: {backup_opts.get('extractor_args', {})}")
+                    
+                    with yt_dlp.YoutubeDL(backup_opts) as backup_ydl:
+                        try:
+                            info = backup_ydl.extract_info(url, download=False)
+                            logger.info("✅ 使用备用配置成功获取视频信息")
+                            return info
+                        except Exception as backup_error:
+                            logger.error(f"备用配置也失败: {str(backup_error)}")
+                            
+                            # 最后尝试：使用最小配置
+                            logger.info("=== 尝试使用最小配置 ===")
+                            minimal_opts = {
+                                'quiet': False,
+                                'no_warnings': False,
+                                'skip_download': True,
+                                'verbose': True,
+                            }
+                            
+                            if settings.USE_PROXY and settings.PROXY_URL:
+                                minimal_opts['proxy'] = settings.PROXY_URL
+                                logger.info(f"最小配置中包含代理: {settings.PROXY_URL}")
+                            
+                            logger.info(f"最小配置参数: {minimal_opts}")
+                            
+                            with yt_dlp.YoutubeDL(minimal_opts) as minimal_ydl:
+                                info = minimal_ydl.extract_info(url, download=False)
+                                logger.info("✅ 使用最小配置成功获取视频信息")
+                                return info
                 
         except DownloadError as e:
-            logger.error(f"yt-dlp 下载错误: {str(e)}")
+            error_msg = str(e)
+            logger.error(f"=== yt-dlp 下载错误 ===")
+            logger.error(f"错误详情: {error_msg}")
+            
+            # 检查是否是 PO Token 相关错误
+            if "Failed to extract any player response" in error_msg:
+                logger.error("🚨 确认为 PO Token 相关错误！")
+                logger.error("可能的原因:")
+                logger.error("1. bgutil-ytdlp-pot-provider 插件未正确工作")
+                logger.error("2. Node.js 版本不兼容（需要 >= 18.0）")
+                logger.error("3. 网络环境或代理问题")
+                logger.error("4. YouTube 检测并阻止了请求")
+                logger.error("5. 容器环境中的依赖缺失")
+                
+                # 提供解决建议
+                logger.error("=== 解决建议 ===")
+                logger.error("1. 检查容器中是否安装了 Node.js >= 18.0")
+                logger.error("2. 确认 bgutil-ytdlp-pot-provider 包已正确安装")
+                logger.error("3. 检查 yt-dlp 插件目录是否存在")
+                logger.error("4. 尝试重新构建 Docker 镜像")
+                logger.error("5. 检查网络连接和代理设置")
+            
             return None
         except ExtractorError as e:
             logger.error(f"yt-dlp 提取器错误: {str(e)}")
             return None
         except Exception as e:
             logger.error(f"yt-dlp 未知错误: {str(e)}")
+            logger.error(f"错误类型: {type(e).__name__}")
+            import traceback
+            logger.error(f"完整错误堆栈: {traceback.format_exc()}")
             return None
 
     def _convert_to_video_info(self, info: Dict[str, Any]) -> VideoInfo:
