@@ -87,7 +87,7 @@ class YouTubeFetcher(ContentFetcher):
             
             return video_info
             
-                except Exception as e:
+        except Exception as e:
             logger.error(f"获取YouTube视频信息失败: {str(e)}")
             return None
     
@@ -106,7 +106,7 @@ class YouTubeFetcher(ContentFetcher):
             return None
         except ExtractorError as e:
             logger.error(f"yt-dlp 提取器错误: {str(e)}")
-                    return None
+            return None
         except Exception as e:
             logger.error(f"yt-dlp 未知错误: {str(e)}")
             return None
@@ -192,12 +192,12 @@ class YouTubeFetcher(ContentFetcher):
         # 这个方法保留用于未来可能的扩展
         # 目前只专注于视频信息获取
         logger.info("频道信息获取功能暂未实现")
-                    return None
+        return None
                 
     async def get_playlist_info(self, url: str) -> Optional[Dict[str, Any]]:
         """获取播放列表信息（如果需要的话）"""
         # 这个方法保留用于未来可能的扩展
         # 目前只专注于视频信息获取
         logger.info("播放列表信息获取功能暂未实现")
-                return None
+        return None
 
