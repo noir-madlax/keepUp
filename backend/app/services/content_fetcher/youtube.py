@@ -4,6 +4,7 @@ import requests
 import os
 import random
 import json
+import subprocess
 from typing import Optional, Dict, List
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -26,6 +27,11 @@ class YouTubeFetcher(ContentFetcher):
         self._visitor_id = None
         self._visitor_id_timestamp = None
         self._visitor_id_cache_duration = 3600  # 1小时缓存
+        
+        # 添加 po_token 缓存
+        self._po_token = None
+        self._po_token_timestamp = None
+        self._po_token_cache_duration = 1800  # 30分钟缓存
         
         # 设置证书环境变量 - 这可能会解决SSL问题
         os.environ['REQUESTS_CA_BUNDLE'] = ''
@@ -307,10 +313,23 @@ class YouTubeFetcher(ContentFetcher):
                 else:
                     proxies = None
                 
-                # 使用pytubefix的'WEB'客户端自动生成po_token
-                # 这需要nodejs >= 18.0并且在PATH中可用
-                logger.info("使用pytubefix 'WEB'客户端（自动po_token生成）")
-                yt = YouTube(url, 'WEB', proxies=proxies)
+                # 先尝试生成 po_token
+                logger.info("尝试生成 po_token")
+                token_info = await self.generate_po_token()
+                
+                if token_info:
+                    # 使用预生成的 po_token
+                    logger.info("使用预生成的 po_token 创建 YouTube 客户端")
+                    yt = YouTube(
+                        url, 
+                        use_po_token=True,
+                        po_token_verifier=(token_info['visitor_data'], token_info['po_token']),
+                        proxies=proxies
+                    )
+                else:
+                    # 回退到 WEB 客户端
+                    logger.info("po_token 生成失败，尝试使用 'WEB' 客户端")
+                    yt = YouTube(url, 'WEB', proxies=proxies)
                 
                 # 直接使用pytubefix的内置属性获取信息
                 title = yt.title or "未知视频标题"
@@ -390,11 +409,25 @@ class YouTubeFetcher(ContentFetcher):
                 )
 
             except Exception as e:
-                logger.warning(f"'WEB'客户端失败: {str(e)}")
-                # 备用方案：使用use_po_token=True
+                logger.warning(f"主要方案失败: {str(e)}")
+                # 备用方案：尝试另一种方式
                 try:
-                    logger.info("尝试备用方案: use_po_token=True")
-                    yt = YouTube(url, use_po_token=True, proxies=proxies)
+                    if not token_info:
+                        # 如果之前没有生成 po_token，现在尝试生成
+                        logger.info("尝试生成 po_token 作为备用方案")
+                        token_info = await self.generate_po_token()
+                    
+                    if token_info:
+                        logger.info("使用 po_token 备用方案")
+                        yt = YouTube(
+                            url, 
+                            use_po_token=True,
+                            po_token_verifier=(token_info['visitor_data'], token_info['po_token']),
+                            proxies=proxies
+                        )
+                    else:
+                        logger.info("最后尝试：使用 use_po_token=True（交互式）")
+                        yt = YouTube(url, use_po_token=True, proxies=proxies)
                     
                     title = yt.title or "未知视频标题"
                     description = yt.description or ""
@@ -454,7 +487,7 @@ class YouTubeFetcher(ContentFetcher):
                     )
                     
                 except Exception as fallback_error:
-                    logger.error(f"备用方案也失败: {str(fallback_error)}")
+                    logger.error(f"所有备用方案都失败: {str(fallback_error)}")
                     logger.error(f"原始错误: {str(e)}")
                     logger.error(f"错误详情: {traceback.format_exc()}")
                     return None
@@ -558,4 +591,67 @@ class YouTubeFetcher(ContentFetcher):
     async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
         """获取 YouTube 作者信息"""
         pass
+
+    async def generate_po_token(self) -> Optional[Dict[str, str]]:
+        """使用 youtube-po-token-generator 生成 po_token"""
+        try:
+            # 检查缓存
+            current_time = time.time()
+            if (self._po_token and self._po_token_timestamp and 
+                current_time - self._po_token_timestamp < self._po_token_cache_duration):
+                logger.info("使用缓存的 po_token")
+                return self._po_token
+
+            logger.info("开始生成新的 po_token")
+            
+            # 设置代理环境变量（如果使用代理）
+            env = os.environ.copy()
+            if settings.USE_PROXY:
+                env['HTTPS_PROXY'] = settings.PROXY_URL
+                env['HTTP_PROXY'] = settings.PROXY_URL
+                logger.info("为 po_token 生成设置代理环境变量")
+            
+            # 调用 youtube-po-token-generator
+            result = subprocess.run(
+                ['youtube-po-token-generator'],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                env=env
+            )
+            
+            if result.returncode == 0:
+                # 解析 JSON 输出
+                token_data = json.loads(result.stdout.strip())
+                visitor_data = token_data.get('visitorData')
+                po_token = token_data.get('poToken')
+                
+                if visitor_data and po_token:
+                    token_info = {
+                        'visitor_data': visitor_data,
+                        'po_token': po_token
+                    }
+                    
+                    # 缓存 token
+                    self._po_token = token_info
+                    self._po_token_timestamp = current_time
+                    
+                    logger.info(f"✅ 成功生成 po_token: visitorData={visitor_data[:10]}..., poToken={po_token[:10]}...")
+                    return token_info
+                else:
+                    logger.error("po_token 生成器返回了无效数据")
+                    return None
+            else:
+                logger.error(f"po_token 生成失败: {result.stderr}")
+                return None
+                
+        except subprocess.TimeoutExpired:
+            logger.error("po_token 生成超时")
+            return None
+        except json.JSONDecodeError as e:
+            logger.error(f"解析 po_token 输出失败: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"生成 po_token 时发生异常: {e}")
+            return None
 
