@@ -1,27 +1,17 @@
-fastapi==0.115.12
-uvicorn[standard]==0.32.1
-python-dotenv==1.0.1
-python-multipart==0.0.19
-pydantic==2.11.6
-pydantic-settings==2.9.1
-supabase==2.15.3
-yt-dlp==2025.6.9
-bgutil-ytdlp-pot-provider==1.1.0
-asyncio==3.4.3
-typing-extensions==4.12.2
-requests==2.32.3
-lxml==5.3.0
-feedparser==6.0.11
-aiofiles==24.1.0
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
+fastapi>=0.68.0
+uvicorn>=0.15.0
+httpx==0.23.1
+python-dotenv==1.0.0
+pydantic==2.5.1
+pydantic-settings==2.1.0
+supabase==1.0.3
+youtube-transcript-api==1.1.0 
 beautifulsoup4==4.12.2
+requests==2.31.0
+pytubefix==9.1.1
 
-# Supabase 相关依赖包 - 明确指定版本避免冲突
-supafunc==0.9.0
-sqlalchemy==2.0.41
-pymysql==1.1.0
-cryptography==45.0.4
+# 文件上传
+python-multipart>=0.0.5
 python-docx==1.0.1  # 处理 Word 文档
 PyPDF2==3.0.1      # 处理 PDF 文件
 
@@ -34,10 +24,8 @@ google-api-python-client==2.154.0
 assemblyai==0.20.1
 urllib3==2.0.7
 
+# 定时任务
+APScheduler==3.10.4
+
 # AWS Bedrock
 boto3==1.38.22
-
-# 添加新的依赖包
-apscheduler==3.10.4
-openai==1.72.0
-youtube-transcript-api==1.1.0
