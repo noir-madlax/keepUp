@@ -16,6 +16,8 @@ from yt_dlp.utils import DownloadError, ExtractorError
 from .base import ContentFetcher, VideoInfo
 from app.config import settings
 from app.utils.decorators import retry_decorator
+from app.models.request import FetchRequest
+from app.models.author import AuthorInfo
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,10 @@ class YouTubeFetcher(ContentFetcher):
     def __init__(self):
         super().__init__()
         self.platform = "YouTube"
+    
+    def can_handle(self, url: str) -> bool:
+        """检查是否可以处理该URL"""
+        return self.is_supported_url(url)
         
     def is_supported_url(self, url: str) -> bool:
         """检查是否为支持的YouTube URL"""
@@ -38,6 +44,136 @@ class YouTubeFetcher(ContentFetcher):
         ]
         
         return any(re.match(pattern, url) for pattern in youtube_patterns)
+    
+    async def fetch(self, url: str, request: Optional[FetchRequest] = None) -> Optional[str]:
+        """获取内容"""
+        try:
+            logger.info(f"开始获取YouTube内容: {url}")
+            
+            # 获取视频信息
+            video_info = await self.get_video_info(url)
+            if not video_info:
+                logger.error("无法获取视频信息")
+                return None
+            
+            # 尝试获取字幕/转录
+            transcript = await self._get_transcript(url)
+            
+            # 组合内容
+            content_parts = [
+                f"标题: {video_info.title}",
+                f"作者: {video_info.author}",
+                f"描述: {video_info.description}",
+            ]
+            
+            if transcript:
+                content_parts.append(f"转录内容: {transcript}")
+            
+            content = "\n\n".join(content_parts)
+            logger.info(f"成功获取YouTube内容，长度: {len(content)}")
+            
+            return content
+            
+        except Exception as e:
+            logger.error(f"获取YouTube内容失败: {str(e)}")
+            return None
+    
+    async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
+        """获取作者信息"""
+        try:
+            logger.info(f"开始获取YouTube作者信息: {url}")
+            
+            # 在线程池中运行 yt-dlp
+            loop = asyncio.get_event_loop()
+            info = await loop.run_in_executor(
+                None, 
+                self._extract_info_sync, 
+                url
+            )
+            
+            if not info:
+                logger.error("无法获取视频信息以提取作者信息")
+                return None
+            
+            # 提取作者信息
+            author_name = info.get('uploader', '') or info.get('channel', '') or '未知作者'
+            author_icon = ''
+            
+            # 尝试获取作者头像
+            thumbnails = info.get('thumbnails', [])
+            if thumbnails:
+                author_icon = thumbnails[0].get('url', '')
+            
+            author_info = AuthorInfo(
+                name=author_name,
+                icon=author_icon,
+                platform="YouTube"
+            )
+            
+            logger.info(f"成功获取作者信息: {author_name}")
+            return author_info
+            
+        except Exception as e:
+            logger.error(f"获取YouTube作者信息失败: {str(e)}")
+            return None
+    
+    async def get_chapters(self, url: str) -> Optional[str]:
+        """获取视频章节信息"""
+        try:
+            logger.info(f"开始获取YouTube章节信息: {url}")
+            
+            # 在线程池中运行 yt-dlp
+            loop = asyncio.get_event_loop()
+            info = await loop.run_in_executor(
+                None, 
+                self._extract_info_sync, 
+                url
+            )
+            
+            if not info:
+                logger.error("无法获取视频信息以提取章节信息")
+                return None
+            
+            # 提取章节信息
+            chapters = info.get('chapters', [])
+            if not chapters:
+                logger.info("该视频没有章节信息")
+                return None
+            
+            # 格式化章节信息
+            chapter_lines = []
+            for i, chapter in enumerate(chapters, 1):
+                title = chapter.get('title', f'章节 {i}')
+                start_time = chapter.get('start_time', 0)
+                end_time = chapter.get('end_time', 0)
+                
+                # 转换时间格式
+                start_min, start_sec = divmod(int(start_time), 60)
+                end_min, end_sec = divmod(int(end_time), 60)
+                
+                chapter_line = f"{i}. {title} ({start_min:02d}:{start_sec:02d} - {end_min:02d}:{end_sec:02d})"
+                chapter_lines.append(chapter_line)
+            
+            chapters_text = "\n".join(chapter_lines)
+            logger.info(f"成功获取章节信息，共 {len(chapters)} 个章节")
+            
+            return chapters_text
+            
+        except Exception as e:
+            logger.error(f"获取YouTube章节信息失败: {str(e)}")
+            return None
+    
+    async def _get_transcript(self, url: str) -> Optional[str]:
+        """获取视频转录/字幕"""
+        try:
+            # 这里可以集成 youtube-transcript-api 或其他字幕获取方法
+            # 目前返回 None，表示暂未实现
+            logger.info("字幕获取功能暂未实现")
+            return None
+            
+        except Exception as e:
+            logger.error(f"获取字幕失败: {str(e)}")
+            return None
     
     def _get_ydl_opts(self) -> Dict[str, Any]:
         """获取 yt-dlp 配置选项"""
@@ -126,6 +262,11 @@ class YouTubeFetcher(ContentFetcher):
                 # 选择最高质量的缩略图
                 thumbnail_url = thumbnails[-1].get('url', '')
             
+            # 作者头像
+            author_icon = ''
+            if thumbnails:
+                author_icon = thumbnails[0].get('url', '')
+            
             # 发布日期
             publish_date = None
             upload_date = info.get('upload_date')
@@ -140,17 +281,10 @@ class YouTubeFetcher(ContentFetcher):
             duration = info.get('duration', 0) or 0
             
             # 观看次数
-            view_count = info.get('view_count', 0) or 0
+            views = info.get('view_count', 0) or 0
             
-            # 点赞数
-            like_count = info.get('like_count', 0) or 0
-            
-            # 标签
-            tags = info.get('tags', []) or []
-            
-            # 其他信息
-            video_id = info.get('id', '')
-            webpage_url = info.get('webpage_url', '')
+            # 频道ID
+            channel_id = info.get('channel_id', '') or info.get('uploader_id', '')
             
             logger.info(f"成功转换视频信息: {title}")
             
@@ -158,15 +292,12 @@ class YouTubeFetcher(ContentFetcher):
                 title=title,
                 description=description,
                 author=author,
-                thumbnail_url=thumbnail_url,
+                author_icon=author_icon,
+                thumbnail=thumbnail_url,
                 publish_date=publish_date,
                 duration=duration,
-                view_count=view_count,
-                like_count=like_count,
-                tags=tags,
-                platform="YouTube",
-                original_url=webpage_url or '',
-                video_id=video_id
+                views=views,
+                channel_id=channel_id
             )
             
         except Exception as e:
@@ -176,15 +307,12 @@ class YouTubeFetcher(ContentFetcher):
                 title=info.get('title', '未知标题'),
                 description='',
                 author=info.get('uploader', '未知作者'),
-                thumbnail_url='',
+                author_icon='',
+                thumbnail='',
                 publish_date=None,
                 duration=0,
-                view_count=0,
-                like_count=0,
-                tags=[],
-                platform="YouTube",
-                original_url='',
-                video_id=info.get('id', '')
+                views=0,
+                channel_id=''
             )
     
     async def get_channel_info(self, url: str) -> Optional[Dict[str, Any]]:
