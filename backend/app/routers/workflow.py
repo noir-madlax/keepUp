@@ -14,6 +14,7 @@ from app.services.request_logger import RequestLogger, Steps
 from app.utils.file_processor import process_file_content
 from ..repositories.article_views import ArticleViewsRepository
 from app.services.openrouter_service import OpenRouterService
+from app.models.article import ArticleCreate
 
 import asyncio
 import json
@@ -385,21 +386,39 @@ async def process_article_task(request: FetchRequest):
             await SupabaseService.update_chapters(request.id, chapters)
         
         # 4. 处理作者信息
-        author = await SupabaseService.get_author_by_name(video_info.author["name"])
+        author = await SupabaseService.get_author_by_name(video_info.author)
         if not author:
+            # 创建新作者信息字典
+            author_data = {
+                "name": video_info.author,
+                "platform": request.platform,
+                "icon": video_info.author_icon or ""
+            }
             # 创建新作者
-            author = await SupabaseService.create_author(video_info.author)
+            author = await SupabaseService.create_author(author_data)
         else:
             # 更新作者信息
-            await SupabaseService.update_author(author["id"], video_info.author)
+            author_data = {
+                "name": video_info.author,
+                "platform": request.platform,
+                "icon": video_info.author_icon or ""
+            }
+            await SupabaseService.update_author(author["id"], author_data)
             
         # 5. 创建文章基础信息
         try:
-            article_data = video_info.article
-            article_data.author_id = author["id"]
-            # 添加 platform 和 original_url 到文章数据
-            article_data.channel = request.platform  # 使用解析得到的 platform
-            article_data.original_link = request.original_url  # 使用原始 URL
+            # 手动创建ArticleCreate对象
+            article_data = ArticleCreate(
+                title=video_info.title,
+                content=video_info.description,
+                channel=request.platform,
+                tags=["视频"],
+                original_link=request.original_url,
+                publish_date=video_info.publish_date,
+                cover_image_url=video_info.thumbnail,
+                author_id=author["id"]
+            )
+            
             article = await SupabaseService.create_article(article_data)
             
             # 更新请求记录的文章ID

@@ -42,8 +42,8 @@ class FileFetcher(ContentFetcher):
             return VideoInfo(
                 title=filename,
                 description="",  # 文件没有描述
-                author=author,
-                article=article
+                author="File Upload",  # 现在author是字符串
+                author_icon="/images/icons/file.svg"
             )
             
         except Exception as e:

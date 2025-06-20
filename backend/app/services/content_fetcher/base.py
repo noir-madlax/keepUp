@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Dict
 from pydantic import BaseModel
+from datetime import datetime
 from app.models.article import ArticleCreate
 from app.models.request import FetchRequest
 from app.models.author import AuthorInfo
@@ -9,8 +10,13 @@ class VideoInfo(BaseModel):
     """视频基本信息"""
     title: str
     description: str
-    author: Dict
-    article: ArticleCreate
+    author: str  # 作者名称
+    author_icon: Optional[str] = ""  # 作者头像URL
+    thumbnail: Optional[str] = ""  # 缩略图URL
+    publish_date: Optional[datetime] = None  # 发布日期
+    duration: Optional[int] = None  # 视频时长（秒）
+    views: Optional[int] = None  # 观看次数
+    channel_id: Optional[str] = None  # 频道ID
 
     class Config:
         arbitrary_types_allowed = True

@@ -302,19 +302,14 @@ class ApplePodcastFetcher(ContentFetcher):
             )
             logger.info("成功创建 ArticleCreate 对象")
             
-            # 创建作者信息
-            author = {
-                "name": author_name,
-                "platform": "Apple Podcast",
-                "icon": author_avatar_url  # 添加作者头像URL
-            }
-            
             # 创建并返回 VideoInfo 对象
             return VideoInfo(
                 title=title,
                 description=description,
-                author=author,
-                article=article
+                author=author_name,  # 现在author是字符串
+                author_icon=author_avatar_url or "",
+                thumbnail=thumbnail_url or "",
+                publish_date=publish_date
             )
             
         except Exception as e:

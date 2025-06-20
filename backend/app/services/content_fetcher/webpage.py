@@ -253,8 +253,10 @@ class WebPageFetcher(ContentFetcher):
             return VideoInfo(
                 title=title,
                 description=description,
-                author=author,
-                article=article
+                author=author_name,
+                author_icon="",
+                thumbnail=cover_image_url or "",
+                publish_date=publish_date
             )
             
         except Exception as e:

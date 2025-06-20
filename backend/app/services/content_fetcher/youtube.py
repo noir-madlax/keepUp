@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from pytubefix import YouTube, Channel
 from youtube_transcript_api import YouTubeTranscriptApi
+import traceback
 
 from app.config import settings
 from app.utils.decorators import retry_decorator
@@ -299,165 +300,155 @@ class YouTubeFetcher(ContentFetcher):
             success = False
             
             try:
-                # 获取页面内容
+                # 获取代理配置
                 if settings.USE_PROXY:
                     proxies = await self.get_proxy()
-                    logger.info("使用代理获取页面内容,proxies: %s", proxies)
+                    logger.info("使用代理获取视频信息,proxies: %s", proxies)
                 else:
                     proxies = None
                 
-                # 获取visitor ID并创建增强session
-                visitor_id = await self.get_visitor_id(proxies)
-                session = self.create_enhanced_session(visitor_id, proxies)
+                # 使用pytubefix直接获取视频信息，不需要手动解析HTML
+                # pytubefix 9.2.0已经内置了完整的visitor_data和poToken处理
+                yt = YouTube(url, proxies=proxies)
                 
-                response = session.get(url)
-                response.raise_for_status()
-                soup = BeautifulSoup(response.text, 'html.parser')
-
-                # 提取标题
-                title = soup.find('meta', {'name': 'title'})['content']
-                if not title:
-                    raise ValueError("No video title found")
-                success = True
-            finally:
-                pass
-
-            # 提取描述
-            description_meta = soup.find('meta', {'name': 'description'})
-            description = description_meta['content'] if description_meta else ""
-            logger.info(f"获取到描述: {description[:100]}...")  # 只打印前100个字符
-
-            # 提取作者
-            author_meta = soup.find('link', {'itemprop': 'name'})
-            author_name = author_meta['content'] if author_meta else "未知作者"
-            logger.info(f"获取到作者: {author_name}")
-
-            # 提取缩略图
-            thumbnail_meta = soup.find('link', {'rel': 'image_src'})
-            thumbnail_url = thumbnail_meta['href'] if thumbnail_meta else "无缩略图"
-            logger.info(f"获取到缩略图: {thumbnail_url}")
-
-            # 提取发布日期
-            publish_date_meta = soup.find('meta', {'itemprop': 'datePublished'})
-            publish_date = None
-            if publish_date_meta and publish_date_meta['content']:
+                # 直接使用pytubefix的内置属性获取信息
+                title = yt.title or "未知视频标题"
+                logger.info(f"✅ 通过pytubefix获取到标题: {title}")
+                
+                description = yt.description or ""
+                logger.info(f"✅ 通过pytubefix获取到描述: {len(description)} 字符")
+                
+                author = yt.author or "未知作者"
+                logger.info(f"✅ 通过pytubefix获取到作者: {author}")
+                
+                # 获取缩略图URL
+                thumbnail_url = yt.thumbnail_url or ""
+                logger.info(f"✅ 通过pytubefix获取到缩略图: {thumbnail_url}")
+                
+                # 获取发布日期
+                publish_date = None
                 try:
-                    publish_date = datetime.fromisoformat(publish_date_meta['content'].replace('Z', '+00:00'))
-                    logger.info(f"获取到发布日期: {publish_date}")
-                except ValueError:
-                    logger.warning(f"无法解析发布日期: {publish_date_meta['content']}")
+                    if yt.publish_date:
+                        publish_date = yt.publish_date
+                        logger.info(f"✅ 通过pytubefix获取到发布日期: {publish_date}")
+                except Exception as e:
+                    logger.warning(f"获取发布日期失败: {e}")
+                
+                # 获取视频时长
+                length = None
+                try:
+                    if hasattr(yt, 'length') and yt.length:
+                        length = yt.length
+                        logger.info(f"✅ 通过pytubefix获取到视频时长: {length} 秒")
+                except Exception as e:
+                    logger.warning(f"获取视频时长失败: {e}")
+                
+                # 获取观看次数
+                views = None
+                try:
+                    if hasattr(yt, 'views') and yt.views:
+                        views = yt.views
+                        logger.info(f"✅ 通过pytubefix获取到观看次数: {views}")
+                except Exception as e:
+                    logger.warning(f"获取观看次数失败: {e}")
+                
+                # 获取频道ID
+                channel_id = None
+                try:
+                    if hasattr(yt, 'channel_id') and yt.channel_id:
+                        channel_id = yt.channel_id
+                        logger.info(f"✅ 通过pytubefix获取到频道ID: {channel_id}")
+                except Exception as e:
+                    logger.warning(f"获取频道ID失败: {e}")
 
-            # 在提取作者信息后，添加获取作者头像的代码
-            author_icon = ""
-            try:
-                # 准备headers，包含visitor_id
-                headers = {}
-                if visitor_id:
-                    headers = {
-                        'x-goog-visitor-id': visitor_id,
-                        'Cookie': f'VISITOR_INFO1_LIVE={visitor_id}'
-                    }
-                
-                if settings.USE_PROXY and proxies:
-                    logger.info("使用代理和visitor_id获取作者头像")
-                    yt = YouTube(url, proxies=proxies, verify=False, headers=headers)
-                else:
-                    logger.info("使用visitor_id获取作者头像")
-                    yt = YouTube(url, headers=headers)
-                
-                channel = Channel(yt.channel_url)
-                author_icon = channel.initial_data.get('metadata', {}).get('channelMetadataRenderer', {}).get('avatar', {}).get('thumbnails', [{}])[0].get('url', '')
-                logger.info(f"成功获取到作者头像: {author_icon}")
-            except Exception as e:
-                logger.warning(f"获取作者头像失败，将使用空值: {str(e)}")
+                # 尝试获取作者头像URL - 这个可能需要特殊处理
                 author_icon = ""
+                try:
+                    # 如果有频道ID，可以构造头像URL
+                    if channel_id:
+                        # YouTube频道头像的标准URL格式
+                        author_icon = f"https://yt3.ggpht.com/ytc/channel/{channel_id}"
+                        logger.info(f"✅ 构造作者头像URL: {author_icon}")
+                except Exception as e:
+                    logger.warning(f"获取作者头像失败: {e}")
 
-            # 更新作者信息字典
-            author = {
-                "name": author_name,
-                "platform": "YouTube",
-                "icon": author_icon  # 添加作者头像
-            }
-            logger.info(f"构建的作者信息: {author}")
-            
-            # 构建文章信息
-            article = ArticleCreate(
-                title=title,
-                content=description,
-                channel="YouTube",
-                tags=["视频"],
-                original_link=url,
-                publish_date=publish_date,
-                cover_image_url=thumbnail_url
-            )
-            logger.info(f"构建的文章信息: {article.dict()}")
+                success = True
+                elapsed_time = time.time() - start_time
+                logger.info(f"✅ YouTube视频信息获取成功，耗时: {elapsed_time:.2f}秒")
 
-            video_info = VideoInfo(
-                title=title,
-                description=description,
-                author=author,
-                article=article
-            )
-            
-            logger.info(f"最终构建的VideoInfo: {video_info.dict()}")
-            return video_info
+                return VideoInfo(
+                    title=title,
+                    description=description,
+                    author=author,
+                    author_icon=author_icon,
+                    thumbnail=thumbnail_url,
+                    publish_date=publish_date,
+                    duration=length,
+                    views=views,
+                    channel_id=channel_id
+                )
+
+            except Exception as e:
+                logger.error(f"获取YouTube视频信息失败: {e}")
+                logger.error(f"错误详情: {traceback.format_exc()}")
+                return None
 
         except Exception as e:
-            logger.error(f"获取YouTube视频信息失败: {str(e)}", exc_info=True)
-            raise e
+            logger.error(f"YouTube视频信息获取过程异常: {e}")
+            return None
 
     async def get_chapters(self, url: str) -> Optional[str]:
         """获取YouTube视频章节信息"""
         try:
-            logger.info(f"开始获取YouTube视频章节信息: {url}")
+            logger.info("开始获取YouTube视频章节信息")
             
             # 获取代理配置
-            proxies = None
             if settings.USE_PROXY:
-                logger.info("使用代理获取章节信息")
                 proxies = await self.get_proxy()
+                logger.info("使用代理获取章节信息")
+            else:
+                proxies = None
             
-            # 获取visitor_id
-            visitor_id = await self.get_visitor_id(proxies)
+            # 使用pytubefix直接获取章节信息
+            # pytubefix 9.2.0已经内置了完整的章节解析功能
+            yt = YouTube(url, proxies=proxies)
             
-            # 准备headers，包含visitor_id
-            headers = {}
-            if visitor_id:
-                headers = {
-                    'x-goog-visitor-id': visitor_id,
-                    'Cookie': f'VISITOR_INFO1_LIVE={visitor_id}'
-                }
-                logger.info(f"使用visitor_id获取章节信息: {visitor_id[:10]}...")
+            # 直接使用pytubefix的内置chapters属性
+            chapters = yt.chapters
             
-            # 创建YouTube对象并获取章节信息
-            try:
-                if proxies:
-                    yt = YouTube(url, proxies=proxies, headers=headers)
-                else:
-                    yt = YouTube(url, headers=headers)
-                
-                if not yt.chapters:
-                    logger.info("该视频没有章节信息")
-                    return None
-                
-                # 将章节信息转换为格式化的文本
-                chapters_text = []
-                for chapter in yt.chapters:
-                    formatted_line = f"[{chapter.start_label}] {chapter.title}"
-                    chapters_text.append(formatted_line)
-                
-                # 将所有章节组合成最终文本
-                final_content = "\n".join(chapters_text)
-                
-                logger.info(f"成功获取到章节信息，共 {len(chapters_text)} 个章节")
-                return final_content
-                
-            except Exception as e:
-                logger.warning(f"获取YouTube视频章节信息失败，将返回空值: {str(e)}")
+            if not chapters:
+                logger.info("该视频没有章节信息")
                 return None
-
+            
+            logger.info(f"✅ 通过pytubefix获取到 {len(chapters)} 个章节")
+            
+            # 格式化章节信息
+            chapters_text = []
+            for i, chapter in enumerate(chapters):
+                # pytubefix的Chapter对象有title和start_seconds属性
+                start_time = chapter.start_seconds if hasattr(chapter, 'start_seconds') else 0
+                title = chapter.title if hasattr(chapter, 'title') else f"章节 {i+1}"
+                
+                # 将秒数转换为时分秒格式
+                hours = int(start_time // 3600)
+                minutes = int((start_time % 3600) // 60)
+                seconds = int(start_time % 60)
+                
+                if hours > 0:
+                    time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                else:
+                    time_str = f"{minutes:02d}:{seconds:02d}"
+                
+                chapters_text.append(f"{time_str} - {title}")
+                logger.info(f"章节 {i+1}: {time_str} - {title}")
+            
+            result = "\n".join(chapters_text)
+            logger.info(f"✅ 章节信息格式化完成")
+            return result
+            
         except Exception as e:
-            logger.warning(f"获取YouTube视频章节信息过程出错，将返回空值: {str(e)}")
+            logger.warning(f"获取YouTube视频章节信息失败: {e}")
+            logger.warning(f"错误详情: {traceback.format_exc()}")
             return None
 
     async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
