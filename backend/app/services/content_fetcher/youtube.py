@@ -5,6 +5,7 @@ import os
 import random
 import json
 import subprocess
+import asyncio
 from typing import Optional, Dict, List
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -313,23 +314,9 @@ class YouTubeFetcher(ContentFetcher):
                 else:
                     proxies = None
                 
-                # 先尝试生成 po_token
-                logger.info("尝试生成 po_token")
-                token_info = await self.generate_po_token()
-                
-                if token_info:
-                    # 使用预生成的 po_token
-                    logger.info("使用预生成的 po_token 创建 YouTube 客户端")
-                    yt = YouTube(
-                        url, 
-                        use_po_token=True,
-                        po_token_verifier=(token_info['visitor_data'], token_info['po_token']),
-                        proxies=proxies
-                    )
-                else:
-                    # 回退到 WEB 客户端
-                    logger.info("po_token 生成失败，尝试使用 'WEB' 客户端")
-                    yt = YouTube(url, 'WEB', proxies=proxies)
+                # 方案1: 优先使用 'WEB' 客户端（自动生成po_token）
+                logger.info("使用 'WEB' 客户端（自动生成po_token）")
+                yt = YouTube(url, 'WEB', proxies=proxies)
                 
                 # 直接使用pytubefix的内置属性获取信息
                 title = yt.title or "未知视频标题"
@@ -409,25 +396,12 @@ class YouTubeFetcher(ContentFetcher):
                 )
 
             except Exception as e:
-                logger.warning(f"主要方案失败: {str(e)}")
-                # 备用方案：尝试另一种方式
+                logger.warning(f"'WEB' 客户端失败: {str(e)}")
+                
+                # 备用方案1: 尝试其他客户端（不需要po_token）
                 try:
-                    if not token_info:
-                        # 如果之前没有生成 po_token，现在尝试生成
-                        logger.info("尝试生成 po_token 作为备用方案")
-                        token_info = await self.generate_po_token()
-                    
-                    if token_info:
-                        logger.info("使用 po_token 备用方案")
-                        yt = YouTube(
-                            url, 
-                            use_po_token=True,
-                            po_token_verifier=(token_info['visitor_data'], token_info['po_token']),
-                            proxies=proxies
-                        )
-                    else:
-                        logger.info("最后尝试：使用 use_po_token=True（交互式）")
-                        yt = YouTube(url, use_po_token=True, proxies=proxies)
+                    logger.info("尝试使用 'TV' 客户端（无需po_token）")
+                    yt = YouTube(url, 'TV', proxies=proxies)
                     
                     title = yt.title or "未知视频标题"
                     description = yt.description or ""
@@ -472,7 +446,7 @@ class YouTubeFetcher(ContentFetcher):
                     
                     success = True
                     elapsed_time = time.time() - start_time
-                    logger.info(f"✅ 备用方案成功获取YouTube视频信息，耗时: {elapsed_time:.2f}秒")
+                    logger.info(f"✅ TV客户端成功，耗时: {elapsed_time:.2f}秒")
                     
                     return VideoInfo(
                         title=title,
@@ -486,8 +460,138 @@ class YouTubeFetcher(ContentFetcher):
                         channel_id=channel_id
                     )
                     
-                except Exception as fallback_error:
-                    logger.error(f"所有备用方案都失败: {str(fallback_error)}")
+                except Exception as tv_error:
+                    logger.warning(f"TV客户端失败: {str(tv_error)}")
+                
+                # 备用方案2: 尝试 MWEB 客户端
+                try:
+                    logger.info("尝试使用 'MWEB' 客户端")
+                    yt = YouTube(url, 'MWEB', proxies=proxies)
+                    
+                    title = yt.title or "未知视频标题"
+                    description = yt.description or ""
+                    author = yt.author or "未知作者"
+                    thumbnail_url = yt.thumbnail_url or ""
+                    
+                    # 获取其他元数据
+                    publish_date = None
+                    try:
+                        if yt.publish_date:
+                            publish_date = yt.publish_date
+                    except Exception:
+                        pass
+                    
+                    length = None
+                    try:
+                        if hasattr(yt, 'length') and yt.length:
+                            length = yt.length
+                    except Exception:
+                        pass
+                    
+                    views = None
+                    try:
+                        if hasattr(yt, 'views') and yt.views:
+                            views = yt.views
+                    except Exception:
+                        pass
+                    
+                    channel_id = None
+                    try:
+                        if hasattr(yt, 'channel_id') and yt.channel_id:
+                            channel_id = yt.channel_id
+                    except Exception:
+                        pass
+                    
+                    author_icon = ""
+                    try:
+                        if channel_id:
+                            author_icon = f"https://yt3.ggpht.com/ytc/channel/{channel_id}"
+                    except Exception:
+                        pass
+                    
+                    success = True
+                    elapsed_time = time.time() - start_time
+                    logger.info(f"✅ MWEB客户端成功，耗时: {elapsed_time:.2f}秒")
+                    
+                    return VideoInfo(
+                        title=title,
+                        description=description,
+                        author=author,
+                        author_icon=author_icon,
+                        thumbnail=thumbnail_url,
+                        publish_date=publish_date,
+                        duration=length,
+                        views=views,
+                        channel_id=channel_id
+                    )
+                    
+                except Exception as mweb_error:
+                    logger.warning(f"MWEB客户端失败: {str(mweb_error)}")
+                
+                # 备用方案3: 尝试 ANDROID 客户端
+                try:
+                    logger.info("尝试使用 'ANDROID' 客户端")
+                    yt = YouTube(url, 'ANDROID', proxies=proxies)
+                    
+                    title = yt.title or "未知视频标题"
+                    description = yt.description or ""
+                    author = yt.author or "未知作者"
+                    thumbnail_url = yt.thumbnail_url or ""
+                    
+                    # 获取其他元数据
+                    publish_date = None
+                    try:
+                        if yt.publish_date:
+                            publish_date = yt.publish_date
+                    except Exception:
+                        pass
+                    
+                    length = None
+                    try:
+                        if hasattr(yt, 'length') and yt.length:
+                            length = yt.length
+                    except Exception:
+                        pass
+                    
+                    views = None
+                    try:
+                        if hasattr(yt, 'views') and yt.views:
+                            views = yt.views
+                    except Exception:
+                        pass
+                    
+                    channel_id = None
+                    try:
+                        if hasattr(yt, 'channel_id') and yt.channel_id:
+                            channel_id = yt.channel_id
+                    except Exception:
+                        pass
+                    
+                    author_icon = ""
+                    try:
+                        if channel_id:
+                            author_icon = f"https://yt3.ggpht.com/ytc/channel/{channel_id}"
+                    except Exception:
+                        pass
+                    
+                    success = True
+                    elapsed_time = time.time() - start_time
+                    logger.info(f"✅ ANDROID客户端成功，耗时: {elapsed_time:.2f}秒")
+                    
+                    return VideoInfo(
+                        title=title,
+                        description=description,
+                        author=author,
+                        author_icon=author_icon,
+                        thumbnail=thumbnail_url,
+                        publish_date=publish_date,
+                        duration=length,
+                        views=views,
+                        channel_id=channel_id
+                    )
+                    
+                except Exception as android_error:
+                    logger.error(f"所有客户端都失败: ANDROID客户端错误: {str(android_error)}")
                     logger.error(f"原始错误: {str(e)}")
                     logger.error(f"错误详情: {traceback.format_exc()}")
                     return None
@@ -611,47 +715,83 @@ class YouTubeFetcher(ContentFetcher):
                 env['HTTP_PROXY'] = settings.PROXY_URL
                 logger.info("为 po_token 生成设置代理环境变量")
             
-            # 调用 youtube-po-token-generator
-            result = subprocess.run(
-                ['youtube-po-token-generator'],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                env=env
-            )
+            # 减少超时时间，增加重试机制
+            max_retries = 2
+            timeout = 15  # 减少到15秒
             
-            if result.returncode == 0:
-                # 解析 JSON 输出
-                token_data = json.loads(result.stdout.strip())
-                visitor_data = token_data.get('visitorData')
-                po_token = token_data.get('poToken')
-                
-                if visitor_data and po_token:
-                    token_info = {
-                        'visitor_data': visitor_data,
-                        'po_token': po_token
-                    }
+            for attempt in range(max_retries):
+                try:
+                    logger.info(f"po_token 生成尝试 {attempt + 1}/{max_retries}")
                     
-                    # 缓存 token
-                    self._po_token = token_info
-                    self._po_token_timestamp = current_time
+                    # 调用 youtube-po-token-generator
+                    result = subprocess.run(
+                        ['youtube-po-token-generator'],
+                        capture_output=True,
+                        text=True,
+                        timeout=timeout,
+                        env=env
+                    )
                     
-                    logger.info(f"✅ 成功生成 po_token: visitorData={visitor_data[:10]}..., poToken={po_token[:10]}...")
-                    return token_info
-                else:
-                    logger.error("po_token 生成器返回了无效数据")
-                    return None
-            else:
-                logger.error(f"po_token 生成失败: {result.stderr}")
-                return None
+                    if result.returncode == 0:
+                        # 解析 JSON 输出
+                        token_data = json.loads(result.stdout.strip())
+                        visitor_data = token_data.get('visitorData')
+                        po_token = token_data.get('poToken')
+                        
+                        if visitor_data and po_token:
+                            token_info = {
+                                'visitor_data': visitor_data,
+                                'po_token': po_token
+                            }
+                            
+                            # 缓存 token
+                            self._po_token = token_info
+                            self._po_token_timestamp = current_time
+                            
+                            logger.info(f"✅ 成功生成 po_token: visitorData={visitor_data[:10]}..., poToken={po_token[:10]}...")
+                            return token_info
+                        else:
+                            logger.error(f"po_token 生成器返回了无效数据: {token_data}")
+                            continue
+                    else:
+                        logger.warning(f"po_token 生成失败 (尝试 {attempt + 1}): {result.stderr}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(2)  # 等待2秒后重试
+                            continue
+                        else:
+                            logger.error(f"po_token 生成最终失败: {result.stderr}")
+                            return None
+                            
+                except subprocess.TimeoutExpired:
+                    logger.warning(f"po_token 生成超时 (尝试 {attempt + 1})")
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(1)
+                        continue
+                    else:
+                        logger.error("po_token 生成最终超时")
+                        return None
+                        
+                except json.JSONDecodeError as e:
+                    logger.warning(f"解析 po_token 输出失败 (尝试 {attempt + 1}): {e}")
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(1)
+                        continue
+                    else:
+                        logger.error(f"解析 po_token 输出最终失败: {e}")
+                        return None
+                        
+                except Exception as e:
+                    logger.warning(f"生成 po_token 时发生异常 (尝试 {attempt + 1}): {e}")
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(1)
+                        continue
+                    else:
+                        logger.error(f"生成 po_token 最终异常: {e}")
+                        return None
+            
+            return None
                 
-        except subprocess.TimeoutExpired:
-            logger.error("po_token 生成超时")
-            return None
-        except json.JSONDecodeError as e:
-            logger.error(f"解析 po_token 输出失败: {e}")
-            return None
         except Exception as e:
-            logger.error(f"生成 po_token 时发生异常: {e}")
+            logger.error(f"po_token 生成过程发生意外错误: {e}")
             return None
 
