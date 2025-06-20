@@ -13,6 +13,9 @@ RUN apt-get update && apt-get install -y \
 # 验证 Node.js 安装
 RUN node --version && npm --version
 
+# 安装 youtube-po-token-generator 用于生成 po_token
+RUN npm install -g youtube-po-token-generator
+
 # 复制证书到容器
 COPY ca-bright.crt /usr/local/share/ca-certificates/ca-bright.crt
 
