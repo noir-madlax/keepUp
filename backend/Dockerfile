@@ -1,5 +1,18 @@
 FROM python:3.11-slim
 
+# 安装 Node.js (需要 >= 18.0 用于 pytubefix po_token 生成)
+RUN apt-get update && apt-get install -y \
+    curl \
+    ca-certificates \
+    gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 验证 Node.js 安装
+RUN node --version && npm --version
+
 # 复制证书到容器
 COPY ca-bright.crt /usr/local/share/ca-certificates/ca-bright.crt
 
