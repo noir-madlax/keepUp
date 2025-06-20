@@ -3,3 +3,4 @@ cd /home/ec2-user/keepUp/backend
 git pull
 docker-compose up -d --build
 docker-compose logs -f
+ vim .env

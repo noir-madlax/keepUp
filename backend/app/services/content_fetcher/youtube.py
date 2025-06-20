@@ -8,6 +8,7 @@ import time
 import asyncio
 import logging
 import os
+import random
 from typing import Optional, Dict, Any
 from datetime import datetime
 from pathlib import Path
@@ -177,6 +178,91 @@ class YouTubeFetcher(ContentFetcher):
             logger.error(f"获取字幕失败: {str(e)}")
             return None
     
+    def _get_random_browser_headers(self, mobile: bool = True) -> Dict[str, str]:
+        """获取随机的浏览器头部来提高成功率"""
+        if mobile:
+            # 移动端浏览器头部选项
+            mobile_headers = [
+                {
+                    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+                    'sec-ch-ua': '"Chromium";v="118", "Safari";v="17", "Not=A?Brand";v="99"',
+                    'sec-ch-ua-platform': '"iOS"'
+                },
+                {
+                    'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+                    'sec-ch-ua': '"Chromium";v="117", "Safari";v="16", "Not=A?Brand";v="99"',
+                    'sec-ch-ua-platform': '"iOS"'
+                },
+                {
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+                    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    'sec-ch-ua-platform': '"Android"'
+                },
+                {
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
+                    'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+                    'sec-ch-ua-platform': '"Android"'
+                }
+            ]
+            selected = random.choice(mobile_headers)
+            base_headers = {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Sec-Fetch-User': '?1',
+                'Cache-Control': 'max-age=0',
+                'sec-ch-ua-mobile': '?1'
+            }
+        else:
+            # 桌面端浏览器头部选项
+            desktop_headers = [
+                {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    'sec-ch-ua-platform': '"Windows"'
+                },
+                {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    'sec-ch-ua-platform': '"macOS"'
+                },
+                {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0',
+                    'sec-ch-ua': '"Firefox";v="120"',
+                    'sec-ch-ua-platform': '"Windows"'
+                },
+                {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+                    'sec-ch-ua': '"Safari";v="17"',
+                    'sec-ch-ua-platform': '"macOS"'
+                }
+            ]
+            selected = random.choice(desktop_headers)
+            base_headers = {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Sec-Fetch-User': '?1',
+                'Cache-Control': 'max-age=0',
+                'sec-ch-ua-mobile': '?0'
+            }
+        
+        # 合并选定的头部和基础头部
+        headers = {**base_headers, **selected}
+        return headers
+
     def _get_ydl_opts(self) -> Dict[str, Any]:
         """获取 yt-dlp 配置选项 - 使用 bgutil Script 模式"""
         opts = {
@@ -238,12 +324,11 @@ class YouTubeFetcher(ContentFetcher):
             }
         }
         
-        # 设置用户代理为移动浏览器
-        opts['http_headers'] = {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1'
-        }
+        # 构建完整的浏览器头部来伪装成真人的浏览器请求
+        # 包含现代移动浏览器的所有关键头部信息
+        opts['http_headers'] = self._get_random_browser_headers()
         
-        logger.info("yt-dlp 配置: 使用 mweb 客户端 + bgutil Script 模式 PO Token 支持")
+        logger.info("yt-dlp 配置: 使用 mweb 客户端 + bgutil Script 模式 PO Token 支持 + 随机浏览器头部伪装")
         
         return opts
 
@@ -433,7 +518,7 @@ class YouTubeFetcher(ContentFetcher):
                     # 如果失败，尝试不同的客户端配置
                     logger.info("=== 尝试使用备用配置 ===")
                     
-                    # 备用配置：使用 web 客户端
+                    # 备用配置1：使用 web 客户端 + 桌面浏览器头部
                     backup_opts = opts.copy()
                     backup_opts['extractor_args'] = {
                         'youtube': {
@@ -441,8 +526,10 @@ class YouTubeFetcher(ContentFetcher):
                             'player_skip': ['configs'],
                         }
                     }
+                    # 使用桌面浏览器的头部
+                    backup_opts['http_headers'] = self._get_random_browser_headers(False)
                     
-                    logger.info("尝试使用 web 客户端配置")
+                    logger.info("尝试使用 web 客户端 + 桌面浏览器头部配置")
                     logger.info(f"备用配置: {backup_opts.get('extractor_args', {})}")
                     
                     with yt_dlp.YoutubeDL(backup_opts) as backup_ydl:
@@ -452,6 +539,28 @@ class YouTubeFetcher(ContentFetcher):
                             return info
                         except Exception as backup_error:
                             logger.error(f"备用配置也失败: {str(backup_error)}")
+                            
+                            # 备用配置2：尝试 android 客户端
+                            logger.info("=== 尝试使用 Android 客户端配置 ===")
+                            android_opts = opts.copy()
+                            android_opts['extractor_args'] = {
+                                'youtube': {
+                                    'player_client': ['android'],
+                                    'player_skip': ['configs'],
+                                }
+                            }
+                            # 使用 Android 浏览器的头部
+                            android_opts['http_headers'] = self._get_random_browser_headers(True)
+                            
+                            logger.info(f"Android 配置: {android_opts.get('extractor_args', {})}")
+                            
+                            with yt_dlp.YoutubeDL(android_opts) as android_ydl:
+                                try:
+                                    info = android_ydl.extract_info(url, download=False)
+                                    logger.info("✅ 使用 Android 客户端配置成功获取视频信息")
+                                    return info
+                                except Exception as android_error:
+                                    logger.error(f"Android 配置也失败: {str(android_error)}")
                             
                             # 最后尝试：使用最小配置
                             logger.info("=== 尝试使用最小配置 ===")
