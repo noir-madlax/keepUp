@@ -176,7 +176,7 @@ class YouTubeFetcher(ContentFetcher):
             return None
     
     def _get_ydl_opts(self) -> Dict[str, Any]:
-        """获取 yt-dlp 配置选项"""
+        """获取 yt-dlp 配置选项 - 支持 bgutil PO Token provider"""
         opts = {
             'quiet': True,
             'no_warnings': True,
@@ -187,6 +187,12 @@ class YouTubeFetcher(ContentFetcher):
             'writeautomaticsub': False,
             'skip_download': True,  # 只获取信息，不下载视频
             'ignoreerrors': False,
+            # 配置推荐的客户端和 PO Token 支持
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['default', 'mweb'],  # 使用官方推荐的 mweb 客户端
+                }
+            }
         }
         
         # 配置代理
@@ -194,6 +200,25 @@ class YouTubeFetcher(ContentFetcher):
             opts['proxy'] = settings.PROXY_URL
             logger.info("为 yt-dlp 配置代理: %s", settings.PROXY_URL)
         
+        # 检查 bgutil provider 是否可用
+        try:
+            import requests
+            import os
+            
+            # 优先使用环境变量中的 bgutil provider URL（docker-compose 环境）
+            bgutil_url = os.getenv('BGUTIL_PROVIDER_URL', 'http://localhost:4416')
+            
+            response = requests.get(f"{bgutil_url}/health", timeout=2)
+            if response.status_code == 200:
+                logger.info(f"bgutil PO Token provider 服务可用: {bgutil_url}")
+                # bgutil-ytdlp-pot-provider 插件会自动处理 PO Token
+                # 不需要手动配置，插件会自动与 provider 服务通信
+            else:
+                logger.warning(f"bgutil provider 服务不可用: {bgutil_url}，将使用默认配置")
+        except Exception as e:
+            logger.warning(f"无法连接到 bgutil provider: {str(e)}，将使用默认配置")
+        
+        logger.info("yt-dlp 配置完成，支持 PO Token 和 mweb 客户端")
         return opts
 
     @retry_decorator()

@@ -48,6 +48,11 @@ class Settings(BaseSettings):
     USE_PROXY: bool = False
     PROXY_URL: Optional[str] = None
     
+    # YouTube 和 PO Token 配置
+    YOUTUBE_DEBUG: bool = False
+    BGUTIL_PROVIDER_URL: Optional[str] = None
+    PO_TOKEN_TTL: int = 6  # PO Token 缓存时间（小时）
+    
     # CORS 配置
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
