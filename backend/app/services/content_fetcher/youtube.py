@@ -1,29 +1,35 @@
-from typing import Optional, Dict, List
-from .base import ContentFetcher, VideoInfo, AuthorInfo
-from app.models.article import ArticleCreate
 import re
-from app.config import settings
-from youtube_transcript_api import YouTubeTranscriptApi
-from app.utils.logger import logger
+import time
 import requests
+import os
+import random
+import json
+from typing import Optional, Dict, List
 from bs4 import BeautifulSoup
 from datetime import datetime
-from pytubefix import YouTube
-from pytubefix import Channel
+from pytubefix import YouTube, Channel
+from youtube_transcript_api import YouTubeTranscriptApi
+
+from app.config import settings
 from app.utils.decorators import retry_decorator
-from app.repositories.proxy import proxy_repository
-import time
-import os
+from app.models.article import ArticleCreate
+from app.services.content_fetcher.base import ContentFetcher, VideoInfo, AuthorInfo
+from app.utils.logger import logger
 
 class YouTubeFetcher(ContentFetcher):
     def __init__(self):
         # 保留现有的代理配置
         self.proxies = None
         
-        # 设置证书环境变量 - 这可能会解决SSL问题
-        os.environ['REQUESTS_CA_BUNDLE'] = '/etc/ssl/certs/ca-certificates.crt'
-        os.environ['SSL_CERT_FILE'] = '/etc/ssl/certs/ca-certificates.crt'
+        # 添加visitor ID缓存
+        self._visitor_id = None
+        self._visitor_id_timestamp = None
+        self._visitor_id_cache_duration = 3600  # 1小时缓存
         
+        # 设置证书环境变量 - 这可能会解决SSL问题
+        os.environ['REQUESTS_CA_BUNDLE'] = ''
+        os.environ['CURL_CA_BUNDLE'] = ''
+
     def can_handle(self, url: str) -> bool:
         """检查是否是 YouTube URL"""
         youtube_patterns = [
@@ -49,49 +55,170 @@ class YouTubeFetcher(ContentFetcher):
         return None
     
     async def get_proxy(self) -> Optional[Dict[str, str]]:
-        if settings.USE_PROXY:
-            # 注释掉原来的代码，方便下次使用
-            # return await proxy_repository.get_available_proxy()
-            # 使用配置中的 PROXY_URL
-            return {"http": settings.PROXY_URL, "https": settings.PROXY_URL}
-        return None
+        """获取代理配置"""
+        if not settings.USE_PROXY:
+            return None
+        
+        # 这里应该从代理池中获取可用代理
+        # 暂时返回配置的代理
+        return {
+            'http': settings.PROXY_URL,
+            'https': settings.PROXY_URL
+        }
 
+    def get_realistic_headers(self, include_visitor_id: str = None) -> Dict[str, str]:
+        """生成真实的浏览器headers"""
+        # 随机选择一个真实的User-Agent
+        user_agents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0'
+        ]
+        
+        headers = {
+            'User-Agent': random.choice(user_agents),
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'max-age=0',
+            'DNT': '1',
+            'Sec-CH-UA': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'Sec-CH-UA-Mobile': '?0',
+            'Sec-CH-UA-Platform': '"Windows"'
+        }
+        
+        # 如果有visitor ID，添加相关headers
+        if include_visitor_id:
+            headers['x-goog-visitor-id'] = include_visitor_id
+            headers['Cookie'] = f'VISITOR_INFO1_LIVE={include_visitor_id}'
+        
+        return headers
+
+    async def get_visitor_id(self, proxies: Optional[Dict[str, str]] = None) -> Optional[str]:
+        """获取YouTube visitor ID"""
+        try:
+            # 检查缓存
+            current_time = time.time()
+            if (self._visitor_id and self._visitor_id_timestamp and 
+                current_time - self._visitor_id_timestamp < self._visitor_id_cache_duration):
+                logger.info("使用缓存的visitor ID")
+                return self._visitor_id
+
+            logger.info("开始获取YouTube visitor ID")
+            
+            # 创建session并设置完整的浏览器headers
+            session = requests.Session()
+            headers = self.get_realistic_headers()
+            session.headers.update(headers)
+            
+            # 访问YouTube首页获取visitor ID
+            response = session.get('https://www.youtube.com', proxies=proxies, timeout=30, verify=False)
+            response.raise_for_status()
+            
+            # 从cookies中提取VISITOR_INFO1_LIVE
+            visitor_cookie = None
+            for cookie in session.cookies:
+                if cookie.name == 'VISITOR_INFO1_LIVE':
+                    visitor_cookie = cookie.value
+                    break
+            
+            if visitor_cookie:
+                self._visitor_id = visitor_cookie
+                self._visitor_id_timestamp = current_time
+                logger.info(f"成功获取visitor ID: {visitor_cookie[:10]}...")
+                return visitor_cookie
+            else:
+                logger.warning("未能从cookies中找到VISITOR_INFO1_LIVE")
+                # 尝试从页面内容中提取
+                try:
+                    # 查找页面中的visitor ID
+                    import re
+                    visitor_match = re.search(r'"VISITOR_DATA":"([^"]+)"', response.text)
+                    if visitor_match:
+                        visitor_data = visitor_match.group(1)
+                        self._visitor_id = visitor_data
+                        self._visitor_id_timestamp = current_time
+                        logger.info(f"从页面内容获取visitor ID: {visitor_data[:10]}...")
+                        return visitor_data
+                except Exception as e:
+                    logger.warning(f"从页面内容提取visitor ID失败: {str(e)}")
+                
+                return None
+                
+        except Exception as e:
+            logger.error(f"获取visitor ID失败: {str(e)}")
+            return None
+
+    def create_enhanced_session(self, visitor_id: str = None, proxies: Dict[str, str] = None) -> requests.Session:
+        """创建增强的requests session"""
+        session = requests.Session()
+        
+        # 设置完整的浏览器headers
+        headers = self.get_realistic_headers(visitor_id)
+        session.headers.update(headers)
+        
+        # 设置代理
+        if proxies:
+            session.proxies.update(proxies)
+        
+        # 设置SSL验证
+        session.verify = False
+        
+        # 设置超时
+        session.timeout = 30
+        
+        return session
 
     @retry_decorator()
     async def fetch(self, url: str) -> Optional[str]:
-        """获取 YouTube 视频内容并格式化字幕"""
+        """获取YouTube视频字幕"""
         try:
-            logger.info(f"获取 YouTube 内容: {url}")
+            logger.info(f"开始获取YouTube内容: {url}")
             
-            # 提取视频 ID
+            # 提取视频ID
             video_id = self.extract_video_id(url)
             if not video_id:
-                logger.error(f"Failed to extract video ID from URL: {url}")
+                logger.error("无法从URL中提取视频ID")
                 return None
             
             start_time = time.time()
             success = False
+            proxies = None
             
             try:
-                # 使用代理获取字幕
+                # 获取代理配置
                 if settings.USE_PROXY:
                     proxies = await self.get_proxy()
-                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies)
+                    logger.info("使用代理获取字幕")
+                
+                # 获取visitor ID
+                visitor_id = await self.get_visitor_id(proxies)
+                
+                # 尝试使用增强的方式获取字幕
+                if visitor_id:
+                    logger.info("使用visitor ID和完整浏览器伪装获取字幕")
+                    transcript_list = await self._get_transcript_with_enhanced_headers(video_id, visitor_id, proxies)
                 else:
-                    transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+                    logger.info("使用标准方式获取字幕")
+                    # 使用原有方式
+                    if settings.USE_PROXY:
+                        transcript_list = YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies)
+                    else:
+                        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+                
                 if not transcript_list:
                     raise ValueError("No video transcript found")
                 success = True
             finally:
                 pass
-                # # 更新代理状态
-                # if settings.USE_PROXY:
-                #     response_time = time.time() - start_time
-                #     await proxy_repository.update_proxy_status(
-                #         proxies['http'], 
-                #         success=success,
-                #         response_time=response_time
-                #     )
 
             # 格式化字幕内容
             readable_text = []
@@ -120,6 +247,48 @@ class YouTubeFetcher(ContentFetcher):
             logger.error(f"获取 YouTube 内容失败: {str(e)}", exc_info=True)
             raise e
 
+    async def _get_transcript_with_enhanced_headers(self, video_id: str, visitor_id: str, proxies: Optional[Dict[str, str]] = None):
+        """使用增强headers获取字幕"""
+        try:
+            # 首先尝试使用原有API，但使用增强的session
+            try:
+                from youtube_transcript_api._transcripts import TranscriptListFetcher
+                
+                # 创建增强的session
+                session = self.create_enhanced_session(visitor_id, proxies)
+                
+                # 使用自定义session创建TranscriptListFetcher
+                fetcher = TranscriptListFetcher(session)
+                transcript_list = fetcher.fetch(video_id)
+                
+                # 查找字幕
+                try:
+                    # 优先查找英文字幕
+                    transcript = transcript_list.find_transcript(['en', 'en-US', 'en-GB'])
+                    return transcript.fetch()
+                except:
+                    # 如果没有英文字幕，尝试获取任何可用的字幕
+                    available_transcripts = list(transcript_list._manually_created_transcripts.keys()) or list(transcript_list._generated_transcripts.keys())
+                    if available_transcripts:
+                        transcript = transcript_list.find_transcript([available_transcripts[0]])
+                        return transcript.fetch()
+                    else:
+                        raise ValueError("No transcripts available")
+                        
+            except Exception as api_error:
+                logger.warning(f"使用增强headers的API调用失败: {str(api_error)}")
+                
+                # 如果上述方法失败，回退到标准API
+                logger.info("回退到标准API调用")
+                if proxies:
+                    return YouTubeTranscriptApi.get_transcript(video_id, proxies=proxies)
+                else:
+                    return YouTubeTranscriptApi.get_transcript(video_id)
+                
+        except Exception as e:
+            logger.error(f"使用增强headers获取字幕失败: {str(e)}")
+            raise e
+
     @retry_decorator()
     async def get_video_info(self, url: str) -> Optional[VideoInfo]:
         """获取YouTube视频信息"""
@@ -134,9 +303,14 @@ class YouTubeFetcher(ContentFetcher):
                 if settings.USE_PROXY:
                     proxies = await self.get_proxy()
                     logger.info("使用代理获取页面内容,proxies: %s", proxies)
-                    response = requests.get(url, proxies=proxies,verify=False)
                 else:
-                    response = requests.get(url)
+                    proxies = None
+                
+                # 获取visitor ID并创建增强session
+                visitor_id = await self.get_visitor_id(proxies)
+                session = self.create_enhanced_session(visitor_id, proxies)
+                
+                response = session.get(url)
                 response.raise_for_status()
                 soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -147,14 +321,6 @@ class YouTubeFetcher(ContentFetcher):
                 success = True
             finally:
                 pass
-                # # 更新代理状态
-                # if settings.USE_PROXY:
-                #     response_time = time.time() - start_time
-                #     await proxy_repository.update_proxy_status(
-                #         proxies['http'], 
-                #         success=success,
-                #         response_time=response_time
-                #     )
 
             # 提取描述
             description_meta = soup.find('meta', {'name': 'description'})
@@ -182,18 +348,28 @@ class YouTubeFetcher(ContentFetcher):
                     logger.warning(f"无法解析发布日期: {publish_date_meta['content']}")
 
             # 在提取作者信息后，添加获取作者头像的代码
+            author_icon = ""
             try:
+                # 准备headers，包含visitor_id
+                headers = {}
+                if visitor_id:
+                    headers = {
+                        'x-goog-visitor-id': visitor_id,
+                        'Cookie': f'VISITOR_INFO1_LIVE={visitor_id}'
+                    }
+                
                 if settings.USE_PROXY and proxies:
-                    logger.info("使用代理获取作者头像")
-                    yt = YouTube(url, proxies=proxies,verify=False)
+                    logger.info("使用代理和visitor_id获取作者头像")
+                    yt = YouTube(url, proxies=proxies, verify=False, headers=headers)
                 else:
-                    logger.info("不使用代理获取作者头像")
-                    yt = YouTube(url)
+                    logger.info("使用visitor_id获取作者头像")
+                    yt = YouTube(url, headers=headers)
+                
                 channel = Channel(yt.channel_url)
                 author_icon = channel.initial_data.get('metadata', {}).get('channelMetadataRenderer', {}).get('avatar', {}).get('thumbnails', [{}])[0].get('url', '')
-                logger.info(f"获取到作者头像: {author_icon}")
+                logger.info(f"成功获取到作者头像: {author_icon}")
             except Exception as e:
-                logger.warning(f"获取作者头像失败: {str(e)}")
+                logger.warning(f"获取作者头像失败，将使用空值: {str(e)}")
                 author_icon = ""
 
             # 更新作者信息字典
@@ -234,45 +410,55 @@ class YouTubeFetcher(ContentFetcher):
         """获取YouTube视频章节信息"""
         try:
             logger.info(f"开始获取YouTube视频章节信息: {url}")
-            success = False
-
-            # 设置代理
+            
+            # 获取代理配置
+            proxies = None
             if settings.USE_PROXY:
                 logger.info("使用代理获取章节信息")
                 proxies = await self.get_proxy()
-                yt = YouTube(url, proxies=proxies)
-                success = True
-            else:
-                yt = YouTube(url)
             
-            if not yt.chapters:
-                logger.info("该视频没有章节信息")
+            # 获取visitor_id
+            visitor_id = await self.get_visitor_id(proxies)
+            
+            # 准备headers，包含visitor_id
+            headers = {}
+            if visitor_id:
+                headers = {
+                    'x-goog-visitor-id': visitor_id,
+                    'Cookie': f'VISITOR_INFO1_LIVE={visitor_id}'
+                }
+                logger.info(f"使用visitor_id获取章节信息: {visitor_id[:10]}...")
+            
+            # 创建YouTube对象并获取章节信息
+            try:
+                if proxies:
+                    yt = YouTube(url, proxies=proxies, headers=headers)
+                else:
+                    yt = YouTube(url, headers=headers)
+                
+                if not yt.chapters:
+                    logger.info("该视频没有章节信息")
+                    return None
+                
+                # 将章节信息转换为格式化的文本
+                chapters_text = []
+                for chapter in yt.chapters:
+                    formatted_line = f"[{chapter.start_label}] {chapter.title}"
+                    chapters_text.append(formatted_line)
+                
+                # 将所有章节组合成最终文本
+                final_content = "\n".join(chapters_text)
+                
+                logger.info(f"成功获取到章节信息，共 {len(chapters_text)} 个章节")
+                return final_content
+                
+            except Exception as e:
+                logger.warning(f"获取YouTube视频章节信息失败，将返回空值: {str(e)}")
                 return None
-            
-            # 将章节信息转换为格式化的文本
-            chapters_text = []
-            for chapter in yt.chapters:
-                formatted_line = f"[{chapter.start_label}] {chapter.title}"
-                chapters_text.append(formatted_line)
-            
-            # 将所有章节组合成最终文本
-            final_content = "\n".join(chapters_text)
-            
-            logger.info(f"成功获取到章节信息，共 {len(chapters_text)} 个章节")
-            return final_content
 
         except Exception as e:
-            logger.error(f"获取YouTube视频章节信息失败: {str(e)}", exc_info=True)
+            logger.warning(f"获取YouTube视频章节信息过程出错，将返回空值: {str(e)}")
             return None
-        
-        finally:
-            pass
-            # 更新代理状态
-            # if settings.USE_PROXY:
-            #     await proxy_repository.update_proxy_status(
-            #         proxies['http'], 
-            #         success=success
-            #     )
 
     async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
         """获取 YouTube 作者信息"""

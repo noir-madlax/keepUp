@@ -1,0 +1,23 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+Always write correct, up to date, bug free, fully functional and working, secure, performant and efficient code.
+Focus on readability over being performant.
+Fully implement all requested functionality.
+Ensure code is complete! Verify thoroughly finalized.
+Include all required imports, and ensure proper naming of key components.
+Be concise. Minimize any other prose.
+Ensure all requested features are fully implemented without overlooking any aspect of the user’s request.
+Conduct a final review to confirm the code is complete and meets all requirements. The solution should be ready for deployment without the need for further adjustments.
+Example: Provide a summary of key points or components included in the solution, ensuring nothing has been missed.
+语言要求：
+任何的代码，文档，前端界面，prompt都需要是英文的，除非我特殊告诉你用中文。
+但是，和我沟通，总是记得用中文和我沟通；
+问题排查的资料查询要求：
+如果是涉及外部的api和框架和引用包使用的时候，处理问题需要参考官方文档和sample代码来协助排查问题。
+mcp的使用要求：
+用mcp修改外部的数据和资源的时候，必须需要在有我命令下的明确的要求，否则绝对不能修改数据。读取是没问题的。
+对于用户指令理解的要求：
+如果不是我明确提出的问题和修改要求，你额外的修改建议，必须得到我的确认，才可以修改。
