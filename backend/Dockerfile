@@ -1,36 +1,26 @@
+# 使用官方 Python 镜像
 FROM python:3.11-slim
 
-# 安装 Node.js (需要 >= 18.0 用于 pytubefix po_token 生成)
-RUN apt-get update && apt-get install -y \
-    curl \
-    ca-certificates \
-    gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# 验证 Node.js 安装
-RUN node --version && npm --version
-
-# 安装 youtube-po-token-generator 用于生成 po_token
-RUN npm install -g youtube-po-token-generator
-
-# 复制证书到容器
-COPY ca-bright.crt /usr/local/share/ca-certificates/ca-bright.crt
-
-# 更新证书信任存储
-RUN update-ca-certificates
-
-# 设置Python使用系统证书
-ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
-ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
-
+# 设置工作目录
 WORKDIR /app
 
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 复制 requirements.txt
 COPY requirements.txt .
+
+# 安装 Python 依赖
 RUN pip install --no-cache-dir -r requirements.txt
 
+# 复制应用代码
 COPY . .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 暴露端口
+EXPOSE 8000
+
+# 启动命令
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
