@@ -307,9 +307,10 @@ class YouTubeFetcher(ContentFetcher):
                 else:
                     proxies = None
                 
-                # 使用pytubefix直接获取视频信息，不需要手动解析HTML
-                # pytubefix 9.2.0已经内置了完整的visitor_data和poToken处理
-                yt = YouTube(url, proxies=proxies)
+                # 使用pytubefix的'WEB'客户端自动生成po_token
+                # 这需要nodejs >= 18.0并且在PATH中可用
+                logger.info("使用pytubefix 'WEB'客户端（自动po_token生成）")
+                yt = YouTube(url, 'WEB', proxies=proxies)
                 
                 # 直接使用pytubefix的内置属性获取信息
                 title = yt.title or "未知视频标题"
@@ -389,9 +390,74 @@ class YouTubeFetcher(ContentFetcher):
                 )
 
             except Exception as e:
-                logger.error(f"获取YouTube视频信息失败: {e}")
-                logger.error(f"错误详情: {traceback.format_exc()}")
-                return None
+                logger.warning(f"'WEB'客户端失败: {str(e)}")
+                # 备用方案：使用use_po_token=True
+                try:
+                    logger.info("尝试备用方案: use_po_token=True")
+                    yt = YouTube(url, use_po_token=True, proxies=proxies)
+                    
+                    title = yt.title or "未知视频标题"
+                    description = yt.description or ""
+                    author = yt.author or "未知作者"
+                    thumbnail_url = yt.thumbnail_url or ""
+                    
+                    # 获取其他元数据
+                    publish_date = None
+                    try:
+                        if yt.publish_date:
+                            publish_date = yt.publish_date
+                    except Exception:
+                        pass
+                    
+                    length = None
+                    try:
+                        if hasattr(yt, 'length') and yt.length:
+                            length = yt.length
+                    except Exception:
+                        pass
+                    
+                    views = None
+                    try:
+                        if hasattr(yt, 'views') and yt.views:
+                            views = yt.views
+                    except Exception:
+                        pass
+                    
+                    channel_id = None
+                    try:
+                        if hasattr(yt, 'channel_id') and yt.channel_id:
+                            channel_id = yt.channel_id
+                    except Exception:
+                        pass
+                    
+                    author_icon = ""
+                    try:
+                        if channel_id:
+                            author_icon = f"https://yt3.ggpht.com/ytc/channel/{channel_id}"
+                    except Exception:
+                        pass
+                    
+                    success = True
+                    elapsed_time = time.time() - start_time
+                    logger.info(f"✅ 备用方案成功获取YouTube视频信息，耗时: {elapsed_time:.2f}秒")
+                    
+                    return VideoInfo(
+                        title=title,
+                        description=description,
+                        author=author,
+                        author_icon=author_icon,
+                        thumbnail=thumbnail_url,
+                        publish_date=publish_date,
+                        duration=length,
+                        views=views,
+                        channel_id=channel_id
+                    )
+                    
+                except Exception as fallback_error:
+                    logger.error(f"备用方案也失败: {str(fallback_error)}")
+                    logger.error(f"原始错误: {str(e)}")
+                    logger.error(f"错误详情: {traceback.format_exc()}")
+                    return None
 
         except Exception as e:
             logger.error(f"YouTube视频信息获取过程异常: {e}")
@@ -409,9 +475,9 @@ class YouTubeFetcher(ContentFetcher):
             else:
                 proxies = None
             
-            # 使用pytubefix直接获取章节信息
-            # pytubefix 9.2.0已经内置了完整的章节解析功能
-            yt = YouTube(url, proxies=proxies)
+            # 使用pytubefix的'WEB'客户端自动生成po_token获取章节信息
+            logger.info("使用pytubefix 'WEB'客户端获取章节信息")
+            yt = YouTube(url, 'WEB', proxies=proxies)
             
             # 直接使用pytubefix的内置chapters属性
             chapters = yt.chapters
@@ -447,10 +513,49 @@ class YouTubeFetcher(ContentFetcher):
             return result
             
         except Exception as e:
-            logger.warning(f"获取YouTube视频章节信息失败: {e}")
-            logger.warning(f"错误详情: {traceback.format_exc()}")
-            return None
+            logger.warning(f"'WEB'客户端获取章节失败: {str(e)}")
+            # 备用方案：使用use_po_token=True
+            try:
+                logger.info("尝试备用方案获取章节: use_po_token=True")
+                yt = YouTube(url, use_po_token=True, proxies=proxies)
+                
+                chapters = yt.chapters
+                
+                if not chapters:
+                    logger.info("该视频没有章节信息")
+                    return None
+                
+                logger.info(f"✅ 通过备用方案获取到 {len(chapters)} 个章节")
+                
+                # 格式化章节信息
+                chapters_text = []
+                for i, chapter in enumerate(chapters):
+                    start_time = chapter.start_seconds if hasattr(chapter, 'start_seconds') else 0
+                    title = chapter.title if hasattr(chapter, 'title') else f"章节 {i+1}"
+                    
+                    # 将秒数转换为时分秒格式
+                    hours = int(start_time // 3600)
+                    minutes = int((start_time % 3600) // 60)
+                    seconds = int(start_time % 60)
+                    
+                    if hours > 0:
+                        time_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+                    else:
+                        time_str = f"{minutes:02d}:{seconds:02d}"
+                    
+                    chapters_text.append(f"{time_str} - {title}")
+                
+                result = "\n".join(chapters_text)
+                logger.info(f"✅ 备用方案章节信息格式化完成")
+                return result
+                
+            except Exception as fallback_error:
+                logger.warning(f"备用方案也失败: {str(fallback_error)}")
+                logger.warning(f"原始错误: {str(e)}")
+                logger.warning(f"错误详情: {traceback.format_exc()}")
+                return None
 
     async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
         """获取 YouTube 作者信息"""
         pass
+
