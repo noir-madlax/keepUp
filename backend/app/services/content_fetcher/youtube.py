@@ -14,7 +14,7 @@ import yt_dlp
 from yt_dlp.utils import DownloadError, ExtractorError
 
 from .base import ContentFetcher, VideoInfo
-from app.core.config import settings
+from app.config import settings
 from app.utils.decorators import retry_decorator
 
 logger = logging.getLogger(__name__)
