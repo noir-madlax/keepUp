@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # AssemblyAI 配置
     ASSEMBLYAI_API_KEY: str
 
+    # SerpAPI 配置
+    SERPAPI_KEY: str
+
     # Deepseek 配置
     DEEPSEEK_API_KEY: str
 
@@ -78,6 +81,7 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        extra = "ignore"  # 忽略额外的环境变量
         
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
