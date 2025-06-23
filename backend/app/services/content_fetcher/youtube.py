@@ -206,12 +206,23 @@ class YouTubeFetcher(ContentFetcher):
         try:
             logger.info(f"开始获取YouTube字幕: {video_id}")
             
-            # 在线程池中执行字幕获取
-            loop = asyncio.get_event_loop()
-            transcript_list = await loop.run_in_executor(
-                None,
-                lambda: YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'zh', 'zh-CN', 'auto'])
-            )
+            # 配置代理
+            if settings.USE_PROXY and settings.PROXY_URL:
+                logger.info(f"为字幕获取配置代理: {settings.PROXY_URL}")
+                # 在线程池中执行字幕获取，使用代理
+                loop = asyncio.get_event_loop()
+                transcript_list = await loop.run_in_executor(
+                    None,
+                    lambda: self._get_transcript_with_proxy(video_id, settings.PROXY_URL)
+                )
+            else:
+                logger.info("未配置代理，直接获取字幕")
+                # 在线程池中执行字幕获取
+                loop = asyncio.get_event_loop()
+                transcript_list = await loop.run_in_executor(
+                    None,
+                    lambda: YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'zh', 'zh-CN', 'auto'])
+                )
             
             if transcript_list:
                 # 合并字幕文本
@@ -225,6 +236,36 @@ class YouTubeFetcher(ContentFetcher):
         except Exception as e:
             logger.warning(f"获取字幕失败: {str(e)}")
             return None
+    
+    def _get_transcript_with_proxy(self, video_id: str, proxy_url: str):
+        """使用代理获取字幕"""
+        import requests
+        import os
+        
+        # 临时设置代理环境变量，让youtube-transcript-api使用代理
+        original_http_proxy = os.environ.get('HTTP_PROXY')
+        original_https_proxy = os.environ.get('HTTPS_PROXY')
+        
+        try:
+            # 设置代理环境变量
+            os.environ['HTTP_PROXY'] = proxy_url
+            os.environ['HTTPS_PROXY'] = proxy_url
+            
+            # 获取字幕
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'zh', 'zh-CN', 'auto'])
+            return transcript_list
+            
+        finally:
+            # 恢复原始环境变量
+            if original_http_proxy is not None:
+                os.environ['HTTP_PROXY'] = original_http_proxy
+            else:
+                os.environ.pop('HTTP_PROXY', None)
+                
+            if original_https_proxy is not None:
+                os.environ['HTTPS_PROXY'] = original_https_proxy
+            else:
+                os.environ.pop('HTTPS_PROXY', None)
     
     def _parse_published_date(self, date_str: str) -> Optional[datetime]:
         """解析发布日期"""
