@@ -241,21 +241,49 @@ class YouTubeFetcher(ContentFetcher):
         """使用代理获取字幕"""
         import requests
         import os
+        import ssl
+        import urllib3
         
         # 临时设置代理环境变量，让youtube-transcript-api使用代理
         original_http_proxy = os.environ.get('HTTP_PROXY')
         original_https_proxy = os.environ.get('HTTPS_PROXY')
+        original_verify_ssl = os.environ.get('CURL_CA_BUNDLE')
+        
+        # 保存原始的SSL上下文和verify设置
+        original_create_default_context = ssl.create_default_context
         
         try:
             # 设置代理环境变量
             os.environ['HTTP_PROXY'] = proxy_url
             os.environ['HTTPS_PROXY'] = proxy_url
             
+            # 禁用SSL警告
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
+            # 创建不验证SSL的上下文
+            def create_unverified_context(*args, **kwargs):
+                context = ssl.create_default_context()
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+                return context
+            
+            # 临时替换SSL上下文创建函数
+            ssl.create_default_context = create_unverified_context
+            
+            # 设置环境变量禁用SSL验证
+            os.environ['CURL_CA_BUNDLE'] = ''
+            os.environ['REQUESTS_CA_BUNDLE'] = ''
+            
+            logger.info(f"使用代理获取字幕，已禁用SSL验证: {proxy_url}")
+            
             # 获取字幕
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'zh', 'zh-CN', 'auto'])
             return transcript_list
             
         finally:
+            # 恢复SSL上下文
+            ssl.create_default_context = original_create_default_context
+            
             # 恢复原始环境变量
             if original_http_proxy is not None:
                 os.environ['HTTP_PROXY'] = original_http_proxy
@@ -266,6 +294,14 @@ class YouTubeFetcher(ContentFetcher):
                 os.environ['HTTPS_PROXY'] = original_https_proxy
             else:
                 os.environ.pop('HTTPS_PROXY', None)
+                
+            # 恢复SSL相关环境变量
+            if original_verify_ssl is not None:
+                os.environ['CURL_CA_BUNDLE'] = original_verify_ssl
+            else:
+                os.environ.pop('CURL_CA_BUNDLE', None)
+                
+            os.environ.pop('REQUESTS_CA_BUNDLE', None)
     
     def _parse_published_date(self, date_str: str) -> Optional[datetime]:
         """解析发布日期"""
