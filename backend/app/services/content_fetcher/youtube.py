@@ -238,70 +238,70 @@ class YouTubeFetcher(ContentFetcher):
             return None
     
     def _get_transcript_with_proxy(self, video_id: str, proxy_url: str):
-        """使用代理获取字幕"""
+        """使用代理获取字幕，模拟yt-dlp的处理方式"""
         import requests
-        import os
         import ssl
         import urllib3
-        
-        # 临时设置代理环境变量，让youtube-transcript-api使用代理
-        original_http_proxy = os.environ.get('HTTP_PROXY')
-        original_https_proxy = os.environ.get('HTTPS_PROXY')
-        original_verify_ssl = os.environ.get('CURL_CA_BUNDLE')
-        
-        # 保存原始的SSL上下文和verify设置
-        original_create_default_context = ssl.create_default_context
+        from urllib3.util.ssl_ import create_urllib3_context
         
         try:
-            # 设置代理环境变量
-            os.environ['HTTP_PROXY'] = proxy_url
-            os.environ['HTTPS_PROXY'] = proxy_url
-            
-            # 禁用SSL警告
+            # 禁用SSL警告，与yt-dlp行为一致
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             
-            # 创建不验证SSL的上下文
-            def create_unverified_context(*args, **kwargs):
-                context = ssl.create_default_context()
-                context.check_hostname = False
-                context.verify_mode = ssl.CERT_NONE
-                return context
+            # 创建与yt-dlp相同的会话配置
+            session = requests.Session()
             
-            # 临时替换SSL上下文创建函数
-            ssl.create_default_context = create_unverified_context
+            # 设置代理
+            session.proxies = {
+                'http': proxy_url,
+                'https': proxy_url
+            }
             
-            # 设置环境变量禁用SSL验证
-            os.environ['CURL_CA_BUNDLE'] = ''
-            os.environ['REQUESTS_CA_BUNDLE'] = ''
+            # 设置与yt-dlp相同的headers
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+            })
             
-            logger.info(f"使用代理获取字幕，已禁用SSL验证: {proxy_url}")
+            # 禁用SSL验证，与代理测试代码保持一致
+            session.verify = False
+            
+            # 使用monkey patch让youtube-transcript-api使用我们的session
+            import youtube_transcript_api._transcripts
+            original_get = requests.get
+            
+            def patched_get(*args, **kwargs):
+                kwargs['proxies'] = session.proxies
+                kwargs['headers'] = session.headers
+                kwargs['verify'] = False
+                kwargs['timeout'] = 30
+                return original_get(*args, **kwargs)
+            
+            # 临时替换requests.get
+            requests.get = patched_get
+            youtube_transcript_api._transcripts.requests.get = patched_get
+            
+            logger.info(f"使用代理获取字幕，采用yt-dlp兼容模式: {proxy_url}")
             
             # 获取字幕
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'zh', 'zh-CN', 'auto'])
             return transcript_list
             
+        except Exception as e:
+            logger.error(f"代理字幕获取失败: {str(e)}")
+            raise
         finally:
-            # 恢复SSL上下文
-            ssl.create_default_context = original_create_default_context
-            
-            # 恢复原始环境变量
-            if original_http_proxy is not None:
-                os.environ['HTTP_PROXY'] = original_http_proxy
-            else:
-                os.environ.pop('HTTP_PROXY', None)
-                
-            if original_https_proxy is not None:
-                os.environ['HTTPS_PROXY'] = original_https_proxy
-            else:
-                os.environ.pop('HTTPS_PROXY', None)
-                
-            # 恢复SSL相关环境变量
-            if original_verify_ssl is not None:
-                os.environ['CURL_CA_BUNDLE'] = original_verify_ssl
-            else:
-                os.environ.pop('CURL_CA_BUNDLE', None)
-                
-            os.environ.pop('REQUESTS_CA_BUNDLE', None)
+            # 恢复原始的requests.get
+            try:
+                requests.get = original_get
+                youtube_transcript_api._transcripts.requests.get = original_get
+            except:
+                pass
     
     def _parse_published_date(self, date_str: str) -> Optional[datetime]:
         """解析发布日期"""
