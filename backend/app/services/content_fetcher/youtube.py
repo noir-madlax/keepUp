@@ -238,70 +238,28 @@ class YouTubeFetcher(ContentFetcher):
             return None
     
     def _get_transcript_with_proxy(self, video_id: str, proxy_url: str):
-        """使用代理获取字幕，模拟yt-dlp的处理方式"""
-        import requests
-        import ssl
-        import urllib3
-        from urllib3.util.ssl_ import create_urllib3_context
-        
+        """使用代理获取字幕，使用官方支持的方式"""
         try:
-            # 禁用SSL警告，与yt-dlp行为一致
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-            
-            # 创建与yt-dlp相同的会话配置
-            session = requests.Session()
-            
-            # 设置代理
-            session.proxies = {
+            # 构建代理配置
+            proxies = {
                 'http': proxy_url,
                 'https': proxy_url
             }
             
-            # 设置与yt-dlp相同的headers
-            session.headers.update({
-                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-us,en;q=0.5',
-                'Accept-Encoding': 'gzip, deflate',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
-            })
+            logger.info(f"使用官方代理和SSL禁用方式获取字幕: {proxy_url}")
             
-            # 禁用SSL验证，与代理测试代码保持一致
-            session.verify = False
-            
-            # 使用monkey patch让youtube-transcript-api使用我们的session
-            import youtube_transcript_api._transcripts
-            original_get = requests.get
-            
-            def patched_get(*args, **kwargs):
-                kwargs['proxies'] = session.proxies
-                kwargs['headers'] = session.headers
-                kwargs['verify'] = False
-                kwargs['timeout'] = 30
-                return original_get(*args, **kwargs)
-            
-            # 临时替换requests.get
-            requests.get = patched_get
-            youtube_transcript_api._transcripts.requests.get = patched_get
-            
-            logger.info(f"使用代理获取字幕，采用yt-dlp兼容模式: {proxy_url}")
-            
-            # 获取字幕
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, languages=['en', 'zh', 'zh-CN', 'auto'])
+            # 使用官方支持的proxies和verify参数
+            transcript_list = YouTubeTranscriptApi.get_transcript(
+                video_id, 
+                languages=['en', 'zh', 'zh-CN', 'auto'],
+                proxies=proxies,
+                verify=False  # 禁用SSL验证
+            )
             return transcript_list
             
         except Exception as e:
             logger.error(f"代理字幕获取失败: {str(e)}")
             raise
-        finally:
-            # 恢复原始的requests.get
-            try:
-                requests.get = original_get
-                youtube_transcript_api._transcripts.requests.get = original_get
-            except:
-                pass
     
     def _parse_published_date(self, date_str: str) -> Optional[datetime]:
         """解析发布日期"""
