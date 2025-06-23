@@ -15,7 +15,9 @@ class DeepseekService:
         try:
             # 构建请求数据
             request_data = {
-                "model": "google/gemini-2.0-flash-001",
+                #"model": "google/gemini-2.0-flash-001",
+                # 升级模型
+                "model": "google/gemini-2.5-flash",
                 "messages": [
                     {
                         "role": "system",
