@@ -194,11 +194,7 @@ class YouTubeFetcher(ContentFetcher):
             return None
     
     async def _get_transcript(self, video_id: str) -> Optional[str]:
-        """获取视频转录/字幕"""
-        if not TRANSCRIPT_AVAILABLE:
-            logger.warning("youtube-transcript-api不可用，跳过字幕获取")
-            return None
-        
+        """获取视频转录/字幕 - 优先使用Supadata API，备选youtube-transcript-api"""
         if not video_id:
             logger.error("视频ID为空，无法获取字幕")
             return None
@@ -206,10 +202,91 @@ class YouTubeFetcher(ContentFetcher):
         try:
             logger.info(f"开始获取YouTube字幕: {video_id}")
             
-            # 配置代理
+            # 优先尝试Supadata API
+            transcript = await self._get_transcript_supadata(video_id)
+            if transcript:
+                return transcript
+            
+            # 备选：使用youtube-transcript-api
+            if TRANSCRIPT_AVAILABLE:
+                logger.info("Supadata API获取失败，尝试youtube-transcript-api")
+                transcript = await self._get_transcript_youtube_api(video_id)
+                if transcript:
+                    return transcript
+            
+            logger.warning("所有字幕获取方法都失败了")
+            return None
+                
+        except Exception as e:
+            logger.warning(f"获取字幕失败: {str(e)}")
+            return None
+    
+    async def _get_transcript_supadata(self, video_id: str) -> Optional[str]:
+        """使用Supadata API获取字幕"""
+        try:
+            import os
+            from dotenv import load_dotenv
+            
+            # 确保加载环境变量
+            load_dotenv()
+            
+            # 直接从环境变量读取，支持两种命名方式
+            supadata_key = os.getenv('SUPERDATA_KEY') or os.getenv('superdata_KEY')
+            if not supadata_key:
+                logger.warning("SUPERDATA_KEY或superdata_KEY未配置，跳过Supadata API")
+                return None
+            
+            logger.info(f"使用Supadata API获取字幕: {video_id}")
+            
+            url = "https://api.supadata.ai/v1/youtube/transcript"
+            headers = {'x-api-key': supadata_key}
+            params = {
+                'videoId': video_id,
+                'text': 'true'  # 获取纯文本格式，必须是字符串
+            }
+            
+            # 在线程池中执行HTTP请求
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: requests.get(url, headers=headers, params=params, timeout=30)
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                content = data.get('content', '')
+                
+                if isinstance(content, list):
+                    # 如果返回的是分段内容，合并成文本
+                    transcript_text = ' '.join([item.get('text', '') for item in content])
+                elif isinstance(content, str):
+                    # 如果返回的是纯文本
+                    transcript_text = content
+                else:
+                    # 如果content是其他格式，尝试转换为字符串
+                    transcript_text = str(content)
+                
+                if transcript_text:
+                    logger.info(f"Supadata API成功获取字幕，长度: {len(transcript_text)}")
+                    return transcript_text
+                else:
+                    logger.warning("Supadata API返回空字幕")
+                    return None
+            else:
+                logger.warning(f"Supadata API请求失败: {response.status_code} - {response.text}")
+                return None
+                
+        except Exception as e:
+            logger.warning(f"Supadata API获取字幕失败: {str(e)}")
+            return None
+    
+    async def _get_transcript_youtube_api(self, video_id: str) -> Optional[str]:
+        """使用youtube-transcript-api获取字幕"""
+        try:
+            # 检查是否配置了代理
             if settings.USE_PROXY and settings.PROXY_URL:
                 logger.info(f"为字幕获取配置代理: {settings.PROXY_URL}")
-                # 在线程池中执行字幕获取，使用代理
+                # 在线程池中执行字幕获取
                 loop = asyncio.get_event_loop()
                 transcript_list = await loop.run_in_executor(
                     None,
@@ -227,14 +304,14 @@ class YouTubeFetcher(ContentFetcher):
             if transcript_list:
                 # 合并字幕文本
                 transcript_text = ' '.join([item['text'] for item in transcript_list])
-                logger.info(f"成功获取字幕，长度: {len(transcript_text)}")
+                logger.info(f"youtube-transcript-api成功获取字幕，长度: {len(transcript_text)}")
                 return transcript_text
             else:
-                logger.info("未找到可用字幕")
+                logger.warning("youtube-transcript-api返回空字幕")
                 return None
-            
+                
         except Exception as e:
-            logger.warning(f"获取字幕失败: {str(e)}")
+            logger.warning(f"youtube-transcript-api获取字幕失败: {str(e)}")
             return None
     
     def _get_transcript_with_proxy(self, video_id: str, proxy_url: str):
