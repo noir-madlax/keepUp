@@ -9,7 +9,10 @@ from app.utils.decorators import retry_decorator
 
 class OpenRouterService:
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
-    MODEL = "anthropic/claude-3.7-sonnet"
+    # 升级模型
+   #  MODEL = "anthropic/claude-3.7-sonnet"
+    # 升级模型
+    MODEL = "anthropic/claude-sonnet-4"
     
     @staticmethod
     async def get_prompt_data(lang: str) -> Optional[str]:
