@@ -238,7 +238,17 @@ class YouTubeFetcher(ContentFetcher):
             return None
     
     def _get_transcript_with_proxy(self, video_id: str, proxy_url: str):
-        """使用代理获取字幕，使用官方支持的方式"""
+        """使用代理获取字幕，通过环境变量禁用SSL验证"""
+        import os
+        import ssl
+        import urllib3
+        
+        # 保存原始环境变量
+        original_http_proxy = os.environ.get('HTTP_PROXY')
+        original_https_proxy = os.environ.get('HTTPS_PROXY')
+        original_curl_ca_bundle = os.environ.get('CURL_CA_BUNDLE')
+        original_pythonhttpsverify = os.environ.get('PYTHONHTTPSVERIFY')
+        
         try:
             # 构建代理配置
             proxies = {
@@ -246,20 +256,49 @@ class YouTubeFetcher(ContentFetcher):
                 'https': proxy_url
             }
             
-            logger.info(f"使用官方代理和SSL禁用方式获取字幕: {proxy_url}")
+            # 设置环境变量来禁用SSL验证
+            os.environ['HTTP_PROXY'] = proxy_url
+            os.environ['HTTPS_PROXY'] = proxy_url
+            os.environ['PYTHONHTTPSVERIFY'] = '0'
+            os.environ['CURL_CA_BUNDLE'] = ''
             
-            # 使用官方支持的proxies和verify参数
+            # 禁用SSL警告
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
+            logger.info(f"使用代理获取字幕，已禁用SSL验证: {proxy_url}")
+            
+            # 使用官方支持的proxies参数（移除不支持的verify参数）
             transcript_list = YouTubeTranscriptApi.get_transcript(
                 video_id, 
                 languages=['en', 'zh', 'zh-CN', 'auto'],
-                proxies=proxies,
-                verify=False  # 禁用SSL验证
+                proxies=proxies
             )
             return transcript_list
             
         except Exception as e:
             logger.error(f"代理字幕获取失败: {str(e)}")
             raise
+        finally:
+            # 恢复原始环境变量
+            if original_http_proxy is not None:
+                os.environ['HTTP_PROXY'] = original_http_proxy
+            else:
+                os.environ.pop('HTTP_PROXY', None)
+                
+            if original_https_proxy is not None:
+                os.environ['HTTPS_PROXY'] = original_https_proxy
+            else:
+                os.environ.pop('HTTPS_PROXY', None)
+                
+            if original_curl_ca_bundle is not None:
+                os.environ['CURL_CA_BUNDLE'] = original_curl_ca_bundle
+            else:
+                os.environ.pop('CURL_CA_BUNDLE', None)
+                
+            if original_pythonhttpsverify is not None:
+                os.environ['PYTHONHTTPSVERIFY'] = original_pythonhttpsverify
+            else:
+                os.environ.pop('PYTHONHTTPSVERIFY', None)
     
     def _parse_published_date(self, date_str: str) -> Optional[datetime]:
         """解析发布日期"""
