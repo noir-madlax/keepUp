@@ -238,67 +238,50 @@ class YouTubeFetcher(ContentFetcher):
             return None
     
     def _get_transcript_with_proxy(self, video_id: str, proxy_url: str):
-        """使用代理获取字幕，通过环境变量禁用SSL验证"""
-        import os
-        import ssl
+        """使用代理获取字幕，使用新版API的正确方式"""
+        import requests
         import urllib3
-        
-        # 保存原始环境变量
-        original_http_proxy = os.environ.get('HTTP_PROXY')
-        original_https_proxy = os.environ.get('HTTPS_PROXY')
-        original_curl_ca_bundle = os.environ.get('CURL_CA_BUNDLE')
-        original_pythonhttpsverify = os.environ.get('PYTHONHTTPSVERIFY')
+        from youtube_transcript_api.proxies import GenericProxyConfig
         
         try:
-            # 构建代理配置
-            proxies = {
+            # 禁用SSL警告
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
+            # 创建自定义的requests Session，禁用SSL验证
+            session = requests.Session()
+            session.verify = False  # 禁用SSL验证
+            session.proxies = {
                 'http': proxy_url,
                 'https': proxy_url
             }
             
-            # 设置环境变量来禁用SSL验证
-            os.environ['HTTP_PROXY'] = proxy_url
-            os.environ['HTTPS_PROXY'] = proxy_url
-            os.environ['PYTHONHTTPSVERIFY'] = '0'
-            os.environ['CURL_CA_BUNDLE'] = ''
+            # 设置与代理测试代码相同的headers
+            session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1'
+            })
             
-            # 禁用SSL警告
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            logger.info(f"使用新版API和自定义Session获取字幕: {proxy_url}")
             
-            logger.info(f"使用代理获取字幕，已禁用SSL验证: {proxy_url}")
+            # 使用新版API，传递自定义的http_client
+            api = YouTubeTranscriptApi(http_client=session)
             
-            # 使用官方支持的proxies参数（移除不支持的verify参数）
-            transcript_list = YouTubeTranscriptApi.get_transcript(
-                video_id, 
-                languages=['en', 'zh', 'zh-CN', 'auto'],
-                proxies=proxies
-            )
-            return transcript_list
+            # 获取字幕列表
+            transcript_list = api.list(video_id)
+            
+            # 尝试获取字幕（优先级：英文 > 中文 > 自动生成）
+            try:
+                transcript = transcript_list.find_transcript(['en', 'zh', 'zh-CN'])
+            except:
+                # 如果找不到手动字幕，尝试自动生成的
+                transcript = transcript_list.find_generated_transcript(['en', 'zh', 'zh-CN'])
+            
+            # 获取字幕内容
+            transcript_data = transcript.fetch()
+            return transcript_data
             
         except Exception as e:
             logger.error(f"代理字幕获取失败: {str(e)}")
             raise
-        finally:
-            # 恢复原始环境变量
-            if original_http_proxy is not None:
-                os.environ['HTTP_PROXY'] = original_http_proxy
-            else:
-                os.environ.pop('HTTP_PROXY', None)
-                
-            if original_https_proxy is not None:
-                os.environ['HTTPS_PROXY'] = original_https_proxy
-            else:
-                os.environ.pop('HTTPS_PROXY', None)
-                
-            if original_curl_ca_bundle is not None:
-                os.environ['CURL_CA_BUNDLE'] = original_curl_ca_bundle
-            else:
-                os.environ.pop('CURL_CA_BUNDLE', None)
-                
-            if original_pythonhttpsverify is not None:
-                os.environ['PYTHONHTTPSVERIFY'] = original_pythonhttpsverify
-            else:
-                os.environ.pop('PYTHONHTTPSVERIFY', None)
     
     def _parse_published_date(self, date_str: str) -> Optional[datetime]:
         """解析发布日期"""
