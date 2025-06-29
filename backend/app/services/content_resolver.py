@@ -5,12 +5,14 @@ from .platform_parser.youtube import YouTubeParser
 from .platform_parser.apple import ApplePodcastParser
 from .platform_parser.spotify import SpotifyParser
 from .platform_parser.webpage import WebPageParser
+from .platform_parser.wechat import WeChatParser
 
 class ContentResolver:
     """内容解析服务"""
     
     def __init__(self):
         self.parsers: list[PlatformParser] = [
+            WeChatParser(),
             YouTubeParser(),
             ApplePodcastParser(),
             SpotifyParser(),

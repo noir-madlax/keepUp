@@ -5,6 +5,7 @@ from .base import VideoInfo
 from .apple import ApplePodcastFetcher
 from .webpage import WebPageFetcher
 from .file import FileFetcher
+from .wechat import WeChatFetcher
 from app.utils.logger import logger
 from app.models.request import FetchRequest
 from app.models.author import AuthorInfo
@@ -15,6 +16,7 @@ class ContentFetcherService:
         self.request = request
         self.fetchers = [
             FileFetcher(),
+            WeChatFetcher(),
             YouTubeFetcher(),
             XiaoYuZhouFetcher(),
             ApplePodcastFetcher(),
