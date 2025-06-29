@@ -161,6 +161,10 @@ const getChannelIcon = (channel: string) => {
       return 'spotify.svg' 
     case 'apple':
       return 'apple-podcast.svg'
+    case 'wechat':
+    case 'WeChat':
+    case 'weixin':
+      return 'wechat.svg'
     case 'webpage':
       return 'web.svg'
     default:

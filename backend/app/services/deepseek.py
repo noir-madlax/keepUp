@@ -25,7 +25,6 @@ class DeepseekService:
                     }
                 ],
                 "temperature": 0.1,
-                "max_tokens": 5000,
                 "timeout": 30,  
                 "stream": True  # 启用流式响应，发版本更新23下
             }

@@ -1,15 +1,10 @@
 <template>
   <div 
-    class="fixed z-[1003]"
+    class="relative w-full"
     :class="{ 'opacity-50 pointer-events-none': disabled }"
-    :style="{
-      left: '40px',
-      bottom: 'calc(60px)',
-      maxWidth: 'calc(100vw - 40px)'
-    }"
   >
     <!-- 2024-03-25 16:30: 区分移动端和桌面端显示 -->
-    <div class="flex items-center gap-3 overflow-x-auto pb-2 -mb-2">
+    <div class="flex flex-wrap items-start gap-2 pb-2 -mb-2">
       <!-- 移动端只显示基础提示 -->
       <template v-if="isMobile">
         <div class="shrink-0 px-1 py-1.5 rounded-lg text-blue-600 font-medium text-sm">
@@ -19,45 +14,48 @@
 
       <!-- 桌面端保持原有功能 -->
       <template v-else>
-        <div class="shrink-0 px-1 py-1.5 rounded-lg text-blue-600 font-medium text-sm">
+        <!-- 提示文字单独一行 -->
+        <div class="w-full px-1 py-1.5 rounded-lg text-blue-600 font-medium text-sm">
           {{ hasSelectedText ? t('chat.toolbar.selected_hint') : t('chat.toolbar.hint') }}
         </div>
 
-        <!-- 只在选中文字时显示按钮组 -->
+        <!-- 只在选中文字时显示按钮组，换行显示 -->
         <template v-if="hasSelectedText">
-          <!-- 展开说说按钮 - 蓝色气泡 -->
-          <button
-            @click="handleChatAction('EXPAND')"
-            class="bubble-button shrink-0"
-            :class="{ 'disabled-button': chatStore.isAIResponding }"
-            :disabled="chatStore.isAIResponding"
-          >
-            <img src="/images/icons/expand.svg" alt="Expand" class="w-4 h-4" />
-            <span>{{ t('chat.actions.expand') }}</span>
-          </button>
+          <div class="flex flex-wrap gap-2 w-full">
+            <!-- 展开说说按钮 - 蓝色气泡 -->
+            <button
+              @click="handleChatAction('EXPAND')"
+              class="bubble-button"
+              :class="{ 'disabled-button': chatStore.isAIResponding }"
+              :disabled="chatStore.isAIResponding"
+            >
+              <img src="/images/icons/expand.svg" alt="Expand" class="w-4 h-4" />
+              <span>{{ t('chat.actions.expand') }}</span>
+            </button>
 
-          <!-- 给出原文按钮 - 绿色气泡 -->
-          <button
-            @click="handleChatAction('ORIGINAL')"
-            class="bubble-button shrink-0"
-            :class="{ 'disabled-button': chatStore.isAIResponding }"
-            :disabled="chatStore.isAIResponding"
-          >
-            <img src="/images/icons/original.svg" alt="Original" class="w-4 h-4" />
-            <span>{{ t('chat.actions.original') }}</span>
-          </button>
+            <!-- 给出原文按钮 - 绿色气泡 -->
+            <button
+              @click="handleChatAction('ORIGINAL')"
+              class="bubble-button"
+              :class="{ 'disabled-button': chatStore.isAIResponding }"
+              :disabled="chatStore.isAIResponding"
+            >
+              <img src="/images/icons/original.svg" alt="Original" class="w-4 h-4" />
+              <span>{{ t('chat.actions.original') }}</span>
+            </button>
 
-          <!-- 解释一下按钮 - 紫色气泡 -->
-          <button
-            v-if="false"
-            @click="handleChatAction('EXPLAIN')"
-            class="bubble-button shrink-0"
-            :class="{ 'disabled-button': chatStore.isAIResponding }"
-            :disabled="chatStore.isAIResponding"
-          >
-            <img src="/images/icons/explain.svg" alt="Explain" class="w-4 h-4" />
-            <span>{{ t('chat.actions.explain_selection') }}</span>
-          </button>
+            <!-- 解释一下按钮 - 紫色气泡 -->
+            <button
+              v-if="false"
+              @click="handleChatAction('EXPLAIN')"
+              class="bubble-button"
+              :class="{ 'disabled-button': chatStore.isAIResponding }"
+              :disabled="chatStore.isAIResponding"
+            >
+              <img src="/images/icons/explain.svg" alt="Explain" class="w-4 h-4" />
+              <span>{{ t('chat.actions.explain_selection') }}</span>
+            </button>
+          </div>
         </template>
       </template>
     </div>

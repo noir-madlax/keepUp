@@ -301,6 +301,9 @@ const getChannelIcon = (channel: string | undefined): string => {
     'Apple Podcast': 'apple-podcast.svg',
     'Spotify': 'spotify.svg',
     'spotify': 'spotify.svg',
+    'wechat': 'wechat.svg',
+    'WeChat': 'wechat.svg',
+    'weixin': 'wechat.svg',
     'webpage': 'web.svg'
   }
   return iconMap[channel.toLowerCase()] || 'channel_default.png'

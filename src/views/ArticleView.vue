@@ -1,9 +1,6 @@
 <template>
-  <!-- 页面容器 -->
-  <div 
-    class="min-h-screen bg-white overflow-x-hidden w-full"
-    :class="{ 'chat-open': chatStore.chatWindowState === 'expanded' }"
-  >
+  <!-- 页面容器 - 改为flex布局 -->
+  <div class="min-h-screen bg-white w-full flex flex-col h-screen overflow-hidden">
     <!-- 顶部导航栏 - 始终显示 -->
     <header class="fixed top-0 left-0 right-0 bg-white z-[1001] w-full">
       <!-- 使用transition组件包裹两个导航样式 -->
@@ -39,8 +36,6 @@
 
           </div>
 
-
-          
           <!-- 右侧导航元素容器 -->
           <div class="flex items-center gap-1 pl-2">
             <!-- 语言切换组件 -->
@@ -140,118 +135,233 @@
       <div class="h-[1px] hidden bg-[#E5E5E5] w-full"></div>
     </header>
 
-    <!-- 加载状态显示 -->
-    <LoadingSpinner v-if="isLoading || !article" />
+    <!-- 主要内容区域 - Flex布局：左侧文章 + 右侧Chat -->
+    <div class="flex-1 flex h-full overflow-hidden">
+      <!-- 左侧：文章内容容器 -->
+      <div class="flex-1 h-full overflow-y-auto overflow-x-hidden">
+        <!-- 加载状态显示 -->
+        <LoadingSpinner v-if="isLoading || !article" />
 
-    <!-- 主要内容区域 -->
-    <div v-if="!isLoading && article">
-      <!-- 添加语言提示横幅 -->
-      <div 
-        v-if="showLanguageAlert"
-        class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 mx-4 md:mx-8"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex-1 flex items-center">
-            <svg class="h-5 w-5 text-blue-400 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-              <p class="text-sm text-blue-700">
-                {{ t('article.fallbackLanguage.message', {
-                  language: t(`article.fallbackLanguage.${contentLanguage}`)
-                }) }}
-              </p>
-              <!-- 添加获取其他语言内容的按钮 -->
+        <!-- 文章内容 -->
+        <div v-if="!isLoading && article" class="article-content-wrapper h-full">
+          <!-- 添加语言提示横幅 -->
+          <div 
+            v-if="showLanguageAlert"
+            class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4 mx-4 md:mx-8"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex-1 flex items-center">
+                <svg class="h-5 w-5 text-blue-400 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <p class="text-sm text-blue-700">
+                    {{ t('article.fallbackLanguage.message', {
+                      language: t(`article.fallbackLanguage.${contentLanguage}`)
+                    }) }}
+                  </p>
+                  <!-- 添加获取其他语言内容的按钮 -->
+                  <button 
+                    @click="handleMoreContent"
+                    class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    {{ t('article.fallbackLanguage.getOtherLanguage') }}
+                  </button>
+                </div>
+              </div>
               <button 
-                @click="handleMoreContent"
-                class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                @click="showLanguageAlert = false"
+                class="text-blue-400 hover:text-blue-600 ml-4 flex-shrink-0"
               >
-                {{ t('article.fallbackLanguage.getOtherLanguage') }}
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
-          <button 
-            @click="showLanguageAlert = false"
-            class="text-blue-400 hover:text-blue-600 ml-4 flex-shrink-0"
-          >
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </div>
 
-      <!-- 文章标题和作者信息 -->
-      <div class="bg-white">
-        <div 
-          class="w-full max-w-[1024px] mx-auto transition-all duration-300"
-        >
-          <div class="relative px-4 pt-8 pb-0">
-            <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
-              <!-- 文章封面 -->
-              <img 
-                :src="getArticleImage(article.cover_image_url)"
-                :alt="getArticleTitle()" 
-                class="w-auto h-48 md:h-64 object-contain rounded-lg shadow-md" 
-              />
-              <div class="flex-1">
-                <!-- 文章标题 --> 
-                <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{{ getArticleTitle() }}</h1>
-                <!-- 作者信息 -->
-                <div class="flex items-center gap-4 text-gray-600 text-sm md:text-base">
-                  <div class="flex items-center gap-2">
-                    <img 
-                      :src="article.author?.icon || '/images/icons/author_default.svg'" 
-                      :alt="article.author?.name || t('upload.card.fallback.unknownAuthor')" 
-                      class="w-5 h-5 rounded-full"
-                    />
-                    <span>{{ getAuthorName() }}</span>
+          <!-- 文章标题和作者信息 -->
+          <div class="bg-white">
+            <div class="w-full transition-all duration-300">
+              <div class="relative px-4 pt-8 pb-0">
+                <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
+                  <!-- 文章封面 -->
+                  <img 
+                    :src="getArticleImage(article.cover_image_url)"
+                    :alt="getArticleTitle()" 
+                    class="w-auto h-48 md:h-64 object-contain rounded-lg shadow-md" 
+                  />
+                  <div class="flex-1">
+                    <!-- 文章标题 --> 
+                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{{ getArticleTitle() }}</h1>
+                    <!-- 作者信息 -->
+                    <div class="flex items-center gap-4 text-gray-600 text-sm md:text-base">
+                      <div class="flex items-center gap-2">
+                        <img 
+                          :src="article.author?.icon || '/images/icons/author_default.svg'" 
+                          :alt="article.author?.name || t('upload.card.fallback.unknownAuthor')" 
+                          class="w-5 h-5 rounded-full"
+                        />
+                        <span>{{ getAuthorName() }}</span>
+                      </div>
+                      <span>{{ formatDate(article.publish_date) }}</span>
+                    </div>
+                    <!-- 操作按钮组 -->
+                    <div class="flex flex-wrap gap-1.5 sm:gap-2 mt-4">
+                      <!-- 更多内容按钮 -->
+                      <button 
+                        v-if="isMediaArticle"
+                        @click="handleMoreContent" 
+                        class="hidden inline-flex items-center px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200 whitespace-nowrap"
+                      >
+                        <img
+                          src="/images/icons/more_content.svg"
+                          alt="More Content"
+                          class="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5"
+                        />
+                        {{ t('summarize.moreContent') }}
+                      </button>
+
+                      <!-- 查看原文按钮 -->
+                      <a 
+                        v-if="article.original_link"
+                        :href="article.original_link" 
+                        target="_blank" 
+                        class="inline-flex items-center px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200 whitespace-nowrap"
+                      >
+                        <img
+                          src="/images/icons/view_original.svg"
+                          alt="View Original"
+                          class="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5"
+                        />
+                        {{ t('article.viewOriginal') }}
+                      </a>
+
+                      <!-- 分享按钮 -->
+                      <button 
+                        @click="copyCurrentUrl" 
+                        class="inline-flex items-center px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200 whitespace-nowrap"
+                      >
+                        <img
+                          src="/images/icons/share.svg"
+                          alt="Share"
+                          class="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5"
+                        />
+                        {{ t('article.share') }}
+                      </button>
+                    </div>
                   </div>
-                  <span>{{ formatDate(article.publish_date) }}</span>
                 </div>
-                <!-- 操作按钮组 -->
-                <div class="flex flex-wrap gap-1.5 sm:gap-2 mt-4">
-                  <!-- 更多内容按钮 -->
-                  <button 
-                    v-if="isMediaArticle"
-                    @click="handleMoreContent" 
-                    class="hidden inline-flex items-center px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200 whitespace-nowrap"
-                  >
-                    <img
-                      src="/images/icons/more_content.svg"
-                      alt="More Content"
-                      class="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5"
-                    />
-                    {{ t('summarize.moreContent') }}
-                  </button>
+              </div>
+            </div>
+          </div>
 
-                  <!-- 查看原文按钮 -->
-                  <a 
-                    v-if="article.original_link"
-                    :href="article.original_link" 
-                    target="_blank" 
-                    class="inline-flex items-center px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200 whitespace-nowrap"
-                  >
-                    <img
-                      src="/images/icons/view_original.svg"
-                      alt="View Original"
-                      class="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5"
-                    />
-                    {{ t('article.viewOriginal') }}
-                  </a>
+          <!-- 2024-01-17: 添加分割线 -->
+          <div class="hidden w-full h-[1px] bg-[#E5E5E5]"></div>
 
-                  <!-- 分享按钮 -->
-                  <button 
-                    @click="copyCurrentUrl" 
-                    class="inline-flex items-center px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-full transition-colors border border-gray-200 whitespace-nowrap"
-                  >
-                    <img
-                      src="/images/icons/share.svg"
-                      alt="Share"
-                      class="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5"
-                    />
-                    {{ t('article.share') }}
-                  </button>
+          <!-- 小节标签 -->
+          <div class="w-full mx-auto bg-white">
+            <!-- 小节标签 -->
+            <div 
+              class="w-full transition-all duration-300"
+            >
+
+              <!-- 文章内容部分 -->
+              <div class="article-main-container">
+                <div 
+                  class="p-4 md:p-8 article-content"
+                  @mouseup="handleTextSelection"
+                  @touchend="handleTextSelection"
+                >
+                  <!-- 文章内容 -->
+                  <article class="prose prose-sm md:prose-lg max-w-none">
+                    <!-- 2024-03-20 14:30: 添加文章内容hover提示 -->
+                    <div 
+                      class="relative group"
+                      @mouseenter="handleContentHover"
+                      @mousemove="handleMouseMove"
+                      @mouseleave="handleContentLeave"
+                    >
+                      <!-- 添加提示框 -->
+                      <div 
+                        v-if="showHoverHint"
+                        class="fixed text-white px-3 py-1.5 rounded text-sm whitespace-nowrap
+                               opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                               pointer-events-none z-[1000] bg-blue-500/90"
+                        :style="{
+                          left: hintPosition.x + 'px',
+                          top: hintPosition.y + 'px',
+                          transform: 'translate(-50%, -100%)'
+                        }"
+                      >
+                        {{ t('chat.toolbar.hover_hint') }}
+                        <div class="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-full
+                                  border-8 border-transparent border-t-blue-500/90"></div>
+                      </div>
+
+                      <!-- 如果sections存在，则渲染sections -->
+                      <template v-if="sections.length">
+                        <!-- 遍历sections，渲染每个section -->
+                        <div 
+                          v-for="section in displaySections" 
+                          :key="section.id"
+                          class="mb-8"
+                          :data-section-type="section.section_type"
+                          :id="'section-' + section.section_type"
+                        >
+                          <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
+                          
+                          <!-- 根据不同的小节类型使用不同的渲染方式 -->
+                          <template v-if="section.section_type === '思维导图'">
+                            <div class="flex items-center gap-2">
+                                  <span 
+                                    @click="handlePreviewMindmap" 
+                                    class="text-blue-500 hover:text-blue-600 cursor-pointer text-sm flex items-center"
+                                  >
+                                    <i class="el-icon-zoom-in mr-1"></i>
+                                    {{ t('article.preview.enlarge') }}
+                                  </span>
+                                </div>
+                              <mind-map 
+                                :content="section.content" 
+                                @preview="url => previewImageUrl = url"
+                              />
+
+                          </template>
+                          <template v-else-if="section.section_type === '结构图'">
+                            <!-- 结构图组件 --> 
+                            <mermaid :content="section.content" />
+                          </template>
+                          <template v-else>
+                            <!-- 使用问题标记包装markdown内容 -->
+                            <div class="relative">
+                              <div v-html="renderSectionContent(section)"></div>
+                              <!-- 添加section级别的问题标记 -->
+                              <template v-if="getSectionQuestionCount(section.id)">
+                                <div class="absolute right-0 top-0">
+                                  <QuestionMark 
+                                    :mark-id="section.id.toString()"
+                                    :article-id="Number(route.params.id)"
+                                    :section-type="section.section_type"
+                                    :mark-content="''"
+                                    :position="{}"
+                                    :show-question-mark="false"
+                                    :count="getSectionQuestionCount(section.id)"
+                                  >
+                                    <span class="text-gray-400 text-sm">{{ t('chat.questionMark') }}</span>
+                                  </QuestionMark>
+                                </div>
+                              </template>
+                            </div>
+                          </template>
+                        </div>
+                      </template>
+                      <div v-else>  
+                        <!-- 如果sections不存在，则渲染markdown内容 -->
+                        <div v-html="markdownContent"></div>
+                      </div>
+                    </div>
+                  </article>
                 </div>
               </div>
             </div>
@@ -259,116 +369,19 @@
         </div>
       </div>
 
-      <!-- 2024-01-17: 添加分割线 -->
-      <div class="hidden w-full h-[1px] bg-[#E5E5E5]"></div>
-
-      <!-- 小节标签 -->
-      <div class="w-full mx-auto bg-white">
-        <!-- 小节标签 -->
-        <div 
-          class="w-full max-w-[1024px] mx-auto transition-all duration-300"
-        >
-
-          <!-- 文章内容部分 -->
-          <div class="article-main-container">
-            <div 
-              class="p-4 md:p-8 article-content"
-              @mouseup="handleTextSelection"
-              @touchend="handleTextSelection"
-            >
-              <!-- 文章内容 -->
-              <article class="prose prose-sm md:prose-lg max-w-none">
-                <!-- 2024-03-20 14:30: 添加文章内容hover提示 -->
-                <div 
-                  class="relative group"
-                  @mouseenter="handleContentHover"
-                  @mousemove="handleMouseMove"
-                  @mouseleave="handleContentLeave"
-                >
-                  <!-- 添加提示框 -->
-                  <div 
-                    v-if="showHoverHint"
-                    class="fixed text-white px-3 py-1.5 rounded text-sm whitespace-nowrap
-                           opacity-0 group-hover:opacity-100 transition-opacity duration-300
-                           pointer-events-none z-[1000] bg-blue-500/90"
-                    :style="{
-                      left: hintPosition.x + 'px',
-                      top: hintPosition.y + 'px',
-                      transform: 'translate(-50%, -100%)'
-                    }"
-                  >
-                    {{ t('chat.toolbar.hover_hint') }}
-                    <div class="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-full
-                              border-8 border-transparent border-t-blue-500/90"></div>
-                  </div>
-
-                  <!-- 如果sections存在，则渲染sections -->
-                  <template v-if="sections.length">
-                    <!-- 遍历sections，渲染每个section -->
-                    <div 
-                      v-for="section in displaySections" 
-                      :key="section.id"
-                      class="mb-8"
-                      :data-section-type="section.section_type"
-                      :id="'section-' + section.section_type"
-                    >
-                      <h2 class="text-xl font-bold mb-4">{{ getLocalizedSectionType(section.section_type) }}</h2>
-                      
-                      <!-- 根据不同的小节类型使用不同的渲染方式 -->
-                      <template v-if="section.section_type === '思维导图'">
-                        <div class="flex items-center gap-2">
-                              <span 
-                                @click="handlePreviewMindmap" 
-                                class="text-blue-500 hover:text-blue-600 cursor-pointer text-sm flex items-center"
-                              >
-                                <i class="el-icon-zoom-in mr-1"></i>
-                                {{ t('article.preview.enlarge') }}
-                              </span>
-                            </div>
-                          <mind-map 
-                            :content="section.content" 
-                            @preview="url => previewImageUrl = url"
-                          />
-
-                      </template>
-                      <template v-else-if="section.section_type === '结构图'">
-                        <!-- 结构图组件 --> 
-                        <mermaid :content="section.content" />
-                      </template>
-                      <template v-else>
-                        <!-- 使用问题标记包装markdown内容 -->
-                        <div class="relative">
-                          <div v-html="renderSectionContent(section)"></div>
-                          <!-- 添加section级别的问题标记 -->
-                          <template v-if="getSectionQuestionCount(section.id)">
-                            <div class="absolute right-0 top-0">
-                              <QuestionMark 
-                                :mark-id="section.id.toString()"
-                                :article-id="Number(route.params.id)"
-                                :section-type="section.section_type"
-                                :mark-content="''"
-                                :position="{}"
-                                :show-question-mark="false"
-                                :count="getSectionQuestionCount(section.id)"
-                              >
-                                <span class="text-gray-400 text-sm">{{ t('chat.questionMark') }}</span>
-                              </QuestionMark>
-                            </div>
-                          </template>
-                        </div>
-                      </template>
-                    </div>
-                  </template>
-                  <div v-else>  
-                    <!-- 如果sections不存在，则渲染markdown内容 -->
-                    <div v-html="markdownContent"></div>
-                  </div>
-                </div>
-              </article>
-            </div>
-          </div>
-        </div>
+      <!-- 右侧：Chat容器 - 桌面端显示，移动端隐藏 -->
+      <div 
+        v-if="!isMobile"
+        class="flex-shrink-0 transition-all duration-300 ease-in-out relative overflow-hidden h-full"
+        :style="{ width: chatStore.chatWindowState === 'expanded' ? 'var(--chat-window-width)' : '20px' }"
+      >
+        <ChatWindow />
       </div>
+    </div>
+
+    <!-- 移动端Chat窗口 - 固定在底部 -->
+    <div v-if="isMobile" class="relative">
+      <ChatWindow />
     </div>
 
     <!-- 编辑模态框 -->
@@ -517,16 +530,6 @@
         :section-status="sectionStatus"
       />
     </div>
-
-    <!-- 添加工具栏组件 -->
-    <ChatToolbar 
-      @refresh-anchors="handleRefreshAnchors" 
-      :disabled="showMoreContentModal"
-      @scroll-to-bottom="handleScrollToBottom"
-    />
-
-    <!-- 添加聊天窗口 -->
-    <ChatWindow ref="chatWindowRef" />
   </div>
 </template>
 
@@ -960,7 +963,7 @@ onMounted(async () => {
     }
     
     // 2024-01-20 12:30: 确保打开新文章时聊天窗口是最小化的
-    chatStore.chatWindowState = 'minimized'
+    // 保持chat窗口默认展开状态
     
     // 加载文章数据
     await Promise.all([
@@ -1537,7 +1540,7 @@ onMounted(async () => {
   }
   
   // 2024-01-20 12:30: 确保打开新文章时聊天窗口是最小化的
-  chatStore.chatWindowState = 'minimized'
+        // 保持chat窗口默认展开状态
   
   // 添加页面滚动事件监听
   window.addEventListener('scroll', handleScroll)
@@ -1886,8 +1889,8 @@ img {
 :root {
   --chat-window-width: 30vw;
   --content-max-width: 1024px;
-  --content-padding: 1rem;  /* 新增：统一内容padding */
-  --min-side-margin: 1rem;  /* 新增：最小侧边距 */
+  --content-padding: 1rem;
+  --min-side-margin: 1rem;
 }
 
 @media (max-width: 1600px) {
@@ -1903,19 +1906,40 @@ img {
   }
 }
 
-/* 确保内容不会被聊天窗口遮挡 */
+/* 响应式布局：桌面端使用flex布局，移动端为底部chat预留空间 */
 .min-h-screen {
-  padding-top: 71px;
-  padding-bottom: 40vh; /* 为聊天窗口预留空间 */
   transition: all 0.3s ease-in-out;
+}
+
+/* 移动端：保持底部预留空间 */
+@media (max-width: 768px) {
+  .min-h-screen {
+    padding-bottom: 40vh;
+  }
+}
+
+/* 文章内容区域 */
+.article-content-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* 调整内容容器布局 */
 .article-content {
-  margin: 0 auto;
+  margin: 0;
   padding: 0 var(--content-padding);
-  max-width: var(--content-max-width);
   width: 100%;
+  max-width: none; /* 移除固定宽度限制 */
+}
+
+/* 桌面端文章区域确保不超出可用空间 */
+@media (min-width: 769px) {
+  .article-content {
+    /* 为滚动条预留空间 */
+    padding-right: calc(var(--content-padding) + 12px);
+  }
 }
 
 /* 标签区域样式 */
@@ -1927,17 +1951,13 @@ img {
 /* 文章主容器样式 */
 .article-main-container {
   width: 100%;
-  margin: 0 auto;
+  margin: 0;
 }
 
 @media (max-width: 768px) {
   :root {
     --content-padding: 0.5rem;
     --min-side-margin: 0.5rem;
-  }
-  
-  .min-h-screen {
-    padding-bottom: 60vh; /* 移动端聊天窗口更高，预留更多空间 */
   }
 }
 

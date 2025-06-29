@@ -1,31 +1,52 @@
 <template>
   <div 
-    class="fixed bottom-0 left-0 right-0 bg-[#FFFFFF]"
     :class="[
+      'chat-window',
       'transition-all duration-300 ease-in-out',
       { 'transition-none': isResizing }
     ]"
-    :style="{
-      height: chatStore.chatWindowState === 'expanded' ? `${windowHeight}px` : '105px',
-      zIndex: '998',
-      borderLeft: '1px solid #DDDDDD',
-      borderTop: '1px solid #DDDDDD',
-      borderBottom: '1px solid #DDDDDD',
-      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)'
-    }"
+    :style="getChatWindowStyle()"
   >
     <!-- 展开/收起按钮 - 始终显示在顶部 -->
     <div class="relative w-full bg-white" style="z-index: 999;">
-      <!-- 拖拽条 - 仅在展开状态显示 -->
+      <!-- 桌面端拖拽条 - 仅在展开状态显示 -->
       <div 
-        v-if="chatStore.chatWindowState === 'expanded'"
+        v-if="chatStore.chatWindowState === 'expanded' && !isMobile"
         class="absolute left-0 right-0 top-0 h-1 cursor-ns-resize bg-transparent"
         @mousedown="startResize"
       ></div>
-           <!-- 拖拽按钮这个控制位置贴近框 -top-[0px] -->
+      
+      <!-- 桌面端收起状态的展开按钮 -->
       <button
+        v-if="!isMobile"
         @click="toggleChatWindow"
-        class="absolute left-1/2 -translate-x-1/2 -top-[0px] transition-opacity hover:opacity-100 opacity-90 bg-white rounded-t-lg px-2 "
+        :class="[
+          'desktop-toggle-btn',
+          chatStore.chatWindowState === 'minimized' ? 'minimized' : 'expanded'
+        ]"
+        :title="chatStore.chatWindowState === 'expanded' ? '收起聊天' : '展开聊天'"
+      >
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          :class="[
+            'w-4 h-4 transition-transform duration-300',
+            chatStore.chatWindowState === 'expanded' ? 'rotate-180' : ''
+          ]"
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          stroke-width="2"
+        >
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+        <span v-if="chatStore.chatWindowState === 'minimized'" class="toggle-text">Chat</span>
+      </button>
+      
+      <!-- 移动端拖拽按钮 - 保持原有样式 -->
+      <button
+        v-if="isMobile"
+        @click="toggleChatWindow"
+        class="absolute left-1/2 -translate-x-1/2 -top-[0px] transition-opacity hover:opacity-100 opacity-90 bg-white rounded-t-lg px-2"
         style="z-index: 998;"
         :title="chatStore.chatWindowState === 'expanded' ? '收起聊天' : '展开聊天'"
       >
@@ -45,23 +66,42 @@
       </button>
     </div>
 
-    <!-- 收起状态时的内容区域 -->
+    <!-- 收起状态时的展开按钮 -->
     <div 
-      v-if="chatStore.chatWindowState === 'minimized'"
-      class="border-0 w-full h-full cursor-pointer flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
+      v-if="chatStore.chatWindowState === 'minimized' && !isMobile"
+      class="w-full h-full bg-gray-100 hover:bg-gray-200 transition-all duration-200 cursor-pointer relative group border-l border-gray-300"
       @click="toggleChatWindow"
+      title="点击展开聊天"
     >
+      <!-- 展开按钮 - 垂直居中显示 -->
+      <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <div class="flex flex-col items-center justify-center p-1 rounded-md bg-white shadow-sm border border-gray-200 group-hover:shadow-md transition-all duration-200">
+          <!-- 聊天图标 -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600 group-hover:text-blue-600 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-3.774-.9L3 21l1.9-6.226A8.955 8.955 0 013 12a8 8 0 018-8c4.418 0 8 3.582 8 8z" />
+          </svg>
+          <!-- 展开箭头 -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-500 group-hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" />
+          </svg>
+        </div>
+      </div>
+      
+      <!-- 垂直文字提示 -->
+      <div class="absolute left-1/2 bottom-4 transform -translate-x-1/2 -rotate-90 text-xs text-gray-500 group-hover:text-gray-700 whitespace-nowrap">
+        展开聊天
+      </div>
     </div>
 
-    <!-- 聊天内容区域  "h-[calc(100%-60px-40px) 这个控制高度-->
+    <!-- 聊天内容区域 -->
     <div 
       v-if="chatStore.chatWindowState === 'expanded'"
-      class="h-[calc(100%-60px-40px)] overflow-y-auto"
+      class="flex-1 overflow-hidden flex flex-col"
     >
       <!-- 聊天消息内容 -->
       <div 
         ref="messageListRef"
-        class="messages-container pt-4 px-6"
+        class="flex-1 overflow-y-auto pt-4 px-6 pb-2"
         @wheel.prevent="handleChatScroll"
         @touchstart="handleTouchStart"
         @touchmove="handleTouchMove"
@@ -78,8 +118,7 @@
               index !== chatStore.currentSession.messages.length - 1 ? 'mb-3' : ''
             ]"
           >
-            <!-- 2024-03-21 16:00: 添加AI消息的logo -->
-                         <!--max-w-[98%]是为了ai的聊天和用户聊天对齐 和输入框对齐 -->
+            <!-- AI消息 -->
             <template v-if="message.role === 'assistant'">
               <div class="flex items-start max-w-[98%]">
                 <img 
@@ -97,7 +136,7 @@
                 </div>
               </div>
             </template>
-            <!-- 用户消息保持原样 -->
+            <!-- 用户消息 -->
             <template v-else>
               <div class="flex items-start max-w-[95%]">
                 <div 
@@ -108,7 +147,6 @@
                   v-html="renderMarkdown(message.content)"
                 >
                 </div>
-                <!-- 2024-03-21 17:45: 使用与导航栏相同的用户头像获取方式 -->
                 <img 
                   :src="authStore.user?.user_metadata?.avatar_url || '/images/icons/avatar.svg'" 
                   alt="User Avatar" 
@@ -118,10 +156,9 @@
             </template>
           </div>
           
-          <!-- 使用isAIInitialLoading来控制骨架屏 -->
+          <!-- AI初始加载骨架屏 -->
           <div v-if="chatStore.isAIInitialLoading" class="flex justify-start mt-3">
             <div class="flex items-start max-w-[98%]">
-              <!-- AI头像骨架屏 -->
               <div class="w-[24px] h-[24px] mr-2 flex-shrink-0 mt-1 rounded bg-gray-200 animate-pulse"></div>
               <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200 animate-pulse">
                 <div class="h-2 bg-gray-200 rounded-full w-[180px]"></div>
@@ -140,14 +177,12 @@
                 <div class="h-2 bg-blue-200 rounded-full w-[160px]"></div>
                 <div class="h-2 bg-blue-200 rounded-full w-[100px]"></div>
               </div>
-              <!-- 用户头像骨架屏 -->
               <div class="w-[24px] h-[24px] ml-2 flex-shrink-0 mt-1 rounded-full bg-blue-200 animate-pulse"></div>
             </div>
           </div>
           <!-- AI回复骨架屏 -->
           <div class="flex justify-start">
             <div class="flex items-start max-w-[98%]">
-              <!-- AI头像骨架屏 -->
               <div class="w-[24px] h-[24px] mr-2 flex-shrink-0 mt-1 rounded bg-gray-200 animate-pulse"></div>
               <div class="max-w-[80%] space-y-2 bg-gray-50 rounded-lg px-4 py-3 border border-gray-200 animate-pulse">
                 <div class="h-2 bg-gray-200 rounded-full w-[180px]"></div>
@@ -162,28 +197,39 @@
           {{ $t('chat.window.startChat') }}
         </div>
       </div>
+
+      <!-- ChatToolbar区域 - 固定在聊天内容下方，输入框上方 -->
+      <div class="flex-shrink-0 bg-gray-50 border-t border-gray-200 px-4 py-2">
+        <ChatToolbar 
+          @refresh-anchors="handleRefreshAnchors" 
+          :disabled="false"
+          @scroll-to-bottom="handleScrollToBottom"
+        />
+      </div>
     </div>
 
-    <!-- 输入框区域 -->
-        <!--mr-[-20px] 是为了ai的聊天右边的输入框对齐 -->
+    <!-- 输入框区域 - 只在展开状态显示 -->
     <div 
-      class="absolute bottom-0 left-0 right-0 bg-white px-11 py-3 mr-[-20px] "
-      style="height: 59px;"
+      v-if="chatStore.chatWindowState === 'expanded'"
+      class="flex-shrink-0 bg-white border-t border-gray-200 p-4"
     >
-      <!-- 输入框 --> 
       <form @submit.prevent="handleSubmit" class="relative flex items-center h-full">
-               <!-- mr-[24px] 控制按钮位置 -->
         <input
           v-model="messageInput"
           type="text"
           :placeholder="$t('chat.input.placeholder')"
-          class="w-full px-4 py-2 pr-12 mr-[24px] border border-[#D9D9D9] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#BFBFBF] bg-white text-[#333333] text-base"
+          :class="[
+            'chat-input',
+            { 'mobile-chat-input': isMobile }
+          ]"
           :disabled="chatStore.isAIResponding"
         />
-        <!-- 发送按钮 -->
         <button
           type="button"
-          class="absolute right-[32px] w-[32px] h-[32px] flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors"
+          :class="[
+            'chat-send-btn',
+            { 'mobile-send-btn': isMobile }
+          ]"
           :disabled="!messageInput.trim() && !chatStore.isAIResponding"
           @click="chatStore.isAIResponding ? handleAbort() : handleSubmit()"
         >
@@ -212,18 +258,60 @@ import { useAuthStore } from '../../stores/auth'
 import { format } from 'date-fns'
 import type { ChatSession } from '../../types/chat'
 import { marked } from 'marked'
+import ChatToolbar from './ChatToolbar.vue'
 
 const chatStore = useChatStore()
 const authStore = useAuthStore()
 const messageInput = ref('')
 const selectedSessionId = ref('')
 
+// 添加移动端检测
+const isMobile = computed(() => window.innerWidth < 768)
+
 // 2024-01-21 15:10: 定义默认展开高度常量
-const DEFAULT_EXPANDED_HEIGHT = 300 // 默认展开高度
+const DEFAULT_EXPANDED_HEIGHT = 300
 const windowHeight = ref(DEFAULT_EXPANDED_HEIGHT)
 const isResizing = ref(false)
 const startY = ref(0)
 const startHeight = ref(0)
+
+// 计算chat窗口样式
+const getChatWindowStyle = () => {
+  const mobile = isMobile.value
+  const isExpanded = chatStore.chatWindowState === 'expanded'
+  
+  if (mobile) {
+    // 移动端：保持底部布局
+    return {
+      position: 'fixed',
+      bottom: '0',
+      left: '0',
+      right: '0',
+      height: isExpanded ? `${windowHeight.value}px` : '105px',
+      zIndex: '998',
+      borderLeft: '1px solid #DDDDDD',
+      borderTop: '1px solid #DDDDDD',
+      borderBottom: '1px solid #DDDDDD',
+      boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      backgroundColor: '#FFFFFF',
+      boxSizing: 'border-box'
+    }
+  } else {
+    // 桌面端：使用相对定位，适配flex布局，确保有固定高度
+    return {
+      position: 'relative',
+      height: '100%',
+      width: '100%',
+      backgroundColor: isExpanded ? '#FFFFFF' : 'transparent',
+      borderLeft: isExpanded ? '1px solid #DDDDDD' : 'none',
+      boxShadow: isExpanded ? '-2px 0 4px rgba(0, 0, 0, 0.1)' : 'none',
+      boxSizing: 'border-box',
+      overflow: 'hidden', // 确保chat窗口本身不滚动，由内部区域控制滚动
+      display: 'flex',
+      flexDirection: 'column'
+    }
+  }
+}
 
 // 格式化会话标签
 const formatSessionLabel = (session: ChatSession) => {
@@ -239,12 +327,32 @@ const handleSessionChange = async (sessionId: string) => {
   }
 }
 
+// 处理ChatToolbar的事件
+const handleRefreshAnchors = () => {
+  // 刷新锚点的逻辑
+  console.log('Refresh anchors')
+}
+
+const handleScrollToBottom = () => {
+  // 滚动到底部的逻辑
+  if (messageListRef.value) {
+    messageListRef.value.scrollTop = messageListRef.value.scrollHeight
+  }
+}
+
 // 在组件挂载时加载会话列表
 onMounted(async () => {
   await chatStore.loadSessions()
   // 如果有当前会话，设置为选中
   if (chatStore.currentSession) {
     selectedSessionId.value = chatStore.currentSession.id
+  }
+  
+  // 桌面端默认展开，移动端默认收起
+  if (!isMobile.value) {
+    chatStore.chatWindowState = 'expanded'
+  } else {
+    chatStore.chatWindowState = 'minimized'
   }
   
   // 添加滚动事件监听
@@ -474,29 +582,95 @@ const renderMarkdown = (content: string) => {
 </script>
 
 <style scoped>
-/* 添加用户选择样式 */
-.user-select-none {
-  user-select: none;
+/* 桌面端toggle按钮样式 */
+.desktop-toggle-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #6b7280;
+  z-index: 10;
 }
 
-/* 确保拖拽时鼠标样式保持一致 */
-.cursor-ns-resize {
-  cursor: ns-resize;
+.desktop-toggle-btn:hover {
+  background: #f9fafb;
+  color: #374151;
 }
 
-/* 保持过渡效果，但在调整大小时禁用 */
-.transition-all {
-  transition-property: all;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
+.desktop-toggle-btn.minimized {
+  display: none; /* 收起状态隐藏切换按钮，改用细边区域点击 */
 }
 
-/* 调整大小时禁用过渡效果 */
-.resizing {
-  transition: none !important;
+.toggle-text {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
-/* 确保内容区域不会超出容器 */
+/* 聊天内容区域样式 */
+.chat-content-area {
+  /* 移除固定高度计算，使用flex布局控制 */
+}
+
+.mobile-content {
+  height: calc(100% - 60px - 40px);
+}
+
+/* 输入框区域样式 - 更新为flex布局 */
+/* 移除position: absolute，改用flex布局 */
+
+/* 输入框样式 */
+.chat-input {
+  width: 100%;
+  padding: 8px 40px 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  color: #333333;
+  font-size: 14px;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.mobile-chat-input {
+  padding-right: 48px;
+  margin-right: 8px;
+}
+
+/* 发送按钮样式 */
+.chat-send-btn {
+  position: absolute;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.chat-send-btn:hover {
+  background-color: #f9fafb;
+}
+
+.mobile-send-btn {
+  right: 24px;
+}
+
+/* 消息容器样式 */
 .messages-container {
   height: 100%;
   overflow-y: auto;
@@ -529,6 +703,7 @@ const renderMarkdown = (content: string) => {
   justify-content: center;
   padding: 4px;
   transition: transform 0.2s ease-in-out;
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .stop-icon-wrapper:hover {
@@ -550,11 +725,7 @@ const renderMarkdown = (content: string) => {
   }
 }
 
-.stop-icon-wrapper {
-  animation: pulse 2s ease-in-out infinite;
-}
-
-/* 移除之前的过渡效果相关样式 */
+/* 过渡效果样式 */
 .transition-none {
   transition: none !important;
 }
@@ -565,9 +736,7 @@ const renderMarkdown = (content: string) => {
   transition-duration: 300ms;
 }
 
-/* 移除之前的 resizing 类，因为我们现在使用 transition-none */
-
-/* 2024-03-21 15:30: 添加Markdown样式 */
+/* Markdown样式 */
 :deep(.prose) {
   max-width: none;
 }
@@ -614,5 +783,12 @@ const renderMarkdown = (content: string) => {
   background-color: rgba(0, 0, 0, 0.1);
   padding: 0.2em 0.4em;
   border-radius: 0.25em;
+}
+
+/* 响应式样式 */
+@media (max-width: 768px) {
+  .desktop-toggle-btn {
+    display: none;
+  }
 }
 </style> 
