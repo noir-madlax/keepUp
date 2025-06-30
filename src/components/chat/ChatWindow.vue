@@ -69,27 +69,23 @@
     <!-- 收起状态时的展开按钮 -->
     <div 
       v-if="chatStore.chatWindowState === 'minimized' && !isMobile"
-      class="w-full h-full bg-gray-100 hover:bg-gray-200 transition-all duration-200 cursor-pointer relative group border-l border-gray-300"
+      class="w-full h-full bg-gradient-to-b from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 transition-all duration-200 cursor-pointer relative group border-l border-blue-200 flex items-center justify-center"
       @click="toggleChatWindow"
-      title="点击展开聊天"
+      title="展开聊天"
     >
-      <!-- 展开按钮 - 垂直居中显示 -->
-      <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        <div class="flex flex-col items-center justify-center p-1 rounded-md bg-white shadow-sm border border-gray-200 group-hover:shadow-md transition-all duration-200">
-          <!-- 聊天图标 -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-600 group-hover:text-blue-600 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <!-- 聊天图标和文字 - 垂直布局 -->
+      <div class="flex flex-col items-center space-y-2">
+        <!-- 聊天图标 -->
+        <div class="p-2 bg-white rounded-full shadow-sm border border-blue-200 group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-3.774-.9L3 21l1.9-6.226A8.955 8.955 0 013 12a8 8 0 018-8c4.418 0 8 3.582 8 8z" />
           </svg>
-          <!-- 展开箭头 -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-gray-500 group-hover:text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7" />
-          </svg>
         </div>
-      </div>
-      
-      <!-- 垂直文字提示 -->
-      <div class="absolute left-1/2 bottom-4 transform -translate-x-1/2 -rotate-90 text-xs text-gray-500 group-hover:text-gray-700 whitespace-nowrap">
-        展开聊天
+        
+        <!-- 垂直文字提示 -->
+        <div class="transform -rotate-90 text-xs font-medium text-blue-700 whitespace-nowrap">
+          开启对话
+        </div>
       </div>
     </div>
 
@@ -348,12 +344,8 @@ onMounted(async () => {
     selectedSessionId.value = chatStore.currentSession.id
   }
   
-  // 桌面端默认展开，移动端默认收起
-  if (!isMobile.value) {
-    chatStore.chatWindowState = 'expanded'
-  } else {
-    chatStore.chatWindowState = 'minimized'
-  }
+  // 桌面端和移动端都默认收起
+  chatStore.chatWindowState = 'minimized'
   
   // 添加滚动事件监听
   messageListRef.value?.addEventListener('scroll', handleScroll)
@@ -787,7 +779,7 @@ const renderMarkdown = (content: string) => {
 
 /* 响应式样式 */
 @media (max-width: 768px) {
-  .desktop-toggle-btn {
+  .chat-toggle-btn {
     display: none;
   }
 }
