@@ -931,22 +931,26 @@ const handleScroll = () => {
 // 添加记录用户对文章访问
 const recordArticleView = async (userId: string, articleId: number) => {
   try {
-    // 2024-03-25: 直接使用upsert更新访问记录和计数
-    const { error } = await supabase
-      .from('keep_article_views')
-      .upsert({
+    // 2024-12-30: 调用后端API来记录访问，这样会触发viewer_count的更新
+    const response = await fetch('/api/article-views/record', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         user_id: userId,
-        article_id: articleId,
-        last_viewed_at: new Date().toISOString(),
-        is_author: article.value?.user_id === userId
-      }, {
-        onConflict: 'user_id,article_id',
-        ignoreDuplicates: false
+        article_id: articleId
       })
+    })
 
-    if (error) {
-      console.error('更新访问记录失败:', error)
-      throw error
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`API调用失败: ${error}`)
+    }
+
+    const result = await response.json()
+    if (!result.success) {
+      throw new Error('记录访问失败')
     }
   } catch (error) {
     console.error('记录文章访问失败:', error)

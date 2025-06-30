@@ -18,6 +18,7 @@ export interface ArticleBase {
   tags?: string[]
   author_id?: number
   author?: Author
+  viewer_count?: number
 }
 
 export interface Article extends ArticleBase {

@@ -13,7 +13,9 @@
       <!-- 已处理完成的文章卡片内容 -->
       <div class="card-top">
         <!-- 左侧标题 -->
-        <h3 class="article-title">{{ getTitle() }}</h3>
+        <div class="article-title-wrapper">
+          <h3 class="article-title">{{ getTitle() }}</h3>
+        </div>
         
         <!-- 右侧封面 -->
         <div class="cover-container">
@@ -27,6 +29,12 @@
             {{ t('upload.card.fallback.uploaded') }}{{ getUploadTimeText(article.created_at) }}
           </div>
         </div>
+      </div>
+
+      <!-- 浏览量信息 -->
+      <div v-if="article.viewer_count !== undefined" class="viewer-count">
+        <img src="/images/icons/view.svg" alt="Viewers" class="viewer-icon" />
+        <span class="viewer-number">{{ article.viewer_count }}</span>
       </div>
 
       <!-- 分隔线 -->
@@ -171,6 +179,7 @@ interface Props {
     original_url?: string
     platform?: string
     requestId?: string
+    viewer_count?: number
   }
 }
 
@@ -394,11 +403,11 @@ const truncateUrl = (url?: string): string => {
   width: 100%;
   min-width: 340px;
   max-width: 450px;
-  min-height: 190px;
+  min-height: 180px;
   padding: 12px;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 8px;
   border-radius: 12px;
   border: 1px solid #F2F2F2;
   background: #FFF;
@@ -415,16 +424,16 @@ const truncateUrl = (url?: string): string => {
 .card-top {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   overflow: hidden;
 }
 
 .article-title {
-  height: 72px;
+  min-height: 48px;
+  max-height: 96px;
   min-width: 140px;
-  max-width: calc(100% - 140px);
-  flex: 1;
+  max-width: calc(100% - 130px);
   overflow: hidden;
   color: #333;
   font-family: "PingFang SC";
@@ -435,12 +444,13 @@ const truncateUrl = (url?: string): string => {
   -webkit-box-orient: vertical;
   white-space: normal;
   text-overflow: ellipsis;
+  -webkit-line-clamp: 4;
 }
 
 .cover-container {
   position: relative;
   width: auto;
-  height: 120px;
+  height: 100px;
   flex-shrink: 0;
   border-radius: 12px;
   overflow: hidden;
@@ -457,12 +467,12 @@ const truncateUrl = (url?: string): string => {
 
 @media (min-width: 400px) {
   .cover-image {
-    max-width: 190px;
+    max-width: 180px;
     object-fit: contain;
   }
   
   .article-title {
-    max-width: calc(100% - 202px);
+    max-width: calc(100% - 20px);
   }
 }
 
@@ -676,5 +686,34 @@ const truncateUrl = (url?: string): string => {
   line-height: 1.2; /* 减小行高 */
   font-family: "PingFang SC";
   font-weight: 400;
+}
+
+/* 浏览人数相关样式 */
+.article-title-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.viewer-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  margin: 0;
+}
+
+.viewer-icon {
+  width: 18px; /* 放大50%: 12px -> 18px */
+  height: 18px;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.viewer-number {
+  color: #999;
+  font-family: "PingFang SC";
+  font-size: 16px; /* 放大50%: 11px -> 16px */
+  font-weight: 400;
+  line-height: 1;
 }
 </style>

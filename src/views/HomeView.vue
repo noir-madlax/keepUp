@@ -600,10 +600,31 @@ const fetchArticles = async (isRefresh = false) => {
       currentPage.value = 1
     }
 
-    // 构建查询
-    const { data: articlesData, error } = await supabase 
-      .from('keep_articles')
-      .select(`
+    // 构建查询 - 尝试包含viewer_count字段，如果不存在则跳过
+    let queryFields = `
+      id,
+      title,
+      cover_image_url,
+      channel,
+      created_at,
+      tags,
+      publish_date,
+      author_id,
+      content,
+      original_link,
+      author:keep_authors(id, name, icon)
+    `
+    
+    // 尝试查询是否有viewer_count字段
+    try {
+      // 先做一个小的测试查询来检查字段是否存在
+      await supabase
+        .from('keep_articles')
+        .select('id, viewer_count')
+        .limit(1)
+      
+      // 如果成功，则添加viewer_count字段
+      queryFields = `
         id,
         title,
         cover_image_url,
@@ -614,8 +635,16 @@ const fetchArticles = async (isRefresh = false) => {
         author_id,
         content,
         original_link,
+        viewer_count,
         author:keep_authors(id, name, icon)
-      `)
+      `
+    } catch (e) {
+      console.info('viewer_count字段不存在，使用默认值')
+    }
+    
+    const { data: articlesData, error } = await supabase 
+      .from('keep_articles')
+      .select(queryFields)
       .eq('is_visible', true)
       .order('created_at', { ascending: false })
       .range((currentPage.value - 1) * pageSize, currentPage.value * pageSize - 1)
@@ -634,13 +663,14 @@ const fetchArticles = async (isRefresh = false) => {
       requests = requestsData || []
     }
 
-    // 处理文章数据
+    // 处理文章数据 - 直接使用viewer_count字段，如果不存在则使用0
     const validArticles = (articlesData || []).map((article: any) => ({
       ...article,
       is_author: false, // 暂时设为false，避免业务逻辑影响
       status: 'processed' as const,
       content: article.content || '',
-      original_link: article.original_link || ''
+      original_link: article.original_link || '',
+      viewer_count: article.viewer_count || 0
     })).filter((article): article is ArticleType => 
       article !== null && 
       typeof article.is_author === 'boolean' && 
@@ -930,12 +960,13 @@ const handleLoginModalClose = () => {
 const feedbackStore = useFeedbackStore()
 
 // 处理反馈表单提交
-const handleFeedbackSubmit = (formData: {
-  needProduct: boolean
-  satisfiedSummary: boolean
-  allowContact: boolean
+const handleFeedbackSubmit = (data: {
+  need_product: boolean | null
+  satisfied_summary: boolean | null
+  allow_contact: boolean | null
+  notes: string
 }) => {
-  console.log('Feedback submitted:', formData)
+  console.log('Feedback submitted:', data)
   feedbackStore.closeFeedbackForm()
   // TODO: 这里后续会添加发送到后端的逻辑
 }
