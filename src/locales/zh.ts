@@ -74,7 +74,8 @@ export default {
         '彩蛋': 'Easter Eggs',
         '思维导图': 'Mind Map',
         '要点总结': 'Key Points',
-        '典型案例': 'Typical Cases'
+        '典型案例': 'Typical Cases',
+        '额外补充': 'Additional Processing'
       }
     },
     fallbackLanguage: {

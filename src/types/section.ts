@@ -37,6 +37,7 @@ export type ViewType = '默认视图';
 // 这里的顺序决定了展示顺序
 export const ALL_SECTION_TYPES: SectionType[] = [
   '总结',
+  '额外补充',
   '结构图',
 //  '要点总结',
 '分段提纲',

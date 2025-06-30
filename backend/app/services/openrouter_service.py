@@ -230,6 +230,32 @@ class OpenRouterService:
             raise e
 
     @staticmethod
+    async def save_additional_processing_result(article_id: int, content: str, lang: str) -> bool:
+        """保存额外补充结果到数据库
+        
+        Args:
+            article_id: 文章ID
+            content: 额外补充内容
+            lang: 语言代码
+            
+        Returns:
+            bool: 保存是否成功
+        """
+        try:
+            await SupabaseService.create_article_sections(article_id, [
+                {
+                    'article_id': article_id,
+                    'content': content,
+                    'language': lang,
+                    'section_type': '额外补充'
+                }
+            ])
+            return True
+        except Exception as e:
+            logger.error(f"保存额外补充结果失败: {str(e)}")
+            raise e
+
+    @staticmethod
     def extract_summary_content(content: str) -> Optional[str]:
         """从内容中提取Summary部分
         
@@ -262,6 +288,38 @@ class OpenRouterService:
             
         except Exception as e:
             logger.error(f"提取Summary内容失败: {str(e)}")
+            return None
+
+    @staticmethod
+    def extract_additional_processing_content(content: str) -> Optional[str]:
+        """从内容中提取Additional Processing部分
+        
+        Args:
+            content: 原始内容
+            
+        Returns:
+            Optional[str]: 提取的Additional Processing内容，如果没有找到返回None
+        """
+        try:
+            start_marker = "## Additional Processing"
+            
+            start_index = content.find(start_marker)
+            
+            if start_index == -1:
+                logger.info("未找到Additional Processing标记")
+                return None
+                
+            # 提取从Additional Processing开始到文档结尾的内容
+            additional_content = content[start_index + len(start_marker):].strip()
+            
+            if not additional_content:
+                logger.info("Additional Processing内容为空")
+                return None
+                
+            return additional_content
+            
+        except Exception as e:
+            logger.error(f"提取Additional Processing内容失败: {str(e)}")
             return None
 
     @staticmethod
@@ -315,6 +373,9 @@ class OpenRouterService:
                 
                 # 更新处理后的内容
                 response['choices'][0]['message']['content'] = summary_content
+                
+                # 存储完整的原始内容，供后续Additional Processing提取使用
+                response['full_content'] = content
             
             return response
             
@@ -440,5 +501,24 @@ class OpenRouterService:
             
         # 5. 保存结果
         await OpenRouterService.save_summary_result(article_id, summary_content, lang)
+        
+        # 6. 保存完整的LLM返回内容到detailed_content_zh字段
+        if 'full_content' in processed_response:
+            try:
+                await SupabaseService.update_detailed_content(
+                    request_id=request_id,
+                    detailed_content={'full_response': processed_response['full_content']},
+                    language=lang
+                )
+                logger.info(f"完整LLM返回内容已保存到数据库: request_id={request_id}, lang={lang}")
+            except Exception as e:
+                logger.error(f"保存完整LLM返回内容失败: {str(e)}")
+        
+        # 7. 提取并保存Additional Processing内容
+        if 'full_content' in processed_response:
+            additional_content = OpenRouterService.extract_additional_processing_content(processed_response['full_content'])
+            if additional_content:
+                await OpenRouterService.save_additional_processing_result(article_id, additional_content, lang)
+                logger.info(f"Additional Processing内容已保存: article_id={article_id}, lang={lang}")
             
         return summary_content 
