@@ -246,23 +246,7 @@
       </template>
     </template>
 
-    <!-- 2024-03-24: 添加移动端固定在右下角的反馈按钮 -->
-    <div 
-      class="sm:hidden fixed bottom-12 right-0 z-[1002] cursor-pointer"
-      @click="feedbackStore.showForm()"
-    >
-      <div class="bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full px-4 py-2 shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center w-[90px] h-[36px]">
-        <span class="text-sm font-medium whitespace-nowrap">Feedback</span>
-      </div>
-    </div>
 
-    <!-- 2024-03-24: 添加反馈表单组件 -->
-    <FeedbackForm 
-      :is-visible="feedbackStore.showFeedbackForm"
-      @close="feedbackStore.closeFeedbackForm"
-      @submit="handleFeedbackSubmit"
-      class="z-[1003]"
-    />
   </div>
 </template>
 <script setup lang="ts">
@@ -277,8 +261,7 @@ import ArticleRequestForm from '../components/ArticleRequestForm.vue'
 import { useI18n } from 'vue-i18n'
 import PullToRefresh from '../components/PullToRefresh.vue'
 import localforage from 'localforage'
-import FeedbackForm from '@/components/feedback/FeedbackForm.vue'
-import { useFeedbackStore } from '../stores/feedback'
+
 import UploadInput from '../components/UploadInput.vue'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
@@ -956,20 +939,7 @@ const handleLoginModalClose = () => {
   }
 }
 
-// 添加反馈表单相关的状态和方法
-const feedbackStore = useFeedbackStore()
 
-// 处理反馈表单提交
-const handleFeedbackSubmit = (data: {
-  need_product: boolean | null
-  satisfied_summary: boolean | null
-  allow_contact: boolean | null
-  notes: string
-}) => {
-  console.log('Feedback submitted:', data)
-  feedbackStore.closeFeedbackForm()
-  // TODO: 这里后续会添加发送到后端的逻辑
-}
 
 
 // 在 script setup 部分添加

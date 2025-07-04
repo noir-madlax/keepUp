@@ -20,7 +20,8 @@
         </div>
 
         <!-- 只在选中文字时显示按钮组，换行显示 -->
-        <template v-if="hasSelectedText">
+        <!-- 只在chat展开时显示按钮 -->
+        <template v-if="hasSelectedText && chatStore.chatWindowState === 'expanded'">
           <div class="flex flex-wrap gap-2 w-full">
             <!-- 展开说说按钮 - 蓝色气泡 -->
             <button

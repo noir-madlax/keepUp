@@ -97,7 +97,7 @@
       <!-- 聊天消息内容 -->
       <div 
         ref="messageListRef"
-        class="flex-1 overflow-y-auto pt-4 px-6 pb-2"
+        class="flex-1 overflow-y-auto pt-2 px-4 pb-1 min-h-0"
         @wheel.prevent="handleChatScroll"
         @touchstart="handleTouchStart"
         @touchmove="handleTouchMove"
@@ -195,7 +195,7 @@
       </div>
 
       <!-- ChatToolbar区域 - 固定在聊天内容下方，输入框上方 -->
-      <div class="flex-shrink-0 bg-gray-50 border-t border-gray-200 px-4 py-2">
+      <div class="flex-shrink-0 bg-gray-50 border-t border-gray-200 px-3 py-1">
         <ChatToolbar 
           @refresh-anchors="handleRefreshAnchors" 
           :disabled="false"
@@ -207,7 +207,7 @@
     <!-- 输入框区域 - 只在展开状态显示 -->
     <div 
       v-if="chatStore.chatWindowState === 'expanded'"
-      class="flex-shrink-0 bg-white border-t border-gray-200 p-4"
+      class="flex-shrink-0 bg-white border-t border-gray-200 p-3"
     >
       <form @submit.prevent="handleSubmit" class="relative flex items-center h-full">
         <input
@@ -267,6 +267,13 @@ const isMobile = computed(() => window.innerWidth < 768)
 // 2024-01-21 15:10: 定义默认展开高度常量
 const DEFAULT_EXPANDED_HEIGHT = 300
 const windowHeight = ref(DEFAULT_EXPANDED_HEIGHT)
+
+// 计算移动端合适的聊天窗口高度
+const getMobileHeight = () => {
+  const vh = window.innerHeight
+  // 移动端使用视口高度的50%，但至少280px，最多不超过500px
+  return Math.min(180, Math.max(100, vh * 0.3))
+}
 const isResizing = ref(false)
 const startY = ref(0)
 const startHeight = ref(0)
@@ -277,34 +284,35 @@ const getChatWindowStyle = () => {
   const isExpanded = chatStore.chatWindowState === 'expanded'
   
   if (mobile) {
-    // 移动端：保持底部布局
+    // 移动端：保持底部布局，使用动态高度计算
+    const mobileHeight = isExpanded ? getMobileHeight() : 60
     return {
-      position: 'fixed',
+      position: 'fixed' as const,
       bottom: '0',
       left: '0',
       right: '0',
-      height: isExpanded ? `${windowHeight.value}px` : '105px',
+      height: `${mobileHeight}px`,
       zIndex: '998',
       borderLeft: '1px solid #DDDDDD',
       borderTop: '1px solid #DDDDDD',
       borderBottom: '1px solid #DDDDDD',
       boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
       backgroundColor: '#FFFFFF',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box' as const
     }
   } else {
     // 桌面端：使用相对定位，适配flex布局，确保有固定高度
     return {
-      position: 'relative',
+      position: 'relative' as const,
       height: '100%',
       width: '100%',
       backgroundColor: isExpanded ? '#FFFFFF' : 'transparent',
       borderLeft: isExpanded ? '1px solid #DDDDDD' : 'none',
       boxShadow: isExpanded ? '-2px 0 4px rgba(0, 0, 0, 0.1)' : 'none',
-      boxSizing: 'border-box',
-      overflow: 'hidden', // 确保chat窗口本身不滚动，由内部区域控制滚动
-      display: 'flex',
-      flexDirection: 'column'
+      boxSizing: 'border-box' as const,
+      overflow: 'hidden' as const, // 确保chat窗口本身不滚动，由内部区域控制滚动
+      display: 'flex' as const,
+      flexDirection: 'column' as const
     }
   }
 }
@@ -553,7 +561,8 @@ onUnmounted(() => {
 const toggleChatWindow = () => {
   chatStore.chatWindowState = chatStore.chatWindowState === 'expanded' ? 'minimized' : 'expanded'
   if (chatStore.chatWindowState === 'expanded') {
-    windowHeight.value = DEFAULT_EXPANDED_HEIGHT // 使用默认展开高度常量
+    // 移动端使用动态高度，桌面端使用固定高度
+    windowHeight.value = isMobile.value ? getMobileHeight() : DEFAULT_EXPANDED_HEIGHT
   }
 }
 

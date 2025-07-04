@@ -397,6 +397,9 @@
       <ChatWindow />
     </div>
 
+    <!-- 浮动文本选择工具栏 - 当chat收起时显示 -->
+    <FloatingTextToolbar />
+
     <!-- 编辑模态框 -->
     <div 
       v-if="showEditModal" 
@@ -447,15 +450,7 @@
       class="z-[10001]"
     />
 
-    <!-- 2024-03-24: 添加移动端固定在右下角的反馈按钮 -->
-    <div 
-      class="sm:hidden fixed bottom-32 right-0 z-[1002] cursor-pointer"
-      @click="feedbackStore.showForm()"
-    >
-      <div class="bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full px-4 py-2 shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center w-[90px] h-[36px]">
-        <span class="text-sm font-medium whitespace-nowrap">Feedback</span>
-      </div>
-    </div>
+    <!-- 2024-03-24: 移动端反馈按钮已移除 -->
 
     <!-- 2024-03-24: 添加反馈表单组件 -->
     <FeedbackForm 
@@ -569,6 +564,7 @@ import { useChatStore } from '../stores/chat'
 import ChatToolbar from '../components/chat/ChatToolbar.vue'
 import ChatWindow from '../components/chat/ChatWindow.vue'
 import QuestionMark from '../components/chat/QuestionMark.vue'
+import FloatingTextToolbar from '../components/chat/FloatingTextToolbar.vue'
 import { TextPositionHelper } from '@/utils/textPosition'
 import type { ChatSession, Position } from '../types/chat'
 import type { TextMark } from '@/utils/textPosition'
@@ -1931,7 +1927,7 @@ img {
 /* 移动端：保持底部预留空间 */
 @media (max-width: 768px) {
   .min-h-screen {
-    padding-bottom: 40vh;
+    padding-bottom: 10vh;
   }
 }
 
