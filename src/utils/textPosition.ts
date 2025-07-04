@@ -6,6 +6,28 @@ export interface TextMark {
 }
 
 export class TextPositionHelper {
+  // 本地引用解析方法
+  private static parseCitationLocal(markContent: string) {
+    const citationRegex = /^\[(\d{1,2}(?::\d{2}){1,2})\]\s*([^:]+?):\s*"(.+?)"$/s
+    const match = markContent.trim().match(citationRegex)
+    
+    if (match) {
+      return {
+        timestamp: match[1],
+        speaker: match[2].trim(),
+        content: match[3].trim(),
+        isValid: true
+      }
+    }
+    
+    return {
+      timestamp: '',
+      speaker: '',
+      content: markContent,
+      isValid: false
+    }
+  }
+
   // 判断是否是需要处理的文本节点
   private static isValidTextNode(node: Node): boolean {
     if (node.nodeType !== Node.TEXT_NODE) return false
@@ -254,9 +276,21 @@ export class TextPositionHelper {
   // 添加新方法：应用标记样式
   static applyMarkStyle(range: Range, markInfo: any): boolean {
     try {
+      // 动态导入引用解析器
+      const citation = TextPositionHelper.parseCitationLocal(markInfo['mark-content'])
+      
       // 创建包装元素
       const wrapper = document.createElement('span')
-      wrapper.className = 'question-mark-wrapper'
+      
+      if (citation.isValid) {
+        // 引用格式：使用citation-bubble-wrapper
+        wrapper.className = 'citation-bubble-wrapper'
+        wrapper.setAttribute('data-citation-info', JSON.stringify(citation))
+      } else {
+        // 普通标记：使用原有的question-mark-wrapper
+        wrapper.className = 'question-mark-wrapper'
+        wrapper.classList.add('wavy-underline')
+      }
       
       // 设置必要的属性
       wrapper.setAttribute('data-mark-id', markInfo['mark-id'])
@@ -264,9 +298,6 @@ export class TextPositionHelper {
       wrapper.setAttribute('data-section-type', markInfo['section-type'])
       wrapper.setAttribute('data-mark-content', markInfo['mark-content'])
       wrapper.setAttribute('data-position', markInfo['position'])
-      
-      // 添加波浪线样式
-      wrapper.classList.add('wavy-underline')
       
       // 包装选中的文本
       range.surroundContents(wrapper)

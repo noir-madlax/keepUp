@@ -595,6 +595,27 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  // 添加为特定标记加载会话的方法
+  const loadSessionsForMark = async (articleId: number, markContent: string, sectionType: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('keep_chat_sessions')
+        .select(`
+          *,
+          messages:keep_chat_messages(*)
+        `)
+        .eq('article_id', articleId)
+        .eq('mark_content', markContent)
+        .eq('section_type', sectionType)
+        .order('created_at', { ascending: false })
+
+      return { data, error }
+    } catch (error) {
+      console.error('加载标记会话失败:', error)
+      return { data: null, error }
+    }
+  }
+
   return {
     currentSession,
     sessions,
@@ -612,6 +633,7 @@ export const useChatStore = defineStore('chat', () => {
     hideToolbar,
     loadSession,
     loadSessions,
+    loadSessionsForMark,
     lastCreatedSession,
     isInitializing,
     currentAIMessage,

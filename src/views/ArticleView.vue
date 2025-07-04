@@ -282,8 +282,8 @@
                 <div class="article-main-container">
                   <div 
                     class="p-4 md:p-8 article-content"
-                    @mouseup="handleTextSelection"
-                    @touchend="handleTextSelection"
+                    @mouseup="handleTextSelection($event)"
+                    @touchend="handleTextSelection($event)"
                   >
                     <!-- 文章内容 -->
                     <article class="prose prose-sm md:prose-lg max-w-none">
@@ -564,6 +564,7 @@ import { useChatStore } from '../stores/chat'
 import ChatToolbar from '../components/chat/ChatToolbar.vue'
 import ChatWindow from '../components/chat/ChatWindow.vue'
 import QuestionMark from '../components/chat/QuestionMark.vue'
+import CitationBubble from '../components/chat/CitationBubble.vue'
 import FloatingTextToolbar from '../components/chat/FloatingTextToolbar.vue'
 import { TextPositionHelper } from '@/utils/textPosition'
 import type { ChatSession, Position } from '../types/chat'
@@ -1014,6 +1015,8 @@ onUnmounted(() => {
   }
 })
 
+
+
 // 监听sections变化，重新检查tabs状态
 watch(() => sections.value, () => {
   nextTick(() => {
@@ -1386,8 +1389,150 @@ const showLanguageAlert = ref(false)
 const contentLanguage = ref('')
 
 // 处理文本选择
-const handleTextSelection = () => {
+const handleTextSelection = (event?: Event) => {
   console.log('Text selection triggered')
+  
+  // 检查是否点击的是气泡或相关元素
+  if (event && event.target) {
+    const target = event.target as HTMLElement
+    const bubble = target.closest('.citation-bubble')
+    const wrapper = target.closest('.citation-bubble-wrapper')
+    const tooltip = target.closest('.citation-tooltip')
+    
+    if (bubble || wrapper || tooltip) {
+      console.log('🎯 检测到气泡点击，直接处理tooltip显示')
+      console.log('🔍 点击的元素详情:', {
+        clickedElement: target.tagName + '.' + target.className,
+        bubbleFound: !!bubble,
+        wrapperFound: !!wrapper,
+        tooltipFound: !!tooltip
+      })
+      
+      // 直接处理气泡点击逻辑
+      if (bubble && wrapper) {
+        console.log('📍 找到bubble和wrapper，开始查找tooltip')
+        
+        let bubbleTooltip = wrapper.querySelector('.citation-tooltip')
+        console.log('🔍 tooltip查找结果:', {
+          tooltipElement: !!bubbleTooltip,
+          tooltipHTML: bubbleTooltip ? bubbleTooltip.outerHTML.substring(0, 200) + '...' : 'null',
+          wrapperHTML: wrapper.outerHTML.substring(0, 400) + '...',
+          wrapperFullLength: wrapper.outerHTML.length,
+          wrapperChildren: Array.from(wrapper.children).map(child => ({
+            tagName: child.tagName,
+            className: child.className,
+            hasTooltip: child.classList.contains('citation-tooltip')
+          }))
+        })
+        
+        // 如果tooltip不存在，尝试从data属性重建
+        if (!bubbleTooltip && (bubble.dataset.content || wrapper.dataset.content)) {
+          console.log('🔄 Tooltip缺失，尝试从data属性重建...')
+          const timestamp = bubble.dataset.timestamp || wrapper.dataset.timestamp
+          const speaker = bubble.dataset.speaker || wrapper.dataset.speaker
+          const content = bubble.dataset.content || wrapper.dataset.content
+          
+          console.log('📊 Data属性:', { timestamp, speaker, content: content?.substring(0, 100) })
+          
+          if (timestamp && speaker && content) {
+            const tooltipHTML = `<div class="citation-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed" style="top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px;">
+<div class="tooltip-header flex gap-2 mb-2 pb-2 border-b border-gray-200">
+<span class="tooltip-timestamp text-xs text-gray-600 font-medium">[${timestamp}]</span>
+<span class="tooltip-speaker text-xs text-blue-600 font-semibold">${speaker}</span>
+</div>
+<div class="tooltip-content text-gray-700 italic">${content}</div>
+</div>`
+            
+            wrapper.insertAdjacentHTML('beforeend', tooltipHTML)
+            bubbleTooltip = wrapper.querySelector('.citation-tooltip')
+            console.log('✅ Tooltip重建结果:', !!bubbleTooltip)
+          }
+        }
+        
+        if (bubbleTooltip) {
+          const isHidden = bubbleTooltip.classList.contains('hidden')
+          const currentClasses = Array.from(bubbleTooltip.classList).join(' ')
+          
+          console.log('📊 tooltip状态分析:', {
+            isHidden,
+            currentClasses,
+            computedDisplay: window.getComputedStyle(bubbleTooltip).display,
+            computedVisibility: window.getComputedStyle(bubbleTooltip).visibility,
+            computedOpacity: window.getComputedStyle(bubbleTooltip).opacity,
+            boundingRect: bubbleTooltip.getBoundingClientRect()
+          })
+          
+          if (isHidden) {
+            console.log('🔄 隐藏其他tooltip...')
+            // 先隐藏所有其他tooltip
+            const allTooltips = document.querySelectorAll('.citation-tooltip')
+            console.log('📋 找到的所有tooltip数量:', allTooltips.length)
+            
+            allTooltips.forEach((t, index) => {
+              if (t !== bubbleTooltip) {
+                t.classList.add('hidden')
+                console.log(`🙈 隐藏tooltip ${index + 1}`)
+              }
+            })
+            
+            // 显示当前tooltip
+            console.log('🎬 开始显示当前tooltip...')
+            bubbleTooltip.classList.remove('hidden')
+            
+            // 验证操作结果
+            const afterClasses = Array.from(bubbleTooltip.classList).join(' ')
+            const afterRect = bubbleTooltip.getBoundingClientRect()
+            const afterStyles = window.getComputedStyle(bubbleTooltip)
+            
+            console.log('✅ 显示操作完成，验证结果:', {
+              操作前classes: currentClasses,
+              操作后classes: afterClasses,
+              hasHiddenClass: bubbleTooltip.classList.contains('hidden'),
+              display: afterStyles.display,
+              visibility: afterStyles.visibility,
+              opacity: afterStyles.opacity,
+              position: afterStyles.position,
+              zIndex: afterStyles.zIndex,
+              top: afterStyles.top,
+              left: afterStyles.left,
+              transform: afterStyles.transform,
+              boundingRect: afterRect,
+              tooltipContent: bubbleTooltip.textContent?.substring(0, 100) + '...'
+            })
+            
+            // 检查是否真的可见
+            if (afterRect.width > 0 && afterRect.height > 0) {
+              console.log('🎉 SUCCESS: tooltip确实可见!')
+            } else {
+              console.log('❌ FAIL: tooltip不可见，尺寸为0')
+            }
+            
+          } else {
+            console.log('🔄 隐藏当前tooltip...')
+            bubbleTooltip.classList.add('hidden')
+            console.log('❌ 隐藏气泡tooltip完成')
+          }
+          
+          // 额外debug: 检查父元素状态
+          console.log('🏗️ 父元素状态检查:', {
+            wrapperDisplay: window.getComputedStyle(wrapper).display,
+            wrapperPosition: window.getComputedStyle(wrapper).position,
+            wrapperRect: wrapper.getBoundingClientRect(),
+            bubbleRect: bubble.getBoundingClientRect()
+          })
+          
+        } else {
+          console.log('❌ ERROR: 在wrapper中没有找到.citation-tooltip元素')
+          console.log('🔍 wrapper子元素列表:', Array.from(wrapper.children).map(child => child.className))
+        }
+      } else {
+        console.log('❌ ERROR: 没有找到bubble或wrapper元素')
+        console.log('🔍 详细状态:', { bubble: !!bubble, wrapper: !!wrapper })
+      }
+      return
+    }
+  }
+  
   const selection = window.getSelection()
   if (!selection || selection.isCollapsed) {
     console.log('No text selected')
@@ -1448,8 +1593,9 @@ const fetchArticleMarks = async () => {
 
 // 添加处理标记的方法
 const processQuestionMarks = () => {
-  const wrappers = document.querySelectorAll('.question-mark-wrapper')
-  wrappers.forEach(wrapper => {
+  // 处理普通问号标记
+  const questionWrappers = document.querySelectorAll('.question-mark-wrapper')
+  questionWrappers.forEach(wrapper => {
     const markId = wrapper.getAttribute('data-mark-id')
     const articleId = wrapper.getAttribute('data-article-id')
     const sectionType = wrapper.getAttribute('data-section-type')
@@ -1479,6 +1625,13 @@ const processQuestionMarks = () => {
       }
     }
   })
+
+  // 🔧 修复：不再处理引用气泡，保持我们的HTML实现
+  console.log('⚠️ 跳过引用气泡的Vue组件替换，保持HTML实现')
+  
+  // 注释掉引用气泡的处理逻辑，因为会替换我们的tooltip
+  // const citationWrappers = document.querySelectorAll('.citation-bubble-wrapper')
+  // ... 原有的引用气泡处理代码被注释掉
 }
 
 // 修改 renderSectionContent 方法
@@ -1489,17 +1642,128 @@ const renderSectionContent = (section: ArticleSection) => {
   }
 
   try {
-    // 先渲染 markdown
-    const htmlContent = marked(section.content)
+    let content = section.content
+
+    // 渲染 markdown（保持原始内容）
+    let htmlContent = marked(content)
     const container = document.createElement('div')
     container.innerHTML = htmlContent
+    
+    // 后处理：查找<em>标签中的引用并转换为气泡
+    const citationMatches: Array<{citation: any, id: string, element: Element}> = []
+    
+         // 查找所有<em>标签中的引用
+     const emElements = container.querySelectorAll('em')
+     emElements.forEach(em => {
+       const text = em.textContent || ''
+       // 支持中文和英文双引号
+       const citationRegex = /^\[(\d{1,2}(?::\d{2}){1,2})\]\s*([^：:]+?)[:：]\s*["""](.+?)["""]$/
+       const match = text.match(citationRegex)
+       
+       console.log('处理引用:', { text, match }) // 调试日志
+       
+       if (match) {
+         const citation = {
+           timestamp: match[1],
+           speaker: match[2].trim(),
+           content: match[3].trim(),
+           isValid: true
+         }
+         const citationId = `citation-${Date.now()}-${citationMatches.length}`
+         citationMatches.push({
+           citation,
+           id: citationId,
+           element: em
+         })
+         
+         console.log('成功匹配引用:', citation) // 调试日志
+       }
+     })
+    
+    // 处理每个找到的引用
+    citationMatches.forEach(({citation, id, element}) => {
+      const p = element.closest('p')
+             if (p) {
+         // 确保内容存在
+         const safeContent = citation.content || '引用内容缺失'
+         console.log('生成气泡HTML，内容:', safeContent) // 调试日志
+         
+         // 创建气泡HTML - 修复结构
+         const bubbleHtml = `<span class="citation-bubble-wrapper inline-block relative mx-1">
+<span class="citation-bubble inline-block bg-blue-50 border border-blue-200 rounded-xl px-2 py-1 cursor-pointer transition-all duration-200 hover:bg-blue-100 hover:border-blue-300 hover:translate-y-[-1px] text-xs" data-citation-id="${id}" data-content="${safeContent.replace(/"/g, '&quot;')}" data-timestamp="${citation.timestamp}" data-speaker="${citation.speaker}">
+<span class="timestamp text-gray-600 mr-1">[${citation.timestamp}]</span>
+<span class="speaker text-blue-600 font-medium">${citation.speaker}</span>
+</span>
+<div class="citation-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed" style="top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px;">
+<div class="tooltip-header flex gap-2 mb-2 pb-2 border-b border-gray-200">
+<span class="tooltip-timestamp text-xs text-gray-600 font-medium">[${citation.timestamp}]</span>
+<span class="tooltip-speaker text-xs text-blue-600 font-semibold">${citation.speaker}</span>
+</div>
+<div class="tooltip-content text-gray-700 italic">${safeContent}</div>
+</div>
+</span>`
+        
+        // 找到前一个段落并添加气泡
+        let targetParagraph = null
+        const allParagraphs = Array.from(container.querySelectorAll('p'))
+        const pIndex = allParagraphs.indexOf(p)
+        
+        if (pIndex > 0) {
+          targetParagraph = allParagraphs[pIndex - 1]
+        } else {
+          // 如果是第一个段落，查找前面的其他元素
+          let prevElement = p.previousElementSibling
+          while (prevElement) {
+            if (prevElement.tagName === 'P' || prevElement.tagName === 'LI' || 
+                prevElement.tagName === 'UL' || prevElement.tagName === 'OL') {
+              if (prevElement.tagName === 'UL' || prevElement.tagName === 'OL') {
+                const lastLi = prevElement.querySelector('li:last-child')
+                if (lastLi) targetParagraph = lastLi
+              } else {
+                targetParagraph = prevElement
+              }
+              break
+            }
+            prevElement = prevElement.previousElementSibling
+          }
+        }
+        
+                 console.log('🔧 生成的完整HTML长度:', bubbleHtml.length) // 调试日志
+         console.log('🔧 生成的完整HTML前200字符:', bubbleHtml.substring(0, 200)) // 调试日志
+         
+         if (targetParagraph) {
+           console.log('🔧 准备插入HTML到:', targetParagraph.tagName, targetParagraph.innerHTML.substring(0, 100))
+           targetParagraph.insertAdjacentHTML('beforeend', bubbleHtml)
+           console.log('🔧 HTML插入成功到:', targetParagraph.tagName) // 调试日志
+           
+           // 验证插入后的HTML
+           const insertedBubble = targetParagraph.querySelector('.citation-bubble-wrapper:last-child')
+           const insertedTooltip = insertedBubble?.querySelector('.citation-tooltip')
+           console.log('🔧 插入验证:', {
+             bubbleExists: !!insertedBubble,
+             tooltipExists: !!insertedTooltip,
+             tooltipHTML: insertedTooltip?.outerHTML?.substring(0, 100),
+             fullWrapperHTML: insertedBubble?.outerHTML?.substring(0, 300)
+           })
+           
+           // 额外验证：查看整个段落的HTML
+           console.log('🔧 整个段落的HTML:', targetParagraph.innerHTML.substring(targetParagraph.innerHTML.length - 400))
+         }
+        
+        // 移除原始引用段落
+        p.remove()
+      }
+    })
 
-    // 获取该 section 的所有标记
+    // 注意：气泡点击逻辑现在由 handleTextSelection 函数处理
+    console.log('气泡HTML生成完成，点击事件由主容器的mouseup事件处理')
+
+    // 获取该 section 的所有标记（保留原有的chat sessions标记处理）
     const sectionMarks = articleMarks.value?.filter(
       mark => mark.section_type === section.section_type
     ) || []
 
-    // 处理标记
+    // 处理chat sessions标记
     sectionMarks.forEach(mark => {
       const position = mark.position
 
@@ -1515,17 +1779,16 @@ const renderSectionContent = (section: ArticleSection) => {
         nodeIndex: position.nodeIndex,
         startOffset: position.startOffset,
         endOffset: position.endOffset,
-        text: mark.mark_content // 使用原文内容进行匹配
+        text: mark.mark_content
       }
 
       const range = TextPositionHelper.findPosition(container, textMark)
       if (range) {
-        // 使用新的 applyMarkStyle 方法
         const markInfo = {
           'mark-id': mark.id,
           'article-id': section.article_id,
           'section-type': section.section_type,
-          'mark-content': mark.mark_content, // 使用原文内容作为显示内容
+          'mark-content': mark.mark_content,
           'position': JSON.stringify(position)
         }
         
