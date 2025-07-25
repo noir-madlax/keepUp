@@ -19,6 +19,14 @@ class Steps:
     DETAILED_PROCESS = "处理详细内容"
     PROCESS_COMPLETE = "处理完成"
     PROCESS_ERROR = "处理错误"
+    
+    # B站相关处理步骤
+    BILIBILI_COOKIE_LOAD = "加载B站Cookie"
+    BILIBILI_SHORT_URL_RESOLVE = "解析B站短链接"
+    BILIBILI_BV_EXTRACT = "提取BV号"
+    BILIBILI_VIDEO_API = "获取B站视频信息"
+    BILIBILI_PLAYER_API = "获取B站播放器信息"
+    BILIBILI_SUBTITLE_DOWNLOAD = "下载B站字幕"
 
 class RequestLogger:
     """请求日志记录器"""

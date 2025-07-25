@@ -19,6 +19,7 @@ from app.models.author import AuthorInfo
 from app.models.article import ArticleCreate
 from app.utils.logger import logger
 from app.services.bilibili_short_url_service import BilibiliShortUrlService
+from app.services.request_logger import RequestLogger, Steps
 
 class BilibilitFetcher(ContentFetcher):
     """B站视频内容获取器"""
@@ -33,21 +34,27 @@ class BilibilitFetcher(ContentFetcher):
         """检查是否可以处理该URL"""
         return self.short_url_service.is_bilibili_url(url)
     
-    async def load_cookies(self) -> Optional[Dict[str, str]]:
+    async def load_cookies(self, request_id: int = 0) -> Optional[Dict[str, str]]:
         """从数据库加载B站cookie配置，返回headers而不是设置实例变量"""
         try:
             # 从keep_prompt表获取cookie配置
             cookie_prompt = await PromptRepository.get_prompt_by_type('cookie-bilbli')
             
             if not cookie_prompt:
-                logger.error("未找到B站cookie配置 (类型: cookie-bilbli)")
+                error_msg = "未找到B站cookie配置 (类型: cookie-bilbli)"
+                logger.error(error_msg)
+                if request_id:
+                    await RequestLogger.error(request_id, Steps.BILIBILI_COOKIE_LOAD, error_msg, Exception(error_msg))
                 return None
             
             # 解析cookie数据
             try:
                 cookies_data = json.loads(cookie_prompt.content)
             except json.JSONDecodeError:
-                logger.error("B站cookie配置格式错误，无法解析JSON")
+                error_msg = "B站cookie配置格式错误，无法解析JSON"
+                logger.error(error_msg)
+                if request_id:
+                    await RequestLogger.error(request_id, Steps.BILIBILI_COOKIE_LOAD, error_msg, Exception(error_msg))
                 return None
             
             # 提取关键cookie信息
@@ -77,14 +84,20 @@ class BilibilitFetcher(ContentFetcher):
                 logger.info("✅ 成功加载B站cookie配置")
                 return headers
             else:
-                logger.error("B站cookie配置不完整，缺少关键字段")
+                error_msg = "B站cookie配置不完整，缺少关键字段SESSDATA或bili_jct"
+                logger.error(error_msg)
+                if request_id:
+                    await RequestLogger.error(request_id, Steps.BILIBILI_COOKIE_LOAD, error_msg, Exception(error_msg))
                 return None
                 
         except Exception as e:
-            logger.error(f"加载B站cookie配置失败: {str(e)}")
+            error_msg = f"加载B站cookie配置失败: {str(e)}"
+            logger.error(error_msg)
+            if request_id:
+                await RequestLogger.error(request_id, Steps.BILIBILI_COOKIE_LOAD, error_msg, e)
             return None
     
-    async def extract_bv_id(self, video_url: str) -> str:
+    async def extract_bv_id(self, video_url: str, request_id: int = 0) -> str:
         """从URL中提取BV号，支持短链接"""
         # 如果是短链接，先解析为长链接
         if 'b23.tv' in video_url:
@@ -92,11 +105,17 @@ class BilibilitFetcher(ContentFetcher):
             if resolved_url:
                 video_url = resolved_url
             else:
-                logger.error(f"无法解析短链接: {video_url}")
+                error_msg = f"无法解析B站短链接: {video_url}"
+                logger.error(error_msg)
+                if request_id:
+                    await RequestLogger.error(request_id, Steps.BILIBILI_SHORT_URL_RESOLVE, error_msg, Exception(error_msg))
                 return ""
         
         # 使用短链接服务提取视频ID
         video_id = self.short_url_service.extract_video_id(video_url)
+        if not video_id and request_id:
+            error_msg = f"无法从URL提取BV号: {video_url}"
+            await RequestLogger.error(request_id, Steps.BILIBILI_BV_EXTRACT, error_msg, Exception(error_msg))
         return video_id or ""
     
     def is_chinese_subtitle(self, lan: str, lan_doc: str) -> bool:
@@ -155,13 +174,17 @@ class BilibilitFetcher(ContentFetcher):
     
     async def fetch(self, url: str, request: Optional[FetchRequest] = None) -> Optional[str]:
         """获取B站视频内容"""
+        request_id = request.id if request else 0
         try:
             logger.info(f"🚀 开始获取B站视频内容: {url}")
             
             # 获取视频信息（已整合字幕获取逻辑）
-            video_info = await self.get_video_info(url)
+            video_info = await self.get_video_info(url, request_id)
             if not video_info:
-                logger.error(f"无法获取B站视频信息")
+                error_msg = f"无法获取B站视频信息: {url}"
+                logger.error(error_msg)
+                if request_id:
+                    await RequestLogger.error(request_id, Steps.VIDEO_INFO_FETCH, error_msg, Exception(error_msg))
                 return None
             
             # 数据一致性检查
@@ -191,21 +214,30 @@ class BilibilitFetcher(ContentFetcher):
             return content
             
         except Exception as e:
-            logger.error(f"获取B站视频内容失败: {str(e)}")
+            error_msg = f"获取B站视频内容失败: {str(e)}"
+            logger.error(error_msg)
+            if request_id:
+                await RequestLogger.error(request_id, Steps.CONTENT_FETCH, error_msg, e)
             return None
     
-    async def get_video_info(self, url: str) -> Optional[VideoInfo]:
+    async def get_video_info(self, url: str, request_id: int = 0) -> Optional[VideoInfo]:
         """获取B站视频基本信息和字幕"""
         try:
             # 使用新的cookie加载逻辑
-            headers = await self.load_cookies()
+            headers = await self.load_cookies(request_id)
             if not headers:
-                logger.error("无法加载cookie配置")
+                error_msg = "无法加载B站cookie配置"
+                logger.error(error_msg)
+                if request_id:
+                    await RequestLogger.error(request_id, Steps.BILIBILI_COOKIE_LOAD, error_msg, Exception(error_msg))
                 return None
             
-            bv_id = await self.extract_bv_id(url)
+            bv_id = await self.extract_bv_id(url, request_id)
             if not bv_id:
-                logger.error("无法提取BV号")
+                error_msg = f"无法提取BV号: {url}"
+                logger.error(error_msg)
+                if request_id:
+                    await RequestLogger.error(request_id, Steps.BILIBILI_BV_EXTRACT, error_msg, Exception(error_msg))
                 return None
             
             logger.info(f"📋 开始处理视频: BV={bv_id}, 原始URL={url}")
@@ -217,12 +249,18 @@ class BilibilitFetcher(ContentFetcher):
             response = requests.get(video_info_url, headers=headers)
             
             if response.status_code != 200:
-                logger.error(f"获取视频信息失败: HTTP {response.status_code}")
+                error_msg = f"获取B站视频信息失败: HTTP {response.status_code}, URL={video_info_url}"
+                logger.error(error_msg)
+                if request_id:
+                    await RequestLogger.error(request_id, Steps.BILIBILI_VIDEO_API, error_msg, Exception(error_msg))
                 return None
             
             video_data = response.json()
             if video_data.get("code") != 0:
-                logger.error(f"视频API返回错误: {video_data.get('message')}")
+                error_msg = f"B站视频API返回错误: {video_data.get('message')}, BV={bv_id}"
+                logger.error(error_msg)
+                if request_id:
+                    await RequestLogger.error(request_id, Steps.BILIBILI_VIDEO_API, error_msg, Exception(error_msg))
                 return None
             
             video_info = video_data["data"]
@@ -272,13 +310,19 @@ class BilibilitFetcher(ContentFetcher):
                 
                 player_response = requests.get(player_url, headers=headers, params=player_params)
                 if player_response.status_code != 200:
-                    logger.error(f"获取播放器信息失败: HTTP {player_response.status_code}")
-                    raise Exception(f"无法获取播放器信息: HTTP {player_response.status_code}")
+                    error_msg = f"获取B站播放器信息失败: HTTP {player_response.status_code}, BV={bv_id}, CID={cid}"
+                    logger.error(error_msg)
+                    if request_id:
+                        await RequestLogger.error(request_id, Steps.BILIBILI_PLAYER_API, error_msg, Exception(error_msg))
+                    raise Exception(error_msg)
                 
                 player_data = player_response.json()
                 if player_data.get("code") != 0:
-                    logger.error(f"播放器API返回错误: {player_data.get('message')}")
-                    raise Exception(f"播放器API错误: {player_data.get('message')}")
+                    error_msg = f"B站播放器API返回错误: {player_data.get('message')}, BV={bv_id}, CID={cid}"
+                    logger.error(error_msg)
+                    if request_id:
+                        await RequestLogger.error(request_id, Steps.BILIBILI_PLAYER_API, error_msg, Exception(error_msg))
+                    raise Exception(error_msg)
                 
                 # 检查字幕信息 - 完全按照参考代码的逻辑
                 subtitle_info = player_data.get("data", {}).get("subtitle", {})
@@ -343,9 +387,15 @@ class BilibilitFetcher(ContentFetcher):
                                     else:
                                         logger.warning(f"⚠️ 字幕数据格式异常: 缺少body字段或body为空")
                                 else:
-                                    logger.error(f"❌ 字幕下载失败: HTTP {subtitle_response.status_code}")
+                                    error_msg = f"B站字幕下载失败: HTTP {subtitle_response.status_code}, URL={subtitle_url}, BV={bv_id}"
+                                    logger.error(f"❌ {error_msg}")
+                                    if request_id:
+                                        await RequestLogger.error(request_id, Steps.BILIBILI_SUBTITLE_DOWNLOAD, error_msg, Exception(error_msg))
                             except Exception as e:
-                                logger.error(f"❌ 处理字幕异常: {str(e)}")
+                                error_msg = f"处理B站字幕异常: {str(e)}, BV={bv_id}, URL={subtitle_url}"
+                                logger.error(f"❌ {error_msg}")
+                                if request_id:
+                                    await RequestLogger.error(request_id, Steps.BILIBILI_SUBTITLE_DOWNLOAD, error_msg, e)
                         else:
                             logger.warning(f"⚠️ 字幕URL为空")
                     else:
@@ -392,7 +442,10 @@ class BilibilitFetcher(ContentFetcher):
             )
             
         except Exception as e:
-            logger.error(f"获取B站视频信息失败 (URL={url}): {str(e)}")
+            error_msg = f"获取B站视频信息失败 (URL={url}): {str(e)}"
+            logger.error(error_msg)
+            if request_id:
+                await RequestLogger.error(request_id, Steps.VIDEO_INFO_FETCH, error_msg, e)
             return None
     
     async def get_chapters(self, url: str) -> Optional[str]:
@@ -402,7 +455,7 @@ class BilibilitFetcher(ContentFetcher):
     async def get_author_info(self, url: str) -> Optional[AuthorInfo]:
         """获取作者信息"""
         try:
-            video_info = await self.get_video_info(url)
+            video_info = await self.get_video_info(url, 0)  # 没有request_id时使用0
             if video_info and video_info.author:
                 return AuthorInfo(
                     name=video_info.author.get('name', '未知作者'),
