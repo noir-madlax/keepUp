@@ -74,7 +74,16 @@ const handlePaste = async () => {
   try {
     if (!navigator.clipboard) return
     const text = await navigator.clipboard.readText()
-    if (text.includes('http') && text.includes('.')) {
+    
+    // 检查是否包含 B站短链接
+    const bilibiliShortUrlRegex = /https?:\/\/b23\.tv\/[A-Za-z0-9]+/
+    const match = text.match(bilibiliShortUrlRegex)
+    
+    if (match) {
+      // 如果包含B站短链接，只提取短链接部分并加上 @
+      localUrl.value = `@${match[0]}`
+    } else if (text.includes('http') && text.includes('.')) {
+      // 原有逻辑，处理其他链接
       localUrl.value = text.trim()
     }
   } catch (err) {
