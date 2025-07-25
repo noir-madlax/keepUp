@@ -76,6 +76,12 @@
                   <img src="/images/icons/spotify.svg" alt="Spotify" class="podcast-icon">
                 </div>
               </div>
+              <!-- Bilibili Icon -->
+              <div class="icon">
+                <div class="icon-background">
+                  <img src="/images/icons/bilibili.svg" alt="Bilibili" class="podcast-icon">
+                </div>
+              </div>
             </div>
             <div class="link-text">{{ t('upload.card.supportedPlatforms') }}</div>
           </div>
