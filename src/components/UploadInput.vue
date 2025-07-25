@@ -80,8 +80,8 @@ const handlePaste = async () => {
     const match = text.match(bilibiliShortUrlRegex)
     
     if (match) {
-      // 如果包含B站短链接，只提取短链接部分并加上 @
-      localUrl.value = `@${match[0]}`
+      // 如果包含B站短链接，只提取短链接部分
+      localUrl.value = `${match[0]}`
     } else if (text.includes('http') && text.includes('.')) {
       // 原有逻辑，处理其他链接
       localUrl.value = text.trim()
