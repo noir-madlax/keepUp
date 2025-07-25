@@ -1,0 +1,2844 @@
+{
+  "font_size": 0.4,
+  "font_color": "#FFFFFF",
+  "background_alpha": 0.5,
+  "background_color": "#9C27B0",
+  "Stroke": "none",
+  "type": "AIsubtitle",
+  "lang": "zh",
+  "version": "v1.7.0.4",
+  "body": [
+    {
+      "from": 0.08,
+      "to": 1.32,
+      "sid": 1,
+      "location": 2,
+      "content": "育碧可能会倒闭",
+      "music": 0.0
+    },
+    {
+      "from": 1.32,
+      "to": 3.19,
+      "sid": 2,
+      "location": 2,
+      "content": "但永远不会变质",
+      "music": 0.0
+    },
+    {
+      "from": 3.19,
+      "to": 4.63,
+      "sid": 3,
+      "location": 2,
+      "content": "经过30多个小时",
+      "music": 0.0
+    },
+    {
+      "from": 4.63,
+      "to": 6.55,
+      "sid": 4,
+      "location": 2,
+      "content": "我终于从营里改造回来了",
+      "music": 0.0
+    },
+    {
+      "from": 6.55,
+      "to": 7.71,
+      "sid": 5,
+      "location": 2,
+      "content": "先概括一下优点",
+      "music": 0.0
+    },
+    {
+      "from": 7.71,
+      "to": 8.53,
+      "sid": 6,
+      "location": 2,
+      "content": "因为没多少",
+      "music": 0.0
+    },
+    {
+      "from": 8.53,
+      "to": 11.26,
+      "sid": 7,
+      "location": 2,
+      "content": "然后直接开始正片影的风景建模",
+      "music": 0.0
+    },
+    {
+      "from": 11.26,
+      "to": 12.5,
+      "sid": 8,
+      "location": 2,
+      "content": "品质啊都很在线诶",
+      "music": 0.0
+    },
+    {
+      "from": 12.5,
+      "to": 13.98,
+      "sid": 9,
+      "location": 2,
+      "content": "四季变化非常漂亮",
+      "music": 0.0
+    },
+    {
+      "from": 13.98,
+      "to": 16.46,
+      "sid": 10,
+      "location": 2,
+      "content": "人物的头发是最近玩的游戏里效果最好",
+      "music": 0.0
+    },
+    {
+      "from": 16.46,
+      "to": 18.38,
+      "sid": 11,
+      "location": 2,
+      "content": "最逼真的小雪药可以直接喝",
+      "music": 0.0
+    },
+    {
+      "from": 18.38,
+      "to": 19.38,
+      "sid": 12,
+      "location": 2,
+      "content": "也没有喝药动作啊",
+      "music": 0.0
+    },
+    {
+      "from": 19.38,
+      "to": 21.61,
+      "sid": 13,
+      "location": 2,
+      "content": "进出房间呢会自动穿脱鞋子",
+      "music": 0.0
+    },
+    {
+      "from": 21.61,
+      "to": 23.49,
+      "sid": 14,
+      "location": 2,
+      "content": "小将的动作非常灵活啊",
+      "music": 0.0
+    },
+    {
+      "from": 23.49,
+      "to": 25.41,
+      "sid": 15,
+      "location": 2,
+      "content": "迷住打起来也非常有力量感",
+      "music": 0.0
+    },
+    {
+      "from": 25.41,
+      "to": 26.45,
+      "sid": 16,
+      "location": 2,
+      "content": "优化也还可以",
+      "music": 0.0
+    },
+    {
+      "from": 26.45,
+      "to": 27.72,
+      "sid": 17,
+      "location": 2,
+      "content": "没什么闪退问题",
+      "music": 0.0
+    },
+    {
+      "from": 27.72,
+      "to": 30.26,
+      "sid": 18,
+      "location": 2,
+      "content": "开头几个小时的游玩体验和播片呢",
+      "music": 0.0
+    },
+    {
+      "from": 30.26,
+      "to": 31.56,
+      "sid": 19,
+      "location": 2,
+      "content": "我觉得是挺不错的",
+      "music": 0.0
+    },
+    {
+      "from": 31.56,
+      "to": 34.16,
+      "sid": 20,
+      "location": 2,
+      "content": "体验好到让你以为阿玉洗心革面",
+      "music": 0.0
+    },
+    {
+      "from": 34.16,
+      "to": 35.2,
+      "sid": 21,
+      "location": 2,
+      "content": "重新做游了",
+      "music": 0.0
+    },
+    {
+      "from": 35.2,
+      "to": 36.44,
+      "sid": 22,
+      "location": 2,
+      "content": "之前有很多博主啊",
+      "music": 0.0
+    },
+    {
+      "from": 36.44,
+      "to": 38.44,
+      "sid": 23,
+      "location": 2,
+      "content": "提前体验之后说哎觉得不错啊",
+      "music": 0.0
+    },
+    {
+      "from": 38.44,
+      "to": 39.92,
+      "sid": 24,
+      "location": 2,
+      "content": "不是说夸就是收钱了",
+      "music": 0.0
+    },
+    {
+      "from": 39.92,
+      "to": 40.88,
+      "sid": 25,
+      "location": 2,
+      "content": "而是育碧的游戏",
+      "music": 0.0
+    },
+    {
+      "from": 40.88,
+      "to": 42.78,
+      "sid": 26,
+      "location": 2,
+      "content": "前几个小时确实没啥毛病",
+      "music": 0.0
+    },
+    {
+      "from": 42.78,
+      "to": 43.76,
+      "sid": 27,
+      "location": 2,
+      "content": "谁玩谁麻",
+      "music": 0.0
+    },
+    {
+      "from": 43.76,
+      "to": 45.04,
+      "sid": 28,
+      "location": 2,
+      "content": "你玩你也麻",
+      "music": 0.0
+    },
+    {
+      "from": 45.04,
+      "to": 47.14,
+      "sid": 29,
+      "location": 2,
+      "content": "游戏看不太出来有什么DEI内容",
+      "music": 0.0
+    },
+    {
+      "from": 47.14,
+      "to": 48.98,
+      "sid": 30,
+      "location": 2,
+      "content": "如果迷住睡阿是双主角",
+      "music": 0.0
+    },
+    {
+      "from": 48.98,
+      "to": 50.72,
+      "sid": 31,
+      "location": 2,
+      "content": "恋爱自由不算的话啊",
+      "music": 0.0
+    },
+    {
+      "from": 50.72,
+      "to": 52.62,
+      "sid": 32,
+      "location": 2,
+      "content": "前六七个小时体验是不错的",
+      "music": 0.0
+    },
+    {
+      "from": 52.62,
+      "to": 54.2,
+      "sid": 33,
+      "location": 2,
+      "content": "因为没怎么正式进入主线",
+      "music": 0.0
+    },
+    {
+      "from": 54.2,
+      "to": 55.04,
+      "sid": 34,
+      "location": 2,
+      "content": "都在讲故事",
+      "music": 0.0
+    },
+    {
+      "from": 55.04,
+      "to": 55.92,
+      "sid": 35,
+      "location": 2,
+      "content": "单线推荐啊",
+      "music": 0.0
+    },
+    {
+      "from": 55.92,
+      "to": 57.5,
+      "sid": 36,
+      "location": 2,
+      "content": "找到蒲团打坐冥想",
+      "music": 0.0
+    },
+    {
+      "from": 57.5,
+      "to": 58.68,
+      "sid": 37,
+      "location": 2,
+      "content": "进入心流回忆",
+      "music": 0.0
+    },
+    {
+      "from": 58.68,
+      "to": 60.58,
+      "sid": 38,
+      "location": 2,
+      "content": "然后从回忆里面学到东西",
+      "music": 0.0
+    },
+    {
+      "from": 60.58,
+      "to": 62.16,
+      "sid": 39,
+      "location": 2,
+      "content": "补全剧情还是不错的",
+      "music": 0.0
+    },
+    {
+      "from": 62.16,
+      "to": 65.12,
+      "sid": 40,
+      "location": 2,
+      "content": "但是啊等到后面进入主线之后",
+      "music": 0.0
+    },
+    {
+      "from": 65.12,
+      "to": 67.27,
+      "sid": 41,
+      "location": 2,
+      "content": "体验就开始一眼望穿的下降",
+      "music": 0.0
+    },
+    {
+      "from": 67.27,
+      "to": 69.83,
+      "sid": 42,
+      "location": 2,
+      "content": "等到十多个小时之后就开始麻木了",
+      "music": 0.0
+    },
+    {
+      "from": 69.83,
+      "to": 71.19,
+      "sid": 43,
+      "location": 2,
+      "content": "思考活着的意义",
+      "music": 0.0
+    },
+    {
+      "from": 71.19,
+      "to": 73.87,
+      "sid": 44,
+      "location": 2,
+      "content": "再往后一上游戏就起生理反应",
+      "music": 0.0
+    },
+    {
+      "from": 73.87,
+      "to": 74.96,
+      "sid": 45,
+      "location": 2,
+      "content": "犯恶心",
+      "music": 0.0
+    },
+    {
+      "from": 74.96,
+      "to": 77.88,
+      "sid": 46,
+      "location": 2,
+      "content": "那么这款游戏究竟为什么会有如此的魔力呢",
+      "music": 0.0
+    },
+    {
+      "from": 80.87,
+      "to": 82.83,
+      "sid": 47,
+      "location": 2,
+      "content": "玩家的好日子也就到头了",
+      "music": 0.0
+    },
+    {
+      "from": 82.83,
+      "to": 85.19,
+      "sid": 48,
+      "location": 2,
+      "content": "打开面板一看一个圆圈唉",
+      "music": 0.0
+    },
+    {
+      "from": 85.19,
+      "to": 86.3,
+      "sid": 49,
+      "location": 2,
+      "content": "要挨个调查",
+      "music": 0.0
+    },
+    {
+      "from": 86.3,
+      "to": 87.6,
+      "sid": 50,
+      "location": 2,
+      "content": "刺杀12个敌人",
+      "music": 0.0
+    },
+    {
+      "from": 87.6,
+      "to": 89.86,
+      "sid": 51,
+      "location": 2,
+      "content": "然后把这个圈在旁边复制N个",
+      "music": 0.0
+    },
+    {
+      "from": 89.86,
+      "to": 91.64,
+      "sid": 52,
+      "location": 2,
+      "content": "就成了其他主线和支线",
+      "music": 0.0
+    },
+    {
+      "from": 91.64,
+      "to": 92.9,
+      "sid": 53,
+      "location": 2,
+      "content": "你做的第一个任务",
+      "music": 0.0
+    },
+    {
+      "from": 92.9,
+      "to": 95.22,
+      "sid": 54,
+      "location": 2,
+      "content": "流程和最后一个几乎没有区别",
+      "music": 0.0
+    },
+    {
+      "from": 95.22,
+      "to": 97.41,
+      "sid": 55,
+      "location": 2,
+      "content": "影的地图和防区非常的大",
+      "music": 0.0
+    },
+    {
+      "from": 97.41,
+      "to": 99.09,
+      "sid": 56,
+      "location": 2,
+      "content": "虽然体验也更真实了",
+      "music": 0.0
+    },
+    {
+      "from": 99.09,
+      "to": 101.07,
+      "sid": 57,
+      "location": 2,
+      "content": "但是由此引出的问题也更多了",
+      "music": 0.0
+    },
+    {
+      "from": 101.07,
+      "to": 103.08,
+      "sid": 58,
+      "location": 2,
+      "content": "影不但把人物和性能一分为二",
+      "music": 0.0
+    },
+    {
+      "from": 103.08,
+      "to": 104.7,
+      "sid": 59,
+      "location": 2,
+      "content": "同样把鹰眼也一分为二",
+      "music": 0.0
+    },
+    {
+      "from": 104.7,
+      "to": 105.88,
+      "sid": 60,
+      "location": 2,
+      "content": "一个是把敌人变红",
+      "music": 0.0
+    },
+    {
+      "from": 105.88,
+      "to": 106.58,
+      "sid": 61,
+      "location": 2,
+      "content": "可以锁敌",
+      "music": 0.0
+    },
+    {
+      "from": 106.58,
+      "to": 107.76,
+      "sid": 62,
+      "location": 2,
+      "content": "另一个是聚焦唉",
+      "music": 0.0
+    },
+    {
+      "from": 107.76,
+      "to": 109.2,
+      "sid": 63,
+      "location": 2,
+      "content": "可以看到道具和敌人的位置",
+      "music": 0.0
+    },
+    {
+      "from": 109.2,
+      "to": 110.32,
+      "sid": 64,
+      "location": 2,
+      "content": "并把他们标出来",
+      "music": 0.0
+    },
+    {
+      "from": 110.32,
+      "to": 111.72,
+      "sid": 65,
+      "location": 2,
+      "content": "然后问题来了",
+      "music": 0.0
+    },
+    {
+      "from": 111.72,
+      "to": 113.16,
+      "sid": 66,
+      "location": 2,
+      "content": "主角是他们个近视眼",
+      "music": 0.0
+    },
+    {
+      "from": 113.16,
+      "to": 114.83,
+      "sid": 67,
+      "location": 2,
+      "content": "这个聚焦有范围",
+      "music": 0.0
+    },
+    {
+      "from": 114.83,
+      "to": 116.69,
+      "sid": 68,
+      "location": 2,
+      "content": "稍微远点就什么都看不到",
+      "music": 0.0
+    },
+    {
+      "from": 116.69,
+      "to": 119.35,
+      "sid": 69,
+      "location": 2,
+      "content": "你站在俯瞰点更是什么都看不到",
+      "music": 0.0
+    },
+    {
+      "from": 119.35,
+      "to": 120.39,
+      "sid": 70,
+      "location": 2,
+      "content": "地区稍微大点",
+      "music": 0.0
+    },
+    {
+      "from": 120.39,
+      "to": 122.4,
+      "sid": 71,
+      "location": 2,
+      "content": "就得各种绕来绕去搜东西",
+      "music": 0.0
+    },
+    {
+      "from": 122.4,
+      "to": 123.96,
+      "sid": 72,
+      "location": 2,
+      "content": "每个城里都有一个大宝箱",
+      "music": 0.0
+    },
+    {
+      "from": 123.96,
+      "to": 127.02,
+      "sid": 73,
+      "location": 2,
+      "content": "哎你得把里面的武士大将都杀了才能开",
+      "music": 0.0
+    },
+    {
+      "from": 127.02,
+      "to": 128.18,
+      "sid": 74,
+      "location": 2,
+      "content": "有时候是杀一个",
+      "music": 0.0
+    },
+    {
+      "from": 128.18,
+      "to": 129.32,
+      "sid": 75,
+      "location": 2,
+      "content": "有时候是杀五个",
+      "music": 0.0
+    },
+    {
+      "from": 129.32,
+      "to": 130.98,
+      "sid": 76,
+      "location": 2,
+      "content": "这个武士大将他会瞎溜达",
+      "music": 0.0
+    },
+    {
+      "from": 130.98,
+      "to": 132.92,
+      "sid": 77,
+      "location": 2,
+      "content": "你绕来绕去不一定都能找得到",
+      "music": 0.0
+    },
+    {
+      "from": 132.92,
+      "to": 133.9,
+      "sid": 78,
+      "location": 2,
+      "content": "非常的费劲",
+      "music": 0.0
+    },
+    {
+      "from": 133.9,
+      "to": 134.86,
+      "sid": 79,
+      "location": 2,
+      "content": "城一大了",
+      "music": 0.0
+    },
+    {
+      "from": 134.86,
+      "to": 138.28,
+      "sid": 80,
+      "location": 2,
+      "content": "有够你跑的了武士大将和各种箱子一圈找下来",
+      "music": 0.0
+    },
+    {
+      "from": 138.28,
+      "to": 139.34,
+      "sid": 81,
+      "location": 2,
+      "content": "花个20分钟",
+      "music": 0.0
+    },
+    {
+      "from": 139.34,
+      "to": 141.02,
+      "sid": 82,
+      "location": 2,
+      "content": "半个小时常有的事儿",
+      "music": 0.0
+    },
+    {
+      "from": 141.02,
+      "to": 143.84,
+      "sid": 83,
+      "location": 2,
+      "content": "然而你只需要把这个操作重复几十遍",
+      "music": 0.0
+    },
+    {
+      "from": 143.84,
+      "to": 145.9,
+      "sid": 84,
+      "location": 2,
+      "content": "就能清完地图上的各个城池了",
+      "music": 0.0
+    },
+    {
+      "from": 145.9,
+      "to": 147.48,
+      "sid": 85,
+      "location": 2,
+      "content": "真的非常具有挑战性",
+      "music": 0.0
+    },
+    {
+      "from": 147.48,
+      "to": 148.6,
+      "sid": 86,
+      "location": 2,
+      "content": "对我的阳寿来说",
+      "music": 0.0
+    },
+    {
+      "from": 148.6,
+      "to": 151.28,
+      "sid": 87,
+      "location": 2,
+      "content": "角色有了技能点还不一定能点技能",
+      "music": 0.0
+    },
+    {
+      "from": 151.28,
+      "to": 152.86,
+      "sid": 88,
+      "location": 2,
+      "content": "因为有个知识等级卡着",
+      "music": 0.0
+    },
+    {
+      "from": 152.86,
+      "to": 154.5,
+      "sid": 89,
+      "location": 2,
+      "content": "你不够就点不了",
+      "music": 0.0
+    },
+    {
+      "from": 154.5,
+      "to": 156.48,
+      "sid": 90,
+      "location": 2,
+      "content": "知识点越往上升要找的越多啊",
+      "music": 0.0
+    },
+    {
+      "from": 156.48,
+      "to": 158.66,
+      "sid": 91,
+      "location": 2,
+      "content": "后面升一级要找十几个知识等级",
+      "music": 0.0
+    },
+    {
+      "from": 158.66,
+      "to": 159.66,
+      "sid": 92,
+      "location": 2,
+      "content": "靠找地方打坐",
+      "music": 0.0
+    },
+    {
+      "from": 159.66,
+      "to": 161.22,
+      "sid": 93,
+      "location": 2,
+      "content": "QTE找神社拜祭",
+      "music": 0.0
+    },
+    {
+      "from": 161.22,
+      "to": 162.58,
+      "sid": 94,
+      "location": 2,
+      "content": "这两个还算简单的",
+      "music": 0.0
+    },
+    {
+      "from": 162.58,
+      "to": 164.589,
+      "sid": 95,
+      "location": 2,
+      "content": "还有一个需要在城池里找卷轴",
+      "music": 0.0
+    },
+    {
+      "from": 164.589,
+      "to": 165.869,
+      "sid": 96,
+      "location": 2,
+      "content": "如果你用的是迷住",
+      "music": 0.0
+    },
+    {
+      "from": 165.869,
+      "to": 166.589,
+      "sid": 97,
+      "location": 2,
+      "content": "那就白给了",
+      "music": 0.0
+    },
+    {
+      "from": 166.589,
+      "to": 168.48,
+      "sid": 98,
+      "location": 2,
+      "content": "因为很多卷轴都是在房上的",
+      "music": 0.0
+    },
+    {
+      "from": 168.48,
+      "to": 169.48,
+      "sid": 99,
+      "location": 2,
+      "content": "迷柱就是个笨逼",
+      "music": 0.0
+    },
+    {
+      "from": 169.48,
+      "to": 170.2,
+      "sid": 100,
+      "location": 2,
+      "content": "爬不了一点",
+      "music": 0.0
+    },
+    {
+      "from": 170.2,
+      "to": 171.24,
+      "sid": 101,
+      "location": 2,
+      "content": "也完全潜行不了",
+      "music": 0.0
+    },
+    {
+      "from": 171.24,
+      "to": 172.24,
+      "sid": 102,
+      "location": 2,
+      "content": "有时还避免不了",
+      "music": 0.0
+    },
+    {
+      "from": 172.24,
+      "to": 174.5,
+      "sid": 103,
+      "location": 2,
+      "content": "因为有的剧情和任务会强制你用迷住",
+      "music": 0.0
+    },
+    {
+      "from": 174.5,
+      "to": 175.56,
+      "sid": 104,
+      "location": 2,
+      "content": "任务结束之后呢",
+      "music": 0.0
+    },
+    {
+      "from": 175.56,
+      "to": 177.54,
+      "sid": 105,
+      "location": 2,
+      "content": "你距离最近的传送点非常远",
+      "music": 0.0
+    },
+    {
+      "from": 177.54,
+      "to": 178.88,
+      "sid": 106,
+      "location": 2,
+      "content": "因为迷住不能上房啊",
+      "music": 0.0
+    },
+    {
+      "from": 178.88,
+      "to": 180.06,
+      "sid": 107,
+      "location": 2,
+      "content": "高点的东西捡不到",
+      "music": 0.0
+    },
+    {
+      "from": 180.06,
+      "to": 181.6,
+      "sid": 108,
+      "location": 2,
+      "content": "俯瞰点呢也解锁不了",
+      "music": 0.0
+    },
+    {
+      "from": 181.6,
+      "to": 182.82,
+      "sid": 109,
+      "location": 2,
+      "content": "只能脱战传送走",
+      "music": 0.0
+    },
+    {
+      "from": 182.82,
+      "to": 184.62,
+      "sid": 110,
+      "location": 2,
+      "content": "再用奈绪浆来开一次",
+      "music": 0.0
+    },
+    {
+      "from": 184.62,
+      "to": 185.5,
+      "sid": 111,
+      "location": 2,
+      "content": "两次也就罢了",
+      "music": 0.0
+    },
+    {
+      "from": 185.5,
+      "to": 186.88,
+      "sid": 112,
+      "location": 2,
+      "content": "多了真的非常烦躁",
+      "music": 0.0
+    },
+    {
+      "from": 186.88,
+      "to": 189.8,
+      "sid": 113,
+      "location": 2,
+      "content": "必须要到城外才算完全脱战才能传送",
+      "music": 0.0
+    },
+    {
+      "from": 189.8,
+      "to": 190.76,
+      "sid": 114,
+      "location": 2,
+      "content": "说到传送啊",
+      "music": 0.0
+    },
+    {
+      "from": 190.76,
+      "to": 191.88,
+      "sid": 115,
+      "location": 2,
+      "content": "在做一个主线的时候",
+      "music": 0.0
+    },
+    {
+      "from": 191.88,
+      "to": 192.74,
+      "sid": 116,
+      "location": 2,
+      "content": "进了一个区域",
+      "music": 0.0
+    },
+    {
+      "from": 192.74,
+      "to": 193.14,
+      "sid": 117,
+      "location": 2,
+      "content": "哎",
+      "music": 0.0
+    },
+    {
+      "from": 193.14,
+      "to": 196.78,
+      "sid": 118,
+      "location": 2,
+      "content": "三个精英怪打我一个短炮手死了会很快的自爆",
+      "music": 0.0
+    },
+    {
+      "from": 196.78,
+      "to": 198.19,
+      "sid": 119,
+      "location": 2,
+      "content": "直接满血炸死",
+      "music": 0.0
+    },
+    {
+      "from": 198.19,
+      "to": 200.41,
+      "sid": 120,
+      "location": 2,
+      "content": "而且这三个敌人还越我一级的",
+      "music": 0.0
+    },
+    {
+      "from": 200.41,
+      "to": 202.55,
+      "sid": 121,
+      "location": 2,
+      "content": "如果说找知识卡技能还算好",
+      "music": 0.0
+    },
+    {
+      "from": 202.55,
+      "to": 204.63,
+      "sid": 122,
+      "location": 2,
+      "content": "那么这个等级压制就非常恶心了",
+      "music": 0.0
+    },
+    {
+      "from": 204.63,
+      "to": 206.23,
+      "sid": 123,
+      "location": 2,
+      "content": "前面别人打迷住是刮痧",
+      "music": 0.0
+    },
+    {
+      "from": 206.23,
+      "to": 207.31,
+      "sid": 124,
+      "location": 2,
+      "content": "一旦等级压制",
+      "music": 0.0
+    },
+    {
+      "from": 207.31,
+      "to": 209.33,
+      "sid": 125,
+      "location": 2,
+      "content": "那么就是一到两刀就能秒你",
+      "music": 0.0
+    },
+    {
+      "from": 209.33,
+      "to": 210.55,
+      "sid": 126,
+      "location": 2,
+      "content": "迷住血还多点",
+      "music": 0.0
+    },
+    {
+      "from": 210.55,
+      "to": 212.1,
+      "sid": 127,
+      "location": 2,
+      "content": "奈绪江就死的更快了",
+      "music": 0.0
+    },
+    {
+      "from": 212.1,
+      "to": 212.86,
+      "sid": 128,
+      "location": 2,
+      "content": "到了这儿",
+      "music": 0.0
+    },
+    {
+      "from": 212.86,
+      "to": 215.41,
+      "sid": 129,
+      "location": 2,
+      "content": "等级压制打不过我想走也走不了",
+      "music": 0.0
+    },
+    {
+      "from": 215.41,
+      "to": 216.49,
+      "sid": 130,
+      "location": 2,
+      "content": "想离开区域",
+      "music": 0.0
+    },
+    {
+      "from": 216.49,
+      "to": 218.95,
+      "sid": 131,
+      "location": 2,
+      "content": "但是发现单行道进来就出不去",
+      "music": 0.0
+    },
+    {
+      "from": 218.95,
+      "to": 219.87,
+      "sid": 132,
+      "location": 2,
+      "content": "我想走出去",
+      "music": 0.0
+    },
+    {
+      "from": 219.87,
+      "to": 221.21,
+      "sid": 133,
+      "location": 2,
+      "content": "周围的路全封死",
+      "music": 0.0
+    },
+    {
+      "from": 221.21,
+      "to": 221.91,
+      "sid": 134,
+      "location": 2,
+      "content": "不让爬",
+      "music": 0.0
+    },
+    {
+      "from": 221.91,
+      "to": 222.79,
+      "sid": 135,
+      "location": 2,
+      "content": "不让跳",
+      "music": 0.0
+    },
+    {
+      "from": 222.79,
+      "to": 224.55,
+      "sid": 136,
+      "location": 2,
+      "content": "身边一只怪没有的情况下",
+      "music": 0.0
+    },
+    {
+      "from": 224.55,
+      "to": 225.11,
+      "sid": 137,
+      "location": 2,
+      "content": "不脱战",
+      "music": 0.0
+    },
+    {
+      "from": 225.11,
+      "to": 225.79,
+      "sid": 138,
+      "location": 2,
+      "content": "不让传送",
+      "music": 0.0
+    },
+    {
+      "from": 225.79,
+      "to": 227.03,
+      "sid": 139,
+      "location": 2,
+      "content": "无法离开区域",
+      "music": 0.0
+    },
+    {
+      "from": 227.03,
+      "to": 228.41,
+      "sid": 140,
+      "location": 2,
+      "content": "直接给我拘留了",
+      "music": 0.0
+    },
+    {
+      "from": 228.41,
+      "to": 231.03,
+      "sid": 141,
+      "location": 2,
+      "content": "后面费了好大劲才打过正义三人组啊",
+      "music": 0.0
+    },
+    {
+      "from": 231.03,
+      "to": 231.95,
+      "sid": 142,
+      "location": 2,
+      "content": "好歹出去了",
+      "music": 0.0
+    },
+    {
+      "from": 231.95,
+      "to": 233.26,
+      "sid": 143,
+      "location": 2,
+      "content": "真的非常恶心",
+      "music": 0.0
+    },
+    {
+      "from": 233.26,
+      "to": 235.3,
+      "sid": 144,
+      "location": 2,
+      "content": "影把一个人的性能分开成两个啊",
+      "music": 0.0
+    },
+    {
+      "from": 235.3,
+      "to": 236.64,
+      "sid": 145,
+      "location": 2,
+      "content": "形成了两种战斗风格",
+      "music": 0.0
+    },
+    {
+      "from": 236.64,
+      "to": 237.9,
+      "sid": 146,
+      "location": 2,
+      "content": "迷住呢力大如牛",
+      "music": 0.0
+    },
+    {
+      "from": 237.9,
+      "to": 238.64,
+      "sid": 147,
+      "location": 2,
+      "content": "功高血厚",
+      "music": 0.0
+    },
+    {
+      "from": 238.64,
+      "to": 239.66,
+      "sid": 148,
+      "location": 2,
+      "content": "能正面破门",
+      "music": 0.0
+    },
+    {
+      "from": 239.66,
+      "to": 242.22,
+      "sid": 149,
+      "location": 2,
+      "content": "哎大金棒一棒下去不死也残啊",
+      "music": 0.0
+    },
+    {
+      "from": 242.22,
+      "to": 244.04,
+      "sid": 150,
+      "location": 2,
+      "content": "用了你就知道BBC的好了",
+      "music": 0.0
+    },
+    {
+      "from": 244.04,
+      "to": 246.79,
+      "sid": 151,
+      "location": 2,
+      "content": "代价就是不能潜行上防奈",
+      "music": 0.0
+    },
+    {
+      "from": 246.79,
+      "to": 248.31,
+      "sid": 152,
+      "location": 2,
+      "content": "绪酱呢能上防潜下暗杀",
+      "music": 0.0
+    },
+    {
+      "from": 248.31,
+      "to": 249.67,
+      "sid": 153,
+      "location": 2,
+      "content": "但是伤害相对较低",
+      "music": 0.0
+    },
+    {
+      "from": 249.67,
+      "to": 250.69,
+      "sid": 154,
+      "location": 2,
+      "content": "也比较脆皮",
+      "music": 0.0
+    },
+    {
+      "from": 250.69,
+      "to": 251.65,
+      "sid": 155,
+      "location": 2,
+      "content": "看着挺好",
+      "music": 0.0
+    },
+    {
+      "from": 251.65,
+      "to": 253.17,
+      "sid": 156,
+      "location": 2,
+      "content": "但因为不能随时切换啊",
+      "music": 0.0
+    },
+    {
+      "from": 253.17,
+      "to": 255.31,
+      "sid": 157,
+      "location": 2,
+      "content": "实际游玩下来不变的地方也有不少",
+      "music": 0.0
+    },
+    {
+      "from": 255.31,
+      "to": 257.01,
+      "sid": 158,
+      "location": 2,
+      "content": "就好像把一个人拦腰斩断",
+      "music": 0.0
+    },
+    {
+      "from": 257.01,
+      "to": 260.12,
+      "sid": 159,
+      "location": 2,
+      "content": "一分为二哎上半身下半身平时不影响",
+      "music": 0.0
+    },
+    {
+      "from": 260.12,
+      "to": 261.12,
+      "sid": 160,
+      "location": 2,
+      "content": "但关键时候啊",
+      "music": 0.0
+    },
+    {
+      "from": 261.12,
+      "to": 262.98,
+      "sid": 161,
+      "location": 2,
+      "content": "上半身憋尿想尿尿不出来",
+      "music": 0.0
+    },
+    {
+      "from": 262.98,
+      "to": 263.94,
+      "sid": 162,
+      "location": 2,
+      "content": "下半身有点痒",
+      "music": 0.0
+    },
+    {
+      "from": 263.94,
+      "to": 264.42,
+      "sid": 163,
+      "location": 2,
+      "content": "想挠挠",
+      "music": 0.0
+    },
+    {
+      "from": 264.42,
+      "to": 265.409,
+      "sid": 164,
+      "location": 2,
+      "content": "发现够不着",
+      "music": 0.0
+    },
+    {
+      "from": 265.409,
+      "to": 267.469,
+      "sid": 165,
+      "location": 2,
+      "content": "这两个角色都有技能bug",
+      "music": 0.0
+    },
+    {
+      "from": 267.469,
+      "to": 269.96,
+      "sid": 166,
+      "location": 2,
+      "content": "小将的技能总是莫名其妙失效",
+      "music": 0.0
+    },
+    {
+      "from": 269.96,
+      "to": 271.46,
+      "sid": 167,
+      "location": 2,
+      "content": "技能按了但是放不出来",
+      "music": 0.0
+    },
+    {
+      "from": 271.46,
+      "to": 273.64,
+      "sid": 168,
+      "location": 2,
+      "content": "然后直接进入CD迷住是有能量",
+      "music": 0.0
+    },
+    {
+      "from": 273.64,
+      "to": 274.74,
+      "sid": 169,
+      "location": 2,
+      "content": "但是按了没反应",
+      "music": 0.0
+    },
+    {
+      "from": 274.74,
+      "to": 277.38,
+      "sid": 170,
+      "location": 2,
+      "content": "尤其是在关键时刻按出来就能赢的时候",
+      "music": 0.0
+    },
+    {
+      "from": 277.38,
+      "to": 278.62,
+      "sid": 171,
+      "location": 2,
+      "content": "直接血压飙升",
+      "music": 0.0
+    },
+    {
+      "from": 278.62,
+      "to": 279.54,
+      "sid": 172,
+      "location": 2,
+      "content": "心态爆炸",
+      "music": 0.0
+    },
+    {
+      "from": 279.54,
+      "to": 280.84,
+      "sid": 173,
+      "location": 2,
+      "content": "真想杀了育碧的马",
+      "music": 0.0
+    },
+    {
+      "from": 280.84,
+      "to": 282.82,
+      "sid": 174,
+      "location": 2,
+      "content": "我在房间里躲着外面的弓箭雨",
+      "music": 0.0
+    },
+    {
+      "from": 282.82,
+      "to": 284.02,
+      "sid": 175,
+      "location": 2,
+      "content": "穿过房子把我秒了",
+      "music": 0.0
+    },
+    {
+      "from": 284.02,
+      "to": 284.98,
+      "sid": 176,
+      "location": 2,
+      "content": "和人对打啊",
+      "music": 0.0
+    },
+    {
+      "from": 284.98,
+      "to": 286.799,
+      "sid": 177,
+      "location": 2,
+      "content": "对面砍空气都能把我打到",
+      "music": 0.0
+    },
+    {
+      "from": 286.799,
+      "to": 287.959,
+      "sid": 178,
+      "location": 2,
+      "content": "毕竟是土豆服务器",
+      "music": 0.0
+    },
+    {
+      "from": 287.959,
+      "to": 289.019,
+      "sid": 179,
+      "location": 2,
+      "content": "见怪不怪了",
+      "music": 0.0
+    },
+    {
+      "from": 289.019,
+      "to": 294.64,
+      "sid": 180,
+      "location": 2,
+      "content": "2025年的游戏不能批量买卖分解道具",
+      "music": 0.0
+    },
+    {
+      "from": 294.64,
+      "to": 297.48,
+      "sid": 181,
+      "location": 2,
+      "content": "why tell me喂",
+      "music": 0.0
+    },
+    {
+      "from": 297.48,
+      "to": 300.26,
+      "sid": 182,
+      "location": 2,
+      "content": "我想不出来为什么我真的不理解",
+      "music": 0.0
+    },
+    {
+      "from": 300.26,
+      "to": 302.59,
+      "sid": 183,
+      "location": 2,
+      "content": "是为了拉长在线时长吗",
+      "music": 0.0
+    },
+    {
+      "from": 302.59,
+      "to": 305.39,
+      "sid": 184,
+      "location": 2,
+      "content": "风景和季节变换做得确实不赖",
+      "music": 0.0
+    },
+    {
+      "from": 305.39,
+      "to": 308.13,
+      "sid": 185,
+      "location": 2,
+      "content": "但时不时刮暴风雪雾霾",
+      "music": 0.0
+    },
+    {
+      "from": 308.13,
+      "to": 310.45,
+      "sid": 186,
+      "location": 2,
+      "content": "你走在路上跟被致盲了一样",
+      "music": 0.0
+    },
+    {
+      "from": 310.45,
+      "to": 311.77,
+      "sid": 187,
+      "location": 2,
+      "content": "球看不见一条",
+      "music": 0.0
+    },
+    {
+      "from": 311.77,
+      "to": 313.13,
+      "sid": 188,
+      "location": 2,
+      "content": "正和阿氏约会呢",
+      "music": 0.0
+    },
+    {
+      "from": 313.13,
+      "to": 315.1,
+      "sid": 189,
+      "location": 2,
+      "content": "哎这个逼天启一直下雨",
+      "music": 0.0
+    },
+    {
+      "from": 315.1,
+      "to": 317.36,
+      "sid": 190,
+      "location": 2,
+      "content": "俩人就在外面一边淋雨一边说话",
+      "music": 0.0
+    },
+    {
+      "from": 317.36,
+      "to": 318.66,
+      "sid": 191,
+      "location": 2,
+      "content": "我对话一结束",
+      "music": 0.0
+    },
+    {
+      "from": 318.66,
+      "to": 319.4,
+      "sid": 192,
+      "location": 2,
+      "content": "诶",
+      "music": 0.0
+    },
+    {
+      "from": 319.4,
+      "to": 320.48,
+      "sid": 193,
+      "location": 2,
+      "content": "天晴了",
+      "music": 0.0
+    },
+    {
+      "from": 320.48,
+      "to": 321.4,
+      "sid": 194,
+      "location": 2,
+      "content": "雨停了",
+      "music": 0.0
+    },
+    {
+      "from": 321.4,
+      "to": 322.62,
+      "sid": 195,
+      "location": 2,
+      "content": "笑嘻了",
+      "music": 0.0
+    },
+    {
+      "from": 322.62,
+      "to": 324.82,
+      "sid": 196,
+      "location": 2,
+      "content": "山上树林呢都是复制粘贴的啊",
+      "music": 0.0
+    },
+    {
+      "from": 324.82,
+      "to": 325.32,
+      "sid": 197,
+      "location": 2,
+      "content": "没关系",
+      "music": 0.0
+    },
+    {
+      "from": 325.32,
+      "to": 326.38,
+      "sid": 198,
+      "location": 2,
+      "content": "起码看着好看",
+      "music": 0.0
+    },
+    {
+      "from": 326.38,
+      "to": 328.06,
+      "sid": 199,
+      "location": 2,
+      "content": "但是这玩意儿它挡路啊",
+      "music": 0.0
+    },
+    {
+      "from": 328.06,
+      "to": 330.94,
+      "sid": 200,
+      "location": 2,
+      "content": "上下时候动不动卡树上按啥都不管用",
+      "music": 0.0
+    },
+    {
+      "from": 330.94,
+      "to": 332.26,
+      "sid": 201,
+      "location": 2,
+      "content": "只能存档读档",
+      "music": 0.0
+    },
+    {
+      "from": 332.26,
+      "to": 333.46,
+      "sid": 202,
+      "location": 2,
+      "content": "山上没路的地方",
+      "music": 0.0
+    },
+    {
+      "from": 333.46,
+      "to": 334.26,
+      "sid": 203,
+      "location": 2,
+      "content": "有树挡着",
+      "music": 0.0
+    },
+    {
+      "from": 334.26,
+      "to": 335.38,
+      "sid": 204,
+      "location": 2,
+      "content": "你就是过不去",
+      "music": 0.0
+    },
+    {
+      "from": 335.38,
+      "to": 337.86,
+      "sid": 205,
+      "location": 2,
+      "content": "本来可以直接诶短距离爬上去的",
+      "music": 0.0
+    },
+    {
+      "from": 337.86,
+      "to": 339.34,
+      "sid": 206,
+      "location": 2,
+      "content": "你必须得绕一圈",
+      "music": 0.0
+    },
+    {
+      "from": 339.34,
+      "to": 340.6,
+      "sid": 207,
+      "location": 2,
+      "content": "找一条路上去",
+      "music": 0.0
+    },
+    {
+      "from": 340.6,
+      "to": 342.66,
+      "sid": 208,
+      "location": 2,
+      "content": "本来走5米能道绕一圈唉",
+      "music": 0.0
+    },
+    {
+      "from": 342.66,
+      "to": 343.58,
+      "sid": 209,
+      "location": 2,
+      "content": "多走50米",
+      "music": 0.0
+    },
+    {
+      "from": 343.58,
+      "to": 345.32,
+      "sid": 210,
+      "location": 2,
+      "content": "在线时长又增加了",
+      "music": 0.0
+    },
+    {
+      "from": 345.32,
+      "to": 346.54,
+      "sid": 211,
+      "location": 2,
+      "content": "有的任务距离贼远",
+      "music": 0.0
+    },
+    {
+      "from": 346.54,
+      "to": 347.66,
+      "sid": 212,
+      "location": 2,
+      "content": "哎也没有自动寻路",
+      "music": 0.0
+    },
+    {
+      "from": 347.66,
+      "to": 348.54,
+      "sid": 213,
+      "location": 2,
+      "content": "给你个导航线",
+      "music": 0.0
+    },
+    {
+      "from": 348.54,
+      "to": 350.68,
+      "sid": 214,
+      "location": 2,
+      "content": "唉自己慢慢骑马跑过去吧",
+      "music": 0.0
+    },
+    {
+      "from": 350.68,
+      "to": 354.38,
+      "sid": 215,
+      "location": 2,
+      "content": "哦在线时长又增加了",
+      "music": 0.0
+    },
+    {
+      "from": 354.38,
+      "to": 358.04,
+      "sid": 216,
+      "location": 2,
+      "content": "你能不能不要有自己是死亡搁浅的错觉呀",
+      "music": 0.0
+    },
+    {
+      "from": 358.04,
+      "to": 360.02,
+      "sid": 217,
+      "location": 2,
+      "content": "连个主要制作人都没有的模式",
+      "music": 0.0
+    },
+    {
+      "from": 360.02,
+      "to": 363.1,
+      "sid": 218,
+      "location": 2,
+      "content": "是永远做不出来口技马桑一样的作品的",
+      "music": 0.0
+    },
+    {
+      "from": 363.1,
+      "to": 364.54,
+      "sid": 219,
+      "location": 2,
+      "content": "就因为这个啊",
+      "music": 0.0
+    },
+    {
+      "from": 364.54,
+      "to": 367.42,
+      "sid": 220,
+      "location": 2,
+      "content": "每次找路都是一次折磨太远的任务",
+      "music": 0.0
+    },
+    {
+      "from": 367.42,
+      "to": 368.84,
+      "sid": 221,
+      "location": 2,
+      "content": "我根本懒得去",
+      "music": 0.0
+    },
+    {
+      "from": 368.84,
+      "to": 369.96,
+      "sid": 222,
+      "location": 2,
+      "content": "白天还好唉",
+      "music": 0.0
+    },
+    {
+      "from": 369.96,
+      "to": 373.14,
+      "sid": 223,
+      "location": 2,
+      "content": "一到晚上有的房间啊和古坟黑不隆冬",
+      "music": 0.0
+    },
+    {
+      "from": 373.14,
+      "to": 374.87,
+      "sid": 224,
+      "location": 2,
+      "content": "黑得伸手不见五指",
+      "music": 0.0
+    },
+    {
+      "from": 374.87,
+      "to": 376.43,
+      "sid": 225,
+      "location": 2,
+      "content": "进屋没看见人呢",
+      "music": 0.0
+    },
+    {
+      "from": 376.43,
+      "to": 377.71,
+      "sid": 226,
+      "location": 2,
+      "content": "被砍死了",
+      "music": 0.0
+    },
+    {
+      "from": 377.71,
+      "to": 378.99,
+      "sid": 227,
+      "location": 2,
+      "content": "我收回迷住",
+      "music": 0.0
+    },
+    {
+      "from": 378.99,
+      "to": 380.75,
+      "sid": 228,
+      "location": 2,
+      "content": "不适合潜行的话",
+      "music": 0.0
+    },
+    {
+      "from": 380.75,
+      "to": 383.59,
+      "sid": 229,
+      "location": 2,
+      "content": "影的家园系统和英灵殿啊没太大差别",
+      "music": 0.0
+    },
+    {
+      "from": 383.59,
+      "to": 386.35,
+      "sid": 230,
+      "location": 2,
+      "content": "差别就是从劫掠改成了进城偷材料",
+      "music": 0.0
+    },
+    {
+      "from": 386.35,
+      "to": 388.95,
+      "sid": 231,
+      "location": 2,
+      "content": "在做任务的时候给你提示大概位置啊",
+      "music": 0.0
+    },
+    {
+      "from": 388.95,
+      "to": 389.89,
+      "sid": 232,
+      "location": 2,
+      "content": "让你找人",
+      "music": 0.0
+    },
+    {
+      "from": 389.89,
+      "to": 392.33,
+      "sid": 233,
+      "location": 2,
+      "content": "可以通过家园里的探子帮你搜索区域",
+      "music": 0.0
+    },
+    {
+      "from": 392.33,
+      "to": 393.81,
+      "sid": 234,
+      "location": 2,
+      "content": "找到了就锁定具体位置",
+      "music": 0.0
+    },
+    {
+      "from": 393.81,
+      "to": 395.09,
+      "sid": 235,
+      "location": 2,
+      "content": "找不到就直接白费",
+      "music": 0.0
+    },
+    {
+      "from": 395.09,
+      "to": 396.81,
+      "sid": 236,
+      "location": 2,
+      "content": "升级家园房间需要材料",
+      "music": 0.0
+    },
+    {
+      "from": 396.81,
+      "to": 397.91,
+      "sid": 237,
+      "location": 2,
+      "content": "你得进城去偷",
+      "music": 0.0
+    },
+    {
+      "from": 397.91,
+      "to": 398.21,
+      "sid": 238,
+      "location": 2,
+      "content": "哎",
+      "music": 0.0
+    },
+    {
+      "from": 398.21,
+      "to": 398.77,
+      "sid": 239,
+      "location": 2,
+      "content": "偷的时候呢",
+      "music": 0.0
+    },
+    {
+      "from": 398.77,
+      "to": 401.4,
+      "sid": 240,
+      "location": 2,
+      "content": "部分材料你还得有探子名额帮你运送",
+      "music": 0.0
+    },
+    {
+      "from": 401.4,
+      "to": 403.06,
+      "sid": 241,
+      "location": 2,
+      "content": "如果你用探子探地图",
+      "music": 0.0
+    },
+    {
+      "from": 403.06,
+      "to": 404.68,
+      "sid": 242,
+      "location": 2,
+      "content": "花光了次数或者人手不够",
+      "music": 0.0
+    },
+    {
+      "from": 404.68,
+      "to": 405.4,
+      "sid": 243,
+      "location": 2,
+      "content": "再见到货物",
+      "music": 0.0
+    },
+    {
+      "from": 405.4,
+      "to": 406.44,
+      "sid": 244,
+      "location": 2,
+      "content": "就只能干瞪眼",
+      "music": 0.0
+    },
+    {
+      "from": 406.44,
+      "to": 407.36,
+      "sid": 245,
+      "location": 2,
+      "content": "给大致位置唉",
+      "music": 0.0
+    },
+    {
+      "from": 407.36,
+      "to": 409.0,
+      "sid": 246,
+      "location": 2,
+      "content": "找人找东西一两次还行",
+      "music": 0.0
+    },
+    {
+      "from": 409.0,
+      "to": 410.03,
+      "sid": 247,
+      "location": 2,
+      "content": "挺有沉浸感",
+      "music": 0.0
+    },
+    {
+      "from": 410.03,
+      "to": 410.87,
+      "sid": 248,
+      "location": 2,
+      "content": "次次都找",
+      "music": 0.0
+    },
+    {
+      "from": 410.87,
+      "to": 412.51,
+      "sid": 249,
+      "location": 2,
+      "content": "尤其是找半天找不到的时候",
+      "music": 0.0
+    },
+    {
+      "from": 412.51,
+      "to": 414.039,
+      "sid": 250,
+      "location": 2,
+      "content": "玩的真让人想死",
+      "music": 0.0
+    },
+    {
+      "from": 414.039,
+      "to": 414.959,
+      "sid": 251,
+      "location": 2,
+      "content": "好在啊",
+      "music": 0.0
+    },
+    {
+      "from": 414.959,
+      "to": 416.839,
+      "sid": 252,
+      "location": 2,
+      "content": "可以通过设置里关掉这个模式",
+      "music": 0.0
+    },
+    {
+      "from": 416.839,
+      "to": 417.919,
+      "sid": 253,
+      "location": 2,
+      "content": "直接显示位置",
+      "music": 0.0
+    },
+    {
+      "from": 417.919,
+      "to": 420.159,
+      "sid": 254,
+      "location": 2,
+      "content": "这两个功能啊消耗同一个资源",
+      "music": 0.0
+    },
+    {
+      "from": 420.159,
+      "to": 421.49,
+      "sid": 255,
+      "location": 2,
+      "content": "你觉得合理吗",
+      "music": 0.0
+    },
+    {
+      "from": 421.49,
+      "to": 423.97,
+      "sid": 256,
+      "location": 2,
+      "content": "不建造提升家园也是完全不行的",
+      "music": 0.0
+    },
+    {
+      "from": 423.97,
+      "to": 424.95,
+      "sid": 257,
+      "location": 2,
+      "content": "因为队友位置",
+      "music": 0.0
+    },
+    {
+      "from": 424.95,
+      "to": 425.69,
+      "sid": 258,
+      "location": 2,
+      "content": "装备升级",
+      "music": 0.0
+    },
+    {
+      "from": 425.69,
+      "to": 428.24,
+      "sid": 259,
+      "location": 2,
+      "content": "探测数量等多种功能都需要经营家园",
+      "music": 0.0
+    },
+    {
+      "from": 428.24,
+      "to": 429.92,
+      "sid": 260,
+      "location": 2,
+      "content": "自然也就需要非常多的材料",
+      "music": 0.0
+    },
+    {
+      "from": 429.92,
+      "to": 432.06,
+      "sid": 261,
+      "location": 2,
+      "content": "你就得通过做杀100个敌人的任务",
+      "music": 0.0
+    },
+    {
+      "from": 432.06,
+      "to": 435.21,
+      "sid": 262,
+      "location": 2,
+      "content": "进入敌营去偷东西的重复劳改获得资源",
+      "music": 0.0
+    },
+    {
+      "from": 435.21,
+      "to": 437.17,
+      "sid": 263,
+      "location": 2,
+      "content": "没有一点想要进入敌营的想法",
+      "music": 0.0
+    },
+    {
+      "from": 437.17,
+      "to": 439.25,
+      "sid": 264,
+      "location": 2,
+      "content": "不论是卡技能卡等级卡资源",
+      "music": 0.0
+    },
+    {
+      "from": 439.25,
+      "to": 441.65,
+      "sid": 265,
+      "location": 2,
+      "content": "都让玩家处于一个被迫被动的情况下",
+      "music": 0.0
+    },
+    {
+      "from": 441.65,
+      "to": 443.88,
+      "sid": 266,
+      "location": 2,
+      "content": "而不是出于主动的兴趣去探索",
+      "music": 0.0
+    },
+    {
+      "from": 443.88,
+      "to": 444.72,
+      "sid": 267,
+      "location": 2,
+      "content": "去收集",
+      "music": 0.0
+    },
+    {
+      "from": 444.72,
+      "to": 445.54,
+      "sid": 268,
+      "location": 2,
+      "content": "去战斗",
+      "music": 0.0
+    },
+    {
+      "from": 445.54,
+      "to": 447.18,
+      "sid": 269,
+      "location": 2,
+      "content": "而这样一来就会迅速厌倦",
+      "music": 0.0
+    },
+    {
+      "from": 447.18,
+      "to": 448.32,
+      "sid": 270,
+      "location": 2,
+      "content": "让人如坐针毡",
+      "music": 0.0
+    },
+    {
+      "from": 448.32,
+      "to": 449.88,
+      "sid": 271,
+      "location": 2,
+      "content": "每一次接任务和深入敌营",
+      "music": 0.0
+    },
+    {
+      "from": 449.88,
+      "to": 452.64,
+      "sid": 272,
+      "location": 2,
+      "content": "都是一次酣畅淋漓的坐牢和敌人的战斗",
+      "music": 0.0
+    },
+    {
+      "from": 452.64,
+      "to": 453.8,
+      "sid": 273,
+      "location": 2,
+      "content": "无异于刑讯逼供",
+      "music": 0.0
+    },
+    {
+      "from": 453.8,
+      "to": 455.0,
+      "sid": 274,
+      "location": 2,
+      "content": "真的太戒瘾了",
+      "music": 0.0
+    },
+    {
+      "from": 455.0,
+      "to": 456.16,
+      "sid": 275,
+      "location": 2,
+      "content": "游戏还自带通行证",
+      "music": 0.0
+    },
+    {
+      "from": 456.16,
+      "to": 457.48,
+      "sid": 276,
+      "location": 2,
+      "content": "需要做通行证任务",
+      "music": 0.0
+    },
+    {
+      "from": 457.48,
+      "to": 458.08,
+      "sid": 277,
+      "location": 2,
+      "content": "收集碎片",
+      "music": 0.0
+    },
+    {
+      "from": 458.08,
+      "to": 458.72,
+      "sid": 278,
+      "location": 2,
+      "content": "提升进度",
+      "music": 0.0
+    },
+    {
+      "from": 458.72,
+      "to": 460.4,
+      "sid": 279,
+      "location": 2,
+      "content": "两个主角呢各有一个通行证",
+      "music": 0.0
+    },
+    {
+      "from": 460.4,
+      "to": 462.12,
+      "sid": 280,
+      "location": 2,
+      "content": "但是同一时间只能激活一个",
+      "music": 0.0
+    },
+    {
+      "from": 462.12,
+      "to": 464.0,
+      "sid": 281,
+      "location": 2,
+      "content": "不知道是必须做完一个才能做另一个",
+      "music": 0.0
+    },
+    {
+      "from": 464.0,
+      "to": 465.12,
+      "sid": 282,
+      "location": 2,
+      "content": "还是只能二选一",
+      "music": 0.0
+    },
+    {
+      "from": 465.12,
+      "to": 466.64,
+      "sid": 283,
+      "location": 2,
+      "content": "因为任务数量有限制",
+      "music": 0.0
+    },
+    {
+      "from": 466.64,
+      "to": 467.92,
+      "sid": 284,
+      "location": 2,
+      "content": "需要下周才能刷出来",
+      "music": 0.0
+    },
+    {
+      "from": 467.92,
+      "to": 468.84,
+      "sid": 285,
+      "location": 2,
+      "content": "所以没法验证",
+      "music": 0.0
+    },
+    {
+      "from": 468.84,
+      "to": 470.64,
+      "sid": 286,
+      "location": 2,
+      "content": "我开始用的都是小江通行证",
+      "music": 0.0
+    },
+    {
+      "from": 470.64,
+      "to": 471.08,
+      "sid": 287,
+      "location": 2,
+      "content": "是迷住",
+      "music": 0.0
+    },
+    {
+      "from": 471.08,
+      "to": 471.8,
+      "sid": 288,
+      "location": 2,
+      "content": "中途换过来",
+      "music": 0.0
+    },
+    {
+      "from": 471.8,
+      "to": 473.25,
+      "sid": 289,
+      "location": 2,
+      "content": "小姜呢通行证也没涨",
+      "music": 0.0
+    },
+    {
+      "from": 473.25,
+      "to": 474.53,
+      "sid": 290,
+      "location": 2,
+      "content": "通行证有道具",
+      "music": 0.0
+    },
+    {
+      "from": 474.53,
+      "to": 475.13,
+      "sid": 291,
+      "location": 2,
+      "content": "装备材料",
+      "music": 0.0
+    },
+    {
+      "from": 475.13,
+      "to": 475.65,
+      "sid": 292,
+      "location": 2,
+      "content": "还有货币",
+      "music": 0.0
+    },
+    {
+      "from": 475.65,
+      "to": 477.85,
+      "sid": 293,
+      "location": 2,
+      "content": "货币可以兑换限时装备道具",
+      "music": 0.0
+    },
+    {
+      "from": 477.85,
+      "to": 479.65,
+      "sid": 294,
+      "location": 2,
+      "content": "这装备呢也不是多好的装备",
+      "music": 0.0
+    },
+    {
+      "from": 479.65,
+      "to": 480.53,
+      "sid": 295,
+      "location": 2,
+      "content": "真的有必要吗",
+      "music": 0.0
+    },
+    {
+      "from": 480.53,
+      "to": 481.81,
+      "sid": 296,
+      "location": 2,
+      "content": "因为这个界面是联网的",
+      "music": 0.0
+    },
+    {
+      "from": 481.81,
+      "to": 482.54,
+      "sid": 297,
+      "location": 2,
+      "content": "打开比较慢",
+      "music": 0.0
+    },
+    {
+      "from": 482.54,
+      "to": 483.62,
+      "sid": 298,
+      "location": 2,
+      "content": "旁边的就是商城",
+      "music": 0.0
+    },
+    {
+      "from": 483.62,
+      "to": 485.38,
+      "sid": 299,
+      "location": 2,
+      "content": "唉这商城可真是太丰富了呀",
+      "music": 0.0
+    },
+    {
+      "from": 485.38,
+      "to": 486.38,
+      "sid": 300,
+      "location": 2,
+      "content": "套装装备",
+      "music": 0.0
+    },
+    {
+      "from": 486.38,
+      "to": 488.1,
+      "sid": 301,
+      "location": 2,
+      "content": "坐骑伙伴皮肤应有尽有",
+      "music": 0.0
+    },
+    {
+      "from": 488.1,
+      "to": 489.98,
+      "sid": 302,
+      "location": 2,
+      "content": "各种藏身处资源也是不少",
+      "music": 0.0
+    },
+    {
+      "from": 489.98,
+      "to": 491.98,
+      "sid": 303,
+      "location": 2,
+      "content": "甚至有个地图全开的包啊",
+      "music": 0.0
+    },
+    {
+      "from": 491.98,
+      "to": 492.86,
+      "sid": 304,
+      "location": 2,
+      "content": "60多块钱",
+      "music": 0.0
+    },
+    {
+      "from": 492.86,
+      "to": 494.58,
+      "sid": 305,
+      "location": 2,
+      "content": "不想坐牢就花钱买地图",
+      "music": 0.0
+    },
+    {
+      "from": 494.58,
+      "to": 495.94,
+      "sid": 306,
+      "location": 2,
+      "content": "教你从里面保释出来",
+      "music": 0.0
+    },
+    {
+      "from": 495.94,
+      "to": 498.06,
+      "sid": 307,
+      "location": 2,
+      "content": "虽然说内购商城是育碧传统",
+      "music": 0.0
+    },
+    {
+      "from": 498.06,
+      "to": 499.73,
+      "sid": 308,
+      "location": 2,
+      "content": "但是这个套装啊真的绷不住",
+      "music": 0.0
+    },
+    {
+      "from": 499.73,
+      "to": 501.23,
+      "sid": 309,
+      "location": 2,
+      "content": "地图迷雾解锁也能卖",
+      "music": 0.0
+    },
+    {
+      "from": 501.23,
+      "to": 503.97,
+      "sid": 310,
+      "location": 2,
+      "content": "唉不愧是单机界的换皮手游大厂影",
+      "music": 0.0
+    },
+    {
+      "from": 503.97,
+      "to": 505.65,
+      "sid": 311,
+      "location": 2,
+      "content": "可以说就是把罐头打开倒出来",
+      "music": 0.0
+    },
+    {
+      "from": 505.65,
+      "to": 506.72,
+      "sid": 312,
+      "location": 2,
+      "content": "摆了个精致的盘",
+      "music": 0.0
+    },
+    {
+      "from": 506.72,
+      "to": 507.96,
+      "sid": 313,
+      "location": 2,
+      "content": "看起来像是预制菜",
+      "music": 0.0
+    },
+    {
+      "from": 507.96,
+      "to": 509.24,
+      "sid": 314,
+      "location": 2,
+      "content": "但其实还是罐头",
+      "music": 0.0
+    },
+    {
+      "from": 509.24,
+      "to": 511.3,
+      "sid": 315,
+      "location": 2,
+      "content": "虽然比之前的三部作品做的好一些",
+      "music": 0.0
+    },
+    {
+      "from": 511.3,
+      "to": 512.679,
+      "sid": 316,
+      "location": 2,
+      "content": "卖相看起来也更好",
+      "music": 0.0
+    },
+    {
+      "from": 512.679,
+      "to": 514.159,
+      "sid": 317,
+      "location": 2,
+      "content": "但味道还是那个味道",
+      "music": 0.0
+    },
+    {
+      "from": 514.159,
+      "to": 515.919,
+      "sid": 318,
+      "location": 2,
+      "content": "育碧游戏的制作和运营模式",
+      "music": 0.0
+    },
+    {
+      "from": 515.919,
+      "to": 518.839,
+      "sid": 319,
+      "location": 2,
+      "content": "就决定了成品的大致框架变成流水线作品",
+      "music": 0.0
+    },
+    {
+      "from": 518.839,
+      "to": 520.48,
+      "sid": 320,
+      "location": 2,
+      "content": "就注定了它的味道和品质",
+      "music": 0.0
+    },
+    {
+      "from": 520.48,
+      "to": 521.42,
+      "sid": 321,
+      "location": 2,
+      "content": "罐头做的再好",
+      "music": 0.0
+    },
+    {
+      "from": 521.42,
+      "to": 522.12,
+      "sid": 322,
+      "location": 2,
+      "content": "吹的再牛",
+      "music": 0.0
+    },
+    {
+      "from": 522.12,
+      "to": 523.04,
+      "sid": 323,
+      "location": 2,
+      "content": "摆盘再精致",
+      "music": 0.0
+    },
+    {
+      "from": 523.04,
+      "to": 525.68,
+      "sid": 324,
+      "location": 2,
+      "content": "也肯定比不了老师傅现做现卖罐头",
+      "music": 0.0
+    },
+    {
+      "from": 525.68,
+      "to": 527.52,
+      "sid": 325,
+      "location": 2,
+      "content": "偶尔吃吃可以吃的越多呢",
+      "music": 0.0
+    },
+    {
+      "from": 527.52,
+      "to": 528.62,
+      "sid": 326,
+      "location": 2,
+      "content": "你就越觉得反胃",
+      "music": 0.0
+    },
+    {
+      "from": 528.62,
+      "to": 529.97,
+      "sid": 327,
+      "location": 2,
+      "content": "育碧可能会倒闭",
+      "music": 0.0
+    },
+    {
+      "from": 529.97,
+      "to": 532.25,
+      "sid": 328,
+      "location": 2,
+      "content": "但永远不会变质",
+      "music": 0.0
+    },
+    {
+      "from": 535.76,
+      "to": 537.96,
+      "sid": 329,
+      "location": 2,
+      "content": "卧槽这什么东西",
+      "music": 0.0
+    },
+    {
+      "from": 549.34,
+      "to": 552.34,
+      "sid": 330,
+      "location": 2,
+      "content": "哎我擦育碧",
+      "music": 0.0
+    },
+    {
+      "from": 553.77,
+      "to": 557.21,
+      "sid": 331,
+      "location": 2,
+      "content": "我被困在这了",
+      "music": 0.0
+    },
+    {
+      "from": 564.2,
+      "to": 568.62,
+      "sid": 332,
+      "location": 2,
+      "content": "你跑你卧槽",
+      "music": 0.0
+    },
+    {
+      "from": 568.62,
+      "to": 569.54,
+      "sid": 333,
+      "location": 2,
+      "content": "你拿个短炮",
+      "music": 0.0
+    },
+    {
+      "from": 569.54,
+      "to": 570.82,
+      "sid": 334,
+      "location": 2,
+      "content": "他妈比老子棍子还",
+      "music": 0.0
+    },
+    {
+      "from": 570.82,
+      "to": 572.48,
+      "sid": 335,
+      "location": 2,
+      "content": "这个都物理攻击还要高是吧",
+      "music": 0.0
+    },
+    {
+      "from": 572.48,
+      "to": 573.82,
+      "sid": 336,
+      "location": 2,
+      "content": "你刚你妈呢",
+      "music": 0.0
+    },
+    {
+      "from": 573.82,
+      "to": 575.7,
+      "sid": 337,
+      "location": 2,
+      "content": "你在这",
+      "music": 0.0
+    },
+    {
+      "from": 579.36,
+      "to": 581.64,
+      "sid": 338,
+      "location": 2,
+      "content": "呵呵这我玩你",
+      "music": 0.0
+    },
+    {
+      "from": 585.52,
+      "to": 588.819,
+      "sid": 339,
+      "location": 2,
+      "content": "哦死了呵呵牛逼",
+      "music": 0.0
+    },
+    {
+      "from": 589.299,
+      "to": 590.779,
+      "sid": 340,
+      "location": 2,
+      "content": "我现在他妈走",
+      "music": 0.0
+    },
+    {
+      "from": 590.779,
+      "to": 591.279,
+      "sid": 341,
+      "location": 2,
+      "content": "走不了",
+      "music": 0.0
+    },
+    {
+      "from": 591.279,
+      "to": 593.179,
+      "sid": 342,
+      "location": 2,
+      "content": "出出不来",
+      "music": 0.0
+    },
+    {
+      "from": 596.12,
+      "to": 597.62,
+      "sid": 343,
+      "location": 2,
+      "content": "你在这蓄起力了",
+      "music": 0.0
+    },
+    {
+      "from": 597.62,
+      "to": 598.16,
+      "sid": 344,
+      "location": 2,
+      "content": "",
+      "music": 0.0
+    },
+    {
+      "from": 600.16,
+      "to": 601.36,
+      "sid": 345,
+      "location": 2,
+      "content": "飞起来打人呀",
+      "music": 0.0
+    },
+    {
+      "from": 601.36,
+      "to": 604.56,
+      "sid": 346,
+      "location": 2,
+      "content": "你续你放技能",
+      "music": 0.0
+    },
+    {
+      "from": 604.56,
+      "to": 607.96,
+      "sid": 347,
+      "location": 2,
+      "content": "牛逼",
+      "music": 0.0
+    },
+    {
+      "from": 608.22,
+      "to": 611.14,
+      "sid": 348,
+      "location": 2,
+      "content": "这逼",
+      "music": 0.0
+    },
+    {
+      "from": 611.14,
+      "to": 612.42,
+      "sid": 349,
+      "location": 2,
+      "content": "一个技能按不出来",
+      "music": 0.0
+    },
+    {
+      "from": 612.42,
+      "to": 614.02,
+      "sid": 350,
+      "location": 2,
+      "content": "你妈",
+      "music": 0.0
+    },
+    {
+      "from": 625.62,
+      "to": 627.06,
+      "sid": 351,
+      "location": 2,
+      "content": "不是哥们儿",
+      "music": 0.0
+    },
+    {
+      "from": 627.06,
+      "to": 631.26,
+      "sid": 352,
+      "location": 2,
+      "content": "你这剑带穿透的呀",
+      "music": 0.0
+    },
+    {
+      "from": 634.98,
+      "to": 636.42,
+      "sid": 353,
+      "location": 2,
+      "content": "他妈的吓老子一跳",
+      "music": 0.0
+    },
+    {
+      "from": 636.42,
+      "to": 638.58,
+      "sid": 354,
+      "location": 2,
+      "content": "这个猫长得真恐怖",
+      "music": 0.0
+    }
+  ]
+}

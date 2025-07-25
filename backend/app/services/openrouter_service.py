@@ -6,6 +6,7 @@ from app.repositories.prompt_repository import PromptRepository
 from app.repositories.supabase import SupabaseService
 from app.repositories.llm_records_repository import LLMRecordsRepository
 from app.utils.decorators import retry_decorator
+import requests
 
 class OpenRouterService:
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -15,25 +16,127 @@ class OpenRouterService:
     MODEL = "anthropic/claude-sonnet-4"
     
     @staticmethod
-    async def get_prompt_data(lang: str) -> Optional[str]:
-        """获取对应语言的提示词
+    async def get_prompt_data(lang: str, channel: str = None, content: str = None) -> Optional[str]:
+        """获取对应语言和内容类型的提示词
         
         Args:
             lang: 语言代码 ('zh' 或 'en')
+            channel: 渠道类型 (如 'bilibili')
+            content: 内容文本（用于游戏识别）
             
         Returns:
             Optional[str]: 提示词内容
         """
         try:
-            prompt_type = f"summary_{lang}"
+            # 如果是B站渠道且内容是游戏相关，使用游戏prompt
+            if channel == "bilibili" and content and await OpenRouterService.is_game_content(content):
+                prompt_type = f"game_summary_{lang}"
+                logger.info(f"检测到B站游戏内容，使用游戏舆情分析prompt: {prompt_type}")
+            else:
+                prompt_type = f"summary_{lang}"
+                
             prompt = await PromptRepository.get_prompt_by_type(prompt_type)
             if not prompt:
-                logger.error(f"未找到语言 {lang} 的提示词")
-                return None
+                logger.error(f"未找到类型为 {prompt_type} 的提示词")
+                # 如果游戏prompt不存在，降级使用标准prompt
+                if prompt_type.startswith('game_'):
+                    logger.info("游戏prompt不存在，降级使用标准prompt")
+                    standard_prompt_type = f"summary_{lang}"
+                    prompt = await PromptRepository.get_prompt_by_type(standard_prompt_type)
+                if not prompt:
+                    return None
             return prompt.content
         except Exception as e:
             logger.error(f"获取提示词失败: {str(e)}")
             return None
+
+    @staticmethod
+    async def is_game_content(content: str) -> bool:
+        """判断内容是否为游戏相关
+        
+        Args:
+            content: 视频标题或内容
+            
+        Returns:
+            bool: 是否为游戏相关内容
+        """
+        try:
+            # 从内容中提取标题
+            lines = content.split('\n')
+            title = ""
+            for line in lines:
+                if line.startswith("标题:"):
+                    title = line.replace("标题:", "").strip()
+                    break
+            
+            if not title:
+                return False
+                
+            # 游戏相关关键词匹配 - 如果匹配到明确的游戏关键词，直接返回True
+            game_keywords = [
+                "游戏", "玩游戏", "游戏评测", "游戏攻略", "游戏解说", "游戏直播", 
+                "电竞", "手游", "端游", "网游", "游戏试玩", "游戏体验",
+                "王者荣耀", "英雄联盟", "原神", "和平精英", "穿越火线",
+                "我的世界", "迷你世界", "刺激战场", "绝地求生", "LOL",
+                "DOTA", "CS", "守望先锋", "魔兽", "星际争霸", "炉石传说"
+            ]
+            
+            # 检查标题是否包含游戏关键词
+            if any(keyword in title for keyword in game_keywords):
+                logger.info(f"通过关键词匹配识别为游戏内容: {title}")
+                return True
+            
+            # 如果关键词没有匹配到，使用LLM进行判断
+            logger.info(f"关键词未匹配，使用LLM判断游戏内容: {title}")
+            
+            llm_prompt = f"""请判断以下视频标题是否与游戏相关：
+
+标题：{title}
+
+请仅回答"是"或"否"。如果标题涉及电子游戏、游戏评测、游戏攻略、游戏解说、电竞、手机游戏、电脑游戏等内容，回答"是"，否则回答"否"。
+
+回答："""
+
+            # 调用 LLM 进行判断
+            try:
+                headers = {
+                    "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}"
+                }
+                
+                request_data = {
+                    "model": OpenRouterService.MODEL,
+                    "messages": [
+                        {"role": "user", "content": llm_prompt}
+                    ],
+                    "max_tokens": 10,  # 只需要回答"是"或"否"
+                    "temperature": 0.1
+                }
+                
+                response = requests.post(
+                    OpenRouterService.API_URL,
+                    headers=headers,
+                    json=request_data,
+                    timeout=30
+                )
+                
+                if response.status_code == 200:
+                    response_data = response.json()
+                    if response_data.get('choices') and len(response_data['choices']) > 0:
+                        llm_answer = response_data['choices'][0]['message']['content'].strip()
+                        is_game = "是" in llm_answer
+                        logger.info(f"LLM判断结果: {llm_answer} -> {'游戏内容' if is_game else '非游戏内容'}")
+                        return is_game
+                
+                logger.warning("LLM判断失败，默认为非游戏内容")
+                return False
+                
+            except Exception as llm_e:
+                logger.error(f"LLM游戏内容判断失败: {str(llm_e)}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"游戏内容判断失败: {str(e)}")
+            return False
 
     @staticmethod
     @retry_decorator()
@@ -443,7 +546,7 @@ class OpenRouterService:
             async with httpx.AsyncClient() as client:
                 try:
                     response = await client.post(
-                        "https://openrouter.ai/api/v1/chat/completions",
+                        OpenRouterService.API_URL,
                         headers=headers,
                         json=request_data,
                         timeout=30.0
@@ -475,50 +578,60 @@ class OpenRouterService:
         
         Args:
             content: 需要总结的内容
+            request_id: 请求ID  
             article_id: 文章ID
             lang: 语言代码
             
         Returns:
             Optional[str]: 总结结果，如果失败返回 None
         """
-        # 1. 获取提示词
-        prompt = await OpenRouterService.get_prompt_data(lang)
-        if not prompt:
-            raise Exception("获取提示词失败")
+        try:
+            # 获取文章信息以获取channel
+            article = await SupabaseService.get_article_by_id(article_id)
+            channel = article.get('channel') if article else None
             
-        # 2. 调用API
-        api_response = await OpenRouterService.call_openrouter_api(prompt, content, request_id, lang)
-        
-        # 3. 预处理响应
-        processed_response = OpenRouterService.preprocess_api_response(api_response)
-        if not processed_response:
-            raise Exception("预处理API响应失败")
-        
-        # 4. 验证响应
-        summary_content = OpenRouterService.validate_api_response(processed_response, lang)
-        if not summary_content:
-            raise Exception("验证API响应失败")
+            # 1. 获取提示词（传入channel和content信息）
+            prompt = await OpenRouterService.get_prompt_data(lang, channel, content)
+            if not prompt:
+                raise Exception("获取提示词失败")
             
-        # 5. 保存结果
-        await OpenRouterService.save_summary_result(article_id, summary_content, lang)
-        
-        # 6. 保存完整的LLM返回内容到detailed_content_zh字段
-        if 'full_content' in processed_response:
-            try:
-                await SupabaseService.update_detailed_content(
-                    request_id=request_id,
-                    detailed_content={'full_response': processed_response['full_content']},
-                    language=lang
-                )
-                logger.info(f"完整LLM返回内容已保存到数据库: request_id={request_id}, lang={lang}")
-            except Exception as e:
-                logger.error(f"保存完整LLM返回内容失败: {str(e)}")
-        
-        # 7. 提取并保存Additional Processing内容
-        if 'full_content' in processed_response:
-            additional_content = OpenRouterService.extract_additional_processing_content(processed_response['full_content'])
-            if additional_content:
-                await OpenRouterService.save_additional_processing_result(article_id, additional_content, lang)
-                logger.info(f"Additional Processing内容已保存: article_id={article_id}, lang={lang}")
+            # 2. 调用API
+            api_response = await OpenRouterService.call_openrouter_api(prompt, content, request_id, lang)
             
-        return summary_content 
+            # 3. 预处理响应
+            processed_response = OpenRouterService.preprocess_api_response(api_response)
+            if not processed_response:
+                raise Exception("预处理API响应失败")
+            
+            # 4. 验证响应
+            summary_content = OpenRouterService.validate_api_response(processed_response, lang)
+            if not summary_content:
+                raise Exception("验证API响应失败")
+            
+            # 5. 保存结果
+            await OpenRouterService.save_summary_result(article_id, summary_content, lang)
+            
+            # 6. 保存完整的LLM返回内容到detailed_content_zh字段
+            if 'full_content' in processed_response:
+                try:
+                    await SupabaseService.update_detailed_content(
+                        request_id=request_id,
+                        detailed_content={'full_response': processed_response['full_content']},
+                        language=lang
+                    )
+                    logger.info(f"完整LLM返回内容已保存到数据库: request_id={request_id}, lang={lang}")
+                except Exception as e:
+                    logger.error(f"保存完整LLM返回内容失败: {str(e)}")
+            
+            # 7. 提取并保存Additional Processing内容
+            if 'full_content' in processed_response:
+                additional_content = OpenRouterService.extract_additional_processing_content(processed_response['full_content'])
+                if additional_content:
+                    await OpenRouterService.save_additional_processing_result(article_id, additional_content, lang)
+                    logger.info(f"Additional Processing内容已保存: article_id={article_id}, lang={lang}")
+            
+            return summary_content 
+
+        except Exception as e:
+            logger.error(f"获取总结失败: {str(e)}")
+            return None

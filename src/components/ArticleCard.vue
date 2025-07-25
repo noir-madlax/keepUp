@@ -22,7 +22,9 @@
           <img 
             :src="getArticleImage()" 
             :alt="article.title"
-            class="cover-image" 
+            class="cover-image"
+            referrerpolicy="no-referrer"
+            @error="handleCoverImageError"
           />
           <!-- 隐藏上传时间显示 -->
           <div v-if="false" class="upload-time">
@@ -49,6 +51,8 @@
               :src="getAuthorIcon()"
               :alt="article.author?.name" 
               class="author-icon"
+              referrerpolicy="no-referrer"
+              @error="handleAuthorImageError"
             />
           </div>
           <span class="author-name">{{ getAuthorName() }}</span>
@@ -192,6 +196,10 @@ const emit = defineEmits(['delete'])
 const progress = ref(0)
 let progressTimer: ReturnType<typeof setInterval> | null = null
 
+// 图片加载失败状态管理
+const coverImageError = ref(false)
+const authorImageError = ref(false)
+
 // 处理进度条逻辑
 const startProgress = () => {
   // 重置进度
@@ -232,6 +240,12 @@ watch(() => props.article.status, (newStatus) => {
     }
   }
 }, { immediate: true })
+
+// 监听文章变化，重置图片错误状态
+watch(() => props.article.id, () => {
+  coverImageError.value = false
+  authorImageError.value = false
+})
 
 // 组件卸载时清理
 onUnmounted(() => {
@@ -282,6 +296,11 @@ const getErrorMessage = computed(() => {
 })
 
 const getArticleImage = () => {
+  // 如果图片加载失败，直接返回默认图片
+  if (coverImageError.value) {
+    return '/images/covers/article_default.png'
+  }
+  
   if (props.article.cover_image_url && 
       props.article.cover_image_url.trim() !== '' && 
       !props.article.cover_image_url.includes('qpic.cn') &&
@@ -289,6 +308,14 @@ const getArticleImage = () => {
     return props.article.cover_image_url
   }
   return '/images/covers/article_default.png'
+}
+
+// 处理封面图片加载错误
+const handleCoverImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  if (!coverImageError.value && img.src !== '/images/covers/article_default.png') {
+    coverImageError.value = true
+  }
 }
 
 const formatDate = (date: string | undefined) => {
@@ -307,10 +334,11 @@ const getChannelIcon = (channel: string | undefined): string => {
   const iconMap: Record<string, string> = {
     'YouTube': 'youtube.svg',
     'youtube': 'youtube.svg',
+    'bilibili': 'bilibili.svg',
     'Apple Podcast': 'apple-podcast.svg',
     'Spotify': 'spotify.svg',
     'spotify': 'spotify.svg',
-    'wechat': 'wechat.svg',
+    'wechat': 'wechat.svg',  
     'WeChat': 'wechat.svg',
     'weixin': 'wechat.svg',
     'webpage': 'web.svg'
@@ -325,6 +353,7 @@ const getPlatformIcon = (platform: string | undefined) => {
   const iconMap: Record<string, string> = {
     'youtube': 'youtube.svg',
     'YouTube': 'youtube.svg',
+    'bilibili': 'bilibili.svg',
     'spotify': 'spotify.svg',
     'Spotify': 'spotify.svg',
     'apple': 'apple-podcast.svg',
@@ -335,7 +364,20 @@ const getPlatformIcon = (platform: string | undefined) => {
 }
 
 const getAuthorIcon = () => {
+  // 如果图片加载失败，直接返回默认头像
+  if (authorImageError.value) {
+    return '/images/icons/author_default.svg'
+  }
+  
   return props.article.author?.icon || '/images/icons/author_default.svg'
+}
+
+// 处理作者头像加载错误
+const handleAuthorImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  if (!authorImageError.value && img.src !== '/images/icons/author_default.svg') {
+    authorImageError.value = true
+  }
 }
 
 const getAuthorName = () => {

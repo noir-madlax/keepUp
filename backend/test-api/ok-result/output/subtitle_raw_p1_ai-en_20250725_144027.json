@@ -1,0 +1,635 @@
+{
+  "font_size": 0.4,
+  "font_color": "#FFFFFF",
+  "background_alpha": 0.5,
+  "background_color": "#9C27B0",
+  "Stroke": "none",
+  "type": "AIsubtitle",
+  "lang": "en",
+  "version": "sync-v1.2.0.4",
+  "body": [
+    {
+      "from": 10.04,
+      "to": 11.4,
+      "sid": 1,
+      "location": 2,
+      "content": "Peace in the war"
+    },
+    {
+      "from": 11.4,
+      "to": 13.68,
+      "sid": 2,
+      "location": 2,
+      "content": "Benevolence and cruelty"
+    },
+    {
+      "from": 14.36,
+      "to": 17.34,
+      "sid": 3,
+      "location": 2,
+      "content": "I tread my own path in this divided land"
+    },
+    {
+      "from": 36.5,
+      "to": 37.62,
+      "sid": 4,
+      "location": 2,
+      "content": "The fields are busy"
+    },
+    {
+      "from": 38.62,
+      "to": 41.3,
+      "sid": 5,
+      "location": 2,
+      "content": "A big harvest requires many hands"
+    },
+    {
+      "from": 56.48,
+      "to": 58.199,
+      "sid": 6,
+      "location": 2,
+      "content": "That the other"
+    },
+    {
+      "from": 70.88,
+      "to": 72.32,
+      "sid": 7,
+      "location": 2,
+      "content": "And merchant looks uneasy"
+    },
+    {
+      "from": 74.48,
+      "to": 76.74,
+      "sid": 8,
+      "location": 2,
+      "content": "I will not tolerate this to suspect"
+    },
+    {
+      "from": 95.1,
+      "to": 97.02,
+      "sid": 9,
+      "location": 2,
+      "content": "Well you are a friendly beast"
+    },
+    {
+      "from": 97.02,
+      "to": 98.5,
+      "sid": 10,
+      "location": 2,
+      "content": "Are you not"
+    },
+    {
+      "from": 104.26,
+      "to": 105.94,
+      "sid": 11,
+      "location": 2,
+      "content": "Some i said this way"
+    },
+    {
+      "from": 105.94,
+      "to": 108.78,
+      "sid": 12,
+      "location": 2,
+      "content": "I beg you hurry"
+    },
+    {
+      "from": 108.78,
+      "to": 109.36,
+      "sid": 13,
+      "location": 2,
+      "content": "Sir"
+    },
+    {
+      "from": 109.36,
+      "to": 110.3,
+      "sid": 14,
+      "location": 2,
+      "content": "Please"
+    },
+    {
+      "from": 110.3,
+      "to": 111.48,
+      "sid": 15,
+      "location": 2,
+      "content": "Right behind you"
+    },
+    {
+      "from": 111.48,
+      "to": 112.42,
+      "sid": 16,
+      "location": 2,
+      "content": "Little one"
+    },
+    {
+      "from": 114.72,
+      "to": 115.84,
+      "sid": 17,
+      "location": 2,
+      "content": "Oh baba"
+    },
+    {
+      "from": 115.84,
+      "to": 118.8,
+      "sid": 18,
+      "location": 2,
+      "content": "I brought someone in my room"
+    },
+    {
+      "from": 118.8,
+      "to": 120.88,
+      "sid": 19,
+      "location": 2,
+      "content": "I wonder where you wait"
+    },
+    {
+      "from": 129.099,
+      "to": 130.659,
+      "sid": 20,
+      "location": 2,
+      "content": "A samurai"
+    },
+    {
+      "from": 130.659,
+      "to": 133.479,
+      "sid": 21,
+      "location": 2,
+      "content": "One that does not hail from these ants"
+    },
+    {
+      "from": 133.479,
+      "to": 134.479,
+      "sid": 22,
+      "location": 2,
+      "content": "I am a stranger"
+    },
+    {
+      "from": 134.479,
+      "to": 135.159,
+      "sid": 23,
+      "location": 2,
+      "content": "Yes"
+    },
+    {
+      "from": 135.159,
+      "to": 137.44,
+      "sid": 24,
+      "location": 2,
+      "content": "But you have nothing to fear from me"
+    },
+    {
+      "from": 138.1,
+      "to": 141.54,
+      "sid": 25,
+      "location": 2,
+      "content": "I have enough to fear from the men of kushyama"
+    },
+    {
+      "from": 141.54,
+      "to": 143.44,
+      "sid": 26,
+      "location": 2,
+      "content": "They abuse their power"
+    },
+    {
+      "from": 143.44,
+      "to": 146.56,
+      "sid": 27,
+      "location": 2,
+      "content": "Taxing us again and again"
+    },
+    {
+      "from": 146.739,
+      "to": 148.779,
+      "sid": 28,
+      "location": 2,
+      "content": "Leaving us only scraps"
+    },
+    {
+      "from": 149.899,
+      "to": 151.719,
+      "sid": 29,
+      "location": 2,
+      "content": "I bet they are in the market now"
+    },
+    {
+      "from": 151.719,
+      "to": 153.18,
+      "sid": 30,
+      "location": 2,
+      "content": "Along the main road"
+    },
+    {
+      "from": 154.1,
+      "to": 156.76,
+      "sid": 31,
+      "location": 2,
+      "content": "A stranger might make good merit"
+    },
+    {
+      "from": 156.76,
+      "to": 158.28,
+      "sid": 32,
+      "location": 2,
+      "content": "Leading a village of a threat"
+    },
+    {
+      "from": 158.28,
+      "to": 159.28,
+      "sid": 33,
+      "location": 2,
+      "content": "Like these men"
+    },
+    {
+      "from": 159.28,
+      "to": 164.12,
+      "sid": 34,
+      "location": 2,
+      "content": "Is that so then i shall see it done for this life"
+    },
+    {
+      "from": 164.12,
+      "to": 165.96,
+      "sid": 35,
+      "location": 2,
+      "content": "If not the next"
+    },
+    {
+      "from": 220.44,
+      "to": 221.6,
+      "sid": 36,
+      "location": 2,
+      "content": "What is happening here"
+    },
+    {
+      "from": 222.84,
+      "to": 224.12,
+      "sid": 37,
+      "location": 2,
+      "content": "This isn't your fight"
+    },
+    {
+      "from": 224.12,
+      "to": 225.1,
+      "sid": 38,
+      "location": 2,
+      "content": "Samurai"
+    },
+    {
+      "from": 230.699,
+      "to": 232.86,
+      "sid": 39,
+      "location": 2,
+      "content": "I told you keep walking"
+    },
+    {
+      "from": 284.639,
+      "to": 286.08,
+      "sid": 40,
+      "location": 2,
+      "content": "Make your peace"
+    },
+    {
+      "from": 298.5,
+      "to": 300.26,
+      "sid": 41,
+      "location": 2,
+      "content": "You won't need to kill me"
+    },
+    {
+      "from": 300.26,
+      "to": 301.36,
+      "sid": 42,
+      "location": 2,
+      "content": "Thank you"
+    },
+    {
+      "from": 301.36,
+      "to": 306.89,
+      "sid": 43,
+      "location": 2,
+      "content": "There's another of the world for the castle of corrupt samurai would"
+    },
+    {
+      "from": 309.42,
+      "to": 311.46,
+      "sid": 44,
+      "location": 2,
+      "content": "Greed cannot rule this village"
+    },
+    {
+      "from": 311.46,
+      "to": 313.58,
+      "sid": 45,
+      "location": 2,
+      "content": "Not while i have breath in my lungs"
+    },
+    {
+      "from": 313.58,
+      "to": 315.08,
+      "sid": 46,
+      "location": 2,
+      "content": "And a blade in my head"
+    },
+    {
+      "from": 322.52,
+      "to": 324.76,
+      "sid": 47,
+      "location": 2,
+      "content": "I'll wash away his failure with your blood"
+    },
+    {
+      "from": 325.8,
+      "to": 327.64,
+      "sid": 48,
+      "location": 2,
+      "content": "You have to spill it first"
+    },
+    {
+      "from": 339.32,
+      "to": 342.48,
+      "sid": 49,
+      "location": 2,
+      "content": "Who do you think you are for the people"
+    },
+    {
+      "from": 384.9,
+      "to": 386.3,
+      "sid": 50,
+      "location": 2,
+      "content": "I was going to handle this"
+    },
+    {
+      "from": 389.1,
+      "to": 389.9,
+      "sid": 51,
+      "location": 2,
+      "content": "Too slow"
+    },
+    {
+      "from": 391.279,
+      "to": 392.78,
+      "sid": 52,
+      "location": 2,
+      "content": "What did you find"
+    },
+    {
+      "from": 393.14,
+      "to": 395.82,
+      "sid": 53,
+      "location": 2,
+      "content": "This samurai has been stealing from the villagers"
+    },
+    {
+      "from": 395.82,
+      "to": 398.12,
+      "sid": 54,
+      "location": 2,
+      "content": "He has been staffing the people here for some time"
+    },
+    {
+      "from": 398.12,
+      "to": 400.04,
+      "sid": 55,
+      "location": 2,
+      "content": "So now we know who he worked for"
+    },
+    {
+      "from": 404.1,
+      "to": 407.66,
+      "sid": 56,
+      "location": 2,
+      "content": "We should go not before we send our allies to look for him"
+    },
+    {
+      "from": 407.66,
+      "to": 409.56,
+      "sid": 57,
+      "location": 2,
+      "content": "He'll be difficult to find"
+    },
+    {
+      "from": 423.519,
+      "to": 425.38,
+      "sid": 58,
+      "location": 2,
+      "content": "Who will take the lead"
+    },
+    {
+      "from": 426.099,
+      "to": 430.2,
+      "sid": 59,
+      "location": 2,
+      "content": "We can sneak in or just through the front gate"
+    },
+    {
+      "from": 434.52,
+      "to": 435.56,
+      "sid": 60,
+      "location": 2,
+      "content": "It's almost dark"
+    },
+    {
+      "from": 436.64,
+      "to": 438.22,
+      "sid": 61,
+      "location": 2,
+      "content": "No one will see me coming"
+    },
+    {
+      "from": 438.8,
+      "to": 440.08,
+      "sid": 62,
+      "location": 2,
+      "content": "They will not stand a chance"
+    },
+    {
+      "from": 441.32,
+      "to": 442.7,
+      "sid": 63,
+      "location": 2,
+      "content": "But be careful in there"
+    },
+    {
+      "from": 443.64,
+      "to": 444.54,
+      "sid": 64,
+      "location": 2,
+      "content": "Don't worry"
+    },
+    {
+      "from": 444.54,
+      "to": 445.56,
+      "sid": 65,
+      "location": 2,
+      "content": "I won't be alone"
+    },
+    {
+      "from": 447.08,
+      "to": 448.9,
+      "sid": 66,
+      "location": 2,
+      "content": "It'll be me in the shadows"
+    },
+    {
+      "from": 452.539,
+      "to": 456.56,
+      "sid": 67,
+      "location": 2,
+      "content": "The shadows to serve the light"
+    },
+    {
+      "from": 459.12,
+      "to": 463.179,
+      "sid": 68,
+      "location": 2,
+      "content": "I'll go straight for the dino when fighting a snake"
+    },
+    {
+      "from": 463.179,
+      "to": 466.34,
+      "sid": 69,
+      "location": 2,
+      "content": "Why wrestle the body when you can slice off the head"
+    },
+    {
+      "from": 501.22,
+      "to": 503.5,
+      "sid": 70,
+      "location": 2,
+      "content": "You're my now snake"
+    },
+    {
+      "from": 510.12,
+      "to": 511.26,
+      "sid": 71,
+      "location": 2,
+      "content": "Who did that"
+    },
+    {
+      "from": 541.24,
+      "to": 541.72,
+      "sid": 72,
+      "location": 2,
+      "content": "Lord"
+    },
+    {
+      "from": 541.72,
+      "to": 544.88,
+      "sid": 73,
+      "location": 2,
+      "content": "How i cannot seem to stay to war"
+    },
+    {
+      "from": 557.6,
+      "to": 558.4,
+      "sid": 74,
+      "location": 2,
+      "content": "A grave"
+    },
+    {
+      "from": 558.4,
+      "to": 559.16,
+      "sid": 75,
+      "location": 2,
+      "content": "Huh"
+    },
+    {
+      "from": 612.5,
+      "to": 613.34,
+      "sid": 76,
+      "location": 2,
+      "content": "He's coming"
+    },
+    {
+      "from": 613.34,
+      "to": 614.8,
+      "sid": 77,
+      "location": 2,
+      "content": "I need to hide"
+    },
+    {
+      "from": 637.58,
+      "to": 642.3,
+      "sid": 78,
+      "location": 2,
+      "content": "Fujioka dies in the street at the hands of some stranger"
+    },
+    {
+      "from": 647.84,
+      "to": 650.56,
+      "sid": 79,
+      "location": 2,
+      "content": "You serve me scalding tea"
+    },
+    {
+      "from": 650.56,
+      "to": 653.32,
+      "sid": 80,
+      "location": 2,
+      "content": "Besides ruining its delicate flavour"
+    },
+    {
+      "from": 653.32,
+      "to": 655.9,
+      "sid": 81,
+      "location": 2,
+      "content": "I nearly lose my tongue of this"
+    },
+    {
+      "from": 658.88,
+      "to": 663.599,
+      "sid": 82,
+      "location": 2,
+      "content": "Frioka must have been the samurai yasi took out good riddance"
+    },
+    {
+      "from": 664.28,
+      "to": 665.8,
+      "sid": 83,
+      "location": 2,
+      "content": "Take your time"
+    },
+    {
+      "from": 670.02,
+      "to": 671.02,
+      "sid": 84,
+      "location": 2,
+      "content": "A daimyo"
+    },
+    {
+      "from": 671.02,
+      "to": 671.7,
+      "sid": 85,
+      "location": 2,
+      "content": "Like that"
+    },
+    {
+      "from": 671.7,
+      "to": 675.699,
+      "sid": 86,
+      "location": 2,
+      "content": "Deserves a slower death than the one i'm about to give him"
+    },
+    {
+      "from": 718.04,
+      "to": 719.2,
+      "sid": 87,
+      "location": 2,
+      "content": "I've shed all the blood"
+    },
+    {
+      "from": 719.2,
+      "to": 721.24,
+      "sid": 88,
+      "location": 2,
+      "content": "I need time to go"
+    },
+    {
+      "from": 765.22,
+      "to": 766.48,
+      "sid": 89,
+      "location": 2,
+      "content": "To being allies"
+    }
+  ]
+}

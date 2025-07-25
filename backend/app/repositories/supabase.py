@@ -523,6 +523,34 @@ class SupabaseService:
             return None
     
     @classmethod
+    async def get_article_by_id(cls, article_id: int) -> Optional[Dict]:
+        """通过文章ID获取文章信息
+        
+        Args:
+            article_id: 文章ID
+            
+        Returns:
+            Optional[Dict]: 文章信息或None
+        """
+        try:
+            client = cls.get_client()
+            response = client.table('keep_articles')\
+                .select('*')\
+                .eq('id', article_id)\
+                .single()\
+                .execute()
+            
+            if response.data:
+                return response.data
+            
+            logger.warning(f"找不到对应的文章: article_id={article_id}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"获取文章信息失败: article_id={article_id}, error={str(e)}")
+            return None
+    
+    @classmethod
     async def update_article_visibility(cls, article_id: int, is_visible: bool) -> None:
         """更新文章可见性状态
         

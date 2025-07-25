@@ -1,0 +1,19 @@
+{
+  "video_url": "https://www.bilibili.com/video/BV1sWobYuEa6",
+  "success": true,
+  "chinese_subtitles_found": 1,
+  "subtitle_details": [
+    {
+      "page": 1,
+      "page_title": "避雷！刺客信条影，玩过的都疯了！",
+      "cid": 29069545110,
+      "lan": "ai-zh",
+      "lan_doc": "中文（自动生成）",
+      "subtitle_url": "//aisubtitle.hdslb.com/bfs/ai_subtitle/prod/114224437140862290695451101595f5ed56d931c8e2e138e070d6a972?auth_key=1753430237-7bfe57508a7a4f2ca6eeb29ded2d00b8-0-f292f6f76aa85eac02972610ecdbe2f9",
+      "downloaded": true,
+      "content_preview": "育碧可能会倒闭",
+      "subtitle_count": 354
+    }
+  ],
+  "errors": []
+}

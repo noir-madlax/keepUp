@@ -1,0 +1,165 @@
+{
+  "code": 0,
+  "message": "0",
+  "ttl": 1,
+  "data": {
+    "aid": 1355510441,
+    "bvid": "BV1Bz421h7B1",
+    "allow_bp": false,
+    "no_share": false,
+    "cid": 1577773042,
+    "max_limit": 1500,
+    "page_no": 1,
+    "has_next": false,
+    "ip_info": {
+      "ip": "116.232.119.214",
+      "zone_ip": " 10.157.228.47",
+      "zone_id": 4308992,
+      "country": "中国",
+      "province": "上海",
+      "city": ""
+    },
+    "login_mid": 1342522306,
+    "login_mid_hash": "aed921ea",
+    "is_owner": false,
+    "name": "bili_34297170796",
+    "permission": "10000,1001",
+    "level_info": {
+      "current_level": 2,
+      "current_min": 200,
+      "current_exp": 1335,
+      "next_exp": 1500,
+      "level_up": 1696866441
+    },
+    "vip": {
+      "type": 1,
+      "status": 0,
+      "due_date": 1709049600000,
+      "vip_pay_type": 0,
+      "theme_type": 0,
+      "label": {
+        "path": "",
+        "text": "",
+        "label_theme": "",
+        "text_color": "",
+        "bg_style": 0,
+        "bg_color": "",
+        "border_color": "",
+        "use_img_label": true,
+        "img_label_uri_hans": "",
+        "img_label_uri_hant": "",
+        "img_label_uri_hans_static": "https://i0.hdslb.com/bfs/vip/d7b702ef65a976b20ed854cbd04cb9e27341bb79.png",
+        "img_label_uri_hant_static": "https://i0.hdslb.com/bfs/activity-plat/static/20220614/e369244d0b14644f5e1a06431e22a4d5/KJunwh19T5.png",
+        "label_id": 0,
+        "label_goto": null
+      },
+      "avatar_subscript": 0,
+      "nickname_color": "",
+      "role": 0,
+      "avatar_subscript_url": "",
+      "tv_vip_status": 0,
+      "tv_vip_pay_type": 0,
+      "tv_due_date": 0,
+      "avatar_icon": {
+        "icon_resource": {}
+      },
+      "ott_info": {
+        "vip_type": 0,
+        "pay_type": 0,
+        "pay_channel_id": "",
+        "status": 0,
+        "overdue_time": 0
+      },
+      "super_vip": {
+        "is_super_vip": false
+      }
+    },
+    "answer_status": 0,
+    "block_time": 0,
+    "role": "0",
+    "last_play_time": 214000,
+    "last_play_cid": 1577773042,
+    "now_time": 1753425627,
+    "online_count": 1,
+    "need_login_subtitle": false,
+    "subtitle": {
+      "allow_submit": false,
+      "lan": "",
+      "lan_doc": "",
+      "subtitles": [
+        {
+          "id": 1509021000099006720,
+          "lan": "ai-en",
+          "lan_doc": "英语（自动生成）",
+          "is_lock": false,
+          "subtitle_url": "//aisubtitle.hdslb.com/bfs/ai_subtitle/prod/1355510441157777304230f49b03f424cb31073f1697d3945967?auth_key=1753425627-92fd799ce01f4d32b484f114831bdacc-0-45574381feb2895de39cbf1ef0e58e89",
+          "type": 1,
+          "id_str": "1509021000099006720",
+          "ai_type": 0,
+          "ai_status": 2
+        },
+        {
+          "id": 1509020720456469504,
+          "lan": "ai-zh",
+          "lan_doc": "中文（自动翻译）",
+          "is_lock": false,
+          "subtitle_url": "//aisubtitle.hdslb.com/bfs/ai_subtitle/prod/13555104411577773042f1ff297ab3befda9756ec4af4bb40384?auth_key=1753425627-2b102a600bfc4d419e29838ee3ae4b69-0-ca830995eefb7c9b4f7bd6b60bcf0701",
+          "type": 1,
+          "id_str": "1509020720456469504",
+          "ai_type": 1,
+          "ai_status": 2
+        }
+      ]
+    },
+    "view_points": [],
+    "preview_toast": "为创作付费，购买观看完整视频|购买观看",
+    "options": {
+      "is_360": false,
+      "without_vip": false
+    },
+    "guide_attention": [
+      {
+        "type": 1,
+        "from": 0,
+        "to": 5,
+        "pos_x": 333.5,
+        "pos_y": 243.75
+      }
+    ],
+    "jump_card": [],
+    "operation_card": [],
+    "online_switch": {
+      "enable_gray_dash_playback": "500",
+      "new_broadcast": "1",
+      "realtime_dm": "1",
+      "subtitle_submit_switch": "1"
+    },
+    "fawkes": {
+      "config_version": 34457,
+      "ff_version": 21289
+    },
+    "show_switch": {
+      "long_progress": false
+    },
+    "bgm_info": null,
+    "toast_block": false,
+    "is_upower_exclusive": false,
+    "is_upower_play": false,
+    "is_ugc_pay_preview": false,
+    "elec_high_level": {
+      "privilege_type": 0,
+      "title": "",
+      "sub_title": "",
+      "show_button": false,
+      "button_text": "",
+      "jump_url": "",
+      "intro": "",
+      "new": false,
+      "question_text": "",
+      "qa_title": ""
+    },
+    "disable_show_up_info": false,
+    "is_upower_exclusive_with_qa": false,
+    "arc_aigc": null
+  }
+}

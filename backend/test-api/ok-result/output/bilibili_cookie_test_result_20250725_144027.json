@@ -1,0 +1,28 @@
+{
+  "video_url": "https://www.bilibili.com/video/BV1Bz421h7B1/",
+  "success": true,
+  "subtitles_found": 2,
+  "subtitle_details": [
+    {
+      "page": 1,
+      "page_title": "《刺客信条：影》丨深度实机演示，忍者或是武士，你来决定！",
+      "cid": 1577773042,
+      "lan": "ai-en",
+      "lan_doc": "英语（自动生成）",
+      "subtitle_url": "//aisubtitle.hdslb.com/bfs/ai_subtitle/prod/1355510441157777304230f49b03f424cb31073f1697d3945967?auth_key=1753425627-92fd799ce01f4d32b484f114831bdacc-0-45574381feb2895de39cbf1ef0e58e89",
+      "downloaded": true,
+      "content_preview": "Peace in the war"
+    },
+    {
+      "page": 1,
+      "page_title": "《刺客信条：影》丨深度实机演示，忍者或是武士，你来决定！",
+      "cid": 1577773042,
+      "lan": "ai-zh",
+      "lan_doc": "中文（自动翻译）",
+      "subtitle_url": "//aisubtitle.hdslb.com/bfs/ai_subtitle/prod/13555104411577773042f1ff297ab3befda9756ec4af4bb40384?auth_key=1753425627-2b102a600bfc4d419e29838ee3ae4b69-0-ca830995eefb7c9b4f7bd6b60bcf0701",
+      "downloaded": true,
+      "content_preview": "战争中的和平"
+    }
+  ],
+  "errors": []
+}
