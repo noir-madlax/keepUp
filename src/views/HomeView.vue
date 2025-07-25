@@ -121,7 +121,7 @@
           <!-- 新用户 平台图标 -->
           <div class="flex justify-center items-center gap-6 mb-6">
             <img 
-              v-for="channel in ['youtube', 'apple-podcast', 'spotify']"
+              v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'bilibili']"
               :key="channel"
               :src="`/images/icons/${channel}.svg`"
               :alt="channel"
@@ -152,7 +152,7 @@
                 <div class="flex items-center gap-4 w-full">
                   <div class="flex items-center gap-2 sm:gap-3">
                     <img 
-                      v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'wechat']"
+                      v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'wechat', 'bilibili']"
                       :key="channel"
                       :src="`/images/icons/${channel}.svg`"
                       :alt="channel"
