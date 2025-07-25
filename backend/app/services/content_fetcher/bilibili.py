@@ -18,6 +18,7 @@ from app.models.request import FetchRequest
 from app.models.author import AuthorInfo
 from app.models.article import ArticleCreate
 from app.utils.logger import logger
+from app.services.bilibili_short_url_service import BilibiliShortUrlService
 
 class BilibilitFetcher(ContentFetcher):
     """B站视频内容获取器"""
@@ -25,12 +26,12 @@ class BilibilitFetcher(ContentFetcher):
     def __init__(self):
         super().__init__()
         self.platform = "bilibili"
+        self.short_url_service = BilibiliShortUrlService()
         # ✅ 移除实例变量，避免并发时的状态共享问题
     
     def can_handle(self, url: str) -> bool:
         """检查是否可以处理该URL"""
-        bilibili_domains = ['bilibili.com', 'b23.tv']
-        return any(domain in url for domain in bilibili_domains)
+        return self.short_url_service.is_bilibili_url(url)
     
     async def load_cookies(self) -> Optional[Dict[str, str]]:
         """从数据库加载B站cookie配置，返回headers而不是设置实例变量"""
@@ -83,18 +84,20 @@ class BilibilitFetcher(ContentFetcher):
             logger.error(f"加载B站cookie配置失败: {str(e)}")
             return None
     
-    def extract_bv_id(self, video_url: str) -> str:
-        """从URL中提取BV号"""
-        if "/video/" in video_url:
-            bv_part = video_url.split("/video/")[1]
-            if "/" in bv_part:
-                bv_id = bv_part.split("/")[0]
+    async def extract_bv_id(self, video_url: str) -> str:
+        """从URL中提取BV号，支持短链接"""
+        # 如果是短链接，先解析为长链接
+        if 'b23.tv' in video_url:
+            resolved_url = await self.short_url_service.resolve_short_url(video_url)
+            if resolved_url:
+                video_url = resolved_url
             else:
-                bv_id = bv_part
-            if "?" in bv_id:
-                bv_id = bv_id.split("?")[0]
-            return bv_id
-        return ""
+                logger.error(f"无法解析短链接: {video_url}")
+                return ""
+        
+        # 使用短链接服务提取视频ID
+        video_id = self.short_url_service.extract_video_id(video_url)
+        return video_id or ""
     
     def is_chinese_subtitle(self, lan: str, lan_doc: str) -> bool:
         """判断是否为中文字幕"""
@@ -200,7 +203,7 @@ class BilibilitFetcher(ContentFetcher):
                 logger.error("无法加载cookie配置")
                 return None
             
-            bv_id = self.extract_bv_id(url)
+            bv_id = await self.extract_bv_id(url)
             if not bv_id:
                 logger.error("无法提取BV号")
                 return None
