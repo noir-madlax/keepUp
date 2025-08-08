@@ -9,6 +9,7 @@
       @mouseenter="handleMouseEnter"
       @mouseleave="handleMouseLeave"
       @click="handleClick"
+      @click.stop
     >
       <span class="timestamp">[{{ citation.timestamp }}]</span>
       <span class="speaker">{{ citation.speaker }}</span>
@@ -19,6 +20,9 @@
       v-if="showTooltip"
       class="citation-tooltip"
       :style="tooltipStyle"
+      @click.stop
+      @touchstart.stop
+      @touchend.stop
     >
       <div class="tooltip-header">
         <span class="tooltip-timestamp">[{{ citation.timestamp }}]</span>
@@ -132,18 +136,20 @@ const updateTooltipPosition = () => {
 }
 
 // 点击外部关闭tooltip（移动端）
-const handleClickOutside = (event: MouseEvent) => {
+const handleClickOutside = (event: MouseEvent | TouchEvent) => {
   if (bubbleRef.value && !bubbleRef.value.contains(event.target as Node)) {
     showTooltip.value = false
   }
 }
 
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('click', handleClickOutside, { passive: true } as any)
+  document.addEventListener('touchstart', handleClickOutside as any, { passive: true } as any)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('click', handleClickOutside as any)
+  document.removeEventListener('touchstart', handleClickOutside as any)
 })
 </script>
 

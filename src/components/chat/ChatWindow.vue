@@ -69,25 +69,9 @@
     <!-- 收起状态时的展开按钮 -->
     <div 
       v-if="chatStore.chatWindowState === 'minimized' && !isMobile"
-      class="w-full h-full bg-gradient-to-b from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 transition-all duration-200 cursor-pointer relative group border-l border-blue-200 flex items-center justify-center"
-      @click="toggleChatWindow"
+      class="w-full h-full border-l border-blue-200"
       title="展开聊天"
-    >
-      <!-- 聊天图标和文字 - 垂直布局 -->
-      <div class="flex flex-col items-center space-y-2">
-        <!-- 聊天图标 -->
-        <div class="p-2 bg-white rounded-full shadow-sm border border-blue-200 group-hover:shadow-md group-hover:scale-105 transition-all duration-200">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.955 8.955 0 01-3.774-.9L3 21l1.9-6.226A8.955 8.955 0 013 12a8 8 0 018-8c4.418 0 8 3.582 8 8z" />
-          </svg>
-        </div>
-        
-        <!-- 垂直文字提示 -->
-        <div class="transform -rotate-90 text-xs font-medium text-blue-700 whitespace-nowrap">
-          开启对话
-        </div>
-      </div>
-    </div>
+    ></div>
 
     <!-- 聊天内容区域 -->
     <div 

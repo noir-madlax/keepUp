@@ -18,6 +18,7 @@ from app.utils.decorators import retry_decorator
 from app.models.request import FetchRequest
 from app.models.author import AuthorInfo
 from app.models.article import ArticleCreate
+from app.services.transcript.fallback_provider import TranscriptFallbackProvider
 
 # 字幕获取
 try:
@@ -85,9 +86,55 @@ class YouTubeFetcher(ContentFetcher):
                 logger.error("无法获取视频信息")
                 return None
             
-            # 尝试获取字幕/转录
+            # 尝试获取字幕/转录（优先现有链路）
             video_id = self._extract_video_id(url)
             transcript = await self._get_transcript(video_id) if video_id else None
+            
+            # 若字幕为空且命中白名单频道，走小宇宙+腾讯ASR兜底
+            if not transcript:
+                try:
+                    author_name = (video_info.author or {}).get('name', '')
+                    # 简单命中：从 env 的 YOUTUBE_FALLBACK_CHANNEL_MAP 中查找 key 是否包含在作者名或 handle 里
+                    from dotenv import load_dotenv
+                    import os
+                    load_dotenv(dotenv_path="/Users/rigel/project/keepup-v2/backend/.env")
+                    mapping = os.getenv('YOUTUBE_FALLBACK_CHANNEL_MAP', '')
+                    fallback_url = None
+                    for pair in [p for p in mapping.split(',') if p.strip()] :
+                        if '=' in pair:
+                            key, val = pair.split('=', 1)
+                            if key.strip().lower() in author_name.lower():
+                                fallback_url = val.strip()
+                                break
+                    # SerpAPI channel link 带 handle 时，也试着匹配
+                    if not fallback_url:
+                        try:
+                            if video_id:
+                                data = await self._get_serpapi_info(video_id)
+                            else:
+                                data = None
+                            channel_link = (data or {}).get('channel', {}).get('link', '')
+                            # 从 link 提取 @handle
+                            handle = ''
+                            if '/@' in channel_link:
+                                handle = channel_link.split('/@', 1)[-1]
+                            for pair in [p for p in mapping.split(',') if p.strip()] :
+                                if '=' in pair:
+                                    key, val = pair.split('=', 1)
+                                    if key.strip('@').lower() in handle.lower():
+                                        fallback_url = val.strip()
+                                        break
+                        except Exception:
+                            pass
+                    if fallback_url:
+                        provider = TranscriptFallbackProvider()
+                        transcript = await provider.transcribe_from_xiaoyuzhou(
+                            title=video_info.title,
+                            podcast_url=fallback_url
+                        )
+                except Exception as _:
+                    # 兜底错误不影响主流程
+                    pass
             
             # 组合内容
             content_parts = [

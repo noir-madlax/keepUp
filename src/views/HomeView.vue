@@ -2,8 +2,7 @@
   <!-- 根容器6 -->
   <div class="min-h-screen">
     
-    <!-- 加载状态显示 -->
-    <LoadingSpinner v-if="isLoading" />
+    <!-- 移除全屏遮罩式 Loading，改为列表骨架屏与底部轻量指示 -->
 
     <!-- 顶部导航栏 -->
   <header class="fixed top-0 left-0 right-0 bg-white z-40 w-full">
@@ -83,8 +82,7 @@
       @clearInput="handleClearInput"
     />
 
-    <!-- 只在非加载状态下显示主要内容 -->
-    <template v-if="!isLoading">
+    <!-- 始终展示主要内容；加载中时由骨架屏与底部指示器表现 -->
       <!-- 主要内容区域 - 新用户布局 -->
       <template v-if="isNewUser">
         <div class="flex flex-col items-center justify-center min-h-screen px-4 pt-[90px]">
@@ -178,12 +176,31 @@
               </div>
       <!-- 文字区域- 老用户布局  -->
               <div class="articles-section">
-                <div class="flex justify-between items-center mb-[10px]">
-                  <!-- 文章标题 -->
-                  <h2 class="font-['PingFang_SC'] text-[20px] font-semibold leading-[28px] text-[#000000]">
-                    {{ t('home.articles.title') }}
-                  </h2>
-                  
+                <div class="flex items-center mb-[10px]">
+                  <div class="flex items-center gap-2">
+                    <!-- 文章标题 -->
+                    <h2 class="font-['PingFang_SC'] text-[20px] font-semibold leading-[28px] text-[#000000]">
+                      {{ t('home.articles.title') }}
+                    </h2>
+                    <!-- 只看我上传 开关（简单按钮） -->
+                    <button
+                      type="button"
+                      @click.stop="toggleMineOnly"
+                      @mousedown.stop.prevent="() => {}"
+                      @touchstart.stop.prevent="() => {}"
+                      @touchend.stop.prevent="() => {}"
+                      :aria-pressed="mineOnly"
+                      class="px-3 h-7 rounded-full border text-xs transition-all duration-200 focus:outline-none focus:ring-2"
+                      :class="mineOnly
+                        ? 'bg-blue-600 text-white border-blue-600 shadow'
+                        : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50 shadow-sm hover:shadow-md focus:ring-blue-200'"
+                    >
+                      <span class="inline-flex items-center gap-1">
+                        <span class="text-[12px]" v-if="mineOnly">✓</span>
+                        <span>Only my uploads</span>
+                      </span>
+                    </button>
+                  </div>
                 </div>
                 <!-- 文章列表 -->
                 <div class="articles-grid">
@@ -244,7 +261,6 @@
           </div>
         </pull-to-refresh>
       </template>
-    </template>
 
 
   </div>
@@ -263,7 +279,6 @@ import PullToRefresh from '../components/PullToRefresh.vue'
 import localforage from 'localforage'
 
 import UploadInput from '../components/UploadInput.vue'
-import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
@@ -302,24 +317,7 @@ interface OptimisticCard {
   requestId: string
 }
 
-interface KeepArticleView {
-  article_id: string
-  created_at: string
-  is_author: boolean
-  article: {
-    id: string
-    title: string
-    cover_image_url?: string
-    channel?: string
-    created_at: string
-    tags?: string[]
-    publish_date?: string
-    author_id?: number
-    content?: string | null
-    original_link?: string | null
-    author?: Author
-  }
-}
+//
 
 
 
@@ -327,6 +325,7 @@ interface KeepArticleView {
 const articles = ref<(ArticleType | ArticleRequest)[]>([])
 const optimisticCards = ref<OptimisticCard[]>([])
 const authors = ref<Author[]>([])
+  const mineOnly = ref<boolean>(false)
 
 // 分页相关的状态
 const pageSize = 18 // 每加载的文章数量
@@ -347,12 +346,7 @@ onActivated(() => {
   resetPageState()
 })
 
-// 添加个性来判断是否有筛选条件
-const hasFilters = computed(() => {
-  return selectedTag.value !== 'all' || 
-         selectedChannels.value.length > 0 || 
-         selectedAuthors.value.length > 0
-})
+//
 
 // 添加轮询相关的变量
 const POLL_INTERVAL = 15000  // 15秒轮询一次
@@ -434,24 +428,61 @@ const startPolling = () => {
       // 只有当有处理完成的项目时，才刷新文章列表获取新的文章
       if (hasProcessedItems) {
         // 获取最新的已处理文章
-        const { data: newArticlesData } = await supabase
-          .from('keep_articles')
-          .select(`
-            id,
-            title,
-            cover_image_url,
-            channel,
-            created_at,
-            tags,
-            publish_date,
-            author_id,
-            content,
-            original_link,
-            author:keep_authors(id, name, icon)
-          `)
-          .eq('is_visible', true)
-          .order('created_at', { ascending: false })
-          .limit(pageSize)
+        let newArticlesData: any[] | null = null
+        if (mineOnly.value && authStore.user?.id) {
+          // 通过 keep_article_views 获取本人上传文章的最新 ID，再查详情
+          const { data: idsRows } = await supabase
+            .from('keep_article_views')
+            .select('article_id')
+            .eq('user_id', authStore.user.id)
+            .eq('is_author', true)
+            .order('created_at', { ascending: false })
+            .limit(pageSize)
+          const ids = (idsRows || []).map((r: any) => r.article_id)
+          if (ids.length) {
+            const { data } = await supabase
+              .from('keep_articles')
+              .select(`
+                id,
+                title,
+                cover_image_url,
+                channel,
+                created_at,
+                tags,
+                publish_date,
+                author_id,
+                content,
+                original_link,
+                author:keep_authors(id, name, icon)
+              `)
+              .eq('is_visible', true)
+              .in('id', ids)
+              .order('created_at', { ascending: false })
+            newArticlesData = data || []
+          } else {
+            newArticlesData = []
+          }
+        } else {
+          const { data } = await supabase
+            .from('keep_articles')
+            .select(`
+              id,
+              title,
+              cover_image_url,
+              channel,
+              created_at,
+              tags,
+              publish_date,
+              author_id,
+              content,
+              original_link,
+              author:keep_authors(id, name, icon)
+            `)
+            .eq('is_visible', true)
+            .order('created_at', { ascending: false })
+            .limit(pageSize)
+          newArticlesData = data || []
+        }
 
         if (newArticlesData) {
           // 处理新文章数据
@@ -625,36 +656,77 @@ const fetchArticles = async (isRefresh = false) => {
       console.info('viewer_count字段不存在，使用默认值')
     }
     
-    const { data: articlesData, error } = await supabase 
-      .from('keep_articles')
-      .select(queryFields)
-      .eq('is_visible', true)
-      .order('created_at', { ascending: false })
-      .range((currentPage.value - 1) * pageSize, currentPage.value * pageSize - 1)
+    // 获取文章数据
+    let articlesData: any[] | null = null
+    if (mineOnly.value && authStore.user?.id) {
+      // 通过 keep_article_views 获取我的文章ID（分页），再查详情
+      const { data: idRows, error: idsError } = await supabase
+        .from('keep_article_views')
+        .select('article_id')
+        .eq('user_id', authStore.user.id)
+        .eq('is_author', true)
+        .order('created_at', { ascending: false })
+        .range((currentPage.value - 1) * pageSize, currentPage.value * pageSize - 1)
 
-    if (error) throw error
+      if (idsError) throw idsError
+      const ids = (idRows || []).map((r: any) => r.article_id)
+      // 确保分页顺序与未过滤一致：按 keep_article_views.created_at desc 的顺序再查询详情后，前端再次按 created_at desc 兜底
+
+      if (ids.length === 0) {
+        articlesData = []
+      } else {
+        const { data, error: artErr } = await supabase
+          .from('keep_articles')
+          .select(queryFields)
+          .eq('is_visible', true)
+          .in('id', ids)
+          .order('created_at', { ascending: false })
+        if (artErr) throw artErr
+        articlesData = data || []
+      }
+    } else {
+        const { data, error } = await supabase
+        .from('keep_articles')
+        .select(queryFields)
+        .eq('is_visible', true)
+        .order('created_at', { ascending: false })
+        .range((currentPage.value - 1) * pageSize, currentPage.value * pageSize - 1)
+      if (error) throw error
+      articlesData = data || []
+    }
 
     // 修改：每次刷新或第一页加载时都获取处理中和失败的请求
     let requests: any[] = []
     if (isRefresh || currentPage.value === 1) {
-      const { data: requestsData } = await supabase 
+      // 构建请求查询，mineOnly 时仅查询本人请求
+      let requestsQuery = supabase
         .from('keep_article_requests')
         .select('*')
         .in('status', ['processing', 'failed'] as ArticleStatus[])
+
+      if (mineOnly.value && authStore.user?.id) {
+        requestsQuery = requestsQuery.eq('user_id', authStore.user.id)
+      }
+
+      const { data: requestsData } = await requestsQuery
         .order('created_at', { ascending: false })
       
       requests = requestsData || []
     }
 
     // 处理文章数据 - 直接使用viewer_count字段，如果不存在则使用0
-    const validArticles = (articlesData || []).map((article: any) => ({
+    const validArticles = (articlesData || [])
+      // 兜底保证顺序与“全部”一致
+      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .map((article: any) => ({
       ...article,
       is_author: false, // 暂时设为false，避免业务逻辑影响
       status: 'processed' as const,
       content: article.content || '',
       original_link: article.original_link || '',
       viewer_count: article.viewer_count || 0
-    })).filter((article): article is ArticleType => 
+    }))
+    .filter((article): article is ArticleType => 
       article !== null && 
       typeof article.is_author === 'boolean' && 
       article.status === 'processed' &&
@@ -695,8 +767,8 @@ const fetchArticles = async (isRefresh = false) => {
       return !hasMatchingRequest
     })
 
-    // 更新是否还有更多数据
-    hasMore.value = hasFilters.value ? false : validArticles.length === pageSize
+    // 更新是否还有更多数据（过滤场景也根据返回数量判断）
+    hasMore.value = validArticles.length === pageSize
 
     // 只在完整刷新时更新缓存
     if (isRefresh) {
@@ -938,6 +1010,27 @@ const handleLoginModalClose = () => {
     showLoginModal.value = false
   }
 }
+
+// 简单切换“只看我上传”，并重置分页与数据
+const toggleMineOnly = async () => {
+  // 立即给用户反馈
+  isLoading.value = true
+  // 切换状态并持久化（实际重载由 watcher 触发）
+  mineOnly.value = !mineOnly.value
+  try { localStorage.setItem('home-mine-only', mineOnly.value ? '1' : '0') } catch {}
+  // 直接重置并重新加载，确保点击必然生效
+  await resetPageState()
+}
+
+// 如需响应其它地方修改 mineOnly，可恢复 watcher；目前点击已直接触发刷新
+
+// 初始化：读取本地持久化，保证返回详情页后保持筛选
+try {
+  const saved = localStorage.getItem('home-mine-only')
+  if (saved === '1') {
+    mineOnly.value = true
+  }
+} catch {}
 
 
 

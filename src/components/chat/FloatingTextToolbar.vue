@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="chatStore.toolbarVisible && chatStore.chatWindowState === 'minimized' && !isMobile"
-    class="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2"
+    class="fixed z-50 px-3 py-2"
     :style="{
       top: chatStore.toolbarPosition.top + 'px',
       left: chatStore.toolbarPosition.left + 'px',
@@ -111,21 +111,32 @@ const handleChatAction = async (action: keyof typeof CHAT_ACTIONS) => {
   border-radius: 14px;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #000000;
-  transition: all 0.2s ease;
-  background: #FFFFFF;
-  border: 1px solid #D9D9D9;
-  box-shadow: none;
+  color: #111827; /* gray-900 */
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f7f7 100%);
+  border: 1px solid #E3E3E3;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, /* top highlight */
+              0 1px 2px rgba(16, 24, 40, 0.06),       /* subtle base */
+              0 2px 6px rgba(16, 24, 40, 0.06);       /* soft depth */
   white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .bubble-button:hover:not(.disabled-button) {
   transform: translateY(-1px);
-  border-color: #BFBFBF;
+  border-color: #D1D5DB; /* gray-300 */
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset,
+              0 3px 6px rgba(16, 24, 40, 0.10);
+}
+
+.bubble-button:active:not(.disabled-button) {
+  transform: translateY(0);
+  background: linear-gradient(180deg, #f5f5f5 0%, #efefef 100%);
+  box-shadow: 0 0 0 rgba(0,0,0,0);
 }
 
 .disabled-button {
   cursor: not-allowed;
   opacity: 0.6;
 }
-</style> 
+</style>

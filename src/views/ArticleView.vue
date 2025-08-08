@@ -1,6 +1,6 @@
 <template>
   <!-- 页面容器 - 改为flex布局 -->
-  <div class="min-h-screen bg-white w-full flex flex-col h-screen">
+  <div class="min-h-screen bg-white w-full  h-screen pr-0 scrollbar-hide overflow-y-hidden">
     <!-- 顶部导航栏 - 始终显示 -->
     <header class="fixed top-0 left-0 right-0 bg-white z-[1001] w-full">
       <!-- 使用transition组件包裹两个导航样式 -->
@@ -86,25 +86,24 @@
               >
                 <!-- 上一节 -->
                 <div 
-                  v-if="prevSection" 
-                  :key="'prev-' + prevSection.section_type"
-                  @click="scrollToSection(prevSection.section_type)"
+                  v-if="prevDisplayAnchor" 
+                  :key="'prev-' + prevDisplayAnchor.id"
+                  @click="scrollToDisplayAnchor(prevDisplayAnchor.id)"
                   class="flex items-center cursor-pointer text-gray-500 hover:text-gray-700 transition-colors duration-200"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                   </svg>
-                  <span class="text-sm">{{ getLocalizedSectionType(prevSection.section_type) }}</span>
                 </div>
                 <div v-else :key="'prev-empty'" class="w-20"></div>
 
                 <!-- 当前section名称 -->
                 <div 
-                  :key="currentVisibleSection || 'current'"
+                  :key="currentDisplayTitle || 'current'"
                   class="relative"
                 >
                   <h2 class="text-base md:text-lg text-gray-900 font-medium">
-                    {{ currentVisibleSection ? getLocalizedSectionType(currentVisibleSection) : '' }}
+                    {{ currentDisplayTitle || '' }}
                   </h2>
                   <!-- 添加与tabs相同的底部指示条 -->
                   <div 
@@ -114,12 +113,11 @@
 
                 <!-- 下一节 -->
                 <div 
-                  v-if="nextSection" 
-                  :key="'next-' + nextSection.section_type"
-                  @click="scrollToSection(nextSection.section_type)"
+                  v-if="nextDisplayAnchor" 
+                  :key="'next-' + nextDisplayAnchor.id"
+                  @click="scrollToDisplayAnchor(nextDisplayAnchor.id)"
                   class="flex items-center cursor-pointer text-gray-500 hover:text-gray-700 transition-colors duration-200"
                 >
-                  <span class="text-sm">{{ getLocalizedSectionType(nextSection.section_type) }}</span>
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
@@ -136,10 +134,11 @@
     </header>
 
     <!-- 主要内容区域 - Flex布局：左侧文章 + 右侧Chat -->
-    <div class="flex-1 flex h-full overflow-hidden">
+    <div class="flex-1 flex h-full overflow-hidden w-full">
       <!-- 左侧：文章内容容器 -->
       <div 
         class="h-full overflow-y-auto overflow-x-hidden transition-all duration-300"
+        ref="scrollContainerRef"
         :class="[
           chatStore.chatWindowState === 'minimized' ? 'flex-1' : 'flex-1'
         ]"
@@ -280,11 +279,11 @@
 
                 <!-- 文章内容部分 -->
                 <div class="article-main-container">
-                  <div 
-                    class="p-4 md:p-8 article-content"
-                    @mouseup="handleTextSelection($event)"
-                    @touchend="handleTextSelection($event)"
-                  >
+                    <div 
+                      class="p-4 md:p-8 article-content"
+                      @mouseup="handleMouseUp($event)"
+                      @touchend="handleTouchEndArticle($event)"
+                    >
                     <!-- 文章内容 -->
                     <article class="prose prose-sm md:prose-lg max-w-none">
                       <!-- 2024-03-20 14:30: 添加文章内容hover提示 -->
@@ -386,9 +385,11 @@
       <div 
         v-if="!isMobile"
         class="flex-shrink-0 transition-all duration-300 ease-in-out relative overflow-hidden h-full"
-        :style="{ width: chatStore.chatWindowState === 'expanded' ? 'var(--chat-window-width)' : '20px' }"
+        :style="{ width: chatStore.chatWindowState === 'expanded' ? 'var(--chat-window-width)' : '0px' }"
       >
         <ChatWindow />
+           <!-- Right-top Ask button -->
+           <AskKeepupButton />
       </div>
     </div>
 
@@ -559,10 +560,12 @@ import { useI18n } from 'vue-i18n'
 import MindMap from '../components/MindMap.vue'
 import Mermaid from '../components/Mermaid.vue'
 import { isSupportedMediaUrl } from '../utils/mediaUtils'
+import { isMeaningfulTimestamp } from '../utils/citationParser'
 import MoreContentModal from '../components/MoreContentModal.vue'
 import { useChatStore } from '../stores/chat'
 import ChatToolbar from '../components/chat/ChatToolbar.vue'
 import ChatWindow from '../components/chat/ChatWindow.vue'
+import AskKeepupButton from '../components/chat/AskKeepupButton.vue'
 import QuestionMark from '../components/chat/QuestionMark.vue'
 import CitationBubble from '../components/chat/CitationBubble.vue'
 import FloatingTextToolbar from '../components/chat/FloatingTextToolbar.vue'
@@ -878,18 +881,144 @@ const handleTabsScroll = () => {
   }
 }
 
-// 保持原有的handleScroll函数不变
+// 监听文章内容滚动容器的滚动（兼容 window 回退）
+const scrollContainerRef = ref<HTMLElement | null>(null)
+
+// 展示段（通过内容标题解析，不依赖数据库 section）
+type DisplayAnchor = { id: string; title: string; el: Element }
+const displayAnchors = ref<DisplayAnchor[]>([])
+const currentDisplayId = ref<string>('')
+const currentDisplayTitle = ref<string>('')
+let displayMutationObserver: MutationObserver | null = null
+let displayIntersectionObserver: IntersectionObserver | null = null
+
+// 展示段标题白名单（中英同义项）
+const DISPLAY_TITLES: Record<string, string[]> = {
+  Summary: ['summary', '总结'],
+  'Key Takeaways': ['key takeaways', 'key takeaway', 'key points', 'key insights', '要点总结'],
+  'People': ['人物介绍', '人物', '嘉宾介绍', 'guests', 'guest intro', 'guest introduction', 'people'],
+  'Segmented Outline': ['segmented outline', 'outline', '分段提纲'],
+  'Background': ['背景', 'background'],
+  'Glossary': ['名词解释', '术语', 'glossary'],
+  'Q&A': ['qa环节', 'q&a', 'faq'],
+  'Quotes': ['金句', 'quotes', 'highlights'],
+  'Easter Eggs': ['彩蛋', 'easter eggs'],
+  'Detailed Sections': ['分段详述', 'detailed sections', 'details'],
+  'Transcript': ['原文字幕', 'transcript', 'subtitles', 'captions'],
+  // 新增：与截图匹配的展示段标题
+  'Trending': ['trending', 'trends'],
+  'Companies & Products': ['companies & products', 'companies and products', 'company & products', 'company and products']
+}
+
+const normalize = (s: string) => s
+  .replace(/^[#\s\-:：\[\]]+|[\s\-:：\[\]]+$/g, '')
+  .replace(/\s+/g, ' ')
+  .replace(/&amp;/gi, '&')
+  .replace(/\band\b/gi, 'and')
+  .trim()
+  .toLowerCase()
+
+const getCanonicalDisplayTitle = (text: string): string | null => {
+  const n = normalize(text)
+  for (const [canon, syns] of Object.entries(DISPLAY_TITLES)) {
+    if (syns.some(x => n === x)) return canon
+  }
+  return null
+}
+
+const isDisplayTitle = (text: string): boolean => getCanonicalDisplayTitle(text) !== null
+
+const parseDisplayAnchors = () => {
+  const container = document.querySelector('.article-content .prose') as HTMLElement | null
+  const anchors: DisplayAnchor[] = []
+  if (!container) {
+    displayAnchors.value = anchors
+    return
+  }
+  // 标题通常是 h2/h3，但也可能被 markdown-it/marked 包裹或包含链接元素
+  const headingNodes = Array.from(container.querySelectorAll('h1, h2, h3, h4, h2 > a, h3 > a'))
+    .map((el) => (el.tagName === 'A' && el.parentElement ? el.parentElement : el)) as Element[]
+  // 调试：输出当前页面可用标题
+  // console.debug('[display-nav] headings found:', headingNodes.map(h => h.textContent?.trim()))
+  let idx = 0
+  headingNodes.forEach((el) => {
+    const title = (el.textContent || '').trim()
+    if (!title) return
+    const canon = getCanonicalDisplayTitle(title)
+    if (!canon) return
+    if (!el.id) {
+      el.id = `display-anchor-${idx++}`
+    }
+    anchors.push({ id: el.id, title: canon, el })
+  })
+
+  // 兼容：有些内容不是语义化标题，而是 p>strong 或 div>strong 独立成行，或 strong 内嵌链接
+  const strongCandidates = Array.from(container.querySelectorAll('p > strong, div > strong, li > strong, p > a > strong, div > a > strong')) as Element[]
+  strongCandidates.forEach((strongEl) => {
+    const parent = strongEl.parentElement
+    if (!parent) return
+    // 只接受这一行只有粗体文本，没有其他内容的情况，以避免误判
+    const parentText = (parent.textContent || '').trim()
+    const selfText = (strongEl.textContent || '').trim()
+    if (!parentText || !selfText) return
+    if (normalize(parentText) !== normalize(selfText)) return
+    const canon = getCanonicalDisplayTitle(selfText)
+    if (!canon) return
+    if (!parent.id) parent.id = `display-anchor-${idx++}`
+    anchors.push({ id: parent.id, title: canon, el: parent })
+  })
+
+  // 兼容：解析我们渲染的 section 标题（不依赖数据库字段，只看 DOM）
+  const sectionHeadingNodes = Array.from(container.closest('.article-content')?.querySelectorAll('[data-section-type] > h2') || []) as Element[]
+  sectionHeadingNodes.forEach((el) => {
+    const title = (el.textContent || '').trim()
+    const canon = getCanonicalDisplayTitle(title)
+    if (!canon) return
+    if (!el.id) el.id = `display-anchor-${idx++}`
+    anchors.push({ id: el.id, title: canon, el })
+  })
+  displayAnchors.value = anchors
+
+  // 重建 IntersectionObserver 以更稳健地追踪当前展示段
+  if (displayIntersectionObserver) {
+    displayIntersectionObserver.disconnect()
+  }
+  const rootEl = scrollContainerRef.value || undefined
+  // 仅用于触发滚动判断，不直接用 IO 的可见判定改变当前段，避免“提前切换到下一个标题”
+  displayIntersectionObserver = new IntersectionObserver(() => {
+    handleScroll()
+  }, { root: rootEl as Element | undefined, threshold: [0.0, 0.25, 0.5, 0.75, 1.0] })
+
+  anchors.forEach(a => displayIntersectionObserver!.observe(a.el))
+
+  // 监听 DOM 变化（例如引用气泡/后处理可能会插入节点导致标题位移）
+  if (displayMutationObserver) {
+    displayMutationObserver.disconnect()
+  }
+  displayMutationObserver = new MutationObserver(() => {
+    // 轻量节流
+    setTimeout(() => {
+      parseDisplayAnchors()
+      handleScroll()
+    }, 0)
+  })
+  displayMutationObserver.observe(container, { childList: true, subtree: true })
+}
+
 const handleScroll = () => {
-  const currentScroll = window.scrollY
+  const container = scrollContainerRef.value
+  const currentScroll = container ? container.scrollTop : window.scrollY
   
   // 只有在允许导航切换时才执行切换逻辑
   if (allowNavSwitch.value) {
-    // 获取第一个section元素
-    const firstSection = document.querySelector('[data-section-type]')
-    if (!firstSection) return
+    // 获取第一个展示段元素（优先基于内容解析）
+    const firstAnchorEl = displayAnchors.value[0]?.el || document.querySelector('[data-section-type]')
+    if (!firstAnchorEl) return
     
-    // 获取第一个section距离视口顶部的距离
-    const firstSectionRect = firstSection.getBoundingClientRect()
+    // 获取第一个展示段与容器顶部的相对距离
+    const firstSectionRect = firstAnchorEl.getBoundingClientRect()
+    const containerRectTop = container ? container.getBoundingClientRect().top : 0
+    const relativeTop = firstSectionRect.top - containerRectTop
     // 设置一个阈值，比如当第一个section进入视口顶部200px范围内时
     const threshold = 200
     
@@ -900,7 +1029,7 @@ const handleScroll = () => {
     } else if (currentScroll > lastScrollTop.value) {
       // 向下滚动
       // 只有当第一个section开始入视口，且滚动超过100px时显示导航
-      if (currentScroll > 100 && firstSectionRect.top < threshold) {
+      if (currentScroll > 100 && relativeTop < threshold) {
         showNavB.value = true
       }
     } else {
@@ -917,12 +1046,44 @@ const handleScroll = () => {
   
   // 检测当前可见的section
   const sectionElements = document.querySelectorAll('[data-section-type]')
+  const containerRectTop = container ? container.getBoundingClientRect().top : 0
+  const viewportHeight = container ? container.clientHeight : window.innerHeight
   sectionElements.forEach((element) => {
     const rect = element.getBoundingClientRect()
-    if (rect.top <= window.innerHeight / 3 && rect.bottom >= window.innerHeight / 3) {
+    const top = rect.top - containerRectTop
+    const bottom = rect.bottom - containerRectTop
+    if (top <= viewportHeight / 3 && bottom >= viewportHeight / 3) {
       currentVisibleSection.value = element.getAttribute('data-section-type') || ''
     }
   })
+
+  // 基于展示段锚点检测当前可见的展示段：
+  // 策略：优先选择“最后一个已通过顶部阈值(<= switchTopPx)的标题”；
+  // 若尚未经过任何标题，则选择第一个；这样可避免在两个展示段之间提前跳到下一个。
+  if (displayAnchors.value.length) {
+    const anchors = displayAnchors.value
+    const switchTopPx = 120
+    let passed: { a: DisplayAnchor; top: number }[] = []
+    for (const a of anchors) {
+      const rect = a.el.getBoundingClientRect()
+      const top = rect.top - containerRectTop
+      if (top <= switchTopPx) {
+        passed.push({ a, top })
+      }
+    }
+    // 取顶部阈值内 top 最大（最靠近顶部）的标题
+    let candidate: DisplayAnchor | null = null
+    if (passed.length) {
+      passed.sort((x, y) => y.top - x.top)
+      candidate = passed[0].a
+    } else {
+      candidate = anchors[0]
+    }
+    if (candidate && candidate.id !== currentDisplayId.value) {
+      currentDisplayId.value = candidate.id
+      currentDisplayTitle.value = candidate.title
+    }
+  }
 }
 
 // 添加记录用户对文章访问
@@ -985,8 +1146,9 @@ onMounted(async () => {
       fetchArticleMarks()
     ])
 
-    // 添加页面滚动事件监听
-    window.addEventListener('scroll', handleScroll)
+    // 添加页面滚动事件监听（监听文章容器滚动）
+    const sc = scrollContainerRef.value
+    if (sc) sc.addEventListener('scroll', handleScroll)
     
     // 添加tabs滚动事件监听
     const container = tabsContainerRef.value
@@ -994,8 +1156,10 @@ onMounted(async () => {
       container.addEventListener('scroll', handleTabsScroll)
     }
     
-    // 初始检查
-    handleScroll()
+  // 解析展示段并初始检查
+  await nextTick()
+  parseDisplayAnchors()
+  handleScroll()
     handleTabsScroll()
 
   } catch (error) {
@@ -1008,7 +1172,8 @@ onMounted(async () => {
 
 // 修改组件卸载时的事件监听移除
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
+  const sc = scrollContainerRef.value
+  if (sc) sc.removeEventListener('scroll', handleScroll)
   const container = tabsContainerRef.value
   if (container) {
     container.removeEventListener('scroll', handleTabsScroll)
@@ -1070,10 +1235,15 @@ const nextSection = computed(() => {
     : null
 })
 
+// 新的：基于展示段的上一/当前/下一
+const currentDisplayIndex = computed(() => displayAnchors.value.findIndex(a => a.id === currentDisplayId.value))
+const prevDisplayAnchor = computed(() => currentDisplayIndex.value > 0 ? displayAnchors.value[currentDisplayIndex.value - 1] : null)
+const nextDisplayAnchor = computed(() => currentDisplayIndex.value >= 0 && currentDisplayIndex.value < displayAnchors.value.length - 1 ? displayAnchors.value[currentDisplayIndex.value + 1] : null)
+
 // 添加一个变量来跟踪滑动方向
 const transitionName = ref('slide-right')
 
-// 修改 scrollToSection 函数
+// 修改 scrollToSection 函数（优先滚动内容容器）
 const scrollToSection = (sectionType: string) => {
   const element = document.querySelector(`[data-section-type="${sectionType}"]`)
   if (element) {
@@ -1091,20 +1261,47 @@ const scrollToSection = (sectionType: string) => {
     // 设置过渡方向
     transitionName.value = targetIndex > currentIndex ? 'slide-left' : 'slide-right'
     
-    // 动到目标位置
-    const headerHeight = 71
-    const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-    window.scrollTo({
-      top: elementPosition - headerHeight - 20,
-      behavior: 'smooth'
-    })
+    const sc = scrollContainerRef.value
+    if (sc) {
+      const targetTop = element.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop
+      sc.scrollTo({ top: targetTop - 20, behavior: 'smooth' })
+    } else {
+      // 回退到 window 滚动
+      const headerHeight = 71
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+      window.scrollTo({ top: elementPosition - headerHeight - 20, behavior: 'smooth' })
+    }
 
-    // 画完成后恢复导航换功能
+    // 滚动完成后恢复导航切换功能
     setTimeout(() => {
       allowNavSwitch.value = true
-    }, 800) // 设置稍长于滚动动画的时间
+    }, 800)
   }
 }
+
+// 新增：滚动到展示段锚点
+const scrollToDisplayAnchor = (id: string) => {
+  const anchor = displayAnchors.value.find(a => a.id === id)
+  if (!anchor) return
+  allowNavSwitch.value = false
+  const sc = scrollContainerRef.value
+  if (sc) {
+    const targetTop = (anchor.el.getBoundingClientRect().top - sc.getBoundingClientRect().top) + sc.scrollTop
+    sc.scrollTo({ top: targetTop - 20, behavior: 'smooth' })
+  } else {
+    const y = anchor.el.getBoundingClientRect().top + window.pageYOffset
+    window.scrollTo({ top: y - 71 - 20, behavior: 'smooth' })
+  }
+  setTimeout(() => { allowNavSwitch.value = true }, 800)
+}
+
+// 在数据或语言变化后，重新解析锚点
+watch([() => sections.value, () => markdownContent.value, () => locale.value], () => {
+  nextTick(() => {
+    parseDisplayAnchors()
+    handleScroll()
+  })
+})
 
 const showMindmapPreview = ref(false)
 const previewImageUrl = ref('')
@@ -1388,8 +1585,12 @@ const handleMoreContent = () => {
 const showLanguageAlert = ref(false)
 const contentLanguage = ref('')
 
-// 处理文本选择
-const handleTextSelection = (event?: Event) => {
+  // 防抖：避免移动端一次点击触发 touchend 与 mouseup 双事件
+  let lastTouchTime = 0
+  const TOUCH_MOUSE_GAP_MS = 350
+
+  // 统一处理逻辑
+  const handleTextSelection = (event?: Event) => {
   console.log('Text selection triggered')
   
   // 检查是否点击的是气泡或相关元素
@@ -1398,7 +1599,12 @@ const handleTextSelection = (event?: Event) => {
     const bubble = target.closest('.citation-bubble')
     const wrapper = target.closest('.citation-bubble-wrapper')
     const tooltip = target.closest('.citation-tooltip')
-    
+      // 在气泡或 tooltip 内点击时，阻止冒泡，避免外部 click 监听立刻关闭
+      if (bubble || wrapper || tooltip) {
+        event.stopPropagation?.()
+        event.preventDefault?.()
+      }
+
     if (bubble || wrapper || tooltip) {
       console.log('🎯 检测到气泡点击，直接处理tooltip显示')
       console.log('🔍 点击的元素详情:', {
@@ -1428,20 +1634,15 @@ const handleTextSelection = (event?: Event) => {
         // 如果tooltip不存在，尝试从data属性重建
         if (!bubbleTooltip && (bubble.dataset.content || wrapper.dataset.content)) {
           console.log('🔄 Tooltip缺失，尝试从data属性重建...')
-          const timestamp = bubble.dataset.timestamp || wrapper.dataset.timestamp
-          const speaker = bubble.dataset.speaker || wrapper.dataset.speaker
-          const content = bubble.dataset.content || wrapper.dataset.content
+          const timestamp = bubble.dataset.timestamp || wrapper.dataset.timestamp || ''
+          const speaker = bubble.dataset.speaker || wrapper.dataset.speaker || ''
+          const content = bubble.dataset.content || wrapper.dataset.content || ''
           
           console.log('📊 Data属性:', { timestamp, speaker, content: content?.substring(0, 100) })
           
-          if (timestamp && speaker && content) {
-            const tooltipHTML = `<div class="citation-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed" style="top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px;">
-<div class="tooltip-header flex gap-2 mb-2 pb-2 border-b border-gray-200">
-<span class="tooltip-timestamp text-xs text-gray-600 font-medium">[${timestamp}]</span>
-<span class="tooltip-speaker text-xs text-blue-600 font-semibold">${speaker}</span>
-</div>
-<div class="tooltip-content text-gray-700 italic">${content}</div>
-</div>`
+          if (speaker && content) {
+            const tsPart = isMeaningfulTimestamp(timestamp) ? `<span class=\"tooltip-timestamp text-xs text-gray-600 font-medium\">[${timestamp}]</span>` : ''
+            const tooltipHTML = `<div class=\"citation-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed\" style=\"top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px;\">\n<div class=\"tooltip-header flex gap-2 mb-2 pb-2 border-b border-gray-200\">\n ${tsPart}<span class=\"tooltip-speaker text-xs text-blue-600 font-semibold\">${speaker}</span>\n </div>\n <div class=\"tooltip-content text-gray-700 italic\">${content}</div>\n </div>`
             
             wrapper.insertAdjacentHTML('beforeend', tooltipHTML)
             bubbleTooltip = wrapper.querySelector('.citation-tooltip')
@@ -1571,6 +1772,21 @@ const handleTextSelection = (event?: Event) => {
   chatStore.showToolbar(position, selection.toString())
 }
 
+  // 分发到统一处理：鼠标场景
+  const handleMouseUp = (event: MouseEvent) => {
+    const now = Date.now()
+    // 若在触摸后短时间内触发的 mouseup，则忽略，避免双触发
+    if (now - lastTouchTime < TOUCH_MOUSE_GAP_MS) return
+    handleTextSelection(event)
+  }
+
+  // 分发到统一处理：触屏场景
+  const handleTouchEndArticle = (event: TouchEvent) => {
+    lastTouchTime = Date.now()
+    // 将触摸事件转为通用处理
+    handleTextSelection(event as unknown as Event)
+  }
+
 
 // 添加获取文章标记的方法
 const articleMarks = ref<ChatSession[]>([])
@@ -1649,35 +1865,26 @@ const renderSectionContent = (section: ArticleSection) => {
     const container = document.createElement('div')
     container.innerHTML = htmlContent
     
-    // 后处理：查找<em>标签中的引用并转换为气泡
+     // 后处理：查找<em>标签中的引用并转换为气泡（容错解析并按需隐藏时间戳）
     const citationMatches: Array<{citation: any, id: string, element: Element}> = []
     
          // 查找所有<em>标签中的引用
      const emElements = container.querySelectorAll('em')
      emElements.forEach(em => {
-       const text = em.textContent || ''
-       // 支持中文和英文双引号
-       const citationRegex = /^\[(\d{1,2}(?::\d{2}){1,2})\]\s*([^：:]+?)[:：]\s*["""](.+?)["""]$/
+       const text = (em.textContent || '').trim()
+       const citationRegex = /^(?:\[(.+?)\]\s*)?([^：:]+?)[:：]\s*["“”](.+?)["“”]$/s
        const match = text.match(citationRegex)
-       
-       console.log('处理引用:', { text, match }) // 调试日志
-       
-       if (match) {
-         const citation = {
-           timestamp: match[1],
-           speaker: match[2].trim(),
-           content: match[3].trim(),
-           isValid: true
-         }
-         const citationId = `citation-${Date.now()}-${citationMatches.length}`
-         citationMatches.push({
-           citation,
-           id: citationId,
-           element: em
-         })
-         
-         console.log('成功匹配引用:', citation) // 调试日志
+       if (!match) return
+       const label = (match[1] || '').trim()
+       const timestamp = isMeaningfulTimestamp(label) ? label : ''
+       const citation = {
+         timestamp,
+         speaker: match[2].trim(),
+         content: match[3].trim(),
+         isValid: true
        }
+       const citationId = `citation-${Date.now()}-${citationMatches.length}`
+       citationMatches.push({ citation, id: citationId, element: em })
      })
     
     // 处理每个找到的引用
@@ -1689,43 +1896,36 @@ const renderSectionContent = (section: ArticleSection) => {
          console.log('生成气泡HTML，内容:', safeContent) // 调试日志
          
          // 创建气泡HTML - 修复结构
-         const bubbleHtml = `<span class="citation-bubble-wrapper inline-block relative mx-1">
-<span class="citation-bubble inline-block bg-blue-50 border border-blue-200 rounded-xl px-2 py-1 cursor-pointer transition-all duration-200 hover:bg-blue-100 hover:border-blue-300 hover:translate-y-[-1px] text-xs" data-citation-id="${id}" data-content="${safeContent.replace(/"/g, '&quot;')}" data-timestamp="${citation.timestamp}" data-speaker="${citation.speaker}">
-<span class="timestamp text-gray-600 mr-1">[${citation.timestamp}]</span>
-<span class="speaker text-blue-600 font-medium">${citation.speaker}</span>
-</span>
-<div class="citation-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed" style="top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px;">
-<div class="tooltip-header flex gap-2 mb-2 pb-2 border-b border-gray-200">
-<span class="tooltip-timestamp text-xs text-gray-600 font-medium">[${citation.timestamp}]</span>
-<span class="tooltip-speaker text-xs text-blue-600 font-semibold">${citation.speaker}</span>
-</div>
-<div class="tooltip-content text-gray-700 italic">${safeContent}</div>
-</div>
-</span>`
+          const tsBubble = citation.timestamp && isMeaningfulTimestamp(citation.timestamp) ? `<span class=\"timestamp text-gray-600 mr-1\">[${citation.timestamp}]</span>` : ''
+          const tsTip = citation.timestamp && isMeaningfulTimestamp(citation.timestamp) ? `<span class=\"tooltip-timestamp text-xs text-gray-600 font-medium\">[${citation.timestamp}]</span>` : ''
+          const bubbleHtml = `<span class=\"citation-bubble-wrapper inline-block relative mx-1\">\n<span class=\"citation-bubble inline-block bg-blue-50 border border-blue-200 rounded-xl px-2 py-1 cursor-pointer transition-all duration-200 hover:bg-blue-100 hover:border-blue-300 hover:translate-y-[-1px] text-xs\" data-citation-id=\"${id}\" data-content=\"${safeContent.replace(/\"/g, '&quot;')}\" data-timestamp=\"${citation.timestamp}\" data-speaker=\"${citation.speaker}\">\n ${tsBubble}<span class=\"speaker text-blue-600 font-medium\">${citation.speaker}</span>\n </span>\n <div class=\"citation-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed\" style=\"top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px;\">\n <div class=\"tooltip-header flex gap-2 mb-2 pb-2 border-b border-gray-200\">\n ${tsTip}<span class=\"tooltip-speaker text-xs text-blue-600 font-semibold\">${citation.speaker}</span>\n </div>\n <div class=\"tooltip-content text-gray-700 italic\">${safeContent}</div>\n </div>\n </span>`
         
-        // 找到前一个段落并添加气泡
-        let targetParagraph = null
-        const allParagraphs = Array.from(container.querySelectorAll('p'))
-        const pIndex = allParagraphs.indexOf(p)
-        
-        if (pIndex > 0) {
-          targetParagraph = allParagraphs[pIndex - 1]
-        } else {
-          // 如果是第一个段落，查找前面的其他元素
-          let prevElement = p.previousElementSibling
-          while (prevElement) {
-            if (prevElement.tagName === 'P' || prevElement.tagName === 'LI' || 
-                prevElement.tagName === 'UL' || prevElement.tagName === 'OL') {
-              if (prevElement.tagName === 'UL' || prevElement.tagName === 'OL') {
-                const lastLi = prevElement.querySelector('li:last-child')
-                if (lastLi) targetParagraph = lastLi
+        // 找到紧邻的上一个兄弟块级元素并添加气泡
+        // 说明：之前通过“所有<p>的前一个”来定位，遇到列表(<ul>/<ol>)时会错位。
+        // 现在统一使用 DOM 兄弟遍历，若命中列表则选择最后一个 <li>，否则直接附加到上一个 <p>/<li>。
+        let targetParagraph: Element | null = null
+        let prevElement: Element | null = p.previousElementSibling as Element | null
+        while (prevElement) {
+          const tag = prevElement.tagName
+          if (tag === 'P' || tag === 'LI' || tag === 'UL' || tag === 'OL') {
+            if (tag === 'UL' || tag === 'OL') {
+              const lastLi = prevElement.querySelector('li:last-child')
+              if (lastLi) {
+                targetParagraph = lastLi
               } else {
+                // 列表没有 <li> 时，退化为把气泡加到列表元素本身
                 targetParagraph = prevElement
               }
-              break
+            } else {
+              targetParagraph = prevElement
             }
-            prevElement = prevElement.previousElementSibling
+            break
           }
+          prevElement = prevElement.previousElementSibling as Element | null
+        }
+        // 兜底：如果没有可用的上一个兄弟元素，则附加到当前段落自身
+        if (!targetParagraph) {
+          targetParagraph = p
         }
         
                  console.log('🔧 生成的完整HTML长度:', bubbleHtml.length) // 调试日志
@@ -2060,21 +2260,15 @@ const getSectionQuestionCount = (sectionId: number) => {
   }
 }
 
-/* 优化滚动行为 */
+/* Optimize scrolling behavior without forcing scrollbar or gutter on root */
 html {
   scroll-behavior: smooth;
-  overflow-y: scroll;
-  /* 下面两行确保滚动条总是显示，即使内容不够长 */
-  min-height: 101vh;
-  scrollbar-gutter: stable;
 }
 
 /*  style 标签中加下全样式 */
 body {
   overflow-x: hidden;
   width: 100%;
-  /* 添加这行来防止滚动条导致的页面跳动 */
-  margin-right: calc(-1 * (100vw - 100%));
 }
 
 /* 确保所有图片不会导容器溢出 */
@@ -2111,7 +2305,7 @@ header {
   width: 100%;
   box-sizing: border-box;
   /* 添加这行来确保内容不会因为滚动条出现而移动 */
-  padding-right: calc(100vw - 100%);
+  padding-right: 0;
 }
 
 /* 确保所有弹出层和态框的 z-index 大于导航栏 */

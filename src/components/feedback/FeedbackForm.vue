@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="fixed right-0 top-0 bg-white p-8 rounded-l-lg shadow-lg z-[9999] w-[360px] border-l border-t border-b border-gray-200 max-h-[100vh] overflow-y-auto"
+    class="fixed right-0 top-0 bg-white p-0 rounded-l-lg shadow-lg z-[9999] w-[0px] border-l border-t border-b border-gray-200 max-h-[100vh] overflow-y-hidden scrollbar-hide"
     :class="{ 
       'translate-x-full': !isVisible,
       'translate-x-0': isVisible 

@@ -41,3 +41,4 @@ boto3==1.38.22
 apscheduler==3.10.4
 openai==1.72.0
 youtube-transcript-api==1.1.0
+ tencentcloud-sdk-python==3.0.1206

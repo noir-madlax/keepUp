@@ -233,7 +233,7 @@ export default {
     window: {
       title: 'AI Assistant',
       sessionSelect: 'Select Session',
-      startChat: 'Start chatting...',
+      startChat: 'Ask me anything about the article',
       send: 'Send'
     },
     questionMark: 'Question',
