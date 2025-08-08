@@ -201,6 +201,8 @@
                       :src="getArticleImage(article.cover_image_url)"
                       :alt="getArticleTitle()" 
                       class="w-auto h-48 md:h-64 object-contain rounded-lg shadow-md" 
+                      referrerpolicy="no-referrer"
+                      @error="handleArticleCoverError"
                     />
                     <div class="flex-1">
                       <!-- 文章标题 --> 
@@ -209,9 +211,11 @@
                       <div class="flex items-center gap-4 text-gray-600 text-sm md:text-base">
                         <div class="flex items-center gap-2">
                           <img 
-                            :src="article.author?.icon || '/images/icons/author_default.svg'" 
+                            :src="getAuthorIcon()" 
                             :alt="article.author?.name || t('upload.card.fallback.unknownAuthor')" 
                             class="w-5 h-5 rounded-full"
+                            referrerpolicy="no-referrer"
+                            @error="handleAuthorImageError"
                           />
                           <span>{{ getAuthorName() }}</span>
                         </div>
@@ -679,6 +683,16 @@ const article = ref<Article | null>(null)
 const sections = ref<ArticleSection[]>([])
 const showEditModal = ref(false)
 const editForm = ref<Partial<Article>>({})
+
+// Image error states for cover and author avatar
+const articleCoverError = ref(false)
+const authorImageError = ref(false)
+
+// Reset image error states when navigating to a new article
+watch(() => route.params.id, () => {
+  articleCoverError.value = false
+  authorImageError.value = false
+})
 
 
 // 根据选中的小节筛选显示内容
@@ -1489,15 +1503,40 @@ onUnmounted(() => {
   })
 })
 
-const getArticleImage = (imageUrl: string | null) => {
-  // 使用与ArticleCard相同的判断逻辑
-  if (imageUrl && 
-      imageUrl.trim() !== '' && 
-      !imageUrl.includes('qpic.cn') &&
-      imageUrl !== '无缩略图') {
-    return imageUrl;
+const getArticleImage = (imageUrl: string | null | undefined) => {
+  if (articleCoverError.value) {
+    return '/images/covers/article_default.png'
   }
-  return '/images/covers/article_default.png';
+  if (
+    imageUrl &&
+    imageUrl.trim() !== '' &&
+    !imageUrl.includes('qpic.cn') &&
+    imageUrl !== '无缩略图'
+  ) {
+    return imageUrl
+  }
+  return '/images/covers/article_default.png'
+}
+
+const handleArticleCoverError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  if (!articleCoverError.value && img.src !== '/images/covers/article_default.png') {
+    articleCoverError.value = true
+  }
+}
+
+const getAuthorIcon = () => {
+  if (authorImageError.value) {
+    return '/images/icons/author_default.svg'
+  }
+  return article.value?.author?.icon || '/images/icons/author_default.svg'
+}
+
+const handleAuthorImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement
+  if (!authorImageError.value && img.src !== '/images/icons/author_default.svg') {
+    authorImageError.value = true
+  }
 }
 
 // 添加获取作者名称的方法
