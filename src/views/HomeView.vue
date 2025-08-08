@@ -187,10 +187,10 @@
                       type="button"
                       @click.stop="toggleMineOnly"
                       @mousedown.stop.prevent="() => {}"
-                      @touchstart.stop.prevent="() => {}"
-                      @touchend.stop.prevent="() => {}"
+                      @touchstart.stop="() => {}"
+                      @touchend.stop.prevent="handleTouchEnd"
                       :aria-pressed="mineOnly"
-                      class="px-3 h-7 rounded-full border text-xs transition-all duration-200 focus:outline-none focus:ring-2"
+                      class="px-4 sm:px-3 h-9 sm:h-7 rounded-full border text-xs transition-all duration-200 focus:outline-none focus:ring-2 select-none cursor-pointer"
                       :class="mineOnly
                         ? 'bg-blue-600 text-white border-blue-600 shadow'
                         : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50 shadow-sm hover:shadow-md focus:ring-blue-200'"
@@ -1009,6 +1009,13 @@ const handleLoginModalClose = () => {
   if (authStore.isAuthenticated) {
     showLoginModal.value = false
   }
+}
+
+// 兼容移动端 touch：只在 touchend 触发一次点击逻辑
+const handleTouchEnd = (e: TouchEvent) => {
+  e.preventDefault()
+  e.stopPropagation()
+  toggleMineOnly()
 }
 
 // 简单切换“只看我上传”，并重置分页与数据
