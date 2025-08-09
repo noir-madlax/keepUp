@@ -5,6 +5,7 @@ from .platform_parser.youtube import YouTubeParser
 from .platform_parser.apple import ApplePodcastParser
 from .platform_parser.spotify import SpotifyParser
 from .platform_parser.webpage import WebPageParser
+from .platform_parser.xiaoyuzhou import XiaoYuZhouParser
 from .platform_parser.wechat import WeChatParser
 from .platform_parser.bilibili import BilibiliParser
 
@@ -15,6 +16,7 @@ class ContentResolver:
         self.parsers: list[PlatformParser] = [
             WeChatParser(),
             BilibiliParser(),
+            XiaoYuZhouParser(),
             YouTubeParser(),
             ApplePodcastParser(),
             SpotifyParser(),

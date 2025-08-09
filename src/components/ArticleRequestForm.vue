@@ -66,8 +66,7 @@
                       <img src="/images/icons/youtube.svg" alt="YouTube" class="w-6 h-6" />
                       <img src="/images/icons/apple-podcast.svg" alt="Apple Podcast" class="w-6 h-6" />
                       <img src="/images/icons/spotify.svg" alt="Spotify" class="w-6 h-6" />
-                      <img src="/images/icons/wechat.svg" alt="WeChat" class="w-6 h-6" />
-                      <img src="/images/icons/web.svg" alt="Web Page" class="w-6 h-6" />
+                    
                   </div>
                 </div>
 

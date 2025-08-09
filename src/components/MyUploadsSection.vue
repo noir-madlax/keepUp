@@ -57,31 +57,11 @@
           
           <!-- 不可点击的渠道图标和说明区域 -->
           <div class="non-clickable-area">
+          
             <div class="icon-container">
               <!-- Youtube Icon -->
-              <div class="icon">
-                <div class="icon-background">
-                  <img src="/images/icons/youtube.svg" alt="Youtube" class="youtube-icon">
-                </div>
-              </div>
-              <!-- Apple Icon -->
-              <div class="icon">
-                <div class="icon-background">
-                  <img src="/images/icons/apple-podcast.svg" alt="Apple" class="podcast-icon">
-                </div>
-              </div>
-              <!-- Spotify Icon -->
-              <div class="icon">
-                <div class="icon-background">
-                  <img src="/images/icons/spotify.svg" alt="Spotify" class="podcast-icon">
-                </div>
-              </div>
-              <!-- Bilibili Icon -->
-              <div class="icon">
-                <div class="icon-background">
-                  <img src="/images/icons/bilibili.svg" alt="Bilibili" class="podcast-icon">
-                </div>
-              </div>
+            
+
             </div>
             <div class="link-text">{{ t('upload.card.supportedPlatforms') }}</div>
           </div>
@@ -233,16 +213,18 @@ const isHorizontalMove = ref(false)
 const minDirectionDelta = 20 // 判断方向的最小位移差值
 
 // 从URL判断平台
+// NOTE:
+// - This helper should stay in sync with the backend ContentResolver platform detection.
+// - Add lightweight client-side hints only. Server remains the source of truth.
+// - Keep changes here instead of ArticleRequestForm.vue to avoid duplicate platform logic and future confusion.
 const getPlatformFromUrl = (url: string): string => {
-  if (url.includes('youtube.com') || url.includes('youtu.be')) {
-    return 'youtube'
-  }
-  if (url.includes('open.spotify.com')) {
-    return 'spotify'
-  }
-  if (url.includes('podcasts.apple.com')) {
-    return 'apple'
-  }
+  if (!url) return 'webpage'
+  const u = url.toLowerCase()
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube'
+  if (u.includes('open.spotify.com')) return 'spotify'
+  if (u.includes('podcasts.apple.com')) return 'apple'
+  if (u.includes('xiaoyuzhoufm.com')) return 'xiaoyuzhou'
+  if (u.includes('bilibili.com') || u.includes('b23.tv')) return 'bilibili'
   return 'webpage'
 }
 

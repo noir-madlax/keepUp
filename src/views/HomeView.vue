@@ -117,9 +117,11 @@
           </div>
 
           <!-- 新用户 平台图标 -->
+          <!-- NOTE: These icons are the ones shown above the main input for NEW users. -->
+          <!-- If you are adding a new supported platform for the homepage input row, update here AND the old-user row below. -->
           <div class="flex justify-center items-center gap-6 mb-6">
             <img 
-              v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'bilibili']"
+              v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'bilibili', 'xiaoyuzhou']"
               :key="channel"
               :src="`/images/icons/${channel}.svg`"
               :alt="channel"
@@ -148,9 +150,11 @@
             <div class="max-w-screen-2xl mx-auto w-full px-2 sm:px-0">
               <div class="flex flex-wrap items-center gap-2 sm:gap-4 mb-3 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 border border-gray-200">
                 <div class="flex items-center gap-4 w-full">
+                  <!-- NOTE: This icon row is the ACTUAL one shown above the main input for existing users. -->
+                  <!-- Update this list when adding a supported platform for the homepage input row. -->
                   <div class="flex items-center gap-2 sm:gap-3">
                     <img 
-                      v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'wechat', 'bilibili']"
+                      v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'wechat', 'bilibili', 'xiaoyuzhou']"
                       :key="channel"
                       :src="`/images/icons/${channel}.svg`"
                       :alt="channel"
