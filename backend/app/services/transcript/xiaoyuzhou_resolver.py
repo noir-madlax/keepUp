@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
+from app.utils.logger import logger
 
 
 class XiaoYuZhouResolver:
@@ -34,6 +35,7 @@ class XiaoYuZhouResolver:
         return text.lower()
 
     def _find_episode_links(self, podcast_url: str) -> list[str]:
+        logger.info(f"[XZ Resolver] Fetch podcast page: {podcast_url}")
         resp = requests.get(podcast_url, headers=self.headers, timeout=20)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
@@ -43,7 +45,9 @@ class XiaoYuZhouResolver:
             if isinstance(href, str) and href.startswith("/episode/"):
                 links.append(urljoin(self.BASE_URL, href))
         # de-dup while preserving order
-        return list(dict.fromkeys(links))
+        uniq = list(dict.fromkeys(links))
+        logger.info(f"[XZ Resolver] episode links found: {len(uniq)}")
+        return uniq
 
     def _get_episode_meta(self, episode_url: str) -> tuple[str, str]:
         resp = requests.get(episode_url, headers=self.headers, timeout=20)
@@ -78,6 +82,7 @@ class XiaoYuZhouResolver:
                 if not ep_title or not ep_audio:
                     continue
                 score = SequenceMatcher(None, target, self._normalize_title(ep_title)).ratio()
+                logger.info(f"[XZ Resolver] candidate score={score:.3f} title='{ep_title[:60]}' audio={'yes' if ep_audio else 'no'}")
                 if score > best_score:
                     best_score = score
                     best_audio = ep_audio
@@ -85,7 +90,8 @@ class XiaoYuZhouResolver:
                     break
             except Exception:
                 continue
-
-        return best_audio if best_score >= threshold else None
+        ok = best_audio if best_score >= threshold else None
+        logger.info(f"[XZ Resolver] best_score={best_score:.3f} threshold={threshold} matched={'yes' if ok else 'no'}")
+        return ok
 
 

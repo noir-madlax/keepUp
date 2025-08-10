@@ -8,7 +8,7 @@ import time
 import asyncio
 import logging
 import requests
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
 
@@ -19,6 +19,10 @@ from app.models.request import FetchRequest
 from app.models.author import AuthorInfo
 from app.models.article import ArticleCreate
 from app.services.transcript.fallback_provider import TranscriptFallbackProvider
+import unicodedata
+import os
+import re as _re
+from dotenv import load_dotenv
 
 # 字幕获取
 try:
@@ -56,6 +60,66 @@ class YouTubeFetcher(ContentFetcher):
         ]
         
         return any(re.match(pattern, url) for pattern in youtube_patterns)
+
+    @staticmethod
+    def _normalize_text(value: str) -> str:
+        if not value:
+            return ''
+        # NFKD 去音标，去空格与标点，统一大小写，简繁不在此处处理（避免引入额外依赖）
+        s = unicodedata.normalize('NFKD', value)
+        s = ''.join(ch for ch in s if not unicodedata.combining(ch))
+        s = s.lower()
+        s = s.replace(' ', '')
+        s = _re.sub(r"[\u3000\-_:：··\.\(\)\[\]\{\}\u2019'\u2018\u201C\u201D]", '', s)
+        return s
+
+    async def _select_fallback_podcast_url(self, author_name: str, video_id: Optional[str]) -> Tuple[Optional[str], Optional[str], str]:
+        """根据作者名或频道 handle 从环境变量映射中选择小宇宙播客 URL。
+
+        返回: (fallback_url, matched_key, handle)
+        """
+        try:
+            load_dotenv(dotenv_path="/Users/rigel/project/keepup-v2/backend/.env")
+        except Exception:
+            pass
+        mapping = os.getenv('YOUTUBE_FALLBACK_CHANNEL_MAP', '')
+        pairs = [p for p in mapping.split(',') if p.strip()]
+
+        normalized_author = self._normalize_text(author_name)
+        matched_key: Optional[str] = None
+        fallback_url: Optional[str] = None
+
+        # 1) 先按作者名归一化包含匹配
+        for pair in pairs:
+            if '=' in pair:
+                key, val = pair.split('=', 1)
+                key_n = self._normalize_text(key.strip('@').strip())
+                if key_n and key_n in normalized_author:
+                    matched_key = key
+                    fallback_url = val.strip()
+                    break
+
+        # 2) 再按 channel handle 匹配
+        handle = ''
+        if not fallback_url:
+            try:
+                data = await self._get_serpapi_info(video_id) if video_id else None
+                channel_link = (data or {}).get('channel', {}).get('link', '')
+                if '/@' in channel_link:
+                    handle = channel_link.split('/@', 1)[-1]
+                normalized_handle = self._normalize_text(handle)
+                for pair in pairs:
+                    if '=' in pair:
+                        key, val = pair.split('=', 1)
+                        key_n = self._normalize_text(key.strip('@').strip())
+                        if key_n and key_n in normalized_handle:
+                            matched_key = key
+                            fallback_url = val.strip()
+                            break
+            except Exception:
+                handle = ''
+
+        return fallback_url, matched_key, handle
     
     def _extract_video_id(self, url: str) -> Optional[str]:
         """从YouTube URL中提取视频ID"""
@@ -93,48 +157,28 @@ class YouTubeFetcher(ContentFetcher):
             # 若字幕为空且命中白名单频道，走小宇宙+腾讯ASR兜底
             if not transcript:
                 try:
-                    author_name = (video_info.author or {}).get('name', '')
-                    # 简单命中：从 env 的 YOUTUBE_FALLBACK_CHANNEL_MAP 中查找 key 是否包含在作者名或 handle 里
-                    from dotenv import load_dotenv
-                    import os
-                    load_dotenv(dotenv_path="/Users/rigel/project/keepup-v2/backend/.env")
-                    mapping = os.getenv('YOUTUBE_FALLBACK_CHANNEL_MAP', '')
-                    fallback_url = None
-                    for pair in [p for p in mapping.split(',') if p.strip()] :
-                        if '=' in pair:
-                            key, val = pair.split('=', 1)
-                            if key.strip().lower() in author_name.lower():
-                                fallback_url = val.strip()
-                                break
-                    # SerpAPI channel link 带 handle 时，也试着匹配
-                    if not fallback_url:
-                        try:
-                            if video_id:
-                                data = await self._get_serpapi_info(video_id)
-                            else:
-                                data = None
-                            channel_link = (data or {}).get('channel', {}).get('link', '')
-                            # 从 link 提取 @handle
-                            handle = ''
-                            if '/@' in channel_link:
-                                handle = channel_link.split('/@', 1)[-1]
-                            for pair in [p for p in mapping.split(',') if p.strip()] :
-                                if '=' in pair:
-                                    key, val = pair.split('=', 1)
-                                    if key.strip('@').lower() in handle.lower():
-                                        fallback_url = val.strip()
-                                        break
-                        except Exception:
-                            pass
+                    logger.info("[YT Fallback] Transcript empty. Try XiaoYuZhou fallback matching...")
+                    author_name = (video_info.author or {}).get('name', '') or ''
+                    # 选择兜底播客 URL（更智能匹配 + 详细日志）
+                    fallback_url, match_key, handle = await self._select_fallback_podcast_url(author_name, video_id)
+                    logger.info(
+                        f"[YT Fallback] match_key='{match_key}', author='{author_name}', handle='{handle}', url='{fallback_url or ''}'"
+                    )
                     if fallback_url:
                         provider = TranscriptFallbackProvider()
                         transcript = await provider.transcribe_from_xiaoyuzhou(
                             title=video_info.title,
                             podcast_url=fallback_url
                         )
+                        if transcript:
+                            logger.info(f"[YT Fallback] XiaoYuZhou transcript acquired. length={len(transcript)}")
+                        else:
+                            logger.warning("[YT Fallback] XiaoYuZhou transcript not available or ASR failed.")
+                    else:
+                        logger.info("[YT Fallback] No mapping matched. Skipping XiaoYuZhou fallback.")
                 except Exception as _:
                     # 兜底错误不影响主流程
-                    pass
+                    logger.exception("[YT Fallback] Unexpected error during fallback pipeline")
             
             # 组合内容
             content_parts = [
