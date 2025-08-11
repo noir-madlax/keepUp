@@ -55,6 +55,25 @@ class XiaoYuZhouFetcher(ContentFetcher):
         except Exception:
             return None
 
+    def _normalize_icon_url(self, src: str) -> str:
+        """Ensure the podcast/author icon URL is absolute and usable by clients.
+        - Handles protocol-relative URLs (//)
+        - Handles site-relative URLs (/...)
+        - Trims known size suffix like '@small'
+        """
+        if not src:
+            return ''
+        # Trim size suffix if present
+        if '@small' in src:
+            src = src.split('@small')[0]
+        # Protocol-relative
+        if src.startswith('//'):
+            return f"https:{src}"
+        # Site-relative
+        if src.startswith('/'):
+            return f"https://www.xiaoyuzhoufm.com{src}"
+        return src
+
     def _fallback_audio_via_podcast(self, episode_url: str, episode_id: str, podcast_url: str) -> Optional[str]:
         try:
             logger.info(f"[XiaoYuZhou][Step] Fallback via podcast page: {podcast_url}")
@@ -174,7 +193,7 @@ class XiaoYuZhouFetcher(ContentFetcher):
                     cls = ' '.join(img.get('class', []))
                     src = img.get('src', '')
                     if 'side-avatar' in cls and src:
-                        podcast_icon = src.split('@small')[0]
+                        podcast_icon = self._normalize_icon_url(src)
                         break
                 # 发表时间
                 t = header.find('time')
@@ -235,7 +254,7 @@ class XiaoYuZhouFetcher(ContentFetcher):
                     cls = ' '.join(img.get('class', []))
                     src = img.get('src', '')
                     if 'side-avatar' in cls and src:
-                        icon = src.split('@small')[0]
+                        icon = self._normalize_icon_url(src)
                         break
             if name:
                 return AuthorInfo(name=name, icon=icon or '', platform='XiaoYuZhou')

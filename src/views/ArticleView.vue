@@ -75,28 +75,15 @@
         </div>
         
         <!-- 导航样式B -->
-        <div v-else class="flex justify-between items-center px-4 h-[60px] min-w-[378px] max-w-[1440px] mx-auto" style="max-width: min(100%, 1440px);">
+        <div v-else class="flex justify-center items-center px-4 h-[60px] min-w-[378px] max-w-[1440px] mx-auto" style="max-width: min(100%, 1440px);">
           <div class="flex-1 max-w-4xl mx-auto px-4">
-            <div class="w-full h-[40px] flex items-center justify-between">
+            <div class="w-full h-[40px] flex items-center justify-center">
               <!-- 使用transition-group为section标题添加动画 -->
               <transition-group 
                 :name="transitionName"
-                class="flex items-center justify-between w-full relative"
+                class="flex items-center justify-center w-full relative"
                 tag="div"
               >
-                <!-- 上一节 -->
-                <div 
-                  v-if="prevDisplayAnchor" 
-                  :key="'prev-' + prevDisplayAnchor.id"
-                  @click="scrollToDisplayAnchor(prevDisplayAnchor.id)"
-                  class="flex items-center cursor-pointer text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </div>
-                <div v-else :key="'prev-empty'" class="w-20"></div>
-
                 <!-- 当前section名称 -->
                 <div 
                   :key="currentDisplayTitle || 'current'"
@@ -110,19 +97,6 @@
                     class="absolute inset-x-0 bottom-[-4px] h-0.5 bg-blue-500 transform scale-100 transition-transform duration-200"
                   ></div>
                 </div>
-
-                <!-- 下一节 -->
-                <div 
-                  v-if="nextDisplayAnchor" 
-                  :key="'next-' + nextDisplayAnchor.id"
-                  @click="scrollToDisplayAnchor(nextDisplayAnchor.id)"
-                  class="flex items-center cursor-pointer text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-                <div v-else :key="'next-empty'" class="w-20"></div>
               </transition-group>
             </div>
           </div>

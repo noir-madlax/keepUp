@@ -167,6 +167,8 @@ const getChannelIcon = (channel: string) => {
       return 'wechat.svg'
     case 'webpage':
       return 'web.svg'
+    case 'xiaoyuzhou':
+      return 'xiaoyuzhou.svg'
     default:
       return 'channel_default.png'
   }
@@ -188,9 +190,13 @@ const getPlatformIcon = (platform: string | undefined) => {
       case 'spotify':
         return 'spotify.svg'
       case 'applet':
+      case 'apple':
+      case 'apple podcast':
         return 'apple-podcast.svg'
       case 'webpage':
         return 'web.svg'
+      case 'xiaoyuzhou':
+        return 'xiaoyuzhou.svg'
       default:
         return 'default.svg'
     }

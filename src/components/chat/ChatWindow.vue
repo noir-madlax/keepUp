@@ -83,9 +83,9 @@
         ref="messageListRef"
         class="flex-1 overflow-y-auto pt-2 px-4 pb-1 min-h-0"
         @wheel.prevent="handleChatScroll"
-        @touchstart="handleTouchStart"
-        @touchmove="handleTouchMove"
-        @touchend="handleTouchEnd"
+        @touchstart.passive="handleTouchStart"
+        @touchmove.passive="handleTouchMove"
+        @touchend.passive="handleTouchEnd"
       >
         <!-- 1. 有消息时的显示 -->
         <template v-if="chatStore.currentSession?.messages?.length">
@@ -412,7 +412,7 @@ const touchStartY = ref(0)
 const isTouchingChat = ref(false)
 
 // 2024-03-25 18:30: 处理触摸开始
-const handleTouchStart = (event: TouchEvent) => {
+  const handleTouchStart = (event: TouchEvent) => {
   // 记录开始触摸的位置
   touchStartY.value = event.touches[0].clientY
   
@@ -420,26 +420,19 @@ const handleTouchStart = (event: TouchEvent) => {
   const target = event.target as HTMLElement
   const chatWindow = messageListRef.value
   
-  if (chatWindow && (chatWindow === target || chatWindow.contains(target))) {
+    if (chatWindow && (chatWindow === target || chatWindow.contains(target))) {
     isTouchingChat.value = true
-    // 立即阻止事件冒泡和默认行为，停止文章的惯性滚动
-    event.stopPropagation()
-    event.preventDefault()
-    
-    // 2024-03-25 19:30: 添加额外处理确保滚动响应
-    document.body.style.overscrollBehavior = 'none'
+      // 不再强制阻止默认行为，避免禁用 iOS 系统级左滑返回
+      // 仅在需要时轻量处理，由 CSS overscroll-behavior 控制弹性
+      document.body.style.overscrollBehavior = 'contain'
   } else {
     isTouchingChat.value = false
   }
 }
 
 // 2024-03-25 18:30: 处理触摸移动
-const handleTouchMove = (event: TouchEvent) => {
+  const handleTouchMove = (event: TouchEvent) => {
   if (!messageListRef.value || !isTouchingChat.value) return
-  
-  // 立即阻止默认行为和冒泡
-  event.preventDefault()
-  event.stopPropagation()
   
   const container = messageListRef.value
   const { scrollTop, scrollHeight, clientHeight } = container
@@ -454,11 +447,10 @@ const handleTouchMove = (event: TouchEvent) => {
   // 检查是否在可滚动范围内
   if (newScrollTop >= 0 && newScrollTop <= scrollHeight - clientHeight) {
     container.scrollTop = newScrollTop
-  } else if (newScrollTop < 0 || newScrollTop > scrollHeight - clientHeight) {
-    // 如果已经到达边界，允许事件冒泡
-    isTouchingChat.value = false
-    // 2024-03-25 19:30: 恢复默认滚动行为
-    document.body.style.overscrollBehavior = 'auto'
+    } else if (newScrollTop < 0 || newScrollTop > scrollHeight - clientHeight) {
+      // 到达边界时不再劫持，交还系统默认手势
+      isTouchingChat.value = false
+      document.body.style.overscrollBehavior = 'auto'
   }
   
   // 更新自动滚动标志

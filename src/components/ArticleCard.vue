@@ -330,37 +330,35 @@ const formatDate = (date: string | undefined) => {
 
 const getChannelIcon = (channel: string | undefined): string => {
   if (!channel) return 'channel_default.png'
-  
+  const key = channel.toLowerCase()
   const iconMap: Record<string, string> = {
-    'YouTube': 'youtube.svg',
-    'youtube': 'youtube.svg',
-    'bilibili': 'bilibili.svg',
-    'Apple Podcast': 'apple-podcast.svg',
-    'Spotify': 'spotify.svg',
-    'spotify': 'spotify.svg',
-    'wechat': 'wechat.svg',  
-    'WeChat': 'wechat.svg',
-    'weixin': 'wechat.svg',
-    'webpage': 'web.svg'
+    youtube: 'youtube.svg',
+    bilibili: 'bilibili.svg',
+    'apple podcast': 'apple-podcast.svg',
+    apple: 'apple-podcast.svg',
+    spotify: 'spotify.svg',
+    wechat: 'wechat.svg',
+    weixin: 'wechat.svg',
+    webpage: 'web.svg',
+    xiaoyuzhou: 'xiaoyuzhou.svg'
   }
-  return iconMap[channel.toLowerCase()] || 'channel_default.png'
+  return iconMap[key] || 'channel_default.png'
 }
 
 // 2024-03-19: 添加平台图标获取函数
 const getPlatformIcon = (platform: string | undefined) => {
   if (!platform) return 'default.svg'
-  
+  const key = platform.toLowerCase()
   const iconMap: Record<string, string> = {
-    'youtube': 'youtube.svg',
-    'YouTube': 'youtube.svg',
-    'bilibili': 'bilibili.svg',
-    'spotify': 'spotify.svg',
-    'Spotify': 'spotify.svg',
-    'apple': 'apple-podcast.svg',
-    'Apple Podcast': 'apple-podcast.svg',
-    'webpage': 'web.svg'
+    youtube: 'youtube.svg',
+    bilibili: 'bilibili.svg',
+    spotify: 'spotify.svg',
+    apple: 'apple-podcast.svg',
+    'apple podcast': 'apple-podcast.svg',
+    webpage: 'web.svg',
+    xiaoyuzhou: 'xiaoyuzhou.svg'
   }
-  return iconMap[platform.toLowerCase()] || 'default.svg'
+  return iconMap[key] || 'default.svg'
 }
 
 const getAuthorIcon = () => {
