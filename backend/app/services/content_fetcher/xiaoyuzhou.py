@@ -3,54 +3,32 @@ from .base import ContentFetcher, VideoInfo, AuthorInfo
 import re
 from app.utils.logger import logger
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 from datetime import datetime
 from app.models.article import ArticleCreate
 from app.services.transcript.tencent_asr import TencentASRClient
 from app.config import settings
+from app.services.transcript.xiaoyuzhou_resolver import XiaoYuZhouResolver
 
 class XiaoYuZhouFetcher(ContentFetcher):
-    """Fetcher for XiaoYuZhou pages with optional proxy and retry session"""
+    """Fetcher for XiaoYuZhou pages with anti-bot aware access and verbose logging"""
 
     def __init__(self) -> None:
-        # Build a resilient session with retries and headers
-        self.session = requests.Session()
-        retry_strategy = Retry(
-            total=3,
-            connect=3,
-            read=3,
-            backoff_factor=1,
-            status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["HEAD", "GET", "OPTIONS"],
-        )
-        adapter = HTTPAdapter(max_retries=retry_strategy)
-        self.session.mount("http://", adapter)
-        self.session.mount("https://", adapter)
+        # Use the exact headers/methodology as XiaoYuZhouResolver to avoid wind-control
+        self.resolver = XiaoYuZhouResolver()
+        self.default_headers = dict(self.resolver.headers)
+        # Align language hints
+        self.default_headers.setdefault("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
 
-        # Set a realistic browser User-Agent and language headers
-        self.session.headers.update({
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/124.0 Safari/537.36"
-            ),
-            "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-        })
-
-        # Optional proxy support via settings
+        # Do NOT use proxy for XiaoYuZhou even if configured globally
         if getattr(settings, "USE_PROXY", False) and getattr(settings, "PROXY_URL", None):
-            proxy_url = settings.PROXY_URL
-            self.session.proxies = {"http": proxy_url, "https": proxy_url}
-            masked = re.sub(r":[^@]+@", ":***@", proxy_url)
-            logger.info(f"[XiaoYuZhou] Using proxy for requests: {masked}")
+            logger.info("[XiaoYuZhou] Proxy detected in settings but ignored for XiaoYuZhou fetcher")
 
     def _get_soup(self, url: str) -> BeautifulSoup:
         """Request a URL and return BeautifulSoup, with logging on failures."""
         logger.info(f"[XiaoYuZhou][Step] HTTP request start: {url}")
         try:
-            resp = self.session.get(url, timeout=20)
+            resp = requests.get(url, headers=self.default_headers, timeout=20)
             # Log basic diagnostics before raising
             logger.info(
                 f"[XiaoYuZhou][Step] HTTP response: status={resp.status_code}, len={len(resp.text)}"
@@ -60,6 +38,45 @@ class XiaoYuZhouFetcher(ContentFetcher):
         except Exception as e:
             logger.error(f"[XiaoYuZhou][Step] HTTP request failed: {type(e).__name__}: {e}")
             raise
+
+    def _extract_episode_id(self, url: str) -> str:
+        m = re.search(r"/episode/([A-Za-z0-9]+)", url)
+        return m.group(1) if m else ""
+
+    def _extract_podcast_url(self, soup: BeautifulSoup) -> Optional[str]:
+        try:
+            header = soup.find(lambda tag: tag.name == 'header' and tag.find('h1'))
+            if not header:
+                return None
+            a = header.find('a', href=re.compile(r'^/podcast/'))
+            if a and a.has_attr('href'):
+                return f"https://www.xiaoyuzhoufm.com{a['href']}"
+            return None
+        except Exception:
+            return None
+
+    def _fallback_audio_via_podcast(self, episode_url: str, episode_id: str, podcast_url: str) -> Optional[str]:
+        try:
+            logger.info(f"[XiaoYuZhou][Step] Fallback via podcast page: {podcast_url}")
+            ep_links = self.resolver._find_episode_links(podcast_url)
+            logger.info(f"[XiaoYuZhou][Step] Podcast episodes discovered: {len(ep_links)}")
+            # Match by episode id
+            target = None
+            for link in ep_links:
+                if episode_id and episode_id in link:
+                    target = link
+                    break
+            if not target:
+                logger.warning(f"[XiaoYuZhou][Step] Fallback match by id failed: id='{episode_id}'")
+                return None
+            logger.info(f"[XiaoYuZhou][Step] Fallback target episode: {target}")
+            # Reuse resolver path to read meta
+            title, audio = self.resolver._get_episode_meta(target)
+            logger.info(f"[XiaoYuZhou][Step] Fallback meta extracted: title={'yes' if title else 'no'}, audio={'yes' if audio else 'no'}")
+            return audio or None
+        except Exception as e:
+            logger.error(f"[XiaoYuZhou][Step] Fallback via podcast failed: {type(e).__name__}: {e}")
+            return None
     def can_handle(self, url: str) -> bool:
         """检查是否是小宇宙 URL"""
         return 'xiaoyuzhoufm.com' in url
@@ -74,6 +91,16 @@ class XiaoYuZhouFetcher(ContentFetcher):
             audio_url = audio_meta.get('content', '') if audio_meta else ''
             if not audio_url:
                 logger.warning(f"[XiaoYuZhou][Step] og:audio missing")
+                # Try fallback via podcast list if possible
+                podcast_url = self._extract_podcast_url(soup)
+                if podcast_url:
+                    episode_id = self._extract_episode_id(url)
+                    logger.info(f"[XiaoYuZhou][Step] Attempt fallback using podcast_url and episode_id: {podcast_url} | {episode_id}")
+                    audio_url = self._fallback_audio_via_podcast(url, episode_id, podcast_url) or ''
+                    if audio_url:
+                        logger.info(f"[XiaoYuZhou][Step] Fallback audio_url parsed")
+                    else:
+                        logger.warning(f"[XiaoYuZhou][Step] Fallback audio_url not found")
             else:
                 logger.info(f"[XiaoYuZhou][Step] audio_url parsed")
 
