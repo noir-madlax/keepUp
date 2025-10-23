@@ -1612,11 +1612,35 @@ const contentLanguage = ref('')
     const bubble = target.closest('.citation-bubble')
     const wrapper = target.closest('.citation-bubble-wrapper')
     const tooltip = target.closest('.citation-tooltip')
+    
+    // 检查是否点击的是案例badge
+    const caseBubble = target.closest('.case-bubble')
+    const caseWrapper = target.closest('.case-bubble-wrapper')
+    const caseTooltip = target.closest('.case-tooltip')
+    
       // 在气泡或 tooltip 内点击时，阻止冒泡，避免外部 click 监听立刻关闭
-      if (bubble || wrapper || tooltip) {
+      if (bubble || wrapper || tooltip || caseBubble || caseWrapper || caseTooltip) {
         event.stopPropagation?.()
         event.preventDefault?.()
       }
+    
+    // 处理案例badge的悬停显示
+    if (caseBubble || caseWrapper) {
+      console.log('🎯 检测到案例badge交互')
+      const actualWrapper = (caseWrapper || caseBubble?.closest('.case-bubble-wrapper')) as HTMLElement
+      if (actualWrapper) {
+        const tooltipEl = actualWrapper.querySelector('.case-tooltip') as HTMLElement
+        if (tooltipEl) {
+          // 切换tooltip显示状态
+          if (tooltipEl.classList.contains('hidden')) {
+            tooltipEl.classList.remove('hidden')
+          } else {
+            tooltipEl.classList.add('hidden')
+          }
+        }
+      }
+      return
+    }
 
     if (bubble || wrapper || tooltip) {
       console.log('🎯 检测到气泡点击，直接处理tooltip显示')
@@ -1885,7 +1909,18 @@ const renderSectionContent = (section: ArticleSection) => {
      const emElements = container.querySelectorAll('em')
      emElements.forEach(em => {
        const text = (em.textContent || '').trim()
-       const citationRegex = /^(?:\[(.+?)\]\s*)?([^：:]+?)[:：]\s*["“”](.+?)["“”]$/s
+       
+       // 先检查是否是案例格式: 案例：[公司] - 描述
+       const caseRegex = /^案例[：:]\s*\[?([^\]]+?)\]?\s*[-–—]\s*(.+)$/
+       const caseMatch = text.match(caseRegex)
+       
+       if (caseMatch) {
+         // 这是一个案例badge，不作为引用处理
+         return
+       }
+       
+       // 检查引用格式 (支持各种引号: 英文" 中文"" 弯引号""\u201C\u201D)
+       const citationRegex = /^(?:\[(.+?)\]\s*)?([^：:]+?)[:：]\s*[""\"\u201C](.+?)[""\"\u201D]$/s
        const match = text.match(citationRegex)
        if (!match) return
        const label = (match[1] || '').trim()
@@ -1970,6 +2005,82 @@ const renderSectionContent = (section: ArticleSection) => {
 
     // 注意：气泡点击逻辑现在由 handleTextSelection 函数处理
     console.log('气泡HTML生成完成，点击事件由主容器的mouseup事件处理')
+    
+    // 处理案例badges（在列表项的末尾独立一行显示）
+    const caseElements = container.querySelectorAll('em')
+    const caseRegex = /^案例[：:]\s*\[?([^\]]+?)\]?\s*[-–—]\s*(.+)$/
+    
+    caseElements.forEach(em => {
+      const text = (em.textContent || '').trim()
+      const match = text.match(caseRegex)
+      
+      // 只处理匹配案例格式的em标签,避免误删citation
+      if (match) {
+        const company = match[1].trim()
+        const description = match[2].trim()
+        const safeDescription = description.replace(/"/g, '&quot;')
+        
+        // 使用DOM API创建案例badge元素(避免insertAdjacentHTML截断问题)
+        const wrapper = document.createElement('span')
+        wrapper.className = 'case-bubble-wrapper inline-block relative mx-1 align-middle'
+        
+        // 创建badge
+        const badge = document.createElement('span')
+        badge.className = 'case-bubble inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-purple-500 to-purple-700 text-white rounded-xl text-xs font-medium cursor-pointer transition-all duration-200 hover:translate-y-[-1px] hover:shadow-lg'
+        badge.setAttribute('data-company', company)
+        badge.setAttribute('data-description', description)
+        
+        const icon = document.createElement('span')
+        icon.className = 'case-icon'
+        icon.textContent = '📦'
+        
+        const companySpan = document.createElement('span')
+        companySpan.className = 'case-company'
+        companySpan.textContent = company
+        
+        badge.appendChild(icon)
+        badge.appendChild(companySpan)
+        
+        // 创建tooltip
+        const tooltip = document.createElement('div')
+        tooltip.className = 'case-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed'
+        tooltip.style.cssText = 'bottom: 100%; left: 0; margin-bottom: 8px;'
+        
+        const tooltipHeader = document.createElement('div')
+        tooltipHeader.className = 'tooltip-header pb-2 mb-2 border-b border-gray-200'
+        
+        const tooltipCompany = document.createElement('span')
+        tooltipCompany.className = 'tooltip-company text-xs text-purple-600 font-semibold'
+        tooltipCompany.textContent = company
+        
+        tooltipHeader.appendChild(tooltipCompany)
+        
+        const tooltipContent = document.createElement('div')
+        tooltipContent.className = 'tooltip-content text-gray-700'
+        tooltipContent.textContent = description
+        
+        tooltip.appendChild(tooltipHeader)
+        tooltip.appendChild(tooltipContent)
+        
+        wrapper.appendChild(badge)
+        wrapper.appendChild(tooltip)
+        
+        // 找到包含案例标记的段落
+        const p = em.closest('p')
+        if (p) {
+          // 案例段落通常在<LI>内部,查找父<LI>
+          const parentLi = p.closest('li')
+          
+          if (parentLi) {
+            // 将badge添加到LI的末尾
+            parentLi.appendChild(wrapper)
+          }
+          
+          // 移除原始案例段落
+          p.remove()
+        }
+      }
+    })
 
     // 获取该 section 的所有标记（保留原有的chat sessions标记处理）
     const sectionMarks = articleMarks.value?.filter(

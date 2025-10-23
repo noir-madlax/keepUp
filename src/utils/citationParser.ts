@@ -5,6 +5,12 @@ export interface ParsedCitation {
   isValid: boolean
 }
 
+export interface ParsedCase {
+  company: string      // 公司或产品名称
+  description: string  // 案例描述
+  isValid: boolean
+}
+
 // Determine whether a label inside brackets is a meaningful timestamp.
 // Supports m:ss, mm:ss, h:mm:ss, hh:mm:ss. All-zero values (00:00, 0:00, 00:00:00) are treated as invalid.
 export function isMeaningfulTimestamp(label: string | undefined | null): boolean {
@@ -51,6 +57,29 @@ export function parseCitation(markContent: string): ParsedCitation {
     timestamp: '',
     speaker: '',
     content: markContent,
+    isValid: false
+  }
+}
+
+// Parse case badge format: "案例：[公司/产品名称] - 案例描述"
+export function parseCase(content: string): ParsedCase {
+  // Match: 案例：[company] - description
+  const caseRegex = /^案例[：:]\s*\[?([^\]]+?)\]?\s*[-–—]\s*(.+)$/
+  
+  const trimmed = content.trim()
+  const match = trimmed.match(caseRegex)
+  
+  if (match) {
+    return {
+      company: match[1].trim(),
+      description: match[2].trim(),
+      isValid: true
+    }
+  }
+  
+  return {
+    company: '',
+    description: content,
     isValid: false
   }
 }

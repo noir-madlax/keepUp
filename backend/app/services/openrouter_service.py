@@ -13,7 +13,15 @@ class OpenRouterService:
     # 升级模型
    #  MODEL = "anthropic/claude-3.7-sonnet"
     # 升级模型
-    MODEL = "anthropic/claude-sonnet-4"
+    # MODEL = "anthropic/claude-sonnet-4"
+    # 使用 Gemini 2.5 Flash 模型
+    # MODEL = "google/gemini-2.5-flash"
+    # 测试 Sonnet 4
+    # MODEL = "anthropic/claude-sonnet-4"
+    # 使用 Claude Sonnet 4.5
+    # MODEL = "anthropic/claude-sonnet-4.5"
+    # 测试 Gemini 2.5 Pro
+    MODEL = "google/gemini-2.5-pro"
     
     @staticmethod
     async def get_prompt_data(lang: str, channel: str = None, content: str = None) -> Optional[str]:

@@ -1,0 +1,10 @@
+---
+alwaysApply: false
+---
+
+Host keepup
+    HostName 3.216.98.136
+    User ec2-user
+    IdentityFile ~/.ssh/LightsailDefaultKey-us-east-1.pem
+    IdentitiesOnly yes
+这是ssh的链接信息和pem文件目录位置。这个配置我在cursor可以成功链接ssh。
