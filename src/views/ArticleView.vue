@@ -1618,154 +1618,101 @@ const contentLanguage = ref('')
     const caseWrapper = target.closest('.case-bubble-wrapper')
     const caseTooltip = target.closest('.case-tooltip')
     
-      // 在气泡或 tooltip 内点击时，阻止冒泡，避免外部 click 监听立刻关闭
-      if (bubble || wrapper || tooltip || caseBubble || caseWrapper || caseTooltip) {
-        event.stopPropagation?.()
-        event.preventDefault?.()
-      }
-    
-    // 处理案例badge的悬停显示
-    if (caseBubble || caseWrapper) {
-      console.log('🎯 检测到案例badge交互')
-      const actualWrapper = (caseWrapper || caseBubble?.closest('.case-bubble-wrapper')) as HTMLElement
+    // 如果点击的是tooltip内容,不阻止事件,继续执行文本选择逻辑
+    if (tooltip || caseTooltip) {
+      // 继续执行下面的文本选择逻辑
+    }
+    // 如果点击的是badge,处理tooltip切换并return
+    else if (caseBubble) {
+      // 点击badge时阻止默认行为和冒泡
+      event.stopPropagation?.()
+      event.preventDefault?.()
+      
+      const actualWrapper = caseBubble.closest('.case-bubble-wrapper') as HTMLElement
       if (actualWrapper) {
         const tooltipEl = actualWrapper.querySelector('.case-tooltip') as HTMLElement
         if (tooltipEl) {
-          // 切换tooltip显示状态
-          if (tooltipEl.classList.contains('hidden')) {
+          const isHidden = tooltipEl.classList.contains('hidden')
+          
+          if (isHidden) {
+            // 先隐藏所有其他tooltip
+            document.querySelectorAll('.case-tooltip, .citation-tooltip').forEach(t => {
+              t.classList.add('hidden')
+            })
+            // 显示当前tooltip
             tooltipEl.classList.remove('hidden')
           } else {
+            // 隐藏当前tooltip
             tooltipEl.classList.add('hidden')
           }
         }
       }
       return
     }
-
-    if (bubble || wrapper || tooltip) {
-      console.log('🎯 检测到气泡点击，直接处理tooltip显示')
-      console.log('🔍 点击的元素详情:', {
-        clickedElement: target.tagName + '.' + target.className,
-        bubbleFound: !!bubble,
-        wrapperFound: !!wrapper,
-        tooltipFound: !!tooltip
-      })
+    else if (bubble) {
+      // 点击badge时阻止默认行为和冒泡
+      event.stopPropagation?.()
+      event.preventDefault?.()
       
-      // 直接处理气泡点击逻辑
-      if (bubble && wrapper) {
-        console.log('📍 找到bubble和wrapper，开始查找tooltip')
-        
+      const wrapper = bubble.closest('.citation-bubble-wrapper') as HTMLElement
+      if (wrapper) {
         let bubbleTooltip = wrapper.querySelector('.citation-tooltip')
-        console.log('🔍 tooltip查找结果:', {
-          tooltipElement: !!bubbleTooltip,
-          tooltipHTML: bubbleTooltip ? bubbleTooltip.outerHTML.substring(0, 200) + '...' : 'null',
-          wrapperHTML: wrapper.outerHTML.substring(0, 400) + '...',
-          wrapperFullLength: wrapper.outerHTML.length,
-          wrapperChildren: Array.from(wrapper.children).map(child => ({
-            tagName: child.tagName,
-            className: child.className,
-            hasTooltip: child.classList.contains('citation-tooltip')
-          }))
-        })
         
         // 如果tooltip不存在，尝试从data属性重建
-        if (!bubbleTooltip && (bubble.dataset.content || wrapper.dataset.content)) {
-          console.log('🔄 Tooltip缺失，尝试从data属性重建...')
-          const timestamp = bubble.dataset.timestamp || wrapper.dataset.timestamp || ''
-          const speaker = bubble.dataset.speaker || wrapper.dataset.speaker || ''
-          const content = bubble.dataset.content || wrapper.dataset.content || ''
-          
-          console.log('📊 Data属性:', { timestamp, speaker, content: content?.substring(0, 100) })
+        if (!bubbleTooltip && bubble.dataset.content) {
+          const timestamp = bubble.dataset.timestamp || ''
+          const speaker = bubble.dataset.speaker || ''
+          const content = bubble.dataset.content || ''
           
           if (speaker && content) {
-            const tsPart = isMeaningfulTimestamp(timestamp) ? `<span class=\"tooltip-timestamp text-xs text-gray-600 font-medium\">[${timestamp}]</span>` : ''
-            const tooltipHTML = `<div class=\"citation-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed\" style=\"top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px;\">\n<div class=\"tooltip-header flex gap-2 mb-2 pb-2 border-b border-gray-200\">\n ${tsPart}<span class=\"tooltip-speaker text-xs text-blue-600 font-semibold\">${speaker}</span>\n </div>\n <div class=\"tooltip-content text-gray-700 italic\">${content}</div>\n </div>`
+            const tooltipDiv = document.createElement('div')
+            tooltipDiv.className = 'citation-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed'
+            tooltipDiv.style.cssText = 'top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px;'
             
-            wrapper.insertAdjacentHTML('beforeend', tooltipHTML)
-            bubbleTooltip = wrapper.querySelector('.citation-tooltip')
-            console.log('✅ Tooltip重建结果:', !!bubbleTooltip)
+            const tooltipHeader = document.createElement('div')
+            tooltipHeader.className = 'tooltip-header flex gap-2 mb-2 pb-2 border-b border-gray-200'
+            
+            if (isMeaningfulTimestamp(timestamp)) {
+              const tsTip = document.createElement('span')
+              tsTip.className = 'tooltip-timestamp text-xs text-gray-600 font-medium'
+              tsTip.textContent = `[${timestamp}]`
+              tooltipHeader.appendChild(tsTip)
+            }
+            
+            const speakerTip = document.createElement('span')
+            speakerTip.className = 'tooltip-speaker text-xs text-blue-600 font-semibold'
+            speakerTip.textContent = speaker
+            tooltipHeader.appendChild(speakerTip)
+            
+            const tooltipContentDiv = document.createElement('div')
+            tooltipContentDiv.className = 'tooltip-content text-gray-700 italic'
+            tooltipContentDiv.textContent = content
+            
+            tooltipDiv.appendChild(tooltipHeader)
+            tooltipDiv.appendChild(tooltipContentDiv)
+            wrapper.appendChild(tooltipDiv)
+            bubbleTooltip = tooltipDiv
           }
         }
         
         if (bubbleTooltip) {
           const isHidden = bubbleTooltip.classList.contains('hidden')
-          const currentClasses = Array.from(bubbleTooltip.classList).join(' ')
-          
-          console.log('📊 tooltip状态分析:', {
-            isHidden,
-            currentClasses,
-            computedDisplay: window.getComputedStyle(bubbleTooltip).display,
-            computedVisibility: window.getComputedStyle(bubbleTooltip).visibility,
-            computedOpacity: window.getComputedStyle(bubbleTooltip).opacity,
-            boundingRect: bubbleTooltip.getBoundingClientRect()
-          })
           
           if (isHidden) {
-            console.log('🔄 隐藏其他tooltip...')
-            // 先隐藏所有其他tooltip
-            const allTooltips = document.querySelectorAll('.citation-tooltip')
-            console.log('📋 找到的所有tooltip数量:', allTooltips.length)
-            
-            allTooltips.forEach((t, index) => {
+            // 先隐藏所有其他tooltip(包括citation和case)
+            document.querySelectorAll('.citation-tooltip, .case-tooltip').forEach(t => {
               if (t !== bubbleTooltip) {
                 t.classList.add('hidden')
-                console.log(`🙈 隐藏tooltip ${index + 1}`)
               }
             })
             
             // 显示当前tooltip
-            console.log('🎬 开始显示当前tooltip...')
             bubbleTooltip.classList.remove('hidden')
-            
-            // 验证操作结果
-            const afterClasses = Array.from(bubbleTooltip.classList).join(' ')
-            const afterRect = bubbleTooltip.getBoundingClientRect()
-            const afterStyles = window.getComputedStyle(bubbleTooltip)
-            
-            console.log('✅ 显示操作完成，验证结果:', {
-              操作前classes: currentClasses,
-              操作后classes: afterClasses,
-              hasHiddenClass: bubbleTooltip.classList.contains('hidden'),
-              display: afterStyles.display,
-              visibility: afterStyles.visibility,
-              opacity: afterStyles.opacity,
-              position: afterStyles.position,
-              zIndex: afterStyles.zIndex,
-              top: afterStyles.top,
-              left: afterStyles.left,
-              transform: afterStyles.transform,
-              boundingRect: afterRect,
-              tooltipContent: bubbleTooltip.textContent?.substring(0, 100) + '...'
-            })
-            
-            // 检查是否真的可见
-            if (afterRect.width > 0 && afterRect.height > 0) {
-              console.log('🎉 SUCCESS: tooltip确实可见!')
-            } else {
-              console.log('❌ FAIL: tooltip不可见，尺寸为0')
-            }
-            
           } else {
-            console.log('🔄 隐藏当前tooltip...')
+            // 隐藏当前tooltip
             bubbleTooltip.classList.add('hidden')
-            console.log('❌ 隐藏气泡tooltip完成')
           }
-          
-          // 额外debug: 检查父元素状态
-          console.log('🏗️ 父元素状态检查:', {
-            wrapperDisplay: window.getComputedStyle(wrapper).display,
-            wrapperPosition: window.getComputedStyle(wrapper).position,
-            wrapperRect: wrapper.getBoundingClientRect(),
-            bubbleRect: bubble.getBoundingClientRect()
-          })
-          
-        } else {
-          console.log('❌ ERROR: 在wrapper中没有找到.citation-tooltip元素')
-          console.log('🔍 wrapper子元素列表:', Array.from(wrapper.children).map(child => child.className))
         }
-      } else {
-        console.log('❌ ERROR: 没有找到bubble或wrapper元素')
-        console.log('🔍 详细状态:', { bubble: !!bubble, wrapper: !!wrapper })
       }
       return
     }
@@ -1943,10 +1890,57 @@ const renderSectionContent = (section: ArticleSection) => {
          const safeContent = citation.content || '引用内容缺失'
          console.log('生成气泡HTML，内容:', safeContent) // 调试日志
          
-         // 创建气泡HTML - 修复结构
-          const tsBubble = citation.timestamp && isMeaningfulTimestamp(citation.timestamp) ? `<span class=\"timestamp text-gray-600 mr-1\">[${citation.timestamp}]</span>` : ''
-          const tsTip = citation.timestamp && isMeaningfulTimestamp(citation.timestamp) ? `<span class=\"tooltip-timestamp text-xs text-gray-600 font-medium\">[${citation.timestamp}]</span>` : ''
-          const bubbleHtml = `<span class=\"citation-bubble-wrapper inline-block relative mx-1\">\n<span class=\"citation-bubble inline-block bg-blue-50 border border-blue-200 rounded-xl px-2 py-1 cursor-pointer transition-all duration-200 hover:bg-blue-100 hover:border-blue-300 hover:translate-y-[-1px] text-xs\" data-citation-id=\"${id}\" data-content=\"${safeContent.replace(/\"/g, '&quot;')}\" data-timestamp=\"${citation.timestamp}\" data-speaker=\"${citation.speaker}\">\n ${tsBubble}<span class=\"speaker text-blue-600 font-medium\">${citation.speaker}</span>\n </span>\n <div class=\"citation-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed\" style=\"top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px;\">\n <div class=\"tooltip-header flex gap-2 mb-2 pb-2 border-b border-gray-200\">\n ${tsTip}<span class=\"tooltip-speaker text-xs text-blue-600 font-semibold\">${citation.speaker}</span>\n </div>\n <div class=\"tooltip-content text-gray-700 italic\">${safeContent}</div>\n </div>\n </span>`
+         // 使用DOM API创建气泡元素
+          const wrapper = document.createElement('span')
+          wrapper.className = 'citation-bubble-wrapper inline-block relative mx-1'
+          
+          const bubble = document.createElement('span')
+          bubble.className = 'citation-bubble inline-block bg-blue-50 border border-blue-200 rounded-xl px-2 py-1 cursor-pointer transition-all duration-200 hover:bg-blue-100 hover:border-blue-300 hover:translate-y-[-1px] text-xs'
+          bubble.setAttribute('data-citation-id', id)
+          bubble.setAttribute('data-content', safeContent)
+          bubble.setAttribute('data-timestamp', citation.timestamp)
+          bubble.setAttribute('data-speaker', citation.speaker)
+          
+          if (citation.timestamp && isMeaningfulTimestamp(citation.timestamp)) {
+            const tsSpan = document.createElement('span')
+            tsSpan.className = 'timestamp text-gray-600 mr-1'
+            tsSpan.textContent = `[${citation.timestamp}]`
+            bubble.appendChild(tsSpan)
+          }
+          
+          const speakerSpan = document.createElement('span')
+          speakerSpan.className = 'speaker text-blue-600 font-medium'
+          speakerSpan.textContent = citation.speaker
+          bubble.appendChild(speakerSpan)
+          
+          const tooltipDiv = document.createElement('div')
+          tooltipDiv.className = 'citation-tooltip hidden absolute bg-white border border-gray-300 rounded-lg p-3 max-w-xs min-w-48 shadow-lg z-50 text-sm leading-relaxed'
+          tooltipDiv.style.cssText = 'top: 100%; left: 50%; transform: translateX(-50%); margin-top: 8px;'
+          
+          const tooltipHeader = document.createElement('div')
+          tooltipHeader.className = 'tooltip-header flex gap-2 mb-2 pb-2 border-b border-gray-200'
+          
+          if (citation.timestamp && isMeaningfulTimestamp(citation.timestamp)) {
+            const tsTip = document.createElement('span')
+            tsTip.className = 'tooltip-timestamp text-xs text-gray-600 font-medium'
+            tsTip.textContent = `[${citation.timestamp}]`
+            tooltipHeader.appendChild(tsTip)
+          }
+          
+          const speakerTip = document.createElement('span')
+          speakerTip.className = 'tooltip-speaker text-xs text-blue-600 font-semibold'
+          speakerTip.textContent = citation.speaker
+          tooltipHeader.appendChild(speakerTip)
+          
+          const tooltipContentDiv = document.createElement('div')
+          tooltipContentDiv.className = 'tooltip-content text-gray-700 italic'
+          tooltipContentDiv.textContent = safeContent
+          
+          tooltipDiv.appendChild(tooltipHeader)
+          tooltipDiv.appendChild(tooltipContentDiv)
+          
+          wrapper.appendChild(bubble)
+          wrapper.appendChild(tooltipDiv)
         
         // 找到紧邻的上一个兄弟块级元素并添加气泡
         // 说明：之前通过“所有<p>的前一个”来定位，遇到列表(<ul>/<ol>)时会错位。
@@ -1976,27 +1970,10 @@ const renderSectionContent = (section: ArticleSection) => {
           targetParagraph = p
         }
         
-                 console.log('🔧 生成的完整HTML长度:', bubbleHtml.length) // 调试日志
-         console.log('🔧 生成的完整HTML前200字符:', bubbleHtml.substring(0, 200)) // 调试日志
-         
-         if (targetParagraph) {
-           console.log('🔧 准备插入HTML到:', targetParagraph.tagName, targetParagraph.innerHTML.substring(0, 100))
-           targetParagraph.insertAdjacentHTML('beforeend', bubbleHtml)
-           console.log('🔧 HTML插入成功到:', targetParagraph.tagName) // 调试日志
-           
-           // 验证插入后的HTML
-           const insertedBubble = targetParagraph.querySelector('.citation-bubble-wrapper:last-child')
-           const insertedTooltip = insertedBubble?.querySelector('.citation-tooltip')
-           console.log('🔧 插入验证:', {
-             bubbleExists: !!insertedBubble,
-             tooltipExists: !!insertedTooltip,
-             tooltipHTML: insertedTooltip?.outerHTML?.substring(0, 100),
-             fullWrapperHTML: insertedBubble?.outerHTML?.substring(0, 300)
-           })
-           
-           // 额外验证：查看整个段落的HTML
-           console.log('🔧 整个段落的HTML:', targetParagraph.innerHTML.substring(targetParagraph.innerHTML.length - 400))
-         }
+        if (targetParagraph) {
+          // 使用DOM API插入元素
+          targetParagraph.appendChild(wrapper)
+        }
         
         // 移除原始引用段落
         p.remove()
@@ -2068,12 +2045,34 @@ const renderSectionContent = (section: ArticleSection) => {
         // 找到包含案例标记的段落
         const p = em.closest('p')
         if (p) {
-          // 案例段落通常在<LI>内部,查找父<LI>
           const parentLi = p.closest('li')
           
           if (parentLi) {
-            // 将badge添加到LI的末尾
-            parentLi.appendChild(wrapper)
+            // 在LI内查找包含citation-bubble-wrapper的段落
+            // 注意:必须找到的是citation wrapper,不是当前案例所在的p
+            const allParagraphs = parentLi.querySelectorAll('p')
+            let citationParagraph = null
+            
+            for (const paragraph of allParagraphs) {
+              // 跳过当前案例所在的段落
+              if (paragraph === p) continue
+              // 查找包含citation-bubble-wrapper的段落
+              if (paragraph.querySelector('.citation-bubble-wrapper')) {
+                citationParagraph = paragraph
+                break
+              }
+            }
+            
+            if (citationParagraph) {
+              // 将案例badge添加到包含citation的段落末尾(在同一行)
+              citationParagraph.appendChild(wrapper)
+            } else {
+              // 如果没有找到citation,就添加到第一个段落末尾
+              const firstP = allParagraphs[0]
+              if (firstP && firstP !== p) {
+                firstP.appendChild(wrapper)
+              }
+            }
           }
           
           // 移除原始案例段落
