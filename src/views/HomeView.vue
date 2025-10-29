@@ -74,6 +74,11 @@
       class="z-50"
     />
 
+    <!-- RAG 智能问答模态框 -->
+    <RAGChatModal 
+      v-model="showRAGModal"
+    />
+
     <!-- 添加 ArticleRequestForm 组件到顶层 -->
     <ArticleRequestForm 
       ref="articleRequestFormRef" hidden
@@ -186,24 +191,39 @@
                     <h2 class="font-['PingFang_SC'] text-[20px] font-semibold leading-[28px] text-[#000000]">
                       {{ t('home.articles.title') }}
                     </h2>
-                    <!-- 只看我上传 开关（简单按钮） -->
-                    <button
-                      type="button"
-                      @click.stop="toggleMineOnly"
-                      @mousedown.stop.prevent="() => {}"
-                      @touchstart.stop="() => {}"
-                      @touchend.stop.prevent="handleTouchEnd"
-                      :aria-pressed="mineOnly"
-                      class="px-4 sm:px-3 h-9 sm:h-7 rounded-full border text-xs transition-all duration-200 focus:outline-none focus:ring-2 select-none cursor-pointer"
-                      :class="mineOnly
-                        ? 'bg-blue-600 text-white border-blue-600 shadow'
-                        : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50 shadow-sm hover:shadow-md focus:ring-blue-200'"
-                    >
-                      <span class="inline-flex items-center gap-1">
-                        <span class="text-[12px]" v-if="mineOnly">✓</span>
-                        <span>Only my uploads</span>
-                      </span>
-                    </button>
+                    <!-- 按钮组 -->
+                    <div class="flex items-center gap-2">
+                      <!-- RAG 智能问答按钮 -->
+                      <button
+                        @click="showRAGModal = true"
+                        class="px-3 h-9 sm:h-7 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full hover:from-purple-600 hover:to-blue-600 transition-all shadow-md hover:shadow-lg text-xs font-medium flex items-center gap-1.5"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        <span class="hidden sm:inline">智能问答</span>
+                        <span class="sm:hidden">问答</span>
+                      </button>
+
+                      <!-- 只看我上传 开关（简单按钮） -->
+                      <button
+                        type="button"
+                        @click.stop="toggleMineOnly"
+                        @mousedown.stop.prevent="() => {}"
+                        @touchstart.stop="() => {}"
+                        @touchend.stop.prevent="handleTouchEnd"
+                        :aria-pressed="mineOnly"
+                        class="px-4 sm:px-3 h-9 sm:h-7 rounded-full border text-xs transition-all duration-200 focus:outline-none focus:ring-2 select-none cursor-pointer"
+                        :class="mineOnly
+                          ? 'bg-blue-600 text-white border-blue-600 shadow'
+                          : 'bg-white text-blue-600 border-blue-300 hover:bg-blue-50 shadow-sm hover:shadow-md focus:ring-blue-200'"
+                      >
+                        <span class="inline-flex items-center gap-1">
+                          <span class="text-[12px]" v-if="mineOnly">✓</span>
+                          <span>Only my uploads</span>
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <!-- 文章列表 -->
@@ -281,11 +301,13 @@ import ArticleRequestForm from '../components/ArticleRequestForm.vue'
 import { useI18n } from 'vue-i18n'
 import PullToRefresh from '../components/PullToRefresh.vue'
 import localforage from 'localforage'
+import RAGChatModal from '../components/RAGChatModal.vue'
 
 import UploadInput from '../components/UploadInput.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
+const showRAGModal = ref(false)
 const selectedTag = ref<string>('all')
 const selectedChannels = ref<string[]>([])
 const selectedAuthors = ref<number[]>([])
