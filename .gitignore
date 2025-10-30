@@ -1,3 +1,6 @@
+#.cursorignore
+.cursor/rules/*.mdc
+
 # Node modules
 node_modules/
 
