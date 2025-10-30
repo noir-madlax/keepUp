@@ -62,7 +62,7 @@ BEGIN
   IF st NOT IN (
     'transcript','raw','paragraph','section','sentence',
     'Summary','Key Takeaways','Segmented Outline','Trending','Companies & Products',
-    '总结','要点总结','分段大纲','趋势','公司与产品','人物介绍','核心观点','名词解释','QA环节','金句','未总结内容','彩蛋','典型案例','背景','结构图','思维导图'
+    '总结','要点总结','分段大纲','趋势','公司与产品','人物介绍','核心观点','名词解释','QA环节','金句','未总结内容','彩蛋','典型案例','背景','结构图','思维导图','原文字幕'
   ) THEN
     RETURN NEW;
   END IF;

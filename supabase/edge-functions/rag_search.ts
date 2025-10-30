@@ -14,7 +14,7 @@ Deno.serve(async (req)=>{
     });
   }
   try {
-    const { question, top_k = 10, score_threshold = 0.15, use_layered = true } = await req.json();
+    const { question, top_k = 20, score_threshold = 0.15, use_layered = true } = await req.json();
     if (!question || question.trim().length === 0) {
       return new Response(JSON.stringify({
         error: '问题不能为空'
@@ -41,7 +41,7 @@ Deno.serve(async (req)=>{
       const { data: summaryResults, error: summaryError } = await supabase.rpc('search_article_embeddings', {
         query_embedding: `[${queryEmbedding.join(',')}]`,
         match_threshold: 0.1,
-        match_count: 8
+        match_count: 20
       });
       if (summaryError) {
         throw new Error(`总结层检索失败: ${summaryError.message}`);
@@ -180,7 +180,7 @@ async function generateEmbedding(text) {
   return data.embedding.values;
 }
 
-// 生成回答（使用 Gemini 2.5 Flash）
+// 生成回答（使用 Gemini 2.5 Pro）
 async function generateAnswer(question, sources) {
   const apiKey = Deno.env.get('GOOGLE_API_KEY');
   if (!apiKey) {
@@ -208,16 +208,15 @@ ${question}
 ${context}
 
 **回答要求：**
-1. 必须使用中文回答（即使原文是英文，也要用中文总结和解释）
+1. 必须使用中文回答（如果原文是英文，需要直接翻译成中文回答，但是不要修改原来的文字意思，不要调整，直接翻译）
 2. 严格基于提供的文章片段内容回答，不要编造信息
 3. 如果文章片段无法回答问题，请诚实说明
-4. 回答要简洁、准确、有条理
-5. 可以引用来源编号（如"根据来源1..."）
-6. 如果原文是英文，请翻译并总结关键内容
-7. 保持专业和客观的语气
+4. 回答要准确、有条理、有层次
+5. 可以引用来源编号（如"根据来源1，文章名称：xxxx"）
+6. 保持专业和客观的语气
 
 **你的回答：**`;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -235,7 +234,7 @@ ${context}
       ],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 2048
+        maxOutputTokens: 150000
       }
     })
   });
