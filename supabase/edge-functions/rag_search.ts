@@ -234,7 +234,7 @@ ${context}
       ],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 150000
+        maxOutputTokens: 15000
       }
     })
   });
