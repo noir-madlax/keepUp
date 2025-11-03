@@ -56,8 +56,7 @@ export const ALL_SECTION_TYPES: SectionType[] = [
 // 默认选中的小节 - 移除工具相关的小节
 export const DEFAULT_SELECTED_SECTIONS: SectionType[] = [
   '总结',
-  '分段详述',
-  '原文字幕'
+  '分段详述'
 ];
 
 // 工具按钮对应的小节类型
