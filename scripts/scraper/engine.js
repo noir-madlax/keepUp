@@ -7,7 +7,7 @@ import path from 'path';
  */
 export class ScraperEngine {
   constructor(config, cookies) {
-    this.config = config.scraper_config;
+    this.config = config;
     this.cookies = cookies;
     this.browser = null;
     this.page = null;
@@ -19,7 +19,8 @@ export class ScraperEngine {
    */
   async init() {
     console.log('🚀 启动浏览器...');
-    this.browser = await puppeteer.launch({
+    
+    const launchOptions = {
       headless: 'new',
       args: [
         '--no-sandbox',
@@ -27,7 +28,15 @@ export class ScraperEngine {
         '--disable-dev-shm-usage',
         '--disable-gpu'
       ]
-    });
+    };
+
+    // 在 GitHub Actions 或 CI 环境中使用系统 Chrome
+    if (process.env.CI || process.env.GITHUB_ACTIONS) {
+      console.log('🔧 检测到 CI 环境，使用系统 Chrome');
+      launchOptions.executablePath = '/usr/bin/google-chrome';
+    }
+
+    this.browser = await puppeteer.launch(launchOptions);
 
     this.page = await this.browser.newPage();
     await this.page.setViewport({ width: 1920, height: 1080 });

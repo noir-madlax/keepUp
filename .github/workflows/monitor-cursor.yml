@@ -24,6 +24,8 @@ jobs:
         run: |
           cd scripts
           npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
       
       - name: Run Cursor scraper
         env:
