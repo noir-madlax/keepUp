@@ -1,0 +1,20 @@
+{
+  "name": "keepup-monitor-scripts",
+  "version": "1.0.0",
+  "description": "自动化网站监控脚本",
+  "type": "module",
+  "scripts": {
+    "scrape:openrouter": "node scrape-openrouter.js",
+    "scrape:cursor": "node scrape-cursor.js",
+    "scrape:tikhub": "node scrape-tikhub.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "puppeteer": "^21.6.1",
+    "yaml": "^2.3.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+

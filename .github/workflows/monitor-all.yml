@@ -1,0 +1,50 @@
+name: Monitor All Sites Daily
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    strategy:
+      matrix:
+        site: [openrouter, cursor, tikhub]
+      fail-fast: false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: scripts/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm ci
+      
+      - name: Monitor ${{ matrix.site }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SITE_SLUG: ${{ matrix.site }}
+        run: |
+          cd scripts
+          node scrape-${{ matrix.site }}.js
+      
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshots-${{ matrix.site }}
+          path: scripts/temp/*.png
+          retention-days: 7
+

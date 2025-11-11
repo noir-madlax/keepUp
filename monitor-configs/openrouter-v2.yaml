@@ -1,0 +1,659 @@
+###################################################################################
+# OpenRouter Credits 监控配置 (Version 2.0)
+###################################################################################
+# 业务说明：
+#   本配置用于监控 OpenRouter.ai 平台的 Credits 余额
+#   Credits 是 OpenRouter 平台的积分系统，用于调用各种 AI 模型API
+#   监控目的：及时了解余额变化，避免因余额不足导致服务中断
+#
+# 页面特征：
+#   - URL: https://openrouter.ai/settings/credits
+#   - 认证要求：需要登录状态（通过 Cookie）
+#   - 页面技术栈：React + TailwindCSS + 复杂的数字动画效果
+#   - 数据更新频率：实时
+#   - 关键数据：Credits 余额（如：$7.733）
+###################################################################################
+
+name: "OpenRouter"
+site_id: "openrouter"
+url: "https://openrouter.ai/settings/credits"
+description: "监控 OpenRouter Credits 积分余额"
+icon_url: "https://openrouter.ai/favicon.ico"
+
+# 业务重要性配置
+priority: "high"  # high/medium/low - 决定告警优先级
+alert_threshold:  # 告警阈值配置
+  low_balance: 5.0  # 当余额低于此值时发送告警
+  critical_balance: 1.0  # 当余额低于此值时发送紧急告警
+
+###################################################################################
+# 浏览器环境配置
+###################################################################################
+browser_config:
+  # 视口大小：设置为常见的桌面分辨率，确保页面完整渲染
+  viewport:
+    width: 1920
+    height: 1080
+  
+  # User-Agent：模拟真实的 macOS Chrome 浏览器
+  # 作用：避免被网站识别为爬虫而拒绝访问
+  user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  
+  # 超时配置（毫秒）
+  timeouts:
+    navigation: 30000  # 页面导航超时：30秒
+    wait_for_selector: 15000  # 等待元素出现超时：15秒
+    screenshot: 5000  # 截图超时：5秒
+
+###################################################################################
+# 页面访问与登录验证步骤
+###################################################################################
+steps:
+  # ============================================================================
+  # 步骤 1: 导航到 Credits 页面
+  # ============================================================================
+  - step_id: "nav_to_credits"
+    action: "navigate"
+    url: "https://openrouter.ai/settings/credits"
+    
+    # 业务说明：
+    #   访问 OpenRouter 的 Credits 设置页面
+    #   这是查看和管理 API Credits 的主要页面
+    
+    # 技术细节：
+    #   - wait_until: 'networkidle' 确保所有网络请求完成
+    #   - 包括主页面、CSS、JS、字体、图片等资源
+    #   - networkidle 定义：至少 500ms 内没有超过 2 个网络连接
+    
+    config:
+      wait_until: "networkidle"  # 等待网络空闲，确保页面完全加载
+      timeout: 30000
+    
+    # 期望结果：
+    #   - HTTP 状态码：200
+    #   - 页面标题包含 "OpenRouter" 或 "Credits"
+    #   - URL 包含 "/settings/credits"
+    
+    validation:
+      - type: "url_contains"
+        value: "/settings/credits"
+        error_message: "页面导航失败：未能跳转到 Credits 页面"
+      
+      - type: "http_status"
+        value: 200
+        error_message: "HTTP 请求失败：状态码非 200"
+
+  # ============================================================================
+  # 步骤 2: 验证登录状态
+  # ============================================================================
+  - step_id: "verify_login"
+    action: "wait_for_element"
+    
+    # 业务说明：
+    #   验证用户是否已成功登录
+    #   未登录用户会看到登录按钮，已登录用户会看到账户信息
+    
+    # 核心技术点：
+    #   通过检测特定元素的存在来判断登录状态
+    #   OpenRouter 的已登录标志：
+    #   - aria-label 属性包含 "Remaining credits"
+    #   - 或者存在用户头像元素
+    
+    selectors:
+      # 主选择器：Credits 余额卡片
+      # 这个元素只有在登录状态下才会出现
+      primary: "[aria-label*='Remaining credits']"
+      
+      # 备用选择器：用户头像按钮
+      # 位置：页面右上角
+      # 特征：包含用户缩写字母的圆形头像
+      fallback: 
+        - "button[aria-label*='account']"
+        - ".user-avatar"
+        - "[data-testid='user-menu']"
+    
+    config:
+      timeout: 15000
+      # visible: true 表示元素必须可见（不能是 display:none 或 visibility:hidden）
+      visible: true
+    
+    # 失败处理：
+    #   如果登录验证失败，说明 Cookie 可能已过期
+    #   需要更新 Cookie 或重新登录
+    on_failure:
+      action: "abort"  # 终止后续步骤
+      reason: "cookie_expired"
+      message: "登录状态验证失败：Cookie 可能已过期，请更新认证信息"
+
+  # ============================================================================
+  # 步骤 3: 等待 Credits 数据加载
+  # ============================================================================
+  - step_id: "wait_for_credits_data"
+    action: "wait_for_element"
+    
+    # 业务说明：
+    #   OpenRouter 的 Credits 余额使用动画数字滚动效果显示
+    #   数字通过 CSS transform 动画从上往下滚动到最终值
+    #   需要等待动画完成后才能准确读取数值
+    
+    # 页面结构分析（基于实际 HTML）：
+    #   <div aria-label="Remaining credits: 7.733">  ← 包含完整数值
+    #     <div class="flex items-center gap-2">
+    #       <span class="text-4xl">$</span>
+    #       <span class="text-4xl">                    ← 动画数字容器
+    #         <span class="relative">                 ← 数字滚动容器
+    #           <div class="relative">                ← 个位数
+    #             <div style="transform: translateY(280px)">  ← 滚动到 7
+    #               <div>9</div>
+    #               <div>8</div>
+    #               <div>7</div>  ← 最终显示的数字
+    #               ...
+    #             </div>
+    #           </div>
+    #           <div>.</div>                         ← 小数点
+    #           <div class="relative">                ← 小数位
+    #             ...
+    #           </div>
+    #         </span>
+    #       </span>
+    #     </div>
+    #   </div>
+    
+    # 等待策略：
+    #   方案 1：等待 aria-label 属性出现（推荐）
+    #     优点：aria-label 直接包含完整数值，不受动画影响
+    #     缺点：依赖 OpenRouter 保持此属性
+    #
+    #   方案 2：等待动画完成
+    #     优点：不依赖特定属性
+    #     缺点：需要额外等待动画时间（约 1-2 秒）
+    
+    selectors:
+      # 主选择器：包含完整 Credits 数值的 aria-label
+      primary: "[aria-label*='Remaining credits']"
+      
+      # 备用选择器：Credits 卡片容器
+      fallback:
+        - ".group\\/card[aria-label]"  # 卡片容器
+        - "div[tabindex='0'][aria-label*='credits']"
+    
+    config:
+      timeout: 15000
+      visible: true
+      
+      # 额外等待动画完成时间（毫秒）
+      # OpenRouter 的数字滚动动画约 1 秒
+      additional_wait: 1500
+    
+    # 期望结果：
+    #   - aria-label 属性存在
+    #   - aria-label 包含数字格式（如 "Remaining credits: 7.733"）
+    #   - 数字动画已完成
+    
+    validation:
+      - type: "attribute_exists"
+        attribute: "aria-label"
+        error_message: "Credits 数据元素缺少 aria-label 属性"
+      
+      - type: "attribute_matches"
+        attribute: "aria-label"
+        pattern: "Remaining credits: \\d+(\\.\\d+)?"
+        error_message: "Credits 数值格式不正确"
+
+  # ============================================================================
+  # 步骤 4: 提取 Credits 余额数据
+  # ============================================================================
+  - step_id: "extract_credits_balance"
+    action: "extract"
+    
+    # 业务说明：
+    #   提取当前 Credits 余额数值
+    #   这是本次监控的核心数据
+    
+    # 提取策略：
+    #   优先从 aria-label 提取（最可靠）
+    #   备用方案：从页面文本内容提取
+    
+    target:
+      field_name: "credits_balance"  # 字段名称，存入数据库
+      field_type: "currency"  # 数据类型：货币金额
+      field_description: "OpenRouter Credits 余额"
+    
+    extraction:
+      # 提取方法 1：从 aria-label 属性提取（推荐）
+      - method: "attribute"
+        selector: "[aria-label*='Remaining credits']"
+        attribute: "aria-label"
+        
+        # 正则表达式说明：
+        #   Remaining credits: (\d+(?:\.\d+)?)
+        #   - Remaining credits:  → 固定前缀
+        #   - \d+               → 整数部分（一个或多个数字）
+        #   - (?:\.\d+)?        → 小数部分（可选）
+        #     \.               → 小数点
+        #     \d+              → 小数数字
+        #     (?:...)          → 非捕获组
+        #     ?                → 可选（0 次或 1 次）
+        #   - ()                → 捕获组（提取的内容）
+        
+        regex: "Remaining credits:\\s*\\$?(\\d+(?:\\.\\d+)?)"
+        regex_group: 1  # 提取第一个捕获组的内容
+        
+        # 数据转换：
+        #   将字符串 "7.733" 转换为浮点数 7.733
+        transform: "float"
+        
+        # 数据验证：
+        validation:
+          min_value: 0.0  # 最小值：0
+          max_value: 10000.0  # 最大值：10000（合理范围）
+          decimal_places: 4  # 小数位数：最多 4 位
+      
+      # 提取方法 2：从文本内容提取（备用方案）
+      - method: "text"
+        selector: ".text-4xl.font-bold"
+        
+        # 备用正则：直接匹配美元符号和数字
+        regex: "\\$?(\\d+(?:\\.\\d+)?)"
+        regex_group: 1
+        transform: "float"
+        
+        # 注意事项：
+        #   此方法可能受动画影响
+        #   如果数字还在滚动，可能读取到错误的值
+        #   因此设置为备用方案
+    
+    # 提取成功后的处理：
+    on_success:
+      # 记录提取时间
+      add_timestamp: true
+      timestamp_field: "extracted_at"
+      
+      # 检查是否需要告警
+      check_threshold: true
+      
+      # 如果需要，可以立即发送通知
+      # send_notification: true
+    
+    # 提取失败后的处理：
+    on_failure:
+      action: "retry"  # 重试
+      max_retries: 3  # 最多重试 3 次
+      retry_delay: 2000  # 重试间隔：2 秒
+      
+      # 重试失败后的操作
+      final_action: "log"  # 记录错误日志
+      error_field: "extraction_error"
+
+  # ============================================================================
+  # 步骤 5: 提取页面更新时间（可选）
+  # ============================================================================
+  - step_id: "extract_update_time"
+    action: "extract"
+    optional: true  # 可选步骤，失败不影响整体流程
+    
+    # 业务说明：
+    #   提取页面数据的更新时间
+    #   用于判断数据的时效性
+    
+    target:
+      field_name: "last_updated"
+      field_type: "datetime"
+      field_description: "Credits 余额最后更新时间"
+    
+    extraction:
+      - method: "text"
+        # 尝试查找时间相关的元素
+        selector: "time[datetime], [data-time], .timestamp, .last-updated"
+        attribute: "datetime"  # 优先读取 datetime 属性
+        
+        # 如果没有 datetime 属性，则读取文本内容
+        fallback: "innerText"
+        
+        # 时间格式转换
+        transform: "datetime"
+        
+        # 如果提取失败，使用当前时间
+        default: "now"
+
+  # ============================================================================
+  # 步骤 6: 截取页面截图
+  # ============================================================================
+  - step_id: "capture_screenshot"
+    action: "screenshot"
+    
+    # 业务说明：
+    #   保存 Credits 页面的完整截图
+    #   用途：
+    #   1. 可视化历史记录
+    #   2. 异常情况排查
+    #   3. 数据验证（人工核对）
+    
+    config:
+      # 截图类型：
+      #   full_page: false → 只截取可视区域
+      #   full_page: true  → 截取整个页面（包括滚动区域）
+      type: "viewport"  # viewport/full_page/element
+      
+      # 截图质量：
+      #   0-100，数值越高质量越好，文件越大
+      #   建议：80-90 可以平衡质量和文件大小
+      quality: 85
+      
+      # 图片格式：png/jpeg/webp
+      #   png: 无损压缩，文件较大，支持透明
+      #   jpeg: 有损压缩，文件较小，不支持透明
+      #   webp: 现代格式，文件小质量高（推荐）
+      format: "png"
+      
+      # 截图区域（可选）：
+      #   如果指定了 clip，则只截取指定区域
+      #   不指定则截取整个视口
+      # clip:
+      #   selector: "[aria-label*='Remaining credits']"
+      #   padding: 20  # 在元素周围增加 20px 的边距
+      
+      # 截图前的额外操作（可选）：
+      before_screenshot:
+        # 隐藏不必要的元素（如浮动按钮、通知）
+        hide_elements:
+          - ".notification"
+          - ".floating-action-button"
+          - "[role='dialog']"  # 弹窗
+        
+        # 滚动到特定元素（确保元素在视口内）
+        scroll_to: "[aria-label*='Remaining credits']"
+        scroll_behavior: "smooth"  # smooth/auto
+    
+    # 截图保存配置：
+    storage:
+      # 存储位置：Supabase Storage
+      bucket: "monitor-screenshots"
+      
+      # 文件路径：
+      #   {site_id}/{date}/{timestamp}.png
+      #   示例：openrouter/2025-11-11/20251111_090000.png
+      path_template: "{site_id}/{date}/{step_id}.{format}"
+      
+      # 是否覆盖同名文件：
+      #   true:  每天只保留一张截图（节省空间）
+      #   false: 保留所有历史截图
+      overwrite: true
+      
+      # 文件权限：
+      #   public: 公开访问（不推荐）
+      #   private: 私有访问（需要认证）
+      #   authenticated: 需要 Supabase 认证
+      access_level: "authenticated"
+    
+    # 截图成功后的处理：
+    on_success:
+      # 将截图 URL 添加到提取的数据中
+      add_url_to_data: true
+      url_field: "screenshot_url"
+      
+      # 可选：生成缩略图
+      # generate_thumbnail: true
+      # thumbnail_size: [200, 150]  # width x height
+    
+    # 截图失败后的处理：
+    on_failure:
+      action: "log"  # 记录错误，但不影响整体流程
+      critical: false  # 不是关键步骤
+
+###################################################################################
+# Cookie 验证配置
+###################################################################################
+# 说明：
+#   用于验证 Cookie 是否有效
+#   无效的 Cookie 会导致未登录状态，无法获取数据
+###################################################################################
+cookie_validation:
+  # 验证方法：检查特定元素是否存在
+  #   如果未登录，页面会显示 "Sign In" 按钮
+  #   如果已登录，页面会显示用户信息和 Credits 余额
+  
+  # 已登录标志（至少满足一个）：
+  logged_in_indicators:
+    - selector: "[aria-label*='Remaining credits']"
+      should_exist: true
+      description: "Credits 余额卡片存在"
+    
+    - selector: "button:has-text('Sign In')"
+      should_exist: false
+      description: "登录按钮不存在"
+    
+    - selector: "[data-testid='user-menu'], .user-avatar"
+      should_exist: true
+      description: "用户菜单存在"
+  
+  # 未登录标志（如果出现则表示 Cookie 失效）：
+  logged_out_indicators:
+    - selector: "button:has-text('Sign In')"
+      should_exist: true
+      description: "出现登录按钮"
+    
+    - selector: "a[href*='/login']"
+      should_exist: true
+      description: "出现登录链接"
+  
+  # 验证超时时间：
+  timeout: 10000
+  
+  # 验证失败后的处理：
+  on_invalid:
+    action: "abort"
+    reason: "cookie_expired"
+    message: "Cookie 验证失败，请更新认证信息"
+    
+    # 是否发送通知：
+    notify: true
+    notification_channels: ["email", "webhook"]
+
+###################################################################################
+# 数据处理与存储配置
+###################################################################################
+data_processing:
+  # 数据清洗规则：
+  cleaning_rules:
+    # 移除特殊字符（如美元符号、逗号）
+    - field: "credits_balance"
+      remove_chars: ["$", ",", " "]
+    
+    # 四舍五入到指定小数位
+    - field: "credits_balance"
+      round_to: 4
+  
+  # 数据验证规则：
+  validation_rules:
+    - field: "credits_balance"
+      rules:
+        - type: "not_null"
+          error: "Credits 余额不能为空"
+        
+        - type: "numeric"
+          error: "Credits 余额必须是数字"
+        
+        - type: "range"
+          min: 0
+          max: 10000
+          error: "Credits 余额超出合理范围"
+  
+  # 数据增强：添加额外的计算字段
+  enrichment:
+    # 添加货币符号
+    - field: "credits_balance_formatted"
+      formula: "'$' + credits_balance"
+    
+    # 计算距离告警阈值的差值
+    - field: "balance_status"
+      formula: |
+        if credits_balance < 1.0:
+          return "critical"
+        elif credits_balance < 5.0:
+          return "warning"
+        else:
+          return "normal"
+    
+    # 添加采集元数据
+    - field: "metadata"
+      value:
+        source: "github_actions"
+        version: "2.0"
+        collector: "puppeteer"
+
+# 数据存储到 Supabase
+storage_config:
+  table: "keep_monitor_records"
+  
+  # 字段映射：
+  #   YAML 中的字段名 → 数据库列名
+  field_mapping:
+    credits_balance: "data->credits_balance"
+    credits_balance_formatted: "data->credits_balance_formatted"
+    balance_status: "data->balance_status"
+    last_updated: "data->last_updated"
+    screenshot_url: "screenshot_url"
+    extracted_at: "created_at"
+  
+  # 冲突处理：
+  #   如果记录已存在（基于 site_slug + date）
+  #   replace: 替换旧记录
+  #   ignore: 忽略新记录
+  #   update: 更新部分字段
+  on_conflict: "replace"
+
+###################################################################################
+# 错误处理与重试策略
+###################################################################################
+error_handling:
+  # 全局重试配置：
+  global_retry:
+    max_attempts: 3  # 最多重试 3 次
+    backoff_strategy: "exponential"  # 指数退避：1s, 2s, 4s, 8s...
+    initial_delay: 1000  # 初始延迟：1 秒
+    max_delay: 30000  # 最大延迟：30 秒
+  
+  # 特定错误的处理：
+  specific_errors:
+    # 网络超时
+    - error_type: "TimeoutError"
+      action: "retry"
+      max_retries: 5
+      message: "网络超时，正在重试..."
+    
+    # Cookie 失效
+    - error_type: "AuthenticationError"
+      action: "abort"
+      notify: true
+      message: "认证失败：Cookie 已失效"
+    
+    # 元素未找到
+    - error_type: "ElementNotFoundError"
+      action: "retry"
+      max_retries: 3
+      message: "页面元素未找到，可能页面结构已变更"
+    
+    # 页面结构变更
+    - error_type: "ExtractionError"
+      action: "abort"
+      notify: true
+      message: "数据提取失败：页面结构可能已变更，需要更新配置"
+  
+  # 错误日志记录：
+  logging:
+    level: "info"  # debug/info/warning/error
+    include_screenshot: true  # 发生错误时自动截图
+    include_html: true  # 保存页面 HTML（用于调试）
+
+###################################################################################
+# 监控与告警配置
+###################################################################################
+monitoring:
+  # 性能指标收集：
+  collect_metrics: true
+  metrics:
+    - page_load_time  # 页面加载时间
+    - total_execution_time  # 总执行时间
+    - screenshot_time  # 截图耗时
+    - extraction_time  # 数据提取耗时
+  
+  # 告警规则：
+  alerts:
+    # 余额不足告警
+    - name: "low_balance_alert"
+      condition: "credits_balance < 5.0"
+      severity: "warning"
+      message: "⚠️ OpenRouter Credits 余额不足：${credits_balance}"
+      channels: ["email", "webhook"]
+    
+    # 余额严重不足告警
+    - name: "critical_balance_alert"
+      condition: "credits_balance < 1.0"
+      severity: "critical"
+      message: "🚨 OpenRouter Credits 余额严重不足：${credits_balance}"
+      channels: ["email", "webhook", "sms"]
+    
+    # 采集失败告警
+    - name: "collection_failed_alert"
+      condition: "status == 'failed'"
+      severity: "error"
+      message: "❌ OpenRouter 数据采集失败：${error_message}"
+      channels: ["email", "webhook"]
+    
+    # 性能告警
+    - name: "slow_execution_alert"
+      condition: "total_execution_time > 60000"  # 超过 60 秒
+      severity: "warning"
+      message: "⏱️ OpenRouter 数据采集耗时过长：${total_execution_time}ms"
+      channels: ["webhook"]
+
+###################################################################################
+# 调试与开发配置
+###################################################################################
+debug:
+  # 是否启用调试模式：
+  enabled: false  # 生产环境设置为 false
+  
+  # 调试选项：
+  options:
+    # 保存详细日志
+    verbose_logging: true
+    
+    # 保存页面 HTML
+    save_html: true
+    html_path: "./debug/openrouter_{timestamp}.html"
+    
+    # 保存完整截图（包括滚动区域）
+    save_full_screenshot: true
+    screenshot_path: "./debug/openrouter_{timestamp}.png"
+    
+    # 暂停执行（用于手动检查）
+    pause_on_error: false
+    pause_duration: 30000  # 暂停 30 秒
+    
+    # 浏览器可见模式（非无头）
+    headless: false  # true: 无头模式，false: 可见模式
+
+###################################################################################
+# 版本信息
+###################################################################################
+version: "2.0.0"
+last_updated: "2025-11-11"
+author: "AI Assistant"
+changelog:
+  - version: "2.0.0"
+    date: "2025-11-11"
+    changes:
+      - "完全重构配置文件，增加详细注释"
+      - "基于实际页面结构优化选择器"
+      - "添加完整的错误处理和重试机制"
+      - "添加数据验证和清洗规则"
+      - "添加监控告警功能"
+      - "添加调试支持"
+  
+  - version: "1.0.0"
+    date: "2025-11-10"
+    changes:
+      - "初始版本"
+

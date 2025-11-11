@@ -1,0 +1,10 @@
+。<div class="flex items-center justify-center h-48 rounded-2xl bg-gray-50 shadow-md">
+                <div class="stat">
+                    <div class="stat-title">Account Balance</div>
+                    <div class="stat-value my-4">$9.0416</div>
+                    <div style="display: flex; align-items: center;">
+                        <div class="stat-desc" style="margin-right: 10px;">Total Cost Today:</div>
+                        <div class="stat-desc">$0.0020</div>
+                    </div>
+                </div>
+            </div>

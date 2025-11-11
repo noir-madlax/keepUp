@@ -1,6 +1,7 @@
 #.cursorignore
 .cursor/rules/*.mdc
-
+/cookies-temp/
+/cookies-temp/*.*
 # Node modules
 node_modules/
 

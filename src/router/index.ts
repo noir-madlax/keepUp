@@ -52,6 +52,11 @@ const router = createRouter({
       path: '/c3po',
       name: 'c3po',
       component: () => import('../views/C3POView.vue')
+    },
+    {
+      path: '/monitor',
+      name: 'monitor',
+      component: () => import('../views/MonitorView.vue')
     }
   ]
 })
