@@ -170,7 +170,7 @@ function viewDetails() {
 }
 
 .monitor-card:hover .card-actions {
-  opacity: 1;
+  opacity: 0.7;
   pointer-events: all;
 }
 
@@ -358,7 +358,7 @@ function viewDetails() {
 .card-actions {
   position: absolute;
   top: 1.25rem;
-  right: 1.25rem;
+  right: 3.25rem;
   display: flex;
   gap: 0.5rem;
   opacity: 0;

@@ -99,29 +99,31 @@ async function loadWebsites() {
 async function loadSiteData(site: Website) {
   try {
     // 获取最新的抓取数据
-    const { data: scrapedData } = await supabase
+    const { data: scrapedData, error: scrapedError } = await supabase
       .from('scraped_data')
       .select('*')
       .eq('site_slug', site.slug)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
 
-    if (scrapedData) {
-      site.latest_data = scrapedData
+    if (scrapedError) {
+      console.error(`查询 ${site.name} scraped_data 失败:`, scrapedError)
+    } else if (scrapedData && scrapedData.length > 0) {
+      site.latest_data = scrapedData[0]
     }
 
     // 获取Cookie状态
-    const { data: cookieData } = await supabase
+    const { data: cookieData, error: cookieError } = await supabase
       .from('cookies')
       .select('is_valid')
       .eq('site_slug', site.slug)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
 
-    if (cookieData) {
-      site.cookie_valid = cookieData.is_valid
+    if (cookieError) {
+      console.error(`查询 ${site.name} cookies 失败:`, cookieError)
+    } else if (cookieData && cookieData.length > 0) {
+      site.cookie_valid = cookieData[0].is_valid
     }
   } catch (err) {
     console.error(`加载 ${site.name} 数据失败:`, err)

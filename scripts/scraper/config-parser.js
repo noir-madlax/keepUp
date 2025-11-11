@@ -15,8 +15,8 @@ export function loadConfig(configPath) {
   const content = fs.readFileSync(fullPath, 'utf8');
   const config = YAML.parse(content);
 
-  if (!config.scraper_config) {
-    throw new Error('配置文件缺少 scraper_config 字段');
+  if (!config) {
+    throw new Error('配置文件解析失败');
   }
 
   return config;
@@ -27,13 +27,13 @@ export function loadConfig(configPath) {
  */
 export function validateConfig(config) {
   const required = ['url', 'name', 'steps'];
-  const missing = required.filter(field => !config.scraper_config[field]);
+  const missing = required.filter(field => !config[field]);
 
   if (missing.length > 0) {
     throw new Error(`配置缺少必需字段: ${missing.join(', ')}`);
   }
 
-  if (!Array.isArray(config.scraper_config.steps) || config.scraper_config.steps.length === 0) {
+  if (!Array.isArray(config.steps) || config.steps.length === 0) {
     throw new Error('配置必须包含至少一个步骤');
   }
 
