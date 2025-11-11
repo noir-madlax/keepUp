@@ -37,10 +37,15 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OPENROUTER_PROVISION_KEY: ${{ secrets.OPENROUTER_PROVISION_KEY }}
           SITE_SLUG: ${{ matrix.site }}
         run: |
           cd scripts
-          node scrape-${{ matrix.site }}.js
+          if [ "${{ matrix.site }}" = "openrouter" ]; then
+            node scrape-openrouter-api.js
+          else
+            node scrape-${{ matrix.site }}.js
+          fi
       
       - name: Upload screenshots on failure
         if: failure()
