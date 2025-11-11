@@ -11,8 +11,9 @@ export default async function handler(
 
   const { site } = request.query
   const githubToken = process.env.GITHUB_TOKEN
-  const githubRepo = process.env.GITHUB_REPO || 'keepup-v2'
+  const githubRepo = process.env.GITHUB_REPO || 'keepUp'
   const githubOwner = process.env.GITHUB_OWNER
+  const githubBranch = process.env.GITHUB_BRANCH || 'chore-remove-subtitles-a6fa8'
 
   if (!githubToken) {
     return response.status(500).json({ error: 'GitHub Token未配置' })
@@ -48,7 +49,7 @@ export default async function handler(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ref: 'main', // 或者 'master'，取决于你的默认分支
+          ref: githubBranch,
         }),
       }
     )
