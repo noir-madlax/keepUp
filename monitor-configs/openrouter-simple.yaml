@@ -18,21 +18,15 @@ steps:
     timeout: 10000
     comment: "等待页面基本加载"
 
-  # 3. 额外等待页面完全渲染
-  - action: "wait"
-    selector: ".text-4xl"
-    timeout: 20000
-    comment: "等待价格显示元素加载"
-
-  # 4. 再等待一下确保动画完成
+  # 3. 等待卡片元素加载（使用更通用的选择器）
   - action: "wait"
     selector: ".rounded-xl"
-    timeout: 15000
-    comment: "等待卡片元素完全加载"
+    timeout: 20000
+    comment: "等待卡片元素加载"
 
-  # 5. 提取 Credits 余额
-  # 目标 div 结构: <div class="group/card rounded-xl..." aria-label="Remaining credits: 7.733">
-  # 内部有复杂的数字滚动动画，但 aria-label 包含实际值
+  # 4. 提取 Credits 余额
+  # 目标 div: <div class="group/card rounded-xl..." aria-label="Remaining credits: 7.725">
+  # 直接从 aria-label 属性提取数值，避免处理内部复杂的数字动画
   - action: "extract"
     name: "credits"
     selector: "div[aria-label*='Remaining credits']"
@@ -43,7 +37,7 @@ steps:
     transform: "float"
     comment: "从 aria-label 属性中提取 Credits 余额"
 
-  # 6. 截图
+  # 5. 截图
   - action: "screenshot"
     full_page: false
     comment: "截取页面"
@@ -51,6 +45,6 @@ steps:
 # Cookie 验证配置
 validation:
   cookie_check:
-    selector: ".text-4xl"
+    selector: ".rounded-xl"
     should_exist: true
 

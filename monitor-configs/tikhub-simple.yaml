@@ -27,26 +27,28 @@ steps:
   # 4. 提取 Account Balance (账户余额)
   # 目标结构: <div class="stat-title">Account Balance</div>
   #          <div class="stat-value my-4">$9.0416</div>
+  # 使用第一个 .stat-value 元素
   - action: "extract"
     name: "balance"
-    selector: "div.stat-title:has-text('Account Balance') + div.stat-value"
+    selector: ".stat-value"
     extract_type: "text"
     regex_pattern: "\\$([\\d.]+)"
     regex_group: 1
     transform: "float"
-    comment: "提取账户余额（从 $9.0416 中提取 9.0416）"
+    comment: "提取账户余额（从第一个 stat-value 中提取）"
 
   # 5. 提取 Total Cost Today (今日消费)
-  # 目标结构: <div class="stat-desc">Total Cost Today:</div>
-  #          <div class="stat-desc">$0.0020</div>
+  # 结构: <div class="stat-desc">Total Cost Today:</div>
+  #      <div class="stat-desc">$0.0020</div>
+  # 获取所有文本内容，然后用正则提取第二个金额
   - action: "extract"
     name: "daily_cost"
-    selector: "div.stat-desc:has-text('Total Cost Today:') + div.stat-desc"
+    selector: ".stat"
     extract_type: "text"
-    regex_pattern: "\\$([\\d.]+)"
+    regex_pattern: "Total Cost Today:[^$]*\\$([\\d.]+)"
     regex_group: 1
     transform: "float"
-    comment: "提取今日消费金额"
+    comment: "从完整的 stat div 中提取 Total Cost Today 后的金额"
 
   # 6. 截图
   - action: "screenshot"
