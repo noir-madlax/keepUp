@@ -37,20 +37,7 @@ steps:
     transform: "float"
     comment: "提取账户余额（从第一个 stat-value 中提取）"
 
-  # 5. 提取 Total Cost Today (今日消费)
-  # 结构: <div class="stat-desc">Total Cost Today:</div>
-  #      <div class="stat-desc">$0.0020</div>
-  # 获取所有文本内容，然后用正则提取第二个金额
-  - action: "extract"
-    name: "daily_cost"
-    selector: ".stat"
-    extract_type: "text"
-    regex_pattern: "Total Cost Today:[^$]*\\$([\\d.]+)"
-    regex_group: 1
-    transform: "float"
-    comment: "从完整的 stat div 中提取 Total Cost Today 后的金额"
-
-  # 6. 截图
+  # 5. 截图
   - action: "screenshot"
     full_page: false
     comment: "截取页面"
