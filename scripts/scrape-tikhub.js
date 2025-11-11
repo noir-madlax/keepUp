@@ -4,7 +4,7 @@ import { getSiteConfig, saveScrapedData, updateCookieStatus, uploadScreenshot } 
 import fs from 'fs';
 
 const SITE_SLUG = 'tikhub';
-const CONFIG_PATH = '../monitor-configs/tikhub.yaml';
+const CONFIG_PATH = '../monitor-configs/tikhub-simple.yaml';
 
 async function main() {
   let engine = null;

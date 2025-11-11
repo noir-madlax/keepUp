@@ -1,0 +1,61 @@
+name: "TikHub"
+site_id: "tikhub"
+url: "https://user.tikhub.io/en-us/users/overview"
+description: "监控 TikHub 账户余额和今日消费 (简化版)"
+icon_url: "https://user.tikhub.io/favicon.ico"
+
+steps:
+  # 1. 导航到用户概览页
+  - action: "navigate"
+    url: "https://user.tikhub.io/en-us/users/overview"
+    wait_for: "networkidle2"
+    timeout: 30000
+    comment: "访问 TikHub 用户 Dashboard"
+
+  # 2. 等待页面加载
+  - action: "wait"
+    selector: "body"
+    timeout: 10000
+    comment: "等待页面基本加载"
+
+  # 3. 等待余额数据显示
+  - action: "wait"
+    selector: ".stat-value"
+    timeout: 15000
+    comment: "等待账户余额数据加载"
+
+  # 4. 提取 Account Balance (账户余额)
+  # 目标结构: <div class="stat-title">Account Balance</div>
+  #          <div class="stat-value my-4">$9.0416</div>
+  - action: "extract"
+    name: "balance"
+    selector: "div.stat-title:has-text('Account Balance') + div.stat-value"
+    extract_type: "text"
+    regex_pattern: "\\$([\\d.]+)"
+    regex_group: 1
+    transform: "float"
+    comment: "提取账户余额（从 $9.0416 中提取 9.0416）"
+
+  # 5. 提取 Total Cost Today (今日消费)
+  # 目标结构: <div class="stat-desc">Total Cost Today:</div>
+  #          <div class="stat-desc">$0.0020</div>
+  - action: "extract"
+    name: "daily_cost"
+    selector: "div.stat-desc:has-text('Total Cost Today:') + div.stat-desc"
+    extract_type: "text"
+    regex_pattern: "\\$([\\d.]+)"
+    regex_group: 1
+    transform: "float"
+    comment: "提取今日消费金额"
+
+  # 6. 截图
+  - action: "screenshot"
+    full_page: false
+    comment: "截取页面"
+
+# Cookie 验证配置
+validation:
+  cookie_check:
+    selector: ".stat-value"
+    should_exist: true
+
