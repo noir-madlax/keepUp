@@ -30,10 +30,12 @@ export class ScraperEngine {
       ]
     };
 
-    // 在 GitHub Actions 或 CI 环境中使用系统 Chrome
-    if (process.env.CI || process.env.GITHUB_ACTIONS) {
-      console.log('🔧 检测到 CI 环境，使用系统 Chrome');
+    // 在 GitHub Actions 环境中使用系统 Chrome
+    if (process.env.GITHUB_ACTIONS === 'true') {
+      console.log('🔧 检测到 GitHub Actions 环境，使用系统 Chrome');
       launchOptions.executablePath = '/usr/bin/google-chrome';
+    } else {
+      console.log('🔧 本地环境，使用 Puppeteer Chromium');
     }
 
     this.browser = await puppeteer.launch(launchOptions);
