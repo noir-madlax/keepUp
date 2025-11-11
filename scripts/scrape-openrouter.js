@@ -4,7 +4,7 @@ import { getSiteConfig, saveScrapedData, updateCookieStatus, uploadScreenshot } 
 import fs from 'fs';
 
 const SITE_SLUG = 'openrouter';
-const CONFIG_PATH = '../monitor-configs/openrouter-v2.yaml';
+const CONFIG_PATH = '../monitor-configs/openrouter.yaml';
 
 async function main() {
   let engine = null;
