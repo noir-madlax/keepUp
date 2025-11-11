@@ -12,24 +12,15 @@ steps:
     timeout: 30000
     comment: "访问 OpenRouter Credits 设置页面"
 
-  # 2. 等待页面加载完成
-  - action: "wait"
-    selector: "body"
-    timeout: 10000
-    comment: "等待页面基本加载"
+  # 2. 等待页面加载完成（使用 networkidle2 已经足够）
+  # 不再等待特定元素，因为可能被 Cloudflare 拦截或元素动态加载
 
-  # 3. 额外等待，让 JS 完全加载
-  - action: "wait"
-    selector: "div"
-    timeout: 5000
-    comment: "给页面更多时间加载 JavaScript"
-
-  # 4. 调试截图 - 查看实际页面状态
+  # 3. 调试截图 - 查看实际页面状态
   - action: "screenshot"
     full_page: true
-    comment: "调试截图 - 查看页面是否被 Cloudflare 拦截"
+    comment: "完整截图用于调试（查看是否 Cloudflare 拦截）"
 
-  # 5. 提取 Credits 余额
+  # 4. 提取 Credits 余额
   # 目标 div: <div class="group/card rounded-xl..." aria-label="Remaining credits: 7.725">
   # 直接从 aria-label 属性提取数值，避免处理内部复杂的数字动画
   - action: "extract"
@@ -42,7 +33,7 @@ steps:
     transform: "float"
     comment: "从 aria-label 属性中提取 Credits 余额"
 
-  # 6. 最终截图
+  # 5. 截图
   - action: "screenshot"
     full_page: false
     comment: "截取页面"
