@@ -1,0 +1,44 @@
+name: Monitor OpenRouter
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: scripts/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm ci
+      
+      - name: Run OpenRouter scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SITE_SLUG: openrouter
+        run: |
+          cd scripts
+          node scrape-openrouter.js
+      
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshots-openrouter
+          path: scripts/temp/*.png
+          retention-days: 7
+

@@ -1,0 +1,232 @@
+# TikHub 费用监控配置
+# 网站: https://user.tikhub.io/en-us/users/overview
+# 监控目标: Account Balance, Free Credit, API请求次数
+# 最后更新: 2025-11-11
+
+name: TikHub
+url: https://user.tikhub.io/en-us/users/overview
+
+# 抓取步骤配置
+steps:
+  # 步骤1: 导航到用户概览页
+  - action: navigate
+    url: "{{ url }}"
+    wait_for: networkidle
+    timeout: 30000
+    comment: |
+      访问TikHub用户Dashboard概览页面
+      等待网络空闲，确保所有API请求完成
+      可能遇到Cloudflare验证，需要等待较长时间
+
+  # 步骤2: 等待Cloudflare验证通过（如果有）
+  - action: wait
+    selector: "text=/Check In|Account Balance/"
+    timeout: 15000
+    optional: true
+    comment: |
+      TikHub使用Cloudflare保护，可能需要等待验证
+      等待"Check In"或"Account Balance"文本出现
+      表示已通过验证，页面加载完成
+
+  # 步骤3: 提取Account Balance（账户余额）
+  - action: extract
+    name: balance
+    # 通过文本匹配: "$9.0416"
+    selector: "text=/\\$([\\d.]+)/"
+    extract_type: regex
+    regex_group: 1
+    transform: float
+    fallback_selector: "[data-testid='account-balance'], .balance-amount"
+    comment: |
+      提取账户余额，格式: $9.0416
+      正则匹配美元符号后的数字
+      转换为浮点数存储
+      如果正则失败，尝试CSS选择器
+
+  # 步骤4: 提取Free Credit（免费额度）
+  - action: extract
+    name: free_credit
+    selector: "text=/Free Credit|\\$0\\.\\d+/"
+    extract_type: regex
+    regex_pattern: "\\$([\\d.]+)"
+    regex_group: 1
+    transform: float
+    optional: true
+    comment: |
+      提取免费赠送的额度
+      从"Account Free Credit: $0.0006"中提取数值
+      这是可选字段，有些账户可能没有
+
+  # 步骤5: 提取今日API请求次数
+  - action: extract
+    name: api_requests_today
+    selector: "text=/Today API requests total/"
+    context: next-sibling  # 获取同级下一个元素
+    extract_type: text
+    transform: int
+    comment: |
+      提取今日API请求总数
+      页面结构: <div>Today API requests total</div><div>2</div>
+      获取文本后的下一个元素内容，转换为整数
+
+  # 步骤6: 提取今日消费（Total Cost Today）
+  - action: extract
+    name: daily_cost
+    selector: "text=/Total Cost Today.*\\$([\\d.]+)/"
+    extract_type: regex
+    regex_group: 1
+    transform: float
+    optional: true
+    comment: |
+      提取今日消费金额
+      格式: "Total Cost Today: $0.0020"
+      可选字段，可能不显示
+
+  # 步骤7: 提取最后API调用时间
+  - action: extract
+    name: last_api_call
+    selector: "text=/Lastest Call API Time/"
+    context: next-sibling
+    extract_type: text
+    transform: datetime
+    optional: true
+    comment: |
+      提取最后一次调用API的时间
+      格式: "2025-11-10 19:58:48"
+      转换为ISO 8601格式存储
+
+  # 步骤8: 提取Check-in状态
+  - action: extract
+    name: check_in_status
+    selector: "text=/Check-in Status/"
+    context: next-sibling
+    extract_type: text
+    comment: |
+      提取签到状态: "Not Check-in" 或 日期
+      用于判断今天是否已签到
+
+  # 步骤9: 提取最后Check-in时间
+  - action: extract
+    name: last_check_in
+    selector: "text=/Last Check-in Time/"
+    context: next-sibling
+    extract_type: text
+    transform: date
+    optional: true
+    comment: |
+      提取最后签到日期
+      格式: "2025-06-05"
+      转换为日期格式
+
+  # 步骤10: 截图保存
+  - action: screenshot
+    full_page: false
+    quality: 90
+    comment: |
+      截取Dashboard概览区域
+      保存当前可见内容，不需要滚动
+
+# Cookie有效性验证配置
+validation:
+  # 检查是否已登录
+  cookie_check:
+    selector: "text=/Overview|Check In|Account Balance/"
+    should_exist: true
+    comment: |
+      检查是否在用户Dashboard页面
+      如果看到"Overview"、"Check In"等文本
+      说明已登录，Cookie有效
+  
+  # 检查是否在登录页
+  login_page_check:
+    selector: "text=/Welcome To TikHub|Sign in|Email|Password/"
+    should_exist: false
+    comment: |
+      检查是否被重定向到登录页
+      如果看到"Welcome To TikHub"或登录表单
+      说明Cookie失效
+
+# 错误处理配置
+error_handling:
+  retry_on_failure: true
+  max_retries: 3  # TikHub有Cloudflare保护，可能需要多次重试
+  retry_delay: 10000  # 10秒，给Cloudflare验证足够时间
+  
+  page_load_timeout: 40000  # 40秒，Cloudflare验证可能需要较长时间
+  element_wait_timeout: 15000
+  
+  error_patterns:
+    - pattern: "Sign in|Login required"
+      category: cookie_invalid
+      message: "Cookie已失效，需要重新登录"
+    
+    - pattern: "Cloudflare|Just a moment"
+      category: cloudflare_challenge
+      message: "Cloudflare验证中，请等待"
+    
+    - pattern: "403|Forbidden"
+      category: access_denied
+      message: "访问被拒绝，可能IP被限制"
+
+# 数据映射配置
+data_mapping:
+  output:
+    balance:
+      type: number
+      unit: USD
+      description: "账户余额"
+      required: true
+    
+    free_credit:
+      type: number
+      unit: USD
+      description: "免费额度"
+      optional: true
+    
+    api_requests_today:
+      type: integer
+      description: "今日API请求次数"
+      optional: true
+    
+    daily_cost:
+      type: number
+      unit: USD
+      description: "今日消费金额"
+      optional: true
+    
+    last_api_call:
+      type: datetime
+      description: "最后API调用时间"
+      optional: true
+    
+    check_in_status:
+      type: string
+      description: "签到状态"
+      optional: true
+    
+    last_check_in:
+      type: date
+      description: "最后签到日期"
+      optional: true
+    
+    scraped_at:
+      type: datetime
+      auto: true
+      description: "数据抓取时间"
+
+# 元数据
+metadata:
+  update_frequency: daily
+  critical_level: medium
+  alert_threshold:
+    balance_low: 5.0  # 余额低于$5时告警
+    daily_cost_high: 1.0  # 日消费超过$1时告警
+  tags:
+    - tiktok-api
+    - social-media
+    - data-service
+  notes: |
+    TikHub使用Cloudflare保护，访问时可能遇到验证
+    需要较长的超时时间和重试机制
+    建议降低访问频率，避免触发限制
+

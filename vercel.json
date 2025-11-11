@@ -9,6 +9,12 @@
       "destination": "/index.html"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/trigger-scrape",
+      "schedule": "0 1 * * *"
+    }
+  ],
   "github": {
     "enabled": true,
     "silent": false

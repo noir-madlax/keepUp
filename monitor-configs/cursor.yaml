@@ -1,0 +1,238 @@
+# Cursor 费用监控配置
+# 网站: https://cursor.com/dashboard
+# 监控目标: Included-Request Usage (87/500), On-Demand Usage ($1/$10)
+# 最后更新: 2025-11-11
+
+name: Cursor
+url: https://cursor.com/dashboard
+
+# 抓取步骤配置
+steps:
+  # 步骤1: 导航到Dashboard页面
+  - action: navigate
+    url: "{{ url }}"
+    wait_for: networkidle
+    timeout: 30000
+    comment: |
+      访问Cursor Dashboard页面
+      Cursor使用WorkOS认证，可能需要重定向
+      等待网络空闲，确保页面完全加载
+
+  # 步骤2: 等待Dashboard内容加载
+  - action: wait
+    selector: "text=/Usage|Included|On-Demand/"
+    timeout: 15000
+    comment: |
+      等待Dashboard主要内容出现
+      检测"Usage"、"Included"或"On-Demand"关键字
+      如果超时，可能是Cookie失效被重定向到登录页
+
+  # 步骤3: 提取Included-Request Usage的used值
+  - action: extract
+    name: included_used
+    # 匹配 "87 / 500" 格式，提取第一个数字
+    selector: "text=/(\\d+)\\s*\\/\\s*500|Included.*Request.*Usage/"
+    extract_type: regex
+    regex_pattern: "(\\d+)\\s*\\/\\s*(\\d+)"
+    regex_group: 1
+    transform: int
+    context: parent  # 从父元素中查找
+    comment: |
+      提取已使用的Included请求次数
+      页面显示格式: "87 / 500"
+      正则匹配: 87 / 500，提取第一个数字87
+      转换为整数存储
+
+  # 步骤4: 提取Included-Request Usage的total值
+  - action: extract
+    name: included_total
+    selector: "text=/(\\d+)\\s*\\/\\s*(\\d+)/"
+    extract_type: regex
+    regex_pattern: "(\\d+)\\s*\\/\\s*(\\d+)"
+    regex_group: 2
+    transform: int
+    default: 500
+    comment: |
+      提取Included请求总配额
+      从"87 / 500"中提取第二个数字500
+      默认值500（以防提取失败）
+
+  # 步骤5: 提取On-Demand Usage的spent值
+  - action: extract
+    name: on_demand_spent
+    # 匹配 "$1 / $10" 格式
+    selector: "text=/\\$\\s*(\\d+)\\s*\\/\\s*\\$\\s*(\\d+)|On-Demand.*Usage/"
+    extract_type: regex
+    regex_pattern: "\\$\\s*(\\d+)\\s*\\/\\s*\\$\\s*(\\d+)"
+    regex_group: 1
+    transform: int
+    comment: |
+      提取On-Demand已花费金额
+      页面显示: "$1 / $10"
+      正则提取第一个数字1（美元）
+
+  # 步骤6: 提取On-Demand Usage的limit值
+  - action: extract
+    name: on_demand_limit
+    selector: "text=/\\$\\s*(\\d+)\\s*\\/\\s*\\$\\s*(\\d+)/"
+    extract_type: regex
+    regex_pattern: "\\$\\s*(\\d+)\\s*\\/\\s*\\$\\s*(\\d+)"
+    regex_group: 2
+    transform: int
+    default: 10
+    comment: |
+      提取On-Demand消费限额
+      从"$1 / $10"中提取第二个数字10
+      默认值10美元
+
+  # 步骤7: 提取Usage重置日期（可选）
+  - action: extract
+    name: reset_date
+    selector: "text=/Resets\\s+(\\w+\\s+\\d+,\\s+\\d+)/"
+    extract_type: regex
+    regex_group: 1
+    transform: date
+    optional: true
+    comment: |
+      提取Usage重置日期
+      格式: "Resets Dec 4, 2025"
+      提取"Dec 4, 2025"并转换为日期
+      这是可选字段
+
+  # 步骤8: 计算使用百分比（在抓取器中完成）
+  # included_percentage = (included_used / included_total) * 100
+  # on_demand_percentage = (on_demand_spent / on_demand_limit) * 100
+
+  # 步骤9: 截图保存
+  - action: screenshot
+    full_page: false
+    quality: 90
+    comment: |
+      截取Dashboard使用情况区域
+      不需要完整页面，只要关键数据可见即可
+
+# Cookie有效性验证配置
+validation:
+  # 检查是否已登录Dashboard
+  cookie_check:
+    selector: "text=/Dashboard|Overview|Usage/"
+    should_exist: true
+    comment: |
+      检查是否在Dashboard页面
+      如果看到"Dashboard"、"Overview"或"Usage"
+      说明已登录，Cookie有效
+  
+  # 检查是否在登录页
+  login_page_check:
+    selector: "text=/Sign in|Continue with Google|Continue with GitHub|Email/"
+    should_exist: false
+    comment: |
+      检查是否被重定向到登录页
+      Cursor使用WorkOS，登录页有多种登录方式
+      如果看到登录按钮，说明Cookie失效
+
+  # 检查是否在WorkOS认证页面
+  workos_redirect_check:
+    selector: "text=/authenticator\\.cursor\\.sh|Sign in to/"
+    should_exist: false
+    comment: |
+      检查是否被重定向到WorkOS认证页面
+      URL包含authenticator.cursor.sh时Cookie失效
+
+# 错误处理配置
+error_handling:
+  retry_on_failure: true
+  max_retries: 2
+  retry_delay: 5000
+  
+  page_load_timeout: 30000
+  element_wait_timeout: 15000
+  
+  error_patterns:
+    - pattern: "Sign in|authentication required|authenticator\\.cursor"
+      category: cookie_invalid
+      message: "Cookie已失效，需要重新登录"
+    
+    - pattern: "timeout waiting for|locator.*not found"
+      category: element_not_found
+      message: "页面元素未找到，可能页面结构变化"
+    
+    - pattern: "429|rate limit"
+      category: rate_limit
+      message: "请求频率过高，请稍后重试"
+
+# 数据映射配置
+data_mapping:
+  output:
+    included_usage:
+      type: object
+      properties:
+        used:
+          type: integer
+          description: "已使用的Included请求次数"
+          required: true
+        total:
+          type: integer
+          description: "Included请求总配额"
+          default: 500
+        percentage:
+          type: float
+          description: "使用百分比"
+          computed: true
+          formula: "(used / total) * 100"
+    
+    on_demand_usage:
+      type: object
+      properties:
+        spent:
+          type: integer
+          unit: USD
+          description: "On-Demand已花费金额"
+          required: true
+        limit:
+          type: integer
+          unit: USD
+          description: "On-Demand消费限额"
+          default: 10
+        percentage:
+          type: float
+          description: "消费百分比"
+          computed: true
+          formula: "(spent / limit) * 100"
+    
+    reset_date:
+      type: date
+      description: "Usage重置日期"
+      optional: true
+    
+    scraped_at:
+      type: datetime
+      auto: true
+      description: "数据抓取时间"
+
+# 元数据
+metadata:
+  update_frequency: daily
+  critical_level: high  # Cursor是主力开发工具，非常重要
+  alert_threshold:
+    included_percentage_high: 90  # 使用率超过90%告警
+    on_demand_percentage_high: 80  # On-Demand超过80%告警
+  tags:
+    - ai-editor
+    - development-tool
+    - subscription
+  notes: |
+    Cursor使用WorkOS进行身份认证
+    Cookie名称: WorkosCursorSessionToken
+    过期时间: 2026-12-28（有效期很长）
+    
+    页面结构说明:
+    - Dashboard显示两个主要指标
+    - Included-Request Usage: 免费配额，每月500次
+    - On-Demand Usage: 付费额度，默认限制$10/月
+    
+    数据提取难点:
+    - 页面使用动态渲染，需要等待JS执行完成
+    - 数字格式可能变化（87 vs 087 vs 87.0）
+    - 需要处理千位分隔符的情况（不太可能但要考虑）
+
