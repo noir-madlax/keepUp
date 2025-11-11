@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { inject } from '@vercel/analytics'
+import ElementPlus from 'element-plus'
 import App from './App.vue'
 import router from './router'
 import i18n from './i18n'
@@ -18,6 +19,7 @@ import 'element-plus/dist/index.css'
 const app = createApp(App)
 const pinia = createPinia()
 app.use(pinia)
+app.use(ElementPlus)
 
 // 2024-03-24 17:30: 在应用启动时预加载用户状态
 const authStore = useAuthStore(pinia)

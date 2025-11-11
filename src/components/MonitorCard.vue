@@ -3,7 +3,7 @@
     <div class="card-header">
       <div class="site-info">
         <img v-if="site.icon_url" :src="site.icon_url" :alt="site.name" class="site-icon" />
-        <div>
+        <div class="site-text">
           <h3 class="site-name">{{ site.name }}</h3>
           <p class="site-desc">{{ site.description }}</p>
         </div>
@@ -11,6 +11,15 @@
       <div class="status-indicator" :class="{ valid: site.cookie_valid, invalid: !site.cookie_valid }">
         <span class="status-dot"></span>
       </div>
+    </div>
+
+    <div class="card-actions">
+      <button @click="handleRefresh" :disabled="refreshing" class="action-button" title="刷新">
+        <el-icon :class="{ 'rotating': refreshing }"><Refresh /></el-icon>
+      </button>
+      <button @click="viewDetails" class="action-button" title="查看详情">
+        <el-icon><View /></el-icon>
+      </button>
     </div>
 
     <div v-if="site.latest_data" class="card-body">
@@ -24,42 +33,20 @@
           {{ formatDate(site.latest_data.created_at) }}
         </span>
       </div>
-
-      <div v-if="site.latest_data.screenshot_url" class="screenshot-preview">
-        <el-image
-          :src="site.latest_data.screenshot_url"
-          :preview-src-list="[site.latest_data.screenshot_url]"
-          fit="cover"
-          class="screenshot-img"
-        >
-          <template #placeholder>
-            <div class="image-placeholder">
-              <el-icon><Picture /></el-icon>
-            </div>
-          </template>
-        </el-image>
-      </div>
     </div>
 
     <div v-else class="card-body empty">
-      <el-empty description="暂无数据" />
-    </div>
-
-    <div class="card-footer">
-      <el-button @click="handleRefresh" :loading="refreshing" size="small" type="primary">
-        <el-icon class="mr-1"><Refresh /></el-icon>
-        刷新
-      </el-button>
-      <el-button @click="viewDetails" size="small" type="info" text>
-        查看详情
-      </el-button>
+      <div class="empty-state">
+        <el-icon class="empty-icon"><Picture /></el-icon>
+        <p class="empty-text">暂无数据</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Clock, Refresh, Picture } from '@element-plus/icons-vue'
+import { Clock, Refresh, Picture, View } from '@element-plus/icons-vue'
 
 interface Props {
   site: {
@@ -86,8 +73,33 @@ function formatData(data: any) {
   
   // 格式化显示数据
   if (typeof data === 'object') {
-    return Object.entries(data)
-      .map(([key, value]) => `${key}: ${value}`)
+    const entries = Object.entries(data).filter(([key]) => key !== 'test')
+    
+    // 特殊处理Cursor的included字段
+    const hasIncludedUsed = entries.some(([key]) => key === 'included_used')
+    const hasIncludedTotal = entries.some(([key]) => key === 'included_total')
+    
+    if (hasIncludedUsed && hasIncludedTotal) {
+      const included_used = data.included_used
+      const included_total = data.included_total
+      const ondemand_used = data.ondemand_used
+      const ondemand_limit = data.ondemand_limit
+      
+      return `Included: ${included_used}/${included_total}\nOndemand: ${ondemand_used}/${ondemand_limit}`
+    }
+    
+    return entries
+      .map(([key, value]) => {
+        // 智能缩短字段名
+        const shortKey = key
+          .replace('_used', '')
+          .replace('_total', ' Total')
+          .replace('_limit', ' Limit')
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+        return `${shortKey}: ${value}`
+      })
       .join('\n')
   }
   
@@ -124,164 +136,283 @@ function viewDetails() {
 
 <style scoped>
 .monitor-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 1.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  padding: 1.75rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.monitor-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  border-radius: 24px 24px 0 0;
 }
 
 .monitor-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.12),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.monitor-card:hover .card-actions {
+  opacity: 1;
+  pointer-events: all;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .site-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   flex: 1;
+  min-width: 0;
 }
 
 .site-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   object-fit: contain;
-  background: white;
-  padding: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.site-text {
+  flex: 1;
+  min-width: 0;
 }
 
 .site-name {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: white;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.375rem 0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .site-desc {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.75);
   margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .status-indicator {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .status-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
 
 .status-indicator.valid .status-dot {
   background: #10b981;
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7),
+              0 0 8px rgba(16, 185, 129, 0.4);
 }
 
 .status-indicator.invalid .status-dot {
   background: #ef4444;
-  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
   animation: none;
 }
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7),
+                0 0 8px rgba(16, 185, 129, 0.4);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0),
+                0 0 8px rgba(16, 185, 129, 0.4);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0),
+                0 0 8px rgba(16, 185, 129, 0.4);
   }
 }
 
 .card-body {
-  margin-bottom: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 0;
 }
 
 .card-body.empty {
-  padding: 2rem 0;
+  justify-content: center;
+  align-items: center;
 }
 
-.data-display {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
-  padding: 1rem;
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.4);
   margin-bottom: 1rem;
 }
 
+.empty-text {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9375rem;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.data-display {
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 1rem;
+  flex-shrink: 0;
+}
+
+.data-display::-webkit-scrollbar {
+  width: 6px;
+}
+
+.data-display::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.data-display::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.data-display::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .data-content {
-  color: white;
-  font-family: 'Courier New', monospace;
-  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.95);
+  font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
+  font-size: 0.8125rem;
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.6;
 }
 
 .card-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.75rem;
+  margin-top: auto;
+  padding-top: 1rem;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.8125rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
-.screenshot-preview {
-  margin-top: 1rem;
+.card-actions {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
 }
 
-.screenshot-img {
-  width: 100%;
-  height: 180px;
-  border-radius: 12px;
-  overflow: hidden;
+.action-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(180%);
+  color: white;
+  font-size: 16px;
   cursor: pointer;
-}
-
-.image-placeholder {
-  width: 100%;
-  height: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.1);
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 2rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.card-footer {
-  display: flex;
-  gap: 0.75rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+.action-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.mr-1 {
-  margin-right: 0.25rem;
+.action-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rotating {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
 
