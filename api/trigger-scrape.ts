@@ -13,7 +13,7 @@ export default async function handler(
   const githubToken = process.env.GITHUB_TOKEN
   const githubRepo = process.env.GITHUB_REPO || 'keepUp'
   const githubOwner = process.env.GITHUB_OWNER
-  const githubBranch = process.env.GITHUB_BRANCH || 'chore-remove-subtitles-a6fa8'
+  const githubBranch = process.env.GITHUB_BRANCH || 'main'
 
   if (!githubToken) {
     return response.status(500).json({ error: 'GitHub Token未配置' })
