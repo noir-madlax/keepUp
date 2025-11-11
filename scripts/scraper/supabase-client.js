@@ -29,17 +29,37 @@ export async function getSiteConfig(siteSlug) {
     throw new Error(`获取网站配置失败: ${websiteError.message}`);
   }
 
-  const { data: cookie, error: cookieError } = await supabase
+  // 首先尝试获取有效的 Cookie
+  let { data: cookie, error: cookieError } = await supabase
     .from('cookies')
     .select('*')
     .eq('site_slug', siteSlug)
     .eq('is_valid', true)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
-  if (cookieError) {
-    console.warn(`未找到有效Cookie: ${cookieError.message}`);
+  // 如果没有有效的 Cookie，尝试获取最新的一个（不管是否有效）
+  if (!cookie) {
+    console.warn(`未找到有效Cookie，尝试获取最新Cookie...`);
+    const { data: latestCookie, error: latestError } = await supabase
+      .from('cookies')
+      .select('*')
+      .eq('site_slug', siteSlug)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    if (latestError) {
+      console.error(`获取Cookie失败: ${latestError.message}`);
+      return { website, cookie: null };
+    }
+    
+    cookie = latestCookie;
+  }
+
+  if (!cookie) {
+    console.warn(`站点 ${siteSlug} 没有任何Cookie数据`);
     return { website, cookie: null };
   }
 
