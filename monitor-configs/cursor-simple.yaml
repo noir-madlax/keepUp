@@ -31,15 +31,15 @@ steps:
     transform: "int"
     comment: "提取 Included 已使用量"
   
-  # 5. 提取 Included Total (总额度) - 使用更通用的选择器
+  # 5. 提取 Included Total (总额度) - 精确选择器
   - action: "extract"
     name: "included_total"
-    selector: "div.web-text-xl"
-    extract_type: "regex"
+    selector: "div.web-text-xl.dashboard-text-tertiary.truncate.font-medium"
+    extract_type: "text"
     regex_pattern: "\\/\\s*(\\d+)"
     regex_group: 1
     transform: "int"
-    comment: "提取 Included 总额度"
+    comment: "提取 Included 总额度（从 '/ 500' 中提取 500）"
   
   # 6. 提取 On-Demand Used (已使用金额)
   - action: "extract"
