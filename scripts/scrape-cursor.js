@@ -4,7 +4,7 @@ import { getSiteConfig, saveScrapedData, updateCookieStatus, uploadScreenshot } 
 import fs from 'fs';
 
 const SITE_SLUG = 'cursor';
-const CONFIG_PATH = '../monitor-configs/cursor-v2.yaml';
+const CONFIG_PATH = '../monitor-configs/cursor-simple.yaml';
 
 async function main() {
   let engine = null;

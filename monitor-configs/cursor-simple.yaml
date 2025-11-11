@@ -1,0 +1,68 @@
+# Cursor 简化测试配置
+name: "Cursor"
+url: "https://cursor.com/dashboard"
+description: "Cursor Dashboard 监控"
+
+steps:
+  # 1. 导航到页面
+  - action: "navigate"
+    url: "https://cursor.com/dashboard"
+    wait_for: "networkidle2"
+    timeout: 30000
+    comment: "访问 Cursor Dashboard"
+  
+  # 2. 等待页面加载
+  - action: "wait"
+    selector: "div:has-text('Included-Request Usage')"
+    timeout: 15000
+    comment: "等待使用量卡片加载"
+  
+  # 3. 提取 Included Usage (已使用)
+  - action: "extract"
+    name: "included_used"
+    selector: "div.web-text-xl.flex-shrink-0.font-medium"
+    extract_type: "text"
+    transform: "int"
+    comment: "提取 Included 已使用量"
+  
+  # 4. 提取 Included Total (总额度)
+  - action: "extract"
+    name: "included_total"
+    selector: "div.web-text-xl.dashboard-text-tertiary"
+    extract_type: "text"
+    regex_pattern: "\\/(\\d+)"
+    regex_group: 1
+    transform: "int"
+    comment: "提取 Included 总额度"
+  
+  # 5. 提取 On-Demand Used (已使用金额)
+  - action: "extract"
+    name: "ondemand_used"
+    selector: "div.bg-brand-dashboard-card div.text-base.font-medium:not(.dashboard-text-secondary)"
+    extract_type: "text"
+    regex_pattern: "\\$([\\d.]+)"
+    regex_group: 1
+    transform: "float"
+    comment: "提取 On-Demand 已使用金额"
+  
+  # 6. 提取 On-Demand Limit (限额)
+  - action: "extract"
+    name: "ondemand_limit"
+    selector: "div.bg-brand-dashboard-card div.dashboard-text-secondary"
+    extract_type: "text"
+    regex_pattern: "\\$([\\d.]+)"
+    regex_group: 1
+    transform: "float"
+    comment: "提取 On-Demand 限额"
+  
+  # 7. 截图
+  - action: "screenshot"
+    full_page: false
+    comment: "截取页面"
+
+# Cookie 验证配置
+validation:
+  cookie_check:
+    selector: "div:has-text('Included-Request Usage')"
+    should_exist: true
+
