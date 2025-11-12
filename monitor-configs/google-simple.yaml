@@ -19,14 +19,14 @@ steps:
   
   # 3. 额外等待确保数据加载
   - action: "wait_time"
-    duration: 3000
-    comment: "额外等待3秒确保页面数据完全加载"
+    duration: 5000
+    comment: "额外等待5秒确保页面数据完全加载"
   
-  # 4. 等待 sdui-block 容器出现
+  # 4. 等待费用数据文本元素出现
   - action: "wait"
-    selector: "sdui-block"
-    timeout: 15000
-    comment: "等待费用数据容器加载"
+    selector: "sdui-text-fragment"
+    timeout: 20000
+    comment: "等待费用数据加载"
   
   # 5. 提取总费用（从红框标注的区域）
   - action: "extract"
