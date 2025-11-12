@@ -340,7 +340,7 @@ RETURNING id, site_slug, is_valid;
 
 ## 5️⃣ GitHub Actions 配置
 
-### 5.1 修改工作流文件
+### 5.1 修改统一工作流文件
 
 **文件**: `.github/workflows/monitor-all.yml`
 
@@ -359,6 +359,116 @@ strategy:
     site: [openrouter, cursor, tikhub, google]  # 添加google
   fail-fast: false
 ```
+
+### 5.2 创建独立工作流文件 ⚠️ **重要步骤**
+
+为了能在 GitHub Actions 界面手动触发单个渠道的监控，需要创建独立的 workflow 文件。
+
+**位置**: `.github/workflows/monitor-{渠道}.yml`
+
+**模板**:
+```yaml
+name: Monitor {渠道名称}
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: scripts/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+      
+      - name: Run {渠道名称} scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SITE_SLUG: {渠道slug}
+        run: |
+          cd scripts
+          node scrape-{渠道slug}.js
+      
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-{渠道slug}
+          path: scripts/temp/*.png
+          retention-days: 7
+```
+
+**实际示例** (Google):
+```yaml
+name: Monitor Google
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: scripts/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd scripts
+          npm ci
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+      
+      - name: Run Google scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SITE_SLUG: google
+        run: |
+          cd scripts
+          node scrape-google.js
+      
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots-google
+          path: scripts/temp/*.png
+          retention-days: 7
+```
+
+**注意事项**:
+- 这个独立的 workflow 文件允许你在 GitHub Actions 界面手动触发单个渠道的监控
+- `workflow_dispatch` 启用手动触发
+- `workflow_call` 允许被其他 workflow 调用
+- 如果没有这个文件，虽然 `monitor-all.yml` 可以运行该渠道，但在 Actions 界面看不到独立的 workflow
 
 ### 5.2 配置GitHub Secrets
 
@@ -549,40 +659,49 @@ keepup-v2/
 │   ├── {渠道}-simple.yaml          # ✅ 配置文件
 │   └── {渠道}.target.div           # 📋 参考HTML（可选）
 ├── cookies-temp/
-│   └── {渠道}                      # 📋 Cookie文件
+│   └── {渠道}                      # 📋 Cookie文件（临时）
 ├── scripts/
 │   └── scrape-{渠道}.js            # ✅ 抓取脚本
 └── .github/workflows/
-    └── monitor-all.yml             # ✅ 已修改
+    ├── monitor-all.yml             # ✅ 已修改（matrix 添加新渠道）
+    └── monitor-{渠道}.yml          # ✅ 新增独立 workflow 文件 ⚠️ 重要！
 ```
+
+**重要提醒**: 必须同时创建独立的 workflow 文件，否则在 GitHub Actions 界面看不到该渠道！
 
 ## 🔍 常见问题
 
-### Q0: GitHub上看不到Actions？
+### Q0: GitHub上看不到Actions？⚠️ **最常见问题**
 
 **A**: 
-1. **最常见原因**: workflow文件还未提交到GitHub
+1. **最常见原因**: 没有创建独立的 workflow 文件 ⚠️
+   - 即使 `monitor-all.yml` 的 matrix 包含了新渠道，也必须创建独立文件
+   - 必须创建 `.github/workflows/monitor-{渠道}.yml`
+   - 参考第 5.2 节的模板创建
+   - 示例: `.github/workflows/monitor-google.yml`, `.github/workflows/monitor-dajiala.yml`
+
+2. **workflow文件还未提交到GitHub**:
    ```bash
    git status  # 查看是否有未提交的文件
-   git add .github/workflows/monitor-all.yml
-   git commit -m "feat: 添加GitHub Actions workflow"
+   git add .github/workflows/monitor-{渠道}.yml
+   git commit -m "feat: 添加 {渠道} 的 GitHub Actions workflow"
    git push origin main
    ```
 
-2. **Actions未启用**: 
+3. **Actions未启用**: 
    - 访问仓库的 `Actions` 标签页
    - 点击 `I understand my workflows, go ahead and enable them`
 
-3. **workflow文件位置错误**: 
+4. **workflow文件位置错误**: 
    - 必须在 `.github/workflows/` 目录下
    - 文件名必须是 `.yml` 或 `.yaml` 后缀
 
-4. **workflow语法错误**: 
+5. **workflow语法错误**: 
    - 检查YAML缩进
    - 使用 `yamllint` 验证语法
    - 查看GitHub Actions页面的错误提示
 
-5. **权限问题**:
+6. **权限问题**:
    - 检查仓库的 Actions 权限设置
    - `Settings` → `Actions` → `General` → 确保 `Allow all actions` 已启用
 
@@ -670,8 +789,11 @@ keepup-v2/
 - [ ] ✅ 抓取脚本创建并测试
 - [ ] ✅ 数据库websites表插入成功
 - [ ] ✅ 数据库cookies表插入成功
-- [ ] ✅ GitHub Actions配置已更新
+- [ ] ✅ monitor-all.yml 的 matrix 已添加新渠道
+- [ ] ✅ **创建独立的 workflow 文件** `.github/workflows/monitor-{渠道}.yml` ⚠️ **重要！**
+- [ ] ✅ workflow 文件已提交并推送到 GitHub
 - [ ] ✅ GitHub Secrets已配置
+- [ ] ✅ 在 GitHub Actions 界面可以看到新的 workflow
 - [ ] ✅ 本地抓取测试成功
 - [ ] ✅ 数据库数据验证成功
 - [ ] ✅ 前端显示验证成功
