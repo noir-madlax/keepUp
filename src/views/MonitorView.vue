@@ -8,7 +8,7 @@
     </div>
 
     <div v-if="loading" class="monitor-grid">
-      <div v-for="i in 3" :key="i" class="skeleton-card">
+      <div v-for="i in 7" :key="i" class="skeleton-card">
         <div class="skeleton-header">
           <div class="skeleton-icon"></div>
           <div class="skeleton-text-group">
@@ -176,6 +176,7 @@ onMounted(() => {
 .monitor-view {
   min-height: 100vh;
   padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   background-image: url('https://images.unsplash.com/photo-1559827260-dc66d52bef19?q=80&w=2070&auto=format&fit=crop');
   background-size: cover;
   background-position: center;
@@ -263,10 +264,28 @@ onMounted(() => {
 
 .monitor-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
   position: relative;
   z-index: 1;
+}
+
+@media (max-width: 1400px) {
+  .monitor-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1000px) {
+  .monitor-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .monitor-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .error-container {
@@ -286,9 +305,9 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(40px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 24px;
-  padding: 1.75rem;
-  height: 280px;
+  border-radius: 20px;
+  padding: 1.5rem;
+  height: 240px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -336,14 +355,14 @@ onMounted(() => {
 .skeleton-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.875rem;
+  margin-bottom: 1.25rem;
 }
 
 .skeleton-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
 }
@@ -356,15 +375,15 @@ onMounted(() => {
 }
 
 .skeleton-title {
-  width: 120px;
-  height: 20px;
+  width: 100px;
+  height: 18px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.2);
 }
 
 .skeleton-desc {
-  width: 180px;
-  height: 14px;
+  width: 140px;
+  height: 12px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.15);
 }
@@ -388,13 +407,13 @@ onMounted(() => {
   background: rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  height: 80px;
+  border-radius: 12px;
+  height: 70px;
 }
 
 .skeleton-time {
-  width: 160px;
-  height: 16px;
+  width: 140px;
+  height: 14px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.15);
   margin-top: auto;

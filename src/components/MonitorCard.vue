@@ -144,12 +144,12 @@ function viewDetails() {
   background: rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(40px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 24px;
-  padding: 1.75rem;
+  border-radius: 20px;
+  padding: 1.5rem;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
               inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  height: 280px;
+  height: 240px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -183,25 +183,25 @@ function viewDetails() {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .site-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.875rem;
   flex: 1;
   min-width: 0;
 }
 
 .site-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   object-fit: contain;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
-  padding: 8px;
+  padding: 6px;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
@@ -212,10 +212,10 @@ function viewDetails() {
 }
 
 .site-name {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   color: white;
-  margin: 0 0 0.375rem 0;
+  margin: 0 0 0.25rem 0;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   letter-spacing: -0.01em;
@@ -225,7 +225,7 @@ function viewDetails() {
 }
 
 .site-desc {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.75);
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
@@ -290,18 +290,18 @@ function viewDetails() {
 
 .empty-state {
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 2rem 1rem;
 }
 
 .empty-icon {
-  font-size: 3rem;
+  font-size: 2.5rem;
   color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .empty-text {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
@@ -310,9 +310,11 @@ function viewDetails() {
   background: rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  padding: 1rem;
+  border-radius: 12px;
+  padding: 0.875rem;
   flex-shrink: 0;
+  max-height: 120px;
+  overflow-y: auto;
 }
 
 .data-display::-webkit-scrollbar {
@@ -336,36 +338,36 @@ function viewDetails() {
 .data-content {
   color: rgba(255, 255, 255, 0.95);
   font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .card-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 0.875rem;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
   color: rgba(255, 255, 255, 0.85);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .card-actions {
   position: absolute;
-  top: 1.25rem;
-  right: 3.25rem;
+  top: 1.125rem;
+  right: 2.875rem;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.375rem;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -373,14 +375,14 @@ function viewDetails() {
 }
 
 .action-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px) saturate(180%);
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
