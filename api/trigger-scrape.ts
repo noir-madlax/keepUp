@@ -31,6 +31,10 @@ export default async function handler(
     workflowFile = 'monitor-cursor.yml'
   } else if (site === 'tikhub') {
     workflowFile = 'monitor-tikhub.yml'
+  } else if (site === 'google') {
+    workflowFile = 'monitor-google.yml'
+  } else if (site === 'dajiala') {
+    workflowFile = 'monitor-dajiala.yml'
   } else if (!site) {
     workflowFile = 'monitor-all.yml'
   } else {
