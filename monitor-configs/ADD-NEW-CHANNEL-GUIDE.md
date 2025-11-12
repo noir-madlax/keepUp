@@ -360,6 +360,40 @@ strategy:
   fail-fast: false
 ```
 
+### 5.2 配置GitHub Secrets
+
+在GitHub仓库中配置必要的Secrets：
+
+1. 访问 GitHub 仓库页面
+2. 进入 `Settings` → `Secrets and variables` → `Actions`
+3. 点击 `New repository secret`
+4. 添加以下Secrets：
+   - `SUPABASE_URL`: Supabase项目URL
+   - `SUPABASE_SERVICE_ROLE_KEY`: Supabase服务密钥
+   - 其他API密钥（如需要）
+
+### 5.3 启用GitHub Actions
+
+**重要**: 如果这是首次添加workflow，需要确保：
+
+1. **提交workflow文件到GitHub**:
+   ```bash
+   git add .github/workflows/monitor-all.yml
+   git add scripts/scrape-{渠道}.js
+   git add monitor-configs/{渠道}-simple.yaml
+   git commit -m "feat: 添加{渠道}监控"
+   git push origin main
+   ```
+
+2. **在GitHub上启用Actions**:
+   - 访问仓库的 `Actions` 标签页
+   - 如果看到提示，点击 `I understand my workflows, go ahead and enable them`
+   - 确认workflow出现在列表中
+
+3. **检查workflow文件权限**:
+   - 确保 `.github/workflows/monitor-all.yml` 有正确的权限
+   - GitHub Actions 需要 `workflow` 权限才能运行
+
 ## 6️⃣ 前端验证
 
 ### 6.1 前端自动加载
@@ -441,15 +475,69 @@ LIMIT 1;
 3. 点击刷新按钮测试
 4. 检查数据更新
 
-### 7.4 GitHub Actions 验证
+### 7.4 提交代码到GitHub
 
-**方式1**: 等待每日自动运行（UTC 1:00）
+**关键步骤** - 必须执行才能看到Actions！
 
-**方式2**: 手动触发
+```bash
+# 1. 查看待提交的文件
+git status
+
+# 2. 添加新文件
+git add .github/workflows/monitor-all.yml
+git add scripts/scrape-{渠道}.js
+git add monitor-configs/{渠道}-simple.yaml
+
+# 3. 提交更改
+git commit -m "feat: 添加{渠道}监控功能
+
+- 添加{渠道}-simple.yaml配置文件
+- 创建scrape-{渠道}.js抓取脚本
+- 更新monitor-all.yml工作流
+- 配置数据库表和Cookie"
+
+# 4. 推送到远程仓库
+git push origin main
+```
+
+**重要提示**:
+- 如果有删除的文件，使用 `git add -A` 或 `git rm` 命令
+- 确认所有相关文件都已添加到git
+- 推送成功后，GitHub Actions才会生效
+
+### 7.5 GitHub Actions 验证
+
+**提交代码后的验证步骤**:
+
+**步骤1**: 确认workflow已提交
+1. 访问 `https://github.com/{your-username}/keepup/tree/main/.github/workflows`
+2. 确认 `monitor-all.yml` 文件存在
+3. 查看文件内容，确认包含新渠道
+
+**步骤2**: 查看Actions标签页
+1. 访问 `https://github.com/{your-username}/keepup/actions`
+2. 如果首次使用，可能需要点击 `I understand my workflows, go ahead and enable them`
+3. 应该能看到 `Monitor All Sites Daily` workflow
+
+**步骤3**: 手动触发测试
+
+**方式1**: 手动触发（推荐）
 1. 访问 GitHub Actions 页面
-2. 选择 `monitor-all` workflow
-3. 点击 "Run workflow"
-4. 选择渠道运行
+2. 选择 `Monitor All Sites Daily` workflow
+3. 点击 `Run workflow` 按钮
+4. 选择 `main` 分支
+5. 点击 `Run workflow` 确认
+6. 等待workflow运行（会并行运行所有渠道）
+
+**方式2**: 等待每日自动运行
+- 每天 UTC 1:00 自动运行
+- 北京时间 上午9:00
+
+**步骤4**: 查看运行结果
+1. 点击运行记录查看详情
+2. 查看每个渠道的job执行情况
+3. 如果失败，查看日志定位问题
+4. 检查截图artifacts（失败时上传）
 
 ## 📝 完整文件清单
 
@@ -469,6 +557,34 @@ keepup-v2/
 ```
 
 ## 🔍 常见问题
+
+### Q0: GitHub上看不到Actions？
+
+**A**: 
+1. **最常见原因**: workflow文件还未提交到GitHub
+   ```bash
+   git status  # 查看是否有未提交的文件
+   git add .github/workflows/monitor-all.yml
+   git commit -m "feat: 添加GitHub Actions workflow"
+   git push origin main
+   ```
+
+2. **Actions未启用**: 
+   - 访问仓库的 `Actions` 标签页
+   - 点击 `I understand my workflows, go ahead and enable them`
+
+3. **workflow文件位置错误**: 
+   - 必须在 `.github/workflows/` 目录下
+   - 文件名必须是 `.yml` 或 `.yaml` 后缀
+
+4. **workflow语法错误**: 
+   - 检查YAML缩进
+   - 使用 `yamllint` 验证语法
+   - 查看GitHub Actions页面的错误提示
+
+5. **权限问题**:
+   - 检查仓库的 Actions 权限设置
+   - `Settings` → `Actions` → `General` → 确保 `Allow all actions` 已启用
 
 ### Q1: 选择器找不到元素？
 
@@ -555,11 +671,14 @@ keepup-v2/
 - [ ] ✅ 数据库websites表插入成功
 - [ ] ✅ 数据库cookies表插入成功
 - [ ] ✅ GitHub Actions配置已更新
+- [ ] ✅ GitHub Secrets已配置
 - [ ] ✅ 本地抓取测试成功
 - [ ] ✅ 数据库数据验证成功
 - [ ] ✅ 前端显示验证成功
 - [ ] ✅ Cookie有效期确认
 - [ ] ✅ 文档更新完整
+- [ ] ✅ **代码已提交到GitHub**
+- [ ] ✅ **GitHub Actions已启用并可见**
 
 ## 📚 参考示例
 
