@@ -9,7 +9,7 @@ steps:
     url: "https://aistudio.google.com/usage?timeRange=last-7-days&tab=billing&project=gen-lang-client-0662613502"
     wait_for: "networkidle2"
     timeout: 30000
-    comment: "访问 Google AI Studio Billing 页面，时间范围设置为最近7天"
+    comment: "访问 Google AI Studio Billing 页面"
   
   # 2. 等待页面基本加载
   - action: "wait"
@@ -17,13 +17,18 @@ steps:
     timeout: 10000
     comment: "等待页面基本加载完成"
   
-  # 3. 等待费用数据加载（等待包含"总费用"的文本）
-  - action: "wait"
-    selector: "sdui-text-fragment"
-    timeout: 15000
-    comment: "等待费用数据加载"
+  # 3. 额外等待确保数据加载
+  - action: "wait_time"
+    duration: 3000
+    comment: "额外等待3秒确保页面数据完全加载"
   
-  # 4. 提取总费用（Total Cost）
+  # 4. 等待 sdui-block 容器出现
+  - action: "wait"
+    selector: "sdui-block"
+    timeout: 15000
+    comment: "等待费用数据容器加载"
+  
+  # 5. 提取总费用（从红框标注的区域）
   - action: "extract"
     name: "total_cost"
     selector: "sdui-text-fragment[style*='font-size: 24px'][style*='font-weight: 600']"
@@ -31,19 +36,20 @@ steps:
     regex_pattern: "\\$([\\d.]+)"
     regex_group: 1
     transform: "float"
-    comment: "提取总费用金额（从 '$24.5' 中提取 24.5）"
+    comment: "提取总费用金额（如 '$16.8' 提取为 16.8）"
   
-  # 5. 截图
+  # 6. 截图
   - action: "screenshot"
     full_page: false
     comment: "截取页面当前视图"
 
-# Cookie 验证配置
+# Cookie 验证配置 - 检查是否出现 "Gemini API Billing" 文案
 validation:
   cookie_check:
-    selector: "sdui-text-fragment"
+    selector: "body"
     should_exist: true
-    comment: "检查是否能看到费用数据元素，验证登录状态"
+    text_contains: "Gemini API Billing"
+    comment: "验证页面是否包含 'Gemini API Billing' 文案，确认登录状态"
 
 # 数据转换配置（可选，用于后处理）
 data_transform:
