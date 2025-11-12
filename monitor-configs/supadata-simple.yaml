@@ -1,0 +1,62 @@
+# Supadata 简化配置
+name: "Supadata"
+url: "https://dash.supadata.ai/organizations/881fecd8-af6a-47fa-8834-a3cb8e983b1a/home"
+description: "Supadata AI 额度监控"
+
+steps:
+  # 1. 导航到页面
+  - action: "navigate"
+    url: "https://dash.supadata.ai/organizations/881fecd8-af6a-47fa-8834-a3cb8e983b1a/home"
+    wait_for: "networkidle2"
+    timeout: 30000
+    comment: "访问 Supadata 首页"
+  
+  # 2. 等待页面基本加载
+  - action: "wait"
+    selector: "body"
+    timeout: 10000
+    comment: "等待页面基本加载完成"
+  
+  # 3. 等待额度容器加载
+  - action: "wait"
+    selector: "div.flex.justify-between.text-sm"
+    timeout: 20000
+    comment: "等待额度数据容器加载"
+  
+  # 4. 提取已使用额度
+  - action: "extract"
+    name: "used_credits"
+    selector: "div.flex.justify-between.text-sm > div:first-child > div.font-medium"
+    extract_type: "text"
+    transform: "int"
+    comment: "提取已使用的额度"
+  
+  # 5. 提取最大额度
+  - action: "extract"
+    name: "max_credits"
+    selector: "div.flex.justify-between.text-sm > div:last-child > div.font-medium"
+    extract_type: "text"
+    transform: "int"
+    comment: "提取计划中的最大额度"
+  
+  # 6. 截图
+  - action: "screenshot"
+    full_page: false
+    comment: "截取页面当前视图"
+
+# Cookie 验证配置
+validation:
+  cookie_check:
+    selector: "div.flex.justify-between.text-sm"
+    should_exist: true
+    comment: "检查是否能看到额度元素，验证登录状态"
+
+# 数据转换配置（可选，用于后处理）
+data_transform:
+  - field: "used_credits"
+    type: "int"
+    description: "已使用额度"
+  - field: "max_credits"
+    type: "int"
+    description: "最大额度"
+

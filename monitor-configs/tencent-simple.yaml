@@ -1,0 +1,79 @@
+# 腾讯云语音识别简化配置
+name: "腾讯云 ASR"
+url: "https://console.cloud.tencent.com/asr/resourcebundle"
+description: "腾讯云语音识别资源包监控"
+
+steps:
+  # 1. 导航到页面
+  - action: "navigate"
+    url: "https://console.cloud.tencent.com/asr/resourcebundle"
+    wait_for: "networkidle2"
+    timeout: 30000
+    comment: "访问腾讯云语音识别资源包页面"
+  
+  # 2. 等待页面基本加载
+  - action: "wait"
+    selector: "body"
+    timeout: 10000
+    comment: "等待页面基本加载完成"
+  
+  # 3. 等待表格加载
+  - action: "wait"
+    selector: "tr"
+    timeout: 20000
+    comment: "等待表格数据加载"
+  
+  # 4. 提取已使用小时数
+  - action: "extract"
+    name: "used_hours"
+    selector: "tr:has(span[title*='录音文件识别预付费包']) td:nth-child(4) span"
+    extract_type: "text"
+    regex_pattern: "([\\d.]+)\\s*小时"
+    regex_group: 1
+    transform: "float"
+    comment: "提取已使用的小时数"
+  
+  # 5. 提取剩余小时数
+  - action: "extract"
+    name: "remaining_hours"
+    selector: "tr:has(span[title*='录音文件识别预付费包']) td:nth-child(5) span"
+    extract_type: "text"
+    regex_pattern: "([\\d.]+)\\s*小时"
+    regex_group: 1
+    transform: "float"
+    comment: "提取剩余的小时数"
+  
+  # 6. 提取总小时数
+  - action: "extract"
+    name: "total_hours"
+    selector: "tr:has(span[title*='录音文件识别预付费包']) td:nth-child(3) span"
+    extract_type: "text"
+    regex_pattern: "([\\d.]+)小时"
+    regex_group: 1
+    transform: "float"
+    comment: "提取总小时数"
+  
+  # 7. 截图
+  - action: "screenshot"
+    full_page: false
+    comment: "截取页面当前视图"
+
+# Cookie 验证配置
+validation:
+  cookie_check:
+    selector: "tr"
+    should_exist: true
+    comment: "检查是否能看到表格，验证登录状态"
+
+# 数据转换配置（可选，用于后处理）
+data_transform:
+  - field: "used_hours"
+    type: "float"
+    description: "已使用小时数"
+  - field: "remaining_hours"
+    type: "float"
+    description: "剩余小时数"
+  - field: "total_hours"
+    type: "float"
+    description: "总小时数"
+

@@ -1,19 +1,13 @@
-name: Monitor All Sites Daily
+name: Monitor Tencent
 
 on:
-  schedule:
-    - cron: '0 1 * * *'
   workflow_dispatch:
+  workflow_call:
 
 jobs:
-  monitor:
+  scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    
-    strategy:
-      matrix:
-        site: [openrouter, cursor, tikhub, google, dajiala, supadata, tencent]
-      fail-fast: false
+    timeout-minutes: 5
     
     steps:
       - name: Checkout code
@@ -33,25 +27,20 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
       
-      - name: Monitor ${{ matrix.site }}
+      - name: Run Tencent scraper
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          OPENROUTER_PROVISION_KEY: ${{ secrets.OPENROUTER_PROVISION_KEY }}
-          SITE_SLUG: ${{ matrix.site }}
+          SITE_SLUG: tencent
         run: |
           cd scripts
-          if [ "${{ matrix.site }}" = "openrouter" ]; then
-            node scrape-openrouter-api.js
-          else
-            node scrape-${{ matrix.site }}.js
-          fi
+          node scrape-tencent.js
       
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: screenshots-${{ matrix.site }}
+          name: screenshots-tencent
           path: scripts/temp/*.png
           retention-days: 7
 
