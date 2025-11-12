@@ -47,6 +47,23 @@ export class ScraperEngine {
       console.log('🍪 设置Cookies...');
       await this.page.setCookie(...this.cookies.cookie_data);
     }
+
+    // 如果有storage_data，设置LocalStorage
+    if (this.cookies && this.cookies.storage_data) {
+      console.log('📦 设置LocalStorage...');
+      // 先访问域名以便设置LocalStorage
+      const url = new URL(this.config.url);
+      await this.page.goto(`${url.protocol}//${url.host}`, { waitUntil: 'domcontentloaded' });
+      
+      // 设置LocalStorage
+      await this.page.evaluate((storageData) => {
+        Object.keys(storageData).forEach(key => {
+          localStorage.setItem(key, storageData[key]);
+        });
+      }, this.cookies.storage_data);
+      
+      console.log(`✅ 已设置 ${Object.keys(this.cookies.storage_data).length} 个LocalStorage项`);
+    }
   }
 
   /**
@@ -93,6 +110,23 @@ export class ScraperEngine {
       timeout,
       waitUntil
     });
+
+    // 导航后，如果有storage_data，重新设置LocalStorage
+    if (this.cookies && this.cookies.storage_data) {
+      console.log('📦 重新设置LocalStorage...');
+      await this.page.evaluate((storageData) => {
+        Object.keys(storageData).forEach(key => {
+          localStorage.setItem(key, storageData[key]);
+        });
+        // 验证设置是否成功
+        return {
+          keys: Object.keys(localStorage),
+          userInfo: localStorage.getItem('userInfo')
+        };
+      }, this.cookies.storage_data).then(result => {
+        console.log(`✅ LocalStorage已设置: ${result.keys.join(', ')}`);
+      });
+    }
 
     console.log(`✅ 已导航到: ${step.url}`);
   }

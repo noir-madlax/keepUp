@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        site: [openrouter, cursor, tikhub]
+        site: [openrouter, cursor, tikhub, google, dajiala]
       fail-fast: false
     
     steps:

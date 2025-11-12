@@ -1,0 +1,72 @@
+# 大嘉乐 简化配置
+name: "大嘉乐"
+url: "https://dajiala.com/main/interface?actnav=0"
+description: "大嘉乐账户余额监控"
+
+steps:
+  # 1. 先访问主页建立会话
+  - action: "navigate"
+    url: "https://dajiala.com/"
+    wait_for: "networkidle2"
+    timeout: 30000
+    comment: "先访问主页建立会话"
+  
+  # 2. 等待主页加载
+  - action: "wait"
+    selector: "body"
+    timeout: 5000
+    comment: "等待主页加载"
+  
+  # 3. 访问目标页面
+  - action: "navigate"
+    url: "https://dajiala.com/main/interface?actnav=0"
+    wait_for: "networkidle2"
+    timeout: 30000
+    comment: "访问大嘉乐主界面页面"
+  
+  # 4. 等待页面基本加载
+  - action: "wait"
+    selector: "body"
+    timeout: 10000
+    comment: "等待页面基本加载完成"
+  
+  # 5. 等待余额数据加载
+  - action: "wait"
+    selector: "div.yue"
+    timeout: 15000
+    comment: "等待余额数据加载"
+  
+  # 6. 额外等待确保数据完全渲染
+  - action: "wait"
+    selector: "div.yue span:last-child"
+    timeout: 10000
+    comment: "确保余额文本已渲染"
+  
+  # 7. 提取账户余额
+  - action: "extract"
+    name: "balance"
+    selector: "div.yue span:last-child"
+    extract_type: "text"
+    regex_pattern: "([0-9.]+)"
+    regex_group: 1
+    transform: "float"
+    comment: "提取账户余额（从 '189.14' 中提取数值）"
+  
+  # 8. 截图
+  - action: "screenshot"
+    full_page: false
+    comment: "截取页面当前视图"
+
+# Cookie 验证配置
+validation:
+  cookie_check:
+    selector: "div.yue"
+    should_exist: true
+    comment: "检查是否能看到余额数据元素，验证登录状态"
+
+# 数据转换配置（可选，用于后处理）
+data_transform:
+  - field: "balance"
+    type: "float"
+    description: "账户余额（元）"
+
