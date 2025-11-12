@@ -36,6 +36,7 @@
 5. 确认数据格式（数字、文本等）
 
 **示例**：
+
 ```html
 <!-- Google AI Studio 费用示例 -->
 <sdui-text-fragment style="font-size: 24px; font-weight: 600;">
@@ -50,6 +51,7 @@
 **位置**: `monitor-configs/{渠道}-simple.yaml`
 
 **模板**:
+
 ```yaml
 # {渠道名称} 简化配置
 name: "{渠道显示名称}"
@@ -99,6 +101,7 @@ validation:
 ```
 
 **实际示例** (Google AI Studio):
+
 ```yaml
 name: "Google AI Studio"
 url: "https://aistudio.google.com/usage?timeRange=last-7-days&tab=billing&project=xxx"
@@ -143,6 +146,7 @@ validation:
 将导出的Cookie JSON保存到此文件。
 
 **格式要求**:
+
 ```json
 [
   {
@@ -162,6 +166,7 @@ validation:
 **位置**: `scripts/scrape-{渠道}.js`
 
 **模板**:
+
 ```javascript
 import { ScraperEngine } from './scraper/engine.js';
 import { loadConfig, validateConfig } from './scraper/config-parser.js';
@@ -185,7 +190,7 @@ async function main() {
     // 2. 获取Cookie
     console.log('🔑 获取Cookie...');
     const { website, cookie } = await getSiteConfig(SITE_SLUG);
-    
+  
     if (!cookie) {
       throw new Error('未找到有效的Cookie');
     }
@@ -201,7 +206,7 @@ async function main() {
     // 5. 保存数据
     if (result.success) {
       console.log('💾 保存抓取数据...');
-      
+  
       // 上传截图
       let screenshotUrl = null;
       if (result.screenshot) {
@@ -216,7 +221,7 @@ async function main() {
       // 保存数据到数据库
       await saveScrapedData(SITE_SLUG, result.data, screenshotUrl);
       await updateCookieStatus(SITE_SLUG, true);
-      
+  
       console.log('✅ 抓取成功完成！');
       console.log('📊 提取的数据:', JSON.stringify(result.data, null, 2));
     } else {
@@ -225,14 +230,14 @@ async function main() {
 
   } catch (error) {
     console.error('❌ 抓取失败:', error.message);
-    
+  
     // 更新Cookie状态为无效
     try {
       await updateCookieStatus(SITE_SLUG, false);
     } catch (updateError) {
       console.error('⚠️  无法更新Cookie状态:', updateError.message);
     }
-    
+  
     process.exit(1);
   } finally {
     if (engine) {
@@ -276,6 +281,7 @@ RETURNING id, name, slug, is_active;
 ```
 
 **实际示例** (Google):
+
 ```sql
 INSERT INTO websites (
   name, 
@@ -322,6 +328,7 @@ RETURNING id, site_slug, is_valid;
 ```
 
 **实际示例** (Google):
+
 ```sql
 INSERT INTO cookies (
   site_slug,
@@ -345,6 +352,7 @@ RETURNING id, site_slug, is_valid;
 **文件**: `.github/workflows/monitor-all.yml`
 
 **修改内容**:
+
 ```yaml
 strategy:
   matrix:
@@ -353,6 +361,7 @@ strategy:
 ```
 
 **实际示例**:
+
 ```yaml
 strategy:
   matrix:
@@ -367,6 +376,7 @@ strategy:
 **位置**: `.github/workflows/monitor-{渠道}.yml`
 
 **模板**:
+
 ```yaml
 name: Monitor {渠道名称}
 
@@ -378,25 +388,25 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    
+  
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+  
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: scripts/package-lock.json
-      
+  
       - name: Install dependencies
         run: |
           cd scripts
           npm ci
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
-      
+  
       - name: Run {渠道名称} scraper
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -405,7 +415,7 @@ jobs:
         run: |
           cd scripts
           node scrape-{渠道slug}.js
-      
+  
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -416,6 +426,7 @@ jobs:
 ```
 
 **实际示例** (Google):
+
 ```yaml
 name: Monitor Google
 
@@ -427,25 +438,25 @@ jobs:
   scrape:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    
+  
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      
+  
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: scripts/package-lock.json
-      
+  
       - name: Install dependencies
         run: |
           cd scripts
           npm ci
         env:
           PUPPETEER_SKIP_DOWNLOAD: 'true'
-      
+  
       - name: Run Google scraper
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -454,7 +465,7 @@ jobs:
         run: |
           cd scripts
           node scrape-google.js
-      
+  
       - name: Upload screenshots on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -465,6 +476,7 @@ jobs:
 ```
 
 **注意事项**:
+
 - 这个独立的 workflow 文件允许你在 GitHub Actions 界面手动触发单个渠道的监控
 - `workflow_dispatch` 启用手动触发
 - `workflow_call` 允许被其他 workflow 调用
@@ -487,6 +499,7 @@ jobs:
 **重要**: 如果这是首次添加workflow，需要确保：
 
 1. **提交workflow文件到GitHub**:
+
    ```bash
    git add .github/workflows/monitor-all.yml
    git add scripts/scrape-{渠道}.js
@@ -494,13 +507,13 @@ jobs:
    git commit -m "feat: 添加{渠道}监控"
    git push origin main
    ```
-
 2. **在GitHub上启用Actions**:
+
    - 访问仓库的 `Actions` 标签页
    - 如果看到提示，点击 `I understand my workflows, go ahead and enable them`
    - 确认workflow出现在列表中
-
 3. **检查workflow文件权限**:
+
    - 确保 `.github/workflows/monitor-all.yml` 有正确的权限
    - GitHub Actions 需要 `workflow` 权限才能运行
 
@@ -548,6 +561,7 @@ node scrape-{渠道}.js
 ```
 
 **期待输出**:
+
 ```
 ========== 开始抓取: {渠道名称} ==========
 
@@ -611,6 +625,7 @@ git push origin main
 ```
 
 **重要提示**:
+
 - 如果有删除的文件，使用 `git add -A` 或 `git rm` 命令
 - 确认所有相关文件都已添加到git
 - 推送成功后，GitHub Actions才会生效
@@ -620,11 +635,13 @@ git push origin main
 **提交代码后的验证步骤**:
 
 **步骤1**: 确认workflow已提交
+
 1. 访问 `https://github.com/{your-username}/keepup/tree/main/.github/workflows`
 2. 确认 `monitor-all.yml` 文件存在
 3. 查看文件内容，确认包含新渠道
 
 **步骤2**: 查看Actions标签页
+
 1. 访问 `https://github.com/{your-username}/keepup/actions`
 2. 如果首次使用，可能需要点击 `I understand my workflows, go ahead and enable them`
 3. 应该能看到 `Monitor All Sites Daily` workflow
@@ -632,6 +649,7 @@ git push origin main
 **步骤3**: 手动触发测试
 
 **方式1**: 手动触发（推荐）
+
 1. 访问 GitHub Actions 页面
 2. 选择 `Monitor All Sites Daily` workflow
 3. 点击 `Run workflow` 按钮
@@ -640,10 +658,12 @@ git push origin main
 6. 等待workflow运行（会并行运行所有渠道）
 
 **方式2**: 等待每日自动运行
+
 - 每天 UTC 1:00 自动运行
 - 北京时间 上午9:00
 
 **步骤4**: 查看运行结果
+
 1. 点击运行记录查看详情
 2. 查看每个渠道的job执行情况
 3. 如果失败，查看日志定位问题
@@ -669,159 +689,4 @@ keepup-v2/
 
 **重要提醒**: 必须同时创建独立的 workflow 文件，否则在 GitHub Actions 界面看不到该渠道！
 
-## 🔍 常见问题
-
-### Q0: GitHub上看不到Actions？⚠️ **最常见问题**
-
-**A**: 
-1. **最常见原因**: 没有创建独立的 workflow 文件 ⚠️
-   - 即使 `monitor-all.yml` 的 matrix 包含了新渠道，也必须创建独立文件
-   - 必须创建 `.github/workflows/monitor-{渠道}.yml`
-   - 参考第 5.2 节的模板创建
-   - 示例: `.github/workflows/monitor-google.yml`, `.github/workflows/monitor-dajiala.yml`
-
-2. **workflow文件还未提交到GitHub**:
-   ```bash
-   git status  # 查看是否有未提交的文件
-   git add .github/workflows/monitor-{渠道}.yml
-   git commit -m "feat: 添加 {渠道} 的 GitHub Actions workflow"
-   git push origin main
-   ```
-
-3. **Actions未启用**: 
-   - 访问仓库的 `Actions` 标签页
-   - 点击 `I understand my workflows, go ahead and enable them`
-
-4. **workflow文件位置错误**: 
-   - 必须在 `.github/workflows/` 目录下
-   - 文件名必须是 `.yml` 或 `.yaml` 后缀
-
-5. **workflow语法错误**: 
-   - 检查YAML缩进
-   - 使用 `yamllint` 验证语法
-   - 查看GitHub Actions页面的错误提示
-
-6. **权限问题**:
-   - 检查仓库的 Actions 权限设置
-   - `Settings` → `Actions` → `General` → 确保 `Allow all actions` 已启用
-
-### Q1: 选择器找不到元素？
-
-**A**: 
-1. 检查页面是否完全加载
-2. 增加等待时间
-3. 使用浏览器MCP工具确认选择器
-4. 尝试使用更宽泛的选择器
-
-### Q2: Cookie失效？
-
-**A**:
-1. 重新导出Cookie
-2. 检查Cookie过期时间
-3. 更新数据库中的Cookie
-4. 确认目标网站未更改认证机制
-
-### Q3: 数据提取不正确？
-
-**A**:
-1. 检查选择器是否精确
-2. 确认正则表达式正确
-3. 检查数据类型转换
-4. 使用浏览器工具测试选择器
-
-### Q4: 前端不显示新渠道？
-
-**A**:
-1. 确认数据库 `websites.is_active = true`
-2. 检查 `display_order` 是否正确
-3. 清除浏览器缓存
-4. 重启前端开发服务器
-
-### Q5: GitHub Actions 失败？
-
-**A**:
-1. 检查环境变量配置
-2. 验证Secret是否设置正确
-3. 查看Actions日志定位问题
-4. 本地测试是否成功
-
-## 📊 最佳实践
-
-### 1. 命名规范
-
-- **Slug**: 小写英文，如 `google`、`openrouter`
-- **文件名**: 使用slug，如 `scrape-google.js`
-- **配置名**: 使用slug，如 `google-simple.yaml`
-
-### 2. 选择器策略
-
-- 优先使用稳定的属性（class、id）
-- 避免使用容易变化的索引
-- 使用属性选择器增加精确度
-- 添加注释说明选择器用途
-
-### 3. 错误处理
-
-- 捕获所有可能的异常
-- 提供清晰的错误信息
-- 更新Cookie状态
-- 记录详细日志
-
-### 4. 数据验证
-
-- 验证提取的数据格式
-- 检查数据合理性
-- 处理边界情况
-- 提供默认值
-
-### 5. 测试流程
-
-1. 本地测试通过
-2. 数据库验证通过
-3. 前端显示正常
-4. GitHub Actions 测试通过
-
-## 🎯 检查清单
-
-在提交代码前，确认以下项目：
-
-- [ ] ✅ YAML配置文件创建并测试
-- [ ] ✅ 抓取脚本创建并测试
-- [ ] ✅ 数据库websites表插入成功
-- [ ] ✅ 数据库cookies表插入成功
-- [ ] ✅ monitor-all.yml 的 matrix 已添加新渠道
-- [ ] ✅ **创建独立的 workflow 文件** `.github/workflows/monitor-{渠道}.yml` ⚠️ **重要！**
-- [ ] ✅ workflow 文件已提交并推送到 GitHub
-- [ ] ✅ GitHub Secrets已配置
-- [ ] ✅ 在 GitHub Actions 界面可以看到新的 workflow
-- [ ] ✅ 本地抓取测试成功
-- [ ] ✅ 数据库数据验证成功
-- [ ] ✅ 前端显示验证成功
-- [ ] ✅ Cookie有效期确认
-- [ ] ✅ 文档更新完整
-- [ ] ✅ **代码已提交到GitHub**
-- [ ] ✅ **GitHub Actions已启用并可见**
-
-## 📚 参考示例
-
-### 完整示例：Google AI Studio
-
-可以参考以下文件作为完整示例：
-
-1. **配置**: `monitor-configs/google-simple.yaml`
-2. **脚本**: `scripts/scrape-google.js`
-3. **文档**: `monitor-configs/GOOGLE-SETUP-COMPLETE.md`
-
-### 其他渠道示例
-
-- **Cursor**: `monitor-configs/cursor-simple.yaml`
-- **TikHub**: `monitor-configs/tikhub-simple.yaml`
-- **OpenRouter**: `monitor-configs/openrouter.yaml`
-
----
-
-**文档版本**: v1.0  
-**创建日期**: 2025-11-12  
-**最后更新**: 2025-11-12  
-**维护者**: Development Team
-
+## 🔍
