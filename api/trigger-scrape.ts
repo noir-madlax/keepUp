@@ -35,6 +35,10 @@ export default async function handler(
     workflowFile = 'monitor-google.yml'
   } else if (site === 'dajiala') {
     workflowFile = 'monitor-dajiala.yml'
+  } else if (site === 'supadata') {
+    workflowFile = 'monitor-supadata.yml'
+  } else if (site === 'tencent') {
+    workflowFile = 'monitor-tencent.yml'
   } else if (!site) {
     workflowFile = 'monitor-all.yml'
   } else {
