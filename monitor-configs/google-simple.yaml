@@ -17,18 +17,24 @@ steps:
     timeout: 10000
     comment: "等待页面基本加载完成"
   
-  # 3. 额外等待确保数据加载
-  - action: "wait_time"
-    duration: 5000
-    comment: "额外等待5秒确保页面数据完全加载"
+  # 3. 调试截图 - 查看页面初始状态
+  - action: "screenshot"
+    full_page: true
+    comment: "调试：截取页面初始状态"
   
-  # 4. 等待费用数据文本元素出现
+  # 4. 等待费用组件加载（sdui-block 是主要容器）
+  - action: "wait"
+    selector: "sdui-block"
+    timeout: 25000
+    comment: "等待费用数据容器加载"
+  
+  # 4. 等待 sdui-text-fragment 元素
   - action: "wait"
     selector: "sdui-text-fragment"
     timeout: 20000
-    comment: "等待费用数据加载"
+    comment: "等待文本元素加载"
   
-  # 5. 提取总费用（从红框标注的区域）
+  # 6. 提取总费用（Total Cost）
   - action: "extract"
     name: "total_cost"
     selector: "sdui-text-fragment[style*='font-size: 24px'][style*='font-weight: 600']"
@@ -36,20 +42,19 @@ steps:
     regex_pattern: "\\$([\\d.]+)"
     regex_group: 1
     transform: "float"
-    comment: "提取总费用金额（如 '$16.8' 提取为 16.8）"
+    comment: "提取总费用金额（从 '$16.8' 中提取 16.8）"
   
-  # 6. 截图
+  # 7. 截图
   - action: "screenshot"
     full_page: false
     comment: "截取页面当前视图"
 
-# Cookie 验证配置 - 检查是否出现 "Gemini API Billing" 文案
+# Cookie 验证配置
 validation:
   cookie_check:
-    selector: "body"
+    selector: "sdui-text-fragment[style*='font-size: 24px']"
     should_exist: true
-    text_contains: "Gemini API Billing"
-    comment: "验证页面是否包含 'Gemini API Billing' 文案，确认登录状态"
+    comment: "检查是否能看到费用金额元素，验证登录状态"
 
 # 数据转换配置（可选，用于后处理）
 data_transform:

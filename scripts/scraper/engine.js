@@ -89,9 +89,6 @@ export class ScraperEngine {
       case 'wait':
         await this.wait(step);
         break;
-      case 'wait_time':
-        await this.waitTime(step);
-        break;
       case 'extract':
         await this.extract(step);
         break;
@@ -146,16 +143,6 @@ export class ScraperEngine {
     } catch (error) {
       throw new Error(`等待元素超时: ${step.selector}`);
     }
-  }
-
-  /**
-   * 等待指定时间
-   */
-  async waitTime(step) {
-    const duration = step.duration || 1000;
-    console.log(`⏳ 等待 ${duration}ms...`);
-    await new Promise(resolve => setTimeout(resolve, duration));
-    console.log(`✅ 等待完成`);
   }
 
   /**
@@ -227,33 +214,19 @@ export class ScraperEngine {
       return true;
     }
 
-    const { selector, should_exist, text_contains } = this.config.validation.cookie_check;
+    const { selector, should_exist } = this.config.validation.cookie_check;
 
     try {
-      // 检查元素是否存在
       const element = await this.page.$(selector);
       const exists = element !== null;
 
-      if (should_exist !== undefined && exists !== should_exist) {
-        console.error('❌ Cookie验证失败: 元素存在性不符合预期');
+      if (exists === should_exist) {
+        console.log('✅ Cookie验证通过');
+        return true;
+      } else {
+        console.error('❌ Cookie验证失败');
         return false;
       }
-
-      // 检查页面是否包含特定文本
-      if (text_contains) {
-        const pageContent = await this.page.content();
-        const containsText = pageContent.includes(text_contains);
-        
-        if (!containsText) {
-          console.error(`❌ Cookie验证失败: 页面不包含文本 "${text_contains}"`);
-          return false;
-        }
-        
-        console.log(`✅ 找到验证文本: "${text_contains}"`);
-      }
-
-      console.log('✅ Cookie验证通过');
-      return true;
     } catch (error) {
       console.error(`❌ Cookie验证出错: ${error.message}`);
       return false;
