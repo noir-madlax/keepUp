@@ -108,25 +108,24 @@ async function loadSiteData(site: Website) {
 
     if (scrapedError) {
       console.error(`查询 ${site.name} scraped_data 失败:`, scrapedError)
+      site.cookie_valid = false
     } else if (scrapedData && scrapedData.length > 0) {
       site.latest_data = scrapedData[0]
-    }
-
-    // 获取Cookie状态
-    const { data: cookieData, error: cookieError } = await supabase
-      .from('cookies')
-      .select('is_valid')
-      .eq('site_slug', site.slug)
-      .order('created_at', { ascending: false })
-      .limit(1)
-
-    if (cookieError) {
-      console.error(`查询 ${site.name} cookies 失败:`, cookieError)
-    } else if (cookieData && cookieData.length > 0) {
-      site.cookie_valid = cookieData[0].is_valid
+      
+      // 判断最新数据是否是今天的
+      const dataDate = new Date(scrapedData[0].created_at)
+      const today = new Date()
+      const isToday = dataDate.getFullYear() === today.getFullYear() &&
+                      dataDate.getMonth() === today.getMonth() &&
+                      dataDate.getDate() === today.getDate()
+      
+      site.cookie_valid = isToday
+    } else {
+      site.cookie_valid = false
     }
   } catch (err) {
     console.error(`加载 ${site.name} 数据失败:`, err)
+    site.cookie_valid = false
   }
 }
 

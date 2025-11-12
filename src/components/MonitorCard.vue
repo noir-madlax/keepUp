@@ -75,6 +75,11 @@ function formatData(data: any) {
   if (typeof data === 'object') {
     const entries = Object.entries(data).filter(([key]) => key !== 'test')
     
+    // 特殊处理 OpenRouter 的 balance 字段
+    if (data.balance !== undefined) {
+      return `Balance: ${Number(data.balance).toFixed(4)}`
+    }
+    
     // 特殊处理Cursor的included字段
     const hasIncludedUsed = entries.some(([key]) => key === 'included_used')
     const hasIncludedTotal = entries.some(([key]) => key === 'included_total')

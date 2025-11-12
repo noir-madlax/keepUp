@@ -1,4 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// 加载环境变量
+dotenv.config({ path: join(__dirname, '../../.env') });
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -89,13 +98,46 @@ export async function saveScrapedData(siteSlug, data, screenshotUrl) {
  * 更新Cookie状态
  */
 export async function updateCookieStatus(siteSlug, isValid) {
-  const { error } = await supabase
+  // 先检查是否存在记录
+  const { data: existing, error: checkError } = await supabase
     .from('cookies')
-    .update({ is_valid: isValid, updated_at: new Date().toISOString() })
-    .eq('site_slug', siteSlug);
+    .select('id')
+    .eq('site_slug', siteSlug)
+    .maybeSingle();
 
-  if (error) {
-    console.error(`更新Cookie状态失败: ${error.message}`);
+  if (checkError) {
+    console.error(`检查Cookie记录失败: ${checkError.message}`);
+    throw checkError;
+  }
+
+  if (existing) {
+    // 更新现有记录
+    const { error } = await supabase
+      .from('cookies')
+      .update({ 
+        is_valid: isValid,
+        updated_at: new Date().toISOString() 
+      })
+      .eq('site_slug', siteSlug);
+
+    if (error) {
+      console.error(`更新Cookie状态失败: ${error.message}`);
+      throw error;
+    }
+  } else {
+    // 创建新记录（用于不需要真实Cookie的API方式）
+    const { error } = await supabase
+      .from('cookies')
+      .insert({
+        site_slug: siteSlug,
+        cookies: {},  // 空对象，因为不需要真实Cookie
+        is_valid: isValid
+      });
+
+    if (error) {
+      console.error(`创建Cookie记录失败: ${error.message}`);
+      throw error;
+    }
   }
 }
 
