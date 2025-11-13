@@ -141,20 +141,30 @@ function viewDetails() {
 
 <style scoped>
 .monitor-card {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 20px;
+  /* 液态玻璃：渐变背景 + 低模糊度 */
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.22) 0%, 
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  backdrop-filter: blur(10px) saturate(200%);
+  border: 0.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
   padding: 1.5rem;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 液态玻璃：参考Figma - 内阴影模拟Plus lighter */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 5.33px 4px 8px rgba(255, 255, 255, 0.25);
   height: 240px;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
+/* 液态玻璃：顶部高光带 */
 .monitor-card::before {
   content: '';
   position: absolute;
@@ -162,16 +172,28 @@ function viewDetails() {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.5), 
+    transparent
+  );
   border-radius: 24px 24px 0 0;
 }
 
+/* macOS风格：斜角折射hover效果 */
 .monitor-card:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.12),
-              inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-5px);
+  /* 145度斜角渐变，模拟光线折射 */
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  box-shadow: 
+    0 16px 48px rgba(0, 0, 0, 0.16),
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    inset 5.33px 4px 12px rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .monitor-card:hover .card-actions {
@@ -378,9 +400,13 @@ function viewDetails() {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.25);
+  /* 液态玻璃：小按钮渐变背景 */
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.18) 0%, 
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  backdrop-filter: blur(10px) saturate(200%);
   color: white;
   font-size: 14px;
   cursor: pointer;
@@ -388,16 +414,22 @@ function viewDetails() {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 2px 12px rgba(0, 0, 0, 0.1),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.25);
 }
 
 .action-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.35);
+  /* macOS风格：145度斜角折射 */
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.28) 0%, 
+    rgba(255, 255, 255, 0.14) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.4);
   transform: scale(1.05);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12),
-              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.14),
+    inset 2px 2px 6px rgba(255, 255, 255, 0.35);
 }
 
 .action-button:active:not(:disabled) {

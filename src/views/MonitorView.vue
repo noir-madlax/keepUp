@@ -218,9 +218,13 @@ onMounted(() => {
   width: 36px;
   height: 36px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(20px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.3);
+  /* 液态玻璃：渐变背景 */
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.22) 0%, 
+    rgba(255, 255, 255, 0.12) 100%
+  );
+  backdrop-filter: blur(10px) saturate(200%);
   color: white;
   font-size: 18px;
   cursor: pointer;
@@ -228,16 +232,22 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.1),
-              inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 2px 16px rgba(0, 0, 0, 0.12),
+    inset 3px 2px 8px rgba(255, 255, 255, 0.25);
 }
 
 .glass-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.35);
+  /* macOS风格：145度斜角折射 */
+  background: linear-gradient(145deg, 
+    rgba(255, 255, 255, 0.32) 0%, 
+    rgba(255, 255, 255, 0.18) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.5);
   transform: scale(1.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14),
-              inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.16),
+    inset 3px 2px 8px rgba(255, 255, 255, 0.4);
 }
 
 .glass-button:active:not(:disabled) {
@@ -289,30 +299,43 @@ onMounted(() => {
 }
 
 .error-container {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  /* 液态玻璃：渐变背景 */
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.25) 0%, 
+    rgba(255, 255, 255, 0.15) 100%
+  );
+  backdrop-filter: blur(10px) saturate(200%);
+  border: 0.5px solid rgba(255, 255, 255, 0.3);
   border-radius: 24px;
   padding: 2.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12),
-              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 5.33px 4px 12px rgba(255, 255, 255, 0.25);
   position: relative;
   z-index: 1;
 }
 
-/* Skeleton Loading Styles */
+/* Skeleton Loading Styles - 液态玻璃风格 */
 .skeleton-card {
-  background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 20px;
+  /* 液态玻璃：渐变背景 + 低模糊度 */
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.22) 0%, 
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  backdrop-filter: blur(10px) saturate(200%);
+  border: 0.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
   padding: 1.5rem;
   height: 240px;
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  /* 液态玻璃：参考Figma内阴影 */
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 5.33px 4px 12px rgba(255, 255, 255, 0.25);
   overflow: hidden;
 }
 
@@ -323,7 +346,11 @@ onMounted(() => {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.5), 
+    transparent
+  );
   border-radius: 24px 24px 0 0;
 }
 
