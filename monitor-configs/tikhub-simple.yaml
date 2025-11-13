@@ -1,15 +1,15 @@
 name: "TikHub"
 site_id: "tikhub"
-url: "https://user.tikhub.io/en-us/users/overview"
+url: "https://user.tikhub.io/dashboard/overview"
 description: "监控 TikHub 账户余额和今日消费 (简化版)"
 icon_url: "https://user.tikhub.io/favicon.ico"
 
 steps:
   # 1. 导航到用户概览页
   - action: "navigate"
-    url: "https://user.tikhub.io/en-us/users/overview"
-    wait_for: "networkidle2"
-    timeout: 30000
+    url: "https://user.tikhub.io/dashboard/overview"
+    wait_for: "domcontentloaded"
+    timeout: 60000
     comment: "访问 TikHub 用户 Dashboard"
 
   # 2. 等待页面加载
@@ -20,22 +20,21 @@ steps:
 
   # 3. 等待余额数据显示
   - action: "wait"
-    selector: ".stat-value"
+    selector: ".text-2xl.font-bold"
     timeout: 15000
     comment: "等待账户余额数据加载"
 
   # 4. 提取 Account Balance (账户余额)
-  # 目标结构: <div class="stat-title">Account Balance</div>
-  #          <div class="stat-value my-4">$9.0416</div>
-  # 使用第一个 .stat-value 元素
+  # 目标结构: <div class="text-2xl font-bold">$9.0416</div>
+  # 在 Balance 卡片中
   - action: "extract"
     name: "balance"
-    selector: ".stat-value"
+    selector: "div[data-tour='balance-card'] .text-2xl.font-bold"
     extract_type: "text"
     regex_pattern: "\\$([\\d.]+)"
     regex_group: 1
     transform: "float"
-    comment: "提取账户余额（从第一个 stat-value 中提取）"
+    comment: "提取账户余额（从 Balance 卡片中提取）"
 
   # 5. 截图
   - action: "screenshot"
@@ -45,6 +44,6 @@ steps:
 # Cookie 验证配置
 validation:
   cookie_check:
-    selector: ".stat-value"
+    selector: ".text-2xl.font-bold"
     should_exist: true
 
