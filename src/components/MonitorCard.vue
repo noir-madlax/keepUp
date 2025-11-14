@@ -74,10 +74,26 @@ function formatData(data: any) {
   // 格式化显示数据
   if (typeof data === 'object') {
     const entries = Object.entries(data).filter(([key]) => key !== 'test')
+    const siteSlug = props.site.slug
     
     // 特殊处理 OpenRouter 的 balance 字段
-    if (data.balance !== undefined) {
-      return `Balance: ${Number(data.balance).toFixed(4)}`
+    if (data.balance !== undefined && siteSlug === 'openrouter') {
+      return `Balance: ${Number(data.balance).toFixed(4)} (USD)`
+    }
+    
+    // 特殊处理 TikHub 的 balance 字段
+    if (data.balance !== undefined && siteSlug === 'tikhub') {
+      return `Balance: ${Number(data.balance).toFixed(4)} (USD)`
+    }
+    
+    // 特殊处理大嘉乐的 balance 字段
+    if (data.balance !== undefined && siteSlug === 'dajiala') {
+      return `Balance: ${Number(data.balance).toFixed(4)} (RMB)`
+    }
+    
+    // 特殊处理 Google 的 total_cost 字段
+    if (data.total_cost !== undefined && siteSlug === 'google') {
+      return `Total Cost: ${Number(data.total_cost).toFixed(1)} (USD)`
     }
     
     // 特殊处理Cursor的included字段
