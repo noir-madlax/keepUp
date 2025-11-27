@@ -61,7 +61,7 @@ export function useRAG() {
       const { data, error: funcError } = await supabase.functions.invoke('rag_search', {
         body: {
           question: question.trim(),
-          top_k: options?.top_k ?? 8,
+          top_k: options?.top_k ?? 20,
           score_threshold: options?.score_threshold ?? 0.0
         }
       });
