@@ -12,15 +12,15 @@ steps:
     timeout: 60000
     comment: "访问 TikHub 用户 Dashboard"
 
-  # 2. 等待页面加载
+  # 2. 等待余额卡片出现（SPA 需要等待 JS 渲染）
   - action: "wait"
-    selector: "body"
-    timeout: 10000
-    comment: "等待页面基本加载"
+    selector: "div[data-tour='balance-card']"
+    timeout: 30000
+    comment: "等待余额卡片元素出现"
 
   # 3. 等待余额数据显示
   - action: "wait"
-    selector: ".text-2xl.font-bold"
+    selector: "div[data-tour='balance-card'] .text-2xl.font-bold"
     timeout: 15000
     comment: "等待账户余额数据加载"
 

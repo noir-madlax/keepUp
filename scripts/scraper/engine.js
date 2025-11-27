@@ -15,6 +15,43 @@ export class ScraperEngine {
   }
 
   /**
+   * 转换 Chrome Cookie 格式为 Puppeteer 格式
+   */
+  convertCookieFormat(cookies) {
+    return cookies.map(cookie => {
+      const converted = {
+        name: cookie.name,
+        value: cookie.value,
+        domain: cookie.domain,
+        path: cookie.path || '/',
+        secure: cookie.secure || false,
+        httpOnly: cookie.httpOnly || false
+      };
+
+      // 转换 expirationDate 到 expires
+      if (cookie.expirationDate) {
+        converted.expires = cookie.expirationDate;
+      }
+
+      // 转换 sameSite 到正确的大小写格式
+      if (cookie.sameSite) {
+        const sameSiteMap = {
+          'strict': 'Strict',
+          'lax': 'Lax',
+          'none': 'None',
+          'unspecified': undefined  // Puppeteer 不支持 unspecified，移除它
+        };
+        const mappedValue = sameSiteMap[cookie.sameSite.toLowerCase()];
+        if (mappedValue) {
+          converted.sameSite = mappedValue;
+        }
+      }
+
+      return converted;
+    });
+  }
+
+  /**
    * 初始化浏览器
    */
   async init() {
@@ -43,17 +80,26 @@ export class ScraperEngine {
     this.page = await this.browser.newPage();
     await this.page.setViewport({ width: 1920, height: 1080 });
 
+    // 对于需要设置 Cookie 的情况，先访问目标域名建立 HTTPS 上下文
     if (this.cookies && this.cookies.cookie_data) {
+      console.log('🌐 先访问目标域名建立上下文...');
+      const url = new URL(this.config.url);
+      await this.page.goto(`${url.protocol}//${url.host}`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      
       console.log('🍪 设置Cookies...');
-      await this.page.setCookie(...this.cookies.cookie_data);
+      const convertedCookies = this.convertCookieFormat(this.cookies.cookie_data);
+      await this.page.setCookie(...convertedCookies);
+      console.log(`✅ 已设置 ${convertedCookies.length} 个Cookie`);
     }
 
     // 如果有storage_data，设置LocalStorage
     if (this.cookies && this.cookies.storage_data) {
       console.log('📦 设置LocalStorage...');
-      // 先访问域名以便设置LocalStorage
-      const url = new URL(this.config.url);
-      await this.page.goto(`${url.protocol}//${url.host}`, { waitUntil: 'domcontentloaded' });
+      // 如果还没访问页面，先访问
+      if (!this.cookies.cookie_data) {
+        const url = new URL(this.config.url);
+        await this.page.goto(`${url.protocol}//${url.host}`, { waitUntil: 'domcontentloaded' });
+      }
       
       // 设置LocalStorage
       await this.page.evaluate((storageData) => {
