@@ -1,0 +1,153 @@
+{
+  "code": 200,
+  "request_id": "582197e1-610f-49e7-ad5a-5fa37fab1352",
+  "message": "Request successful. This request will incur a charge.",
+  "message_zh": "请求成功，本次请求将被计费。",
+  "support": "Discord: https://discord.gg/aMEAS8Xsvz",
+  "time": "2025-11-27 18:24:27",
+  "time_stamp": 1764296667,
+  "time_zone": "America/Los_Angeles",
+  "docs": "https://api.tikhub.io/#/Bilibili-Web-API/fetch_one_video_v3_api_v1_bilibili_web_fetch_one_video_v3_get",
+  "cache_message": "This request will be cached. You can access the cached result directly using the URL below, valid for 24 hours. Accessing the cache will not incur additional charges.",
+  "cache_message_zh": "本次请求将被缓存，你可以使用下面的 URL 直接访问缓存结果，有效期为 24 小时，访问缓存不会产生额外费用。",
+  "cache_url": "https://cache.tikhub.io/api/v1/cache/public/582197e1-610f-49e7-ad5a-5fa37fab1352?sign=1af14ea86b0f4f0d0ce5c3e676cef55f3ce679df8b59503543d9c16b93304bf6",
+  "router": "/api/v1/bilibili/web/fetch_one_video_v3",
+  "params": {
+    "url": "https://www.bilibili.com/video/BV1AbsqzxEqs/?spm_id_from=333.337.search-card.all.click&vd_source=3d1a30968b278a2beb02c0503f296200"
+  },
+  "data": {
+    "bvid": "BV1AbsqzxEqs",
+    "aid": 115422800183311,
+    "videos": 1,
+    "tid": 21,
+    "tid_v2": 2158,
+    "tname": "日常",
+    "tname_v2": "旅游记录",
+    "copyright": 1,
+    "pic": "http://i1.hdslb.com/bfs/archive/0076bb67f65541f4de360f5d6263bbb47346e145.jpg",
+    "title": "沉睡数千年 一醒惊天下——三星堆博物馆（2025）",
+    "pubdate": 1761258600,
+    "ctime": 1761212440,
+    "desc": "即兴解说 脱稿讲述",
+    "desc_v2": [
+      {
+        "raw_text": "即兴解说 脱稿讲述",
+        "type": 1,
+        "biz_id": 0
+      }
+    ],
+    "state": 0,
+    "duration": 3667,
+    "rights": {
+      "bp": 0,
+      "elec": 0,
+      "download": 1,
+      "movie": 0,
+      "pay": 0,
+      "hd5": 1,
+      "no_reprint": 1,
+      "autoplay": 1,
+      "ugc_pay": 0,
+      "is_cooperation": 0,
+      "ugc_pay_preview": 0,
+      "no_background": 0,
+      "clean_mode": 0,
+      "is_stein_gate": 0,
+      "is_360": 0,
+      "no_share": 0,
+      "arc_pay": 0,
+      "free_watch": 0
+    },
+    "owner": {
+      "mid": 345637494,
+      "name": "小君杂坛",
+      "face": "https://i0.hdslb.com/bfs/face/e6c50e3d3d49f6512f70e56b04c4e2086cd3828f.jpg"
+    },
+    "stat": {
+      "aid": 115422800183311,
+      "view": 3721,
+      "danmaku": 7,
+      "reply": 7,
+      "favorite": 82,
+      "coin": 20,
+      "share": 77,
+      "now_rank": 0,
+      "his_rank": 0,
+      "like": 64,
+      "dislike": 0,
+      "evaluation": "",
+      "vt": 0,
+      "viewseo": 3721
+    },
+    "argue_info": {
+      "argue_msg": "",
+      "argue_type": 0,
+      "argue_link": ""
+    },
+    "dynamic": "逛博物馆才是正经事",
+    "cid": 33326039228,
+    "dimension": {
+      "width": 1920,
+      "height": 1080,
+      "rotate": 0
+    },
+    "premiere": null,
+    "teenage_mode": 1,
+    "is_chargeable_season": false,
+    "is_story": false,
+    "is_upower_exclusive": false,
+    "is_upower_play": false,
+    "is_upower_preview": false,
+    "enable_vt": 0,
+    "vt_display": "",
+    "is_upower_exclusive_with_qa": false,
+    "no_cache": false,
+    "pages": [
+      {
+        "cid": 33326039228,
+        "page": 1,
+        "from": "vupload",
+        "part": "studio_video_1761202357622.mp4",
+        "duration": 3667,
+        "vid": "",
+        "weblink": "",
+        "dimension": {
+          "width": 1920,
+          "height": 1080,
+          "rotate": 0
+        },
+        "first_frame": "http://i2.hdslb.com/bfs/storyff/_00003hkm6t0n2l3ub29fosl4442qx2b_firsti.jpg",
+        "ctime": 1761212440
+      }
+    ],
+    "subtitle": {
+      "allow_submit": false,
+      "list": []
+    },
+    "is_season_display": false,
+    "user_garb": {
+      "url_image_ani_cut": ""
+    },
+    "honor_reply": {},
+    "like_icon": "",
+    "need_jump_bv": false,
+    "disable_show_up_info": false,
+    "is_story_play": 1,
+    "is_view_self": false,
+    "embedPlayer": {
+      "p": 1,
+      "aid": 115422800183311,
+      "bvid": "BV1AbsqzxEqs",
+      "cid": 33326039228,
+      "vid": "",
+      "vtype": "vupload",
+      "stats": {
+        "spmId": "333.788.0.0",
+        "spmIdFrom": "333.788.0.0"
+      },
+      "t": 0,
+      "fromDid": null,
+      "featureList": {}
+    }
+  }
+}

@@ -1,0 +1,820 @@
+{
+  "code": 200,
+  "request_id": "0bc13c82-3199-4431-b3d1-6b343b86698d",
+  "message": "Request successful. This request will incur a charge.",
+  "message_zh": "请求成功，本次请求将被计费。",
+  "support": "Discord: https://discord.gg/aMEAS8Xsvz",
+  "time": "2025-11-27 18:26:04",
+  "time_stamp": 1764296764,
+  "time_zone": "America/Los_Angeles",
+  "docs": "https://api.tikhub.io/#/Bilibili-Web-API/fetch_one_video_api_v1_bilibili_web_fetch_one_video_get",
+  "cache_message": "This request will be cached. You can access the cached result directly using the URL below, valid for 24 hours. Accessing the cache will not incur additional charges.",
+  "cache_message_zh": "本次请求将被缓存，你可以使用下面的 URL 直接访问缓存结果，有效期为 24 小时，访问缓存不会产生额外费用。",
+  "cache_url": "https://cache.tikhub.io/api/v1/cache/public/0bc13c82-3199-4431-b3d1-6b343b86698d?sign=3ac3edcf936b52115d98523ef49fed81fd7212df59d488b5811847b0e78063e0",
+  "router": "/api/v1/bilibili/web/fetch_one_video",
+  "params": {
+    "bv_id": "BV1hSt9zdEmX"
+  },
+  "data": {
+    "code": 0,
+    "message": "0",
+    "ttl": 1,
+    "data": {
+      "bvid": "BV1hSt9zdEmX",
+      "aid": 115014593680988,
+      "videos": 1,
+      "tid": 228,
+      "tid_v2": 2090,
+      "tname": "人文历史",
+      "tname_v2": "人文历史",
+      "copyright": 1,
+      "pic": "http://i2.hdslb.com/bfs/archive/f193d18c4dc4a88b0977fc4e46e027cba9671554.jpg",
+      "title": "三星堆有啥神秘的？轻松带你了解三星堆前世今生！",
+      "pubdate": 1754992800,
+      "ctime": 1754983879,
+      "desc": "神秘三星堆 一醒惊天下，但同志们，你有真正了解过三星堆吗？ 什么外星人降临、专家不敢挖了、这根本不是中华文明！种种谣言背后的真相到底是什么？这是一期让你最快成为三星堆懂哥懂姐的视频，而且相当传奇！同志们，上车，咱们出发，三星堆！\n\n参考文献：岳南《看见三星堆》刘兴诗《三星堆的故事》\n纪录片《不止考古：我与三星堆》《解谜三星堆》",
+      "desc_v2": [
+        {
+          "raw_text": "神秘三星堆 一醒惊天下，但同志们，你有真正了解过三星堆吗？ 什么外星人降临、专家不敢挖了、这根本不是中华文明！种种谣言背后的真相到底是什么？这是一期让你最快成为三星堆懂哥懂姐的视频，而且相当传奇！同志们，上车，咱们出发，三星堆！\n\n参考文献：岳南《看见三星堆》刘兴诗《三星堆的故事》\n纪录片《不止考古：我与三星堆》《解谜三星堆》",
+          "type": 1,
+          "biz_id": 0
+        }
+      ],
+      "state": 0,
+      "duration": 1868,
+      "mission_id": 4044133,
+      "rights": {
+        "bp": 0,
+        "elec": 0,
+        "download": 1,
+        "movie": 0,
+        "pay": 0,
+        "hd5": 1,
+        "no_reprint": 1,
+        "autoplay": 1,
+        "ugc_pay": 0,
+        "is_cooperation": 0,
+        "ugc_pay_preview": 0,
+        "no_background": 0,
+        "clean_mode": 0,
+        "is_stein_gate": 0,
+        "is_360": 0,
+        "no_share": 0,
+        "arc_pay": 0,
+        "free_watch": 0
+      },
+      "owner": {
+        "mid": 102584256,
+        "name": "浪花姜",
+        "face": "https://i0.hdslb.com/bfs/face/ac04da8dd94a0cbee7312a98383a35f77819c899.jpg"
+      },
+      "stat": {
+        "aid": 115014593680988,
+        "view": 966373,
+        "danmaku": 2658,
+        "reply": 1217,
+        "favorite": 12385,
+        "coin": 15257,
+        "share": 3715,
+        "now_rank": 0,
+        "his_rank": 0,
+        "like": 30290,
+        "dislike": 0,
+        "evaluation": "",
+        "vt": 0
+      },
+      "argue_info": {
+        "argue_msg": "",
+        "argue_type": 0,
+        "argue_link": ""
+      },
+      "dynamic": "三星堆的前世今生 视频发布～",
+      "cid": 31645961176,
+      "dimension": {
+        "width": 1920,
+        "height": 1080,
+        "rotate": 0
+      },
+      "season_id": 1903070,
+      "premiere": null,
+      "teenage_mode": 0,
+      "is_chargeable_season": false,
+      "is_story": false,
+      "is_upower_exclusive": false,
+      "is_upower_play": false,
+      "is_upower_preview": false,
+      "enable_vt": 0,
+      "vt_display": "",
+      "is_upower_exclusive_with_qa": false,
+      "no_cache": false,
+      "pages": [
+        {
+          "cid": 31645961176,
+          "page": 1,
+          "from": "vupload",
+          "part": "三星堆有啥神秘的？轻松带你了解三星堆前世今生！",
+          "duration": 1868,
+          "vid": "",
+          "weblink": "",
+          "dimension": {
+            "width": 1920,
+            "height": 1080,
+            "rotate": 0
+          },
+          "first_frame": "http://i0.hdslb.com/bfs/storyff/n250812sae58lg0rgnh3e3pvegp3iog1_firsti.jpg",
+          "ctime": 1754993775
+        }
+      ],
+      "subtitle": {
+        "allow_submit": false,
+        "list": []
+      },
+      "ugc_season": {
+        "id": 1903070,
+        "title": "看懂博物馆系列",
+        "cover": "https://archive.biliimg.com/bfs/archive/eb9105373337b98c87fe6fef17374326d339b716.jpg",
+        "mid": 102584256,
+        "intro": "博物馆系列科普视频，带你看懂博物馆！",
+        "sign_state": 0,
+        "attribute": 140,
+        "sections": [
+          {
+            "season_id": 1903070,
+            "id": 2186065,
+            "title": "正片",
+            "type": 1,
+            "episodes": [
+              {
+                "season_id": 1903070,
+                "section_id": 2186065,
+                "id": 45012298,
+                "aid": 874537508,
+                "cid": 1297469372,
+                "title": "不止逃出大英博物馆！带你了解考古史六大悲剧",
+                "attribute": 0,
+                "arc": {
+                  "aid": 874537508,
+                  "videos": 0,
+                  "type_id": 0,
+                  "type_name": "",
+                  "copyright": 0,
+                  "pic": "http://i2.hdslb.com/bfs/archive/ec63694f3356578da2be9e8850894a6e01d62f96.jpg",
+                  "title": "不止逃出大英博物馆！带你了解考古史六大悲剧",
+                  "pubdate": 1697166000,
+                  "ctime": 1697166000,
+                  "desc": "",
+                  "state": 0,
+                  "duration": 1175,
+                  "rights": {
+                    "bp": 0,
+                    "elec": 0,
+                    "download": 0,
+                    "movie": 0,
+                    "pay": 0,
+                    "hd5": 0,
+                    "no_reprint": 0,
+                    "autoplay": 0,
+                    "ugc_pay": 0,
+                    "is_cooperation": 0,
+                    "ugc_pay_preview": 0,
+                    "arc_pay": 0,
+                    "free_watch": 0
+                  },
+                  "author": {
+                    "mid": 102584256,
+                    "name": "浪花姜",
+                    "face": "https://i0.hdslb.com/bfs/face/ac04da8dd94a0cbee7312a98383a35f77819c899.jpg"
+                  },
+                  "stat": {
+                    "aid": 874537508,
+                    "view": 378158,
+                    "danmaku": 1538,
+                    "reply": 661,
+                    "fav": 9062,
+                    "coin": 11196,
+                    "share": 2321,
+                    "now_rank": 0,
+                    "his_rank": 0,
+                    "like": 18409,
+                    "dislike": 0,
+                    "evaluation": "",
+                    "argue_msg": "",
+                    "vt": 2990581,
+                    "vv": 378158
+                  },
+                  "dynamic": "",
+                  "dimension": {
+                    "width": 0,
+                    "height": 0,
+                    "rotate": 0
+                  },
+                  "desc_v2": null,
+                  "is_chargeable_season": false,
+                  "is_blooper": false,
+                  "enable_vt": 0,
+                  "vt_display": "",
+                  "type_id_v2": 0,
+                  "type_name_v2": "",
+                  "is_lesson_video": 0
+                },
+                "page": {
+                  "cid": 1297469372,
+                  "page": 1,
+                  "from": "vupload",
+                  "part": "不止逃出大英博物馆！带你了解考古史六大悲剧",
+                  "duration": 1175,
+                  "vid": "",
+                  "weblink": "",
+                  "dimension": {
+                    "width": 3840,
+                    "height": 2160,
+                    "rotate": 0
+                  }
+                },
+                "bvid": "BV17N4y1y7tH",
+                "pages": [
+                  {
+                    "cid": 1297469372,
+                    "page": 1,
+                    "from": "vupload",
+                    "part": "不止逃出大英博物馆！带你了解考古史六大悲剧",
+                    "duration": 1175,
+                    "vid": "",
+                    "weblink": "",
+                    "dimension": {
+                      "width": 3840,
+                      "height": 2160,
+                      "rotate": 0
+                    }
+                  }
+                ]
+              },
+              {
+                "season_id": 1903070,
+                "section_id": 2186065,
+                "id": 45012301,
+                "aid": 955485334,
+                "cid": 1182996901,
+                "title": "[宝藏] 我承认这是B站最值得看的中国博物馆大盘点！",
+                "attribute": 0,
+                "arc": {
+                  "aid": 955485334,
+                  "videos": 0,
+                  "type_id": 0,
+                  "type_name": "",
+                  "copyright": 0,
+                  "pic": "http://i1.hdslb.com/bfs/archive/cd73289542cc2dc28d84bea74eda8430bc7cc854.jpg",
+                  "title": "[宝藏] 我承认这是B站最值得看的中国博物馆大盘点！",
+                  "pubdate": 1688374800,
+                  "ctime": 1688374800,
+                  "desc": "",
+                  "state": 0,
+                  "duration": 1680,
+                  "rights": {
+                    "bp": 0,
+                    "elec": 0,
+                    "download": 0,
+                    "movie": 0,
+                    "pay": 0,
+                    "hd5": 0,
+                    "no_reprint": 0,
+                    "autoplay": 0,
+                    "ugc_pay": 0,
+                    "is_cooperation": 0,
+                    "ugc_pay_preview": 0,
+                    "arc_pay": 0,
+                    "free_watch": 0
+                  },
+                  "author": {
+                    "mid": 102584256,
+                    "name": "浪花姜",
+                    "face": "https://i0.hdslb.com/bfs/face/ac04da8dd94a0cbee7312a98383a35f77819c899.jpg"
+                  },
+                  "stat": {
+                    "aid": 955485334,
+                    "view": 723748,
+                    "danmaku": 3542,
+                    "reply": 1407,
+                    "fav": 29262,
+                    "coin": 19537,
+                    "share": 6862,
+                    "now_rank": 0,
+                    "his_rank": 0,
+                    "like": 36355,
+                    "dislike": 0,
+                    "evaluation": "",
+                    "argue_msg": "",
+                    "vt": 4568434,
+                    "vv": 723748
+                  },
+                  "dynamic": "",
+                  "dimension": {
+                    "width": 0,
+                    "height": 0,
+                    "rotate": 0
+                  },
+                  "desc_v2": null,
+                  "is_chargeable_season": false,
+                  "is_blooper": false,
+                  "enable_vt": 0,
+                  "vt_display": "",
+                  "type_id_v2": 0,
+                  "type_name_v2": "",
+                  "is_lesson_video": 0
+                },
+                "page": {
+                  "cid": 1182996901,
+                  "page": 1,
+                  "from": "vupload",
+                  "part": "[宝藏] 我承认这是B站最值得看的中国博物馆大盘点！",
+                  "duration": 1680,
+                  "vid": "",
+                  "weblink": "",
+                  "dimension": {
+                    "width": 3840,
+                    "height": 2160,
+                    "rotate": 0
+                  }
+                },
+                "bvid": "BV1Gs4y1c7XT",
+                "pages": [
+                  {
+                    "cid": 1182996901,
+                    "page": 1,
+                    "from": "vupload",
+                    "part": "[宝藏] 我承认这是B站最值得看的中国博物馆大盘点！",
+                    "duration": 1680,
+                    "vid": "",
+                    "weblink": "",
+                    "dimension": {
+                      "width": 3840,
+                      "height": 2160,
+                      "rotate": 0
+                    }
+                  }
+                ]
+              },
+              {
+                "season_id": 1903070,
+                "section_id": 2186065,
+                "id": 88810877,
+                "aid": 113304341060159,
+                "cid": 26284330513,
+                "title": "我给中国最有钱的墓主人带了一盒草莓味蒙脱石散",
+                "attribute": 0,
+                "arc": {
+                  "aid": 113304341060159,
+                  "videos": 0,
+                  "type_id": 0,
+                  "type_name": "",
+                  "copyright": 0,
+                  "pic": "http://i0.hdslb.com/bfs/archive/eab916f009b457201bb08a31772c5e1c318ee574.jpg",
+                  "title": "我给中国最有钱的墓主人带了一盒草莓味蒙脱石散",
+                  "pubdate": 1728896400,
+                  "ctime": 1728896400,
+                  "desc": "",
+                  "state": 0,
+                  "duration": 1011,
+                  "rights": {
+                    "bp": 0,
+                    "elec": 0,
+                    "download": 0,
+                    "movie": 0,
+                    "pay": 0,
+                    "hd5": 0,
+                    "no_reprint": 0,
+                    "autoplay": 0,
+                    "ugc_pay": 0,
+                    "is_cooperation": 0,
+                    "ugc_pay_preview": 0,
+                    "arc_pay": 0,
+                    "free_watch": 0
+                  },
+                  "author": {
+                    "mid": 102584256,
+                    "name": "浪花姜",
+                    "face": "https://i0.hdslb.com/bfs/face/ac04da8dd94a0cbee7312a98383a35f77819c899.jpg"
+                  },
+                  "stat": {
+                    "aid": 113304341060159,
+                    "view": 603497,
+                    "danmaku": 2259,
+                    "reply": 847,
+                    "fav": 7582,
+                    "coin": 22191,
+                    "share": 2340,
+                    "now_rank": 0,
+                    "his_rank": 0,
+                    "like": 35224,
+                    "dislike": 0,
+                    "evaluation": "",
+                    "argue_msg": "",
+                    "vt": 4335451,
+                    "vv": 603497
+                  },
+                  "dynamic": "",
+                  "dimension": {
+                    "width": 0,
+                    "height": 0,
+                    "rotate": 0
+                  },
+                  "desc_v2": null,
+                  "is_chargeable_season": false,
+                  "is_blooper": false,
+                  "enable_vt": 0,
+                  "vt_display": "",
+                  "type_id_v2": 0,
+                  "type_name_v2": "",
+                  "is_lesson_video": 0
+                },
+                "page": {
+                  "cid": 26284330513,
+                  "page": 1,
+                  "from": "vupload",
+                  "part": "大汉昏君？土豪文青？一期带你看懂海昏侯墓！",
+                  "duration": 1011,
+                  "vid": "",
+                  "weblink": "",
+                  "dimension": {
+                    "width": 3840,
+                    "height": 2160,
+                    "rotate": 0
+                  }
+                },
+                "bvid": "BV1PJmGYvE9G",
+                "pages": [
+                  {
+                    "cid": 26284330513,
+                    "page": 1,
+                    "from": "vupload",
+                    "part": "大汉昏君？土豪文青？一期带你看懂海昏侯墓！",
+                    "duration": 1011,
+                    "vid": "",
+                    "weblink": "",
+                    "dimension": {
+                      "width": 3840,
+                      "height": 2160,
+                      "rotate": 0
+                    }
+                  }
+                ]
+              },
+              {
+                "season_id": 1903070,
+                "section_id": 2186065,
+                "id": 126300913,
+                "aid": 114561625628325,
+                "cid": 30123950469,
+                "title": "曹操墓里能多寒酸？坟前布洛芬却堆积成山",
+                "attribute": 0,
+                "arc": {
+                  "aid": 114561625628325,
+                  "videos": 0,
+                  "type_id": 0,
+                  "type_name": "",
+                  "copyright": 0,
+                  "pic": "http://i2.hdslb.com/bfs/archive/fdfbe7bdc14516303ca51982980095fd86ac83dc.jpg",
+                  "title": "曹操墓里能多寒酸？坟前布洛芬却堆积成山",
+                  "pubdate": 1748077200,
+                  "ctime": 1748077200,
+                  "desc": "",
+                  "state": 0,
+                  "duration": 683,
+                  "rights": {
+                    "bp": 0,
+                    "elec": 0,
+                    "download": 0,
+                    "movie": 0,
+                    "pay": 0,
+                    "hd5": 0,
+                    "no_reprint": 0,
+                    "autoplay": 0,
+                    "ugc_pay": 0,
+                    "is_cooperation": 0,
+                    "ugc_pay_preview": 0,
+                    "arc_pay": 0,
+                    "free_watch": 0
+                  },
+                  "author": {
+                    "mid": 102584256,
+                    "name": "浪花姜",
+                    "face": "https://i0.hdslb.com/bfs/face/ac04da8dd94a0cbee7312a98383a35f77819c899.jpg"
+                  },
+                  "stat": {
+                    "aid": 114561625628325,
+                    "view": 1120852,
+                    "danmaku": 2356,
+                    "reply": 1687,
+                    "fav": 4291,
+                    "coin": 3424,
+                    "share": 891,
+                    "now_rank": 0,
+                    "his_rank": 0,
+                    "like": 27725,
+                    "dislike": 0,
+                    "evaluation": "",
+                    "argue_msg": "",
+                    "vt": 9921554,
+                    "vv": 1120852
+                  },
+                  "dynamic": "",
+                  "dimension": {
+                    "width": 0,
+                    "height": 0,
+                    "rotate": 0
+                  },
+                  "desc_v2": null,
+                  "is_chargeable_season": false,
+                  "is_blooper": false,
+                  "enable_vt": 0,
+                  "vt_display": "",
+                  "type_id_v2": 0,
+                  "type_name_v2": "",
+                  "is_lesson_video": 0
+                },
+                "page": {
+                  "cid": 30123950469,
+                  "page": 1,
+                  "from": "vupload",
+                  "part": "曹操墓里能有多寒酸？坟前布洛芬却堆积成山",
+                  "duration": 683,
+                  "vid": "",
+                  "weblink": "",
+                  "dimension": {
+                    "width": 1920,
+                    "height": 1080,
+                    "rotate": 0
+                  }
+                },
+                "bvid": "BV1ecj4zsEzm",
+                "pages": [
+                  {
+                    "cid": 30123950469,
+                    "page": 1,
+                    "from": "vupload",
+                    "part": "曹操墓里能有多寒酸？坟前布洛芬却堆积成山",
+                    "duration": 683,
+                    "vid": "",
+                    "weblink": "",
+                    "dimension": {
+                      "width": 1920,
+                      "height": 1080,
+                      "rotate": 0
+                    }
+                  }
+                ]
+              },
+              {
+                "season_id": 1903070,
+                "section_id": 2186065,
+                "id": 127660657,
+                "aid": 114608333397717,
+                "cid": 30270229021,
+                "title": "文化盛宴！一期253分钟带你看完中国顶级国宝！",
+                "attribute": 0,
+                "arc": {
+                  "aid": 114608333397717,
+                  "videos": 0,
+                  "type_id": 0,
+                  "type_name": "",
+                  "copyright": 0,
+                  "pic": "http://i1.hdslb.com/bfs/archive/2fc0cbb3613d03b9a90f3c3b9a431ca32a050080.jpg",
+                  "title": "文化盛宴！一期253分钟带你看完中国顶级国宝！",
+                  "pubdate": 1748786674,
+                  "ctime": 1748786674,
+                  "desc": "",
+                  "state": 0,
+                  "duration": 15135,
+                  "rights": {
+                    "bp": 0,
+                    "elec": 0,
+                    "download": 0,
+                    "movie": 0,
+                    "pay": 0,
+                    "hd5": 0,
+                    "no_reprint": 0,
+                    "autoplay": 0,
+                    "ugc_pay": 0,
+                    "is_cooperation": 0,
+                    "ugc_pay_preview": 0,
+                    "arc_pay": 0,
+                    "free_watch": 0
+                  },
+                  "author": {
+                    "mid": 102584256,
+                    "name": "浪花姜",
+                    "face": "https://i0.hdslb.com/bfs/face/ac04da8dd94a0cbee7312a98383a35f77819c899.jpg"
+                  },
+                  "stat": {
+                    "aid": 114608333397717,
+                    "view": 2153305,
+                    "danmaku": 23773,
+                    "reply": 3878,
+                    "fav": 161942,
+                    "coin": 177223,
+                    "share": 23776,
+                    "now_rank": 0,
+                    "his_rank": 9,
+                    "like": 153631,
+                    "dislike": 0,
+                    "evaluation": "",
+                    "argue_msg": "",
+                    "vt": 28337483,
+                    "vv": 2153305
+                  },
+                  "dynamic": "",
+                  "dimension": {
+                    "width": 0,
+                    "height": 0,
+                    "rotate": 0
+                  },
+                  "desc_v2": null,
+                  "is_chargeable_season": false,
+                  "is_blooper": false,
+                  "enable_vt": 0,
+                  "vt_display": "",
+                  "type_id_v2": 0,
+                  "type_name_v2": "",
+                  "is_lesson_video": 0
+                },
+                "page": {
+                  "cid": 30270229021,
+                  "page": 1,
+                  "from": "vupload",
+                  "part": "文化盛宴！一期253分钟带你看完中国顶级国宝！",
+                  "duration": 15135,
+                  "vid": "",
+                  "weblink": "",
+                  "dimension": {
+                    "width": 1920,
+                    "height": 1080,
+                    "rotate": 0
+                  }
+                },
+                "bvid": "BV1EU7rzkEGd",
+                "pages": [
+                  {
+                    "cid": 30270229021,
+                    "page": 1,
+                    "from": "vupload",
+                    "part": "文化盛宴！一期253分钟带你看完中国顶级国宝！",
+                    "duration": 15135,
+                    "vid": "",
+                    "weblink": "",
+                    "dimension": {
+                      "width": 1920,
+                      "height": 1080,
+                      "rotate": 0
+                    }
+                  }
+                ]
+              },
+              {
+                "season_id": 1903070,
+                "section_id": 2186065,
+                "id": 140757897,
+                "aid": 115014593680988,
+                "cid": 31645961176,
+                "title": "三星堆有啥神秘的？轻松带你了解三星堆前世今生！",
+                "attribute": 0,
+                "arc": {
+                  "aid": 115014593680988,
+                  "videos": 0,
+                  "type_id": 0,
+                  "type_name": "",
+                  "copyright": 0,
+                  "pic": "http://i2.hdslb.com/bfs/archive/f193d18c4dc4a88b0977fc4e46e027cba9671554.jpg",
+                  "title": "三星堆有啥神秘的？轻松带你了解三星堆前世今生！",
+                  "pubdate": 1754992800,
+                  "ctime": 1754992800,
+                  "desc": "",
+                  "state": 0,
+                  "duration": 1868,
+                  "rights": {
+                    "bp": 0,
+                    "elec": 0,
+                    "download": 0,
+                    "movie": 0,
+                    "pay": 0,
+                    "hd5": 0,
+                    "no_reprint": 0,
+                    "autoplay": 0,
+                    "ugc_pay": 0,
+                    "is_cooperation": 0,
+                    "ugc_pay_preview": 0,
+                    "arc_pay": 0,
+                    "free_watch": 0
+                  },
+                  "author": {
+                    "mid": 102584256,
+                    "name": "浪花姜",
+                    "face": "https://i0.hdslb.com/bfs/face/ac04da8dd94a0cbee7312a98383a35f77819c899.jpg"
+                  },
+                  "stat": {
+                    "aid": 115014593680988,
+                    "view": 966373,
+                    "danmaku": 2658,
+                    "reply": 1217,
+                    "fav": 12385,
+                    "coin": 15257,
+                    "share": 3715,
+                    "now_rank": 0,
+                    "his_rank": 0,
+                    "like": 30290,
+                    "dislike": 0,
+                    "evaluation": "",
+                    "argue_msg": "",
+                    "vt": 8002027,
+                    "vv": 966373
+                  },
+                  "dynamic": "",
+                  "dimension": {
+                    "width": 0,
+                    "height": 0,
+                    "rotate": 0
+                  },
+                  "desc_v2": null,
+                  "is_chargeable_season": false,
+                  "is_blooper": false,
+                  "enable_vt": 0,
+                  "vt_display": "",
+                  "type_id_v2": 0,
+                  "type_name_v2": "",
+                  "is_lesson_video": 0
+                },
+                "page": {
+                  "cid": 31645961176,
+                  "page": 1,
+                  "from": "vupload",
+                  "part": "三星堆有啥神秘的？轻松带你了解三星堆前世今生！",
+                  "duration": 1868,
+                  "vid": "",
+                  "weblink": "",
+                  "dimension": {
+                    "width": 1920,
+                    "height": 1080,
+                    "rotate": 0
+                  }
+                },
+                "bvid": "BV1hSt9zdEmX",
+                "pages": [
+                  {
+                    "cid": 31645961176,
+                    "page": 1,
+                    "from": "vupload",
+                    "part": "三星堆有啥神秘的？轻松带你了解三星堆前世今生！",
+                    "duration": 1868,
+                    "vid": "",
+                    "weblink": "",
+                    "dimension": {
+                      "width": 1920,
+                      "height": 1080,
+                      "rotate": 0
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "stat": {
+          "season_id": 1903070,
+          "view": 5945929,
+          "danmaku": 36126,
+          "reply": 9697,
+          "fav": 224524,
+          "coin": 248828,
+          "share": 39905,
+          "now_rank": 0,
+          "his_rank": 0,
+          "like": 301634,
+          "vt": 0,
+          "vv": 0
+        },
+        "ep_count": 6,
+        "season_type": 1,
+        "is_pay_season": false,
+        "enable_vt": 0
+      },
+      "is_season_display": true,
+      "user_garb": {
+        "url_image_ani_cut": ""
+      },
+      "honor_reply": {
+        "honor": [
+          {
+            "aid": 115014593680988,
+            "type": 7,
+            "desc": "热门收录",
+            "weekly_recommend_num": 0
+          }
+        ]
+      },
+      "like_icon": "",
+      "need_jump_bv": false,
+      "disable_show_up_info": false,
+      "is_story_play": 1,
+      "is_view_self": false
+    }
+  }
+}
