@@ -148,7 +148,7 @@ def convert_wav_to_mp3(input_path: Path, output_path: Path):
 
 def main():
     # Target file
-    input_wav = current_dir / "AR snow pilot1.wav"
+    input_wav = current_dir / "input" / "小仓广场.m4a"
     temp_mp3 = current_dir / "temp_audio.mp3"
     
     if not input_wav.exists():
@@ -156,11 +156,11 @@ def main():
         return
 
     # 1. Convert to MP3 to reduce size (target < 5MB)
-    # Using 64k bitrate to be safe for 27MB wav (approx 3 mins -> ~1.5MB)
+    # Using very low bitrate for 7MB m4a file
     print("Compressing audio to meet API size limits (<5MB)...")
     cmd = [
         "ffmpeg", "-y", "-i", str(input_wav),
-        "-codec:a", "libmp3lame", "-b:a", "32k", "-ac", "1", 
+        "-codec:a", "libmp3lame", "-b:a", "24k", "-ac", "1",
         str(temp_mp3)
     ]
     try:
@@ -197,7 +197,9 @@ def main():
         transcript = client.to_bracketed_transcript(result)
         
         # Save to file
-        output_file = current_dir / f"{input_wav.stem}.txt"
+        output_dir = current_dir / "output"
+        output_dir.mkdir(exist_ok=True)
+        output_file = output_dir / f"{input_wav.stem}.txt"
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(transcript)
             
