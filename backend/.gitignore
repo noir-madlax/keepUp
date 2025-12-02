@@ -1,4 +1,8 @@
 test-api/wavToTextUsingTencent/AR*.*
+test-api/wavToTextUsingTencent/*.*
+test-api/wavToTextUsingTencent/.py
+test-api/wavToTextUsingTencent/output/*.*
+test-api/wavToTextUsingTencent/input/*.*
 
 # Python
 __pycache__/
