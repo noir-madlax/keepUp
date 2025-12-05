@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     # Bedrock Configuration
     AWS_ACCESS_KEY_ID: str
     AWS_SECRET_ACCESS_KEY: str
+    AWS_BEDROCK_REGION: str = "us-east-2"
+    
+    # LLM Provider 切换配置
+    # 可选值: "bedrock" 或 "openrouter"
+    LLM_SUMMARY_PROVIDER: str = "bedrock"  # 文章总结使用的Provider
+    LLM_CHAT_PROVIDER: str = "bedrock"     # Chat功能使用的Provider
 
     # 代理配置
     USE_PROXY: bool = False

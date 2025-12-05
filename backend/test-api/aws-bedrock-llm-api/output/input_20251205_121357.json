@@ -1,0 +1,9 @@
+{
+  "article_id": 2096,
+  "model_id": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "region": "us-east-2",
+  "max_tokens": 16000,
+  "prompt_length": 7422,
+  "content_length": 120101,
+  "timestamp": "20251205_121357"
+}

@@ -1,0 +1,6 @@
+{
+  "error": "Read timeout on endpoint URL: \"https://bedrock-runtime.us-east-2.amazonaws.com/model/us.anthropic.claude-sonnet-4-5-20250929-v1%3A0/invoke\"",
+  "timestamp": "20251205_115828",
+  "model_id": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "region": "us-east-2"
+}

@@ -1,0 +1,12 @@
+{
+  "article_id": 2096,
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "region": "us-east-2",
+  "max_tokens": 4096,
+  "mark_content": "能源效率的巨大提升将使AI无处不在",
+  "user_message": "能源效率的巨大提升将使AI无处不在\n\n\nPlease elaborate this content in detail, including more specific examples.",
+  "system_prompt_length": 120689,
+  "article_content_length": 120101,
+  "timestamp": "20251205_123020",
+  "comparison_target": "google/gemini-2.5-flash (via OpenRouter)"
+}

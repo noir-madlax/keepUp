@@ -1,4 +1,7 @@
 import httpx
+import boto3
+import json
+from botocore.config import Config
 from typing import Optional, Dict, Any
 from app.config import settings
 from app.utils.logger import logger
@@ -9,19 +12,14 @@ from app.utils.decorators import retry_decorator
 import requests
 
 class OpenRouterService:
+    # OpenRouter 配置
     API_URL = "https://openrouter.ai/api/v1/chat/completions"
-    # 升级模型
-   #  MODEL = "anthropic/claude-3.7-sonnet"
-    # 升级模型
-    # MODEL = "anthropic/claude-sonnet-4"
-    # 使用 Gemini 2.5 Flash 模型
-    # MODEL = "google/gemini-2.5-flash"
-    # 测试 Sonnet 4
-    # MODEL = "anthropic/claude-sonnet-4"
-    # 使用 Claude Sonnet 4.5
-    # MODEL = "anthropic/claude-sonnet-4.5"
-    # 测试 Gemini 2.5 Pro
-    MODEL = "google/gemini-2.5-pro"
+    MODEL = "google/gemini-2.5-pro"  # OpenRouter模型
+    
+    # AWS Bedrock 配置
+    BEDROCK_MODEL = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"  # Claude Sonnet 4.5
+    BEDROCK_REGION = settings.AWS_BEDROCK_REGION
+    BEDROCK_MAX_TOKENS = 16000
     
     @staticmethod
     async def get_prompt_data(lang: str, channel: str = None, content: str = None) -> Optional[str]:
@@ -145,6 +143,111 @@ class OpenRouterService:
         except Exception as e:
             logger.error(f"游戏内容判断失败: {str(e)}")
             return False
+
+    @staticmethod
+    @retry_decorator()
+    async def call_bedrock_api(prompt: str, content: str, request_id: int, lang: str) -> Optional[Dict[str, Any]]:
+        """调用 AWS Bedrock API (Claude Sonnet 4.5)
+        
+        Args:
+            prompt: 提示词
+            content: 需要总结的内容
+            request_id: 请求ID
+            lang: 语言代码
+            
+        Returns:
+            Optional[Dict[str, Any]]: API 返回的响应（转换为OpenRouter格式以保持兼容）
+        """
+        response_data = None
+        error_msg = None
+        request_data = None
+        
+        try:
+            # 配置超时时间（长文本需要更长的处理时间）
+            config = Config(
+                read_timeout=300,  # 5分钟读取超时
+                connect_timeout=60,
+                retries={'max_attempts': 3}
+            )
+            
+            # 创建Bedrock客户端
+            bedrock_client = boto3.client(
+                'bedrock-runtime',
+                region_name=OpenRouterService.BEDROCK_REGION,
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                config=config
+            )
+            
+            # 构建请求数据 - 使用Messages API格式
+            request_data = {
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": OpenRouterService.BEDROCK_MAX_TOKENS,
+                "temperature": 0.1,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": f"Please follow my requirement to summary the content\n\n{prompt}\n\n{content}"
+                    }
+                ]
+            }
+            
+            logger.info(f"正在调用AWS Bedrock API...")
+            logger.info(f"模型: {OpenRouterService.BEDROCK_MODEL}")
+            logger.info(f"区域: {OpenRouterService.BEDROCK_REGION}")
+            logger.info(f"输入内容长度: {len(content)} 字符")
+            
+            # 调用Bedrock API
+            response = bedrock_client.invoke_model(
+                modelId=OpenRouterService.BEDROCK_MODEL,
+                body=json.dumps(request_data),
+                contentType="application/json"
+            )
+            
+            # 解析响应
+            response_body = response['body'].read()
+            bedrock_response = json.loads(response_body)
+            
+            # 记录token使用情况
+            usage = bedrock_response.get('usage', {})
+            if usage:
+                logger.info(f"Bedrock Token使用情况: 输入={usage.get('input_tokens', 0)}, "
+                          f"输出={usage.get('output_tokens', 0)}")
+            
+            # 转换为OpenRouter格式以保持兼容性
+            response_data = {
+                'choices': [{
+                    'message': {
+                        'content': bedrock_response['content'][0]['text']
+                    }
+                }],
+                'model': OpenRouterService.BEDROCK_MODEL,
+                'usage': {
+                    'prompt_tokens': usage.get('input_tokens', 0),
+                    'completion_tokens': usage.get('output_tokens', 0),
+                    'total_tokens': usage.get('input_tokens', 0) + usage.get('output_tokens', 0)
+                }
+            }
+            
+            logger.info(f"Bedrock API调用成功")
+            return response_data
+            
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"Bedrock API调用异常: {error_msg}")
+            raise e
+            
+        finally:
+            # 记录调用结果
+            await LLMRecordsRepository.create_record(
+                request_id=request_id,
+                provider="bedrock",
+                model=OpenRouterService.BEDROCK_MODEL,
+                prompt_type=f"summary_{lang}",
+                input_content=request_data,
+                output_content=response_data,
+                error_message=error_msg
+            )
 
     @staticmethod
     @retry_decorator()
@@ -603,8 +706,14 @@ class OpenRouterService:
             if not prompt:
                 raise Exception("获取提示词失败")
             
-            # 2. 调用API
-            api_response = await OpenRouterService.call_openrouter_api(prompt, content, request_id, lang)
+            # 2. 根据配置选择调用哪个API
+            provider = settings.LLM_SUMMARY_PROVIDER
+            logger.info(f"使用 {provider} 进行文章总结")
+            
+            if provider == "bedrock":
+                api_response = await OpenRouterService.call_bedrock_api(prompt, content, request_id, lang)
+            else:
+                api_response = await OpenRouterService.call_openrouter_api(prompt, content, request_id, lang)
             
             # 3. 预处理响应
             processed_response = OpenRouterService.preprocess_api_response(api_response)

@@ -1,0 +1,6 @@
+{
+  "error": "An error occurred (ValidationException) when calling the InvokeModel operation: Invocation of model ID anthropic.claude-sonnet-4-5-20250929-v1:0 with on-demand throughput isn’t supported. Retry your request with the ID or ARN of an inference profile that contains this model.",
+  "timestamp": "20251205_115752",
+  "model_id": "anthropic.claude-sonnet-4-5-20250929-v1:0",
+  "region": "us-east-2"
+}
