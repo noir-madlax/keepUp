@@ -14,10 +14,11 @@ from app.services.request_logger import RequestLogger, Steps
 from app.utils.file_processor import process_file_content
 from ..repositories.article_views import ArticleViewsRepository
 from app.services.openrouter_service import OpenRouterService
+from app.services.private_content_service import PrivateContentService
 
 import asyncio
 import json
-from typing import List
+from typing import List, Optional
 
 router = APIRouter()
 
@@ -692,4 +693,167 @@ async def append_workflow(
         
     except Exception as e:
         logger.error(f"创建补充请求失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def process_private_content_task(
+    request_id: int,
+    user_id: str,
+    input_type: str,
+    prompt_type: str,
+    title: str,
+    content: str = None,
+    audio_url: str = None
+):
+    """后台处理私密内容任务"""
+    try:
+        result = await PrivateContentService.process_private_content(
+            request_id=request_id,
+            user_id=user_id,
+            input_type=input_type,
+            prompt_type=prompt_type,
+            title=title,
+            content=content,
+            audio_url=audio_url
+        )
+        
+        if result:
+            logger.info(f"私密内容处理完成: request_id={request_id}, article_id={result['article_id']}")
+        else:
+            logger.error(f"私密内容处理失败: request_id={request_id}")
+            
+    except Exception as e:
+        logger.error(f"私密内容后台任务失败: {str(e)}")
+        await SupabaseService.update_status(request_id, "failed", str(e))
+
+
+@router.post("/workflow/private-upload")
+async def private_upload_workflow(
+    background_tasks: BackgroundTasks,
+    file: Optional[UploadFile] = None,
+    text_content: str = Form(None),
+    input_type: str = Form(...),  # 'audio' 或 'text'
+    prompt_type: str = Form(default='general'),  # 'general', 'parent', 'customer'
+    title: str = Form(default=''),
+    user_id: str = Form(...)
+):
+    """处理私密内容上传请求
+    
+    支持两种输入方式：
+    1. 音频文件上传 (input_type='audio')
+    2. 文字内容输入 (input_type='text')
+    
+    Args:
+        file: 音频文件（input_type='audio'时必需）
+        text_content: 文字内容（input_type='text'时必需）
+        input_type: 输入类型
+        prompt_type: Prompt模版类型
+        title: 内容标题
+        user_id: 用户ID
+    """
+    try:
+        audio_url = None
+        content = None
+        
+        # 验证输入
+        if input_type == 'audio':
+            if not file:
+                return {
+                    "success": False,
+                    "message": "音频模式下必须上传文件"
+                }
+            
+            # 读取文件内容
+            file_content = await file.read()
+            
+            # 验证音频文件
+            is_valid, error_msg = PrivateContentService.validate_audio_file(
+                file.filename,
+                len(file_content)
+            )
+            if not is_valid:
+                return {
+                    "success": False,
+                    "message": error_msg
+                }
+            
+            # 上传到 Supabase Storage
+            audio_url = await PrivateContentService.upload_audio_to_storage(
+                file_content=file_content,
+                filename=file.filename,
+                user_id=user_id
+            )
+            
+            if not audio_url:
+                return {
+                    "success": False,
+                    "message": "音频文件上传失败"
+                }
+                
+        elif input_type == 'text':
+            if not text_content or not text_content.strip():
+                return {
+                    "success": False,
+                    "message": "文字模式下必须输入内容"
+                }
+            content = text_content.strip()
+            
+            # 验证文字内容长度
+            if len(content) < 50:
+                return {
+                    "success": False,
+                    "message": "文字内容太短，请输入至少50个字符"
+                }
+            if len(content) > 100000:
+                return {
+                    "success": False,
+                    "message": "文字内容超过限制，最多支持10万字符"
+                }
+        else:
+            return {
+                "success": False,
+                "message": "无效的输入类型"
+            }
+        
+        # 创建请求记录
+        request_data = await PrivateContentService.create_private_request(
+            user_id=user_id,
+            input_type=input_type,
+            prompt_type=prompt_type,
+            title=title,
+            original_url=audio_url or f'private://{input_type}'
+        )
+        
+        if not request_data:
+            return {
+                "success": False,
+                "message": "创建请求记录失败"
+            }
+        
+        request_id = request_data['id']
+        
+        # 启动后台处理任务
+        # 注意：title 保持原始值（可能为空），让 process_private_content 根据 AI 生成标题
+        background_tasks.add_task(
+            process_private_content_task,
+            request_id=request_id,
+            user_id=user_id,
+            input_type=input_type,
+            prompt_type=prompt_type,
+            title=title,  # 保持原始值，空则由 AI 生成
+            content=content,
+            audio_url=audio_url
+        )
+        
+        return {
+            "success": True,
+            "message": "私密内容已接收，开始处理",
+            "request_id": request_id
+        }
+        
+    except Exception as e:
+        logger.error(f"私密内容上传处理失败: {str(e)}")
+        return {
+            "success": False,
+            "message": str(e)
+        }

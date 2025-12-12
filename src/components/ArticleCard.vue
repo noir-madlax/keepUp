@@ -2,14 +2,21 @@
   <!-- 根据状态决定是否使用路由链接 -->
   <router-link 
     v-if="article.status === 'processed'" 
-    :to="`/article/${article.id}`"
+    :to="getArticleUrl()"
     custom
     v-slot="{ navigate }"
   >
     <div 
       class="card-container"
+      :class="{ 'private-card': article.is_private }"
       @click="handleClick($event, navigate)"
     >
+      <!-- 私密内容标记 -->
+      <div v-if="article.is_private" class="private-badge">
+        <span class="private-icon">🔒</span>
+        <span class="private-text">私密</span>
+      </div>
+      
       <!-- 已处理完成的文章卡片内容 -->
       <div class="card-top">
         <!-- 左侧标题 -->
@@ -184,6 +191,8 @@ interface Props {
     platform?: string
     requestId?: string
     viewer_count?: number
+    is_private?: boolean
+    private_slug?: string
   }
 }
 
@@ -298,7 +307,7 @@ const getErrorMessage = computed(() => {
 const getArticleImage = () => {
   // 如果图片加载失败，直接返回默认图片
   if (coverImageError.value) {
-    return '/images/covers/article_default.png'
+    return getDefaultCoverImage()
   }
   
   if (props.article.cover_image_url && 
@@ -307,6 +316,27 @@ const getArticleImage = () => {
       props.article.cover_image_url !== '无缩略图') {
     return props.article.cover_image_url
   }
+  return getDefaultCoverImage()
+}
+
+// 获取默认封面图片（私密内容根据类型显示不同图片）
+const getDefaultCoverImage = () => {
+  const channel = props.article.channel?.toLowerCase() || ''
+  
+  // 私密内容根据类型返回对应图片
+  if (props.article.is_private || channel.startsWith('private')) {
+    switch (channel) {
+      case 'private_general':
+        return '/images/covers/private_general.svg'
+      case 'private_parent':
+        return '/images/covers/private_parent.svg'
+      case 'private_customer':
+        return '/images/covers/private_customer.svg'
+      default:
+        return '/images/covers/private_general.svg'
+    }
+  }
+  
   return '/images/covers/article_default.png'
 }
 
@@ -340,7 +370,12 @@ const getChannelIcon = (channel: string | undefined): string => {
     wechat: 'wechat.svg',
     weixin: 'wechat.svg',
     webpage: 'web.svg',
-    xiaoyuzhou: 'xiaoyuzhou.svg'
+    xiaoyuzhou: 'xiaoyuzhou.svg',
+    // 私密内容图标
+    private_general: 'private_general.svg',
+    private_parent: 'private_parent.svg',
+    private_customer: 'private_customer.svg',
+    private: 'private_general.svg'
   }
   return iconMap[key] || 'channel_default.png'
 }
@@ -389,6 +424,14 @@ const getAuthorName = () => {
 
 const getTitle = () => {
   return props.article.title || t('upload.card.fallback.noTitle')
+}
+
+// 获取文章URL（私密内容使用 private_slug）
+const getArticleUrl = () => {
+  if (props.article.is_private && props.article.private_slug) {
+    return `/article/${props.article.private_slug}`
+  }
+  return `/article/${props.article.id}`
 }
 
 // 2024-03-19: 添加上传时间处理函数
@@ -756,4 +799,39 @@ const truncateUrl = (url?: string): string => {
   font-weight: 400;
   line-height: 1;
 }
+
+/* 私密内容卡片样式 */
+.card-container.private-card {
+  border: 1px solid rgba(100, 100, 120, 0.2);
+  background: linear-gradient(135deg, 
+    rgba(250, 250, 255, 1) 0%, 
+    rgba(245, 245, 250, 1) 100%
+  );
+}
+
+.card-container.private-card:hover {
+  border-color: rgba(100, 100, 120, 0.3);
+}
+
+.private-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: rgba(100, 100, 120, 0.1);
+  font-size: 12px;
+  color: #666;
+  align-self: flex-start;
+}
+
+.private-icon {
+  font-size: 12px;
+}
+
+.private-text {
+  font-family: "PingFang SC";
+  font-weight: 500;
+}
+
 </style>

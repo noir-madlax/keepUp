@@ -14,7 +14,7 @@ from tencentcloud.asr.v20190614 import asr_client, models
 
 class TencentASRClient:
     def __init__(self):
-        load_dotenv(dotenv_path="/Users/rigel/project/keepup-v2/backend/.env")
+        load_dotenv()  # 从项目根目录加载 .env
         self.secret_id = os.getenv("TENCENTCLOUD_SECRET_ID")
         self.secret_key = os.getenv("TENCENTCLOUD_SECRET_KEY")
         if not self.secret_id or not self.secret_key:

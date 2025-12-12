@@ -1,0 +1,16 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="200" height="200" fill="#f0faf5"/>
+<!-- 家长图标 -->
+<circle cx="70" cy="55" r="18" stroke="#10b981" stroke-width="4"/>
+<path d="M40 110v-10a30 30 0 0160 0v10" stroke="#10b981" stroke-width="4" stroke-linecap="round"/>
+<!-- 孩子图标 -->
+<circle cx="130" cy="65" r="12" stroke="#10b981" stroke-width="3"/>
+<path d="M110 110v-8a20 20 0 0140 0v8" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>
+<!-- 书本图标 -->
+<rect x="60" y="130" width="80" height="50" rx="4" stroke="#10b981" stroke-width="2" fill="none"/>
+<path d="M100 130v50" stroke="#10b981" stroke-width="2"/>
+<path d="M65 140h30" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+<path d="M65 150h25" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+<path d="M105 140h30" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+<path d="M105 150h25" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+</svg>

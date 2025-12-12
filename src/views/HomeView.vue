@@ -79,6 +79,12 @@
       v-model="showRAGModal"
     />
 
+    <!-- 私密上传模态框 -->
+    <PrivateUploadModal 
+      v-model="showPrivateUploadModal"
+      @submit="handlePrivateUploadSubmit"
+    />
+
     <!-- 添加 ArticleRequestForm 组件到顶层 -->
     <ArticleRequestForm 
       ref="articleRequestFormRef" hidden
@@ -172,15 +178,26 @@
                   </p>
                 </div>
 
-                <div class="relative flex-grow w-full">
-                  <UploadInput
-                    v-model="requestUrl"
-                    container-class="relative flex-grow w-full"
-                    input-class="w-full sm:flex-grow pl-3 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300"
-                    enter-icon-class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 opacity-100 transition-opacity duration-200 cursor-pointer hover:scale-110 transition-transform"
-                    @submit="handleSubmit"
-                    @showLogin="showLoginModal = true"
-                  />
+                <div class="relative flex-grow w-full flex items-center gap-2">
+                  <div class="relative flex-grow">
+                    <UploadInput
+                      v-model="requestUrl"
+                      container-class="relative flex-grow w-full"
+                      input-class="w-full sm:flex-grow pl-3 pr-12 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-000 focus:border-transparent bg-gray-100 transition-all duration-300"
+                      enter-icon-class="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 opacity-100 transition-opacity duration-200 cursor-pointer hover:scale-110 transition-transform"
+                      @submit="handleSubmit"
+                      @showLogin="showLoginModal = true"
+                    />
+                  </div>
+                  <!-- 私密上传按钮 -->
+                  <button 
+                    @click="handlePrivateUploadClick"
+                    class="private-upload-btn flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200"
+                    title="私密上传"
+                  >
+                    <span class="text-base">🔒</span>
+                    <span class="hidden sm:inline">私密上传</span>
+                  </button>
                 </div>
               </div>
       <!-- 文字区域- 老用户布局  -->
@@ -302,12 +319,14 @@ import { useI18n } from 'vue-i18n'
 import PullToRefresh from '../components/PullToRefresh.vue'
 import localforage from 'localforage'
 import RAGChatModal from '../components/RAGChatModal.vue'
+import PrivateUploadModal from '../components/PrivateUploadModal.vue'
 
 import UploadInput from '../components/UploadInput.vue'
 
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
 const showRAGModal = ref(false)
+const showPrivateUploadModal = ref(false)
 const selectedTag = ref<string>('all')
 const selectedChannels = ref<string[]>([])
 const selectedAuthors = ref<number[]>([])
@@ -479,6 +498,9 @@ const startPolling = () => {
                 author_id,
                 content,
                 original_link,
+                is_private,
+                private_slug,
+                user_id,
                 author:keep_authors(id, name, icon)
               `)
               .eq('is_visible', true)
@@ -489,7 +511,9 @@ const startPolling = () => {
             newArticlesData = []
           }
         } else {
-          const { data } = await supabase
+          // 查询公开内容 + 自己的私密内容
+          const userId = authStore.user?.id
+          let query = supabase
             .from('keep_articles')
             .select(`
               id,
@@ -502,11 +526,23 @@ const startPolling = () => {
               author_id,
               content,
               original_link,
+              is_private,
+              private_slug,
+              user_id,
               author:keep_authors(id, name, icon)
             `)
             .eq('is_visible', true)
             .order('created_at', { ascending: false })
             .limit(pageSize)
+          
+          // 添加私密内容过滤条件
+          if (userId) {
+            query = query.or(`is_private.eq.false,and(is_private.eq.true,user_id.eq.${userId})`)
+          } else {
+            query = query.eq('is_private', false)
+          }
+          
+          const { data } = await query
           newArticlesData = data || []
         }
 
@@ -640,8 +676,8 @@ const fetchArticles = async (isRefresh = false) => {
       currentPage.value = 1
     }
 
-    // 构建查询 - 尝试包含viewer_count字段，如果不存在则跳过
-    let queryFields = `
+    // 构建查询 - 包含私密内容相关字段
+    const queryFields = `
       id,
       title,
       cover_image_url,
@@ -652,35 +688,12 @@ const fetchArticles = async (isRefresh = false) => {
       author_id,
       content,
       original_link,
+      viewer_count,
+      is_private,
+      private_slug,
+      user_id,
       author:keep_authors(id, name, icon)
     `
-    
-    // 尝试查询是否有viewer_count字段
-    try {
-      // 先做一个小的测试查询来检查字段是否存在
-      await supabase
-        .from('keep_articles')
-        .select('id, viewer_count')
-        .limit(1)
-      
-      // 如果成功，则添加viewer_count字段
-      queryFields = `
-        id,
-        title,
-        cover_image_url,
-        channel,
-        created_at,
-        tags,
-        publish_date,
-        author_id,
-        content,
-        original_link,
-        viewer_count,
-        author:keep_authors(id, name, icon)
-      `
-    } catch (e) {
-      console.info('viewer_count字段不存在，使用默认值')
-    }
     
     // 获取文章数据
     let articlesData: any[] | null = null
@@ -711,12 +724,26 @@ const fetchArticles = async (isRefresh = false) => {
         articlesData = data || []
       }
     } else {
-        const { data, error } = await supabase
+      // 查询公开内容 + 自己的私密内容
+      // 使用 or 条件: is_private = false OR (is_private = true AND user_id = 当前用户)
+      const userId = authStore.user?.id
+      let query = supabase
         .from('keep_articles')
         .select(queryFields)
         .eq('is_visible', true)
         .order('created_at', { ascending: false })
         .range((currentPage.value - 1) * pageSize, currentPage.value * pageSize - 1)
+      
+      // 添加私密内容过滤条件
+      if (userId) {
+        // 登录用户：展示公开内容 + 自己的私密内容
+        query = query.or(`is_private.eq.false,and(is_private.eq.true,user_id.eq.${userId})`)
+      } else {
+        // 未登录用户：只展示公开内容
+        query = query.eq('is_private', false)
+      }
+      
+      const { data, error } = await query
       if (error) throw error
       articlesData = data || []
     }
@@ -1084,6 +1111,22 @@ const handleSubmit = (url: string) => {
     handleClearInput()
   }
 }
+
+// 处理私密上传按钮点击
+const handlePrivateUploadClick = () => {
+  if (!authStore.isAuthenticated) {
+    showLoginModal.value = true
+    return
+  }
+  showPrivateUploadModal.value = true
+}
+
+// 处理私密上传提交成功
+const handlePrivateUploadSubmit = (data: { requestId: number }) => {
+  console.log('私密上传提交成功:', data)
+  // 刷新文章列表
+  handleRefresh()
+}
 </script>
 
 <style scoped>
@@ -1311,6 +1354,26 @@ input::placeholder {
 /* 添加新的样式 */
 input::placeholder {
   color: #9CA3AF;
+}
+
+/* 私密上传按钮样式 */
+.private-upload-btn {
+  background: linear-gradient(135deg, 
+    rgba(100, 100, 120, 0.1) 0%, 
+    rgba(80, 80, 100, 0.15) 100%
+  );
+  border: 1px solid rgba(100, 100, 120, 0.2);
+  color: #555;
+}
+
+.private-upload-btn:hover {
+  background: linear-gradient(135deg, 
+    rgba(100, 100, 120, 0.15) 0%, 
+    rgba(80, 80, 100, 0.2) 100%
+  );
+  border-color: rgba(100, 100, 120, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 input:focus::placeholder {

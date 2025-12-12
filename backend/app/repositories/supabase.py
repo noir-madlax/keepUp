@@ -597,3 +597,31 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"更新请求记录文章ID失败: {str(e)}", exc_info=True)
             raise
+    
+    @classmethod
+    async def get_article_by_private_slug(cls, private_slug: str) -> Optional[Dict]:
+        """通过私密链接slug获取文章信息
+        
+        Args:
+            private_slug: 私密链接slug
+            
+        Returns:
+            Optional[Dict]: 文章信息或None
+        """
+        try:
+            client = cls.get_client()
+            response = client.table('keep_articles')\
+                .select('*')\
+                .eq('private_slug', private_slug)\
+                .single()\
+                .execute()
+            
+            if response.data:
+                return response.data
+            
+            logger.warning(f"找不到对应的私密文章: private_slug={private_slug}")
+            return None
+            
+        except Exception as e:
+            logger.error(f"获取私密文章失败: private_slug={private_slug}, error={str(e)}")
+            return None

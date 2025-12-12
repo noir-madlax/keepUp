@@ -165,6 +165,17 @@
               </div>
             </div>
 
+            <!-- 私密内容提示横幅 -->
+            <div 
+              v-if="article.is_private" 
+              class="private-content-banner mx-4 mb-4"
+            >
+              <div class="banner-content">
+                <span class="banner-icon">🔒</span>
+                <span class="banner-text">私密内容 · 仅通过链接可访问</span>
+              </div>
+            </div>
+
             <!-- 文章标题和作者信息 -->
             <div class="bg-white">
               <div class="w-full transition-all duration-300">
@@ -706,33 +717,46 @@ const fetchArticle = async () => {
   try {
     isLoading.value = true
     
-    // 并行执行文章信息和小节内容的查询
-    const [articleResult, sectionsResult] = await Promise.all([
-      // 获取文章基本信息
-      supabase
-        .from('keep_articles')
-        .select(`
-          *,
-          user_id,
-          author:keep_authors(id, name, icon)
-        `)
-        .eq('id', route.params.id)
-        .single(),
-        
-      // 获取当前语言的文章小节内容
-      supabase
-        .from('keep_article_sections')
-        .select('*')
-        .eq('article_id', route.params.id)
-        .eq('language', locale.value)
-        .order('sort_order')
-    ])
-
+    const articleId = route.params.id as string
+    
+    // 判断是数字ID还是私密slug
+    const isNumericId = /^\d+$/.test(articleId)
+    
+    // 首先获取文章基本信息
+    let articleQuery = supabase
+      .from('keep_articles')
+      .select(`
+        *,
+        user_id,
+        author:keep_authors(id, name, icon)
+      `)
+    
+    // 根据ID类型选择查询条件
+    if (isNumericId) {
+      articleQuery = articleQuery.eq('id', articleId)
+    } else {
+      // 使用 private_slug 查询
+      articleQuery = articleQuery.eq('private_slug', articleId)
+    }
+    
+    const articleResult = await articleQuery.single()
+    
     if (articleResult.error) throw articleResult.error
     
+    // 使用获取到的文章ID查询小节
+    const realArticleId = articleResult.data.id
+    
+    // 获取当前语言的文章小节内容
+    const sectionsResult = await supabase
+      .from('keep_article_sections')
+      .select('*')
+      .eq('article_id', realArticleId)
+      .eq('language', locale.value)
+      .order('sort_order')
+
     // 设置当前文章ID
-    if (route.params.id) {
-      chatStore.setCurrentArticle(Number(route.params.id))
+    if (realArticleId) {
+      chatStore.setCurrentArticle(Number(realArticleId))
     }
 
     // 如果当前语言没有内容,获取另一种语言的内容
@@ -742,7 +766,7 @@ const fetchArticle = async () => {
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('keep_article_sections')
         .select('*')
-        .eq('article_id', route.params.id)
+        .eq('article_id', realArticleId)
         .eq('language', fallbackLanguage)
         .order('sort_order')
 
@@ -754,17 +778,18 @@ const fetchArticle = async () => {
     article.value = articleResult.data
     sections.value = sectionsData || []
 
-    // 异步记录访问信息，不阻塞主流程
-    if (authStore.user?.id && route.params.id) {
-      recordArticleView(authStore.user.id, Number(route.params.id))
+    // 异步记录访问信息，不阻塞主流程（私密内容也记录）
+    if (authStore.user?.id && realArticleId) {
+      recordArticleView(authStore.user.id, Number(realArticleId))
         .catch(error => console.error('记录访问失败:', error))
     }
 
     // 记录访问事件
     trackEvent('article_view', {
-      article_id: route.params.id,
+      article_id: realArticleId,
       title: article.value?.title,
-      channel: article.value?.channel
+      channel: article.value?.channel,
+      is_private: article.value?.is_private
     })
 
   } catch (error) {
@@ -2724,5 +2749,33 @@ img {
   .article-content {
     padding-right: calc(1rem + 12px);
   }
+}
+
+/* 私密内容横幅样式 */
+.private-content-banner {
+  background: linear-gradient(135deg, 
+    rgba(100, 100, 120, 0.08) 0%, 
+    rgba(80, 80, 100, 0.12) 100%
+  );
+  border: 1px solid rgba(100, 100, 120, 0.15);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 16px;
+}
+
+.private-content-banner .banner-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.private-content-banner .banner-icon {
+  font-size: 16px;
+}
+
+.private-content-banner .banner-text {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
 }
 </style>
