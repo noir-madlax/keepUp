@@ -19,7 +19,7 @@ class OpenRouterService:
     # AWS Bedrock 配置
     BEDROCK_MODEL = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"  # Claude Sonnet 4.5
     BEDROCK_REGION = settings.AWS_BEDROCK_REGION
-    BEDROCK_MAX_TOKENS = 16000
+    BEDROCK_MAX_TOKENS = 64000
     
     @staticmethod
     async def get_prompt_data(lang: str, channel: str = None, content: str = None) -> Optional[str]:
