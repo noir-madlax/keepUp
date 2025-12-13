@@ -118,17 +118,18 @@
         <!-- URL显示 (仅对非失败状态显示) -->
         <div 
           v-if="article.status !== 'failed'"
-          class="url-text-new cursor-pointer hover:text-blue-500" 
-          @click="handleUrlClick"
+          class="url-text-new"
+          :class="{ 'cursor-pointer hover:text-blue-500': !isPrivateProcessing }"
+          @click="!isPrivateProcessing && handleUrlClick()"
         >
-          {{ truncateUrl(article.original_url) || t('upload.card.fallback.noLink') }}
+          {{ isPrivateProcessing ? '私密内容处理中...' : (truncateUrl(article.original_url) || t('upload.card.fallback.noLink')) }}
         </div>
       </div>
       
       <!-- 右侧封面 兜底图-->
       <div class="cover-container">
         <img 
-          src="/images/covers/article_default.png" 
+          :src="isPrivateProcessing ? '/images/covers/private_general.svg' : '/images/covers/article_default.png'" 
           alt="Article placeholder"
           class="cover-image"
         />
@@ -144,11 +145,12 @@
       <div class="author-info">
         <div class="author-icon-wrapper">
           <img 
-            :src="`/images/icons/${getPlatformIcon(article.platform)}`"
+            :src="isPrivateProcessing ? '/images/icons/private_general.svg' : `/images/icons/${getPlatformIcon(article.platform)}`"
             :alt="article.platform"
             class="platform-icon"
           />
         </div>
+        <span v-if="isPrivateProcessing" class="author-name">我的上传</span>
       </div>
 
       <!-- 右侧删除按钮 -->
@@ -169,8 +171,10 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { format, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns'
 import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
+const authStore = useAuthStore()
 
 // 2024-03-19: 更新 Props 类型定义
 interface Props {
@@ -204,6 +208,13 @@ const emit = defineEmits(['delete'])
 // 2024-03-25: 添加进度状态管理
 const progress = ref(0)
 let progressTimer: ReturnType<typeof setInterval> | null = null
+
+// 判断是否为私密内容处理中
+const isPrivateProcessing = computed(() => {
+  return props.article.status === 'processing' && 
+         (props.article.platform === 'private' || 
+          props.article.original_url?.startsWith('private://'))
+})
 
 // 图片加载失败状态管理
 const coverImageError = ref(false)
@@ -414,8 +425,18 @@ const handleAuthorImageError = (event: Event) => {
 }
 
 const getAuthorName = () => {
-  if (!props.article.author?.name || 
-      props.article.author.name === t('upload.card.fallback.unknownAuthor') || 
+  // 私密内容：只有当前用户是作者时才显示"我的上传"
+  if (props.article.is_private) {
+    const currentUserId = authStore.user?.id
+    const articleUserId = (props.article as any).user_id
+    if (currentUserId && articleUserId && currentUserId === articleUserId) {
+      return '我的上传'
+    }
+    // 别人分享的私密内容，显示"私密分享"
+    return '私密分享'
+  }
+  if (!props.article.author?.name ||
+      props.article.author.name === t('upload.card.fallback.unknownAuthor') ||
       props.article.author.name === 'Unknown') {
     return t('upload.card.fallback.unknownAuthor')
   }
@@ -482,6 +503,7 @@ const truncateUrl = (url?: string): string => {
 
 <style scoped>
 .card-container {
+  position: relative;
   display: flex;
   width: 100%;
   min-width: 340px;
@@ -511,6 +533,7 @@ const truncateUrl = (url?: string): string => {
   width: 100%;
   overflow: hidden;
 }
+
 
 .article-title {
   min-height: 48px;
@@ -814,24 +837,28 @@ const truncateUrl = (url?: string): string => {
 }
 
 .private-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 12px;
-  background: rgba(100, 100, 120, 0.1);
-  font-size: 12px;
-  color: #666;
-  align-self: flex-start;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: rgba(80, 80, 100, 0.75);
+  font-size: 10px;
+  color: #fff;
+  z-index: 10;
 }
 
 .private-icon {
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .private-text {
   font-family: "PingFang SC";
   font-weight: 500;
+  font-size: 10px;
 }
 
 </style>

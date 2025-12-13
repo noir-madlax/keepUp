@@ -54,6 +54,10 @@ export default {
   article: {
     viewOriginal: 'View Original',
     share: "Share",
+    delete: "删除",
+    deleteConfirm: "确定要删除这篇文章吗？删除后将不会在首页显示，但仍可通过链接访问。",
+    deleteSuccess: "文章已删除",
+    deleteFailed: "删除失败，请重试",
     copySuccess: "Link copied",
     sections: {
       title: 'Section Types',
@@ -161,7 +165,9 @@ export default {
     noMoreData: 'No more data',
     pleaseLogin: 'Please login first',
     edit: 'Edit Article',
-    cancel: 'Cancel',
+    cancel: '取消',
+    confirm: '确定',
+    warning: '警告',
     save: 'Save',
     close: 'Close',
     preview: 'Preview Mind Map',

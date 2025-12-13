@@ -340,7 +340,8 @@ class PrivateContentService:
                 'private_slug': private_slug,
                 'user_id': user_id,
                 'is_visible': True,
-                'tags': ['私密', '会议纪要']
+                'tags': ['私密', '会议纪要'],
+                'publish_date': datetime.now().strftime('%Y-%m-%d')  # 设置发布日期为当前日期
             }
             
             result = client.table('keep_articles').insert(article_data).execute()

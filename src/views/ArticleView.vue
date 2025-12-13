@@ -249,6 +249,23 @@
                           />
                           {{ t('article.share') }}
                         </button>
+
+                        <!-- 删除按钮 - 仅文章所有者可见 -->
+                        <button 
+                          v-if="isOwner"
+                          @click="handleDeleteArticle"
+                          class="inline-flex items-center px-2.5 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-red-600 bg-white hover:bg-red-50 rounded-full transition-colors border border-red-200 whitespace-nowrap"
+                        >
+                          <svg 
+                            class="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          {{ t('article.delete') }}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -539,7 +556,7 @@ import { format } from 'date-fns'
 import { marked } from 'marked'
 import { supabase } from '../supabaseClient'
 import { useAuthStore } from '../stores/auth'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import ArticleForm from '../components/ArticleForm.vue'
 import LanguageSwitch from '../components/LanguageSwitch.vue'
 import type { Article } from '../types/article'
@@ -668,6 +685,11 @@ const article = ref<Article | null>(null)
 const sections = ref<ArticleSection[]>([])
 const showEditModal = ref(false)
 const editForm = ref<Partial<Article>>({})
+
+// 判断当前用户是否是文章所有者
+const isOwner = computed(() => {
+  return !!(authStore.user?.id && article.value?.user_id && article.value.user_id === authStore.user.id)
+})
 
 // Image error states for cover and author avatar
 const articleCoverError = ref(false)
@@ -860,6 +882,41 @@ const submitEdit = async () => {
   } catch (error) {
     console.error('更新文章失败:', error)
     ElMessage.error(t('error.updateFailed'))
+  }
+}
+
+// 删除文章（软删除，设置 is_visible 为 false）
+const handleDeleteArticle = async () => {
+  try {
+    // 显示确认对话框
+    await ElMessageBox.confirm(
+      t('article.deleteConfirm'),
+      t('common.warning'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    )
+    
+    // 用户确认后执行删除
+    const { error } = await supabase
+      .from('keep_articles')
+      .update({ is_visible: false })
+      .eq('id', article.value?.id)
+      .eq('user_id', authStore.user?.id)  // 双重校验，确保只能删除自己的文章
+    
+    if (error) throw error
+    
+    ElMessage.success(t('article.deleteSuccess'))
+    router.push('/')
+  } catch (error: any) {
+    // 用户取消不提示错误
+    if (error === 'cancel' || error?.message === 'cancel') {
+      return
+    }
+    console.error('删除文章失败:', error)
+    ElMessage.error(t('article.deleteFailed'))
   }
 }
 
@@ -1503,6 +1560,21 @@ onUnmounted(() => {
 })
 
 const getArticleImage = (imageUrl: string | null | undefined) => {
+  // 私密内容使用对应的默认封面
+  if (article.value?.is_private) {
+    const channel = article.value?.channel?.toLowerCase() || ''
+    switch (channel) {
+      case 'private_general':
+        return '/images/covers/private_general.svg'
+      case 'private_parent':
+        return '/images/covers/private_parent.svg'
+      case 'private_customer':
+        return '/images/covers/private_customer.svg'
+      default:
+        return '/images/covers/private_general.svg'
+    }
+  }
+  
   if (articleCoverError.value) {
     return '/images/covers/article_default.png'
   }
@@ -1540,6 +1612,16 @@ const handleAuthorImageError = (event: Event) => {
 
 // 添加获取作者名称的方法
 const getAuthorName = () => {
+  // 私密内容：只有当前用户是作者时才显示"我的上传"
+  if (article.value?.is_private) {
+    const currentUserId = authStore.user?.id
+    const articleUserId = article.value?.user_id
+    if (currentUserId && articleUserId && currentUserId === articleUserId) {
+      return '我的上传'
+    }
+    // 别人分享的私密内容，显示"私密分享"
+    return '私密分享'
+  }
   if (!article.value?.author?.name || 
       article.value?.author?.name === t('upload.card.fallback.unknownAuthor') || 
       article.value?.author?.name === 'Unknown') {

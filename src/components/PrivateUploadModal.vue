@@ -22,6 +22,28 @@
             <span class="notice-text">仅你可见，分享链接后他人才能访问</span>
           </div>
 
+          <!-- 总结类型选择（放在最前面，强制用户先选择） -->
+          <div class="prompt-section">
+            <div class="section-label">总结类型 <span class="required-hint">*</span></div>
+            <div class="prompt-options-inline">
+              <label 
+                v-for="option in promptOptions" 
+                :key="option.value"
+                class="prompt-chip"
+                :class="{ active: promptType === option.value }"
+              >
+                <input 
+                  type="radio" 
+                  :value="option.value" 
+                  v-model="promptType"
+                  class="hidden-radio"
+                />
+                <span class="chip-icon">{{ option.icon }}</span>
+                <span class="chip-label">{{ option.label }}</span>
+              </label>
+            </div>
+          </div>
+
           <!-- 输入类型选择 -->
           <div class="input-type-section">
             <div class="type-tabs">
@@ -94,28 +116,6 @@
             <div class="text-counter">{{ textContent.length.toLocaleString() }}/100,000</div>
           </div>
 
-          <!-- 总结类型选择 -->
-          <div class="prompt-section">
-            <div class="section-label">总结类型</div>
-            <div class="prompt-options-inline">
-              <label 
-                v-for="option in promptOptions" 
-                :key="option.value"
-                class="prompt-chip"
-                :class="{ active: promptType === option.value }"
-              >
-                <input 
-                  type="radio" 
-                  :value="option.value" 
-                  v-model="promptType"
-                  class="hidden-radio"
-                />
-                <span class="chip-icon">{{ option.icon }}</span>
-                <span class="chip-label">{{ option.label }}</span>
-              </label>
-            </div>
-          </div>
-
           <!-- 标题输入 -->
           <div class="title-section">
             <div class="section-label">
@@ -166,7 +166,7 @@ const authStore = useAuthStore()
 const inputType = ref<'audio' | 'text'>('audio')
 const selectedFile = ref<File | null>(null)
 const textContent = ref('')
-const promptType = ref('general')
+const promptType = ref('')  // 默认空，强制用户选择
 const title = ref('')
 const isDragging = ref(false)
 const isSubmitting = ref(false)
@@ -176,11 +176,14 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const promptOptions = [
   { value: 'general', label: '通用会议纪要', icon: '🎯' },
   { value: 'parent', label: '家长会纪要', icon: '👨‍👩‍👧' },
-  { value: 'customer', label: '客户会议纪要', icon: '💼' }
+  { value: 'customer', label: '客户商机分析纪要', icon: '💼' }
 ]
 
 // 计算属性
 const canSubmit = computed(() => {
+  // 必须选择总结类型
+  if (!promptType.value) return false
+  
   if (inputType.value === 'audio') {
     return selectedFile.value !== null
   } else {
@@ -200,7 +203,7 @@ const resetForm = () => {
   inputType.value = 'audio'
   selectedFile.value = null
   textContent.value = ''
-  promptType.value = 'general'
+  promptType.value = ''  // 重置为空，强制再次选择
   title.value = ''
   isDragging.value = false
 }
@@ -270,7 +273,7 @@ const handleSubmit = async () => {
     const formData = new FormData()
     formData.append('input_type', inputType.value)
     formData.append('prompt_type', promptType.value)
-    formData.append('title', title.value || '私密会议纪要')
+    formData.append('title', title.value.trim())  // 传空字符串让后端用 LLM 生成标题
     formData.append('user_id', authStore.user.id)
     
     if (inputType.value === 'audio' && selectedFile.value) {
@@ -287,9 +290,11 @@ const handleSubmit = async () => {
     const result = await response.json()
     
     if (result.success) {
+      // 成功后先重置提交状态，然后关闭 modal 并通知父组件
+      isSubmitting.value = false
+      emit('update:modelValue', false)  // 直接关闭 modal
+      resetForm()
       emit('submit', { requestId: result.request_id })
-      closeModal()
-      alert('提交成功！正在处理中，请稍候查看结果。')
     } else {
       alert(`提交失败: ${result.message}`)
     }
@@ -416,6 +421,11 @@ watch(() => props.modelValue, (newVal) => {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+.required-hint {
+  color: #ef4444;
+  font-weight: 600;
 }
 
 .title-hint {

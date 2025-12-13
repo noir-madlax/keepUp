@@ -50,6 +50,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   const signInWithOAuth = async (provider: Provider) => {
     try {
+      // 保存当前页面路径，用于登录后返回
+      const currentPath = window.location.pathname + window.location.search
+      if (currentPath !== '/' && currentPath !== '/auth/callback') {
+        localStorage.setItem('authRedirectUrl', currentPath)
+      }
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {

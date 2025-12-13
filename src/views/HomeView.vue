@@ -724,9 +724,33 @@ const fetchArticles = async (isRefresh = false) => {
         articlesData = data || []
       }
     } else {
-      // 查询公开内容 + 自己的私密内容
-      // 使用 or 条件: is_private = false OR (is_private = true AND user_id = 当前用户)
+      // 查询公开内容 + 自己的私密内容 + 访问过的别人的私密内容
       const userId = authStore.user?.id
+      
+      // 先获取用户访问过的私密文章 ID
+      let viewedPrivateIds: number[] = []
+      if (userId) {
+        const { data: viewedData } = await supabase
+          .from('keep_article_views')
+          .select('article_id')
+          .eq('user_id', userId)
+        
+        if (viewedData && viewedData.length > 0) {
+          // 获取这些文章中的私密文章 ID
+          const articleIds = viewedData.map((v: any) => v.article_id)
+          const { data: privateArticles } = await supabase
+            .from('keep_articles')
+            .select('id')
+            .in('id', articleIds)
+            .eq('is_private', true)
+            .neq('user_id', userId)  // 排除自己的私密文章（已经在主查询中）
+          
+          if (privateArticles) {
+            viewedPrivateIds = privateArticles.map((a: any) => a.id)
+          }
+        }
+      }
+      
       let query = supabase
         .from('keep_articles')
         .select(queryFields)
@@ -736,8 +760,12 @@ const fetchArticles = async (isRefresh = false) => {
       
       // 添加私密内容过滤条件
       if (userId) {
-        // 登录用户：展示公开内容 + 自己的私密内容
-        query = query.or(`is_private.eq.false,and(is_private.eq.true,user_id.eq.${userId})`)
+        // 登录用户：展示公开内容 + 自己的私密内容 + 访问过的别人的私密内容
+        if (viewedPrivateIds.length > 0) {
+          query = query.or(`is_private.eq.false,and(is_private.eq.true,user_id.eq.${userId}),id.in.(${viewedPrivateIds.join(',')})`)
+        } else {
+          query = query.or(`is_private.eq.false,and(is_private.eq.true,user_id.eq.${userId})`)
+        }
       } else {
         // 未登录用户：只展示公开内容
         query = query.eq('is_private', false)
@@ -1122,10 +1150,15 @@ const handlePrivateUploadClick = () => {
 }
 
 // 处理私密上传提交成功
-const handlePrivateUploadSubmit = (data: { requestId: number }) => {
+const handlePrivateUploadSubmit = async (data: { requestId: number }) => {
   console.log('私密上传提交成功:', data)
-  // 刷新文章列表
-  handleRefresh()
+  
+  // 不创建 optimisticCard，直接刷新文章列表获取处理中的请求
+  // 这样可以避免 optimisticCard 和数据库记录同时显示导致两张卡片的问题
+  await fetchArticles(true)
+  
+  // 开始轮询更新状态
+  startPolling()
 }
 </script>
 

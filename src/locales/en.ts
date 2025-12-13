@@ -54,6 +54,10 @@ export default {
   article: {
     viewOriginal: 'View Original',
     share: "Share",
+    delete: "Delete",
+    deleteConfirm: "Are you sure you want to delete this article? It will be hidden from the homepage but still accessible via link.",
+    deleteSuccess: "Article deleted",
+    deleteFailed: "Failed to delete, please try again",
     copySuccess: "Link copied",
     sections: {
       title: 'Section Types',
@@ -162,6 +166,8 @@ export default {
     pleaseLogin: 'Please login first',
     edit: 'Edit Article',
     cancel: 'Cancel',
+    confirm: 'Confirm',
+    warning: 'Warning',
     save: 'Save',
     close: 'Close',
     preview: 'Preview Mind Map',

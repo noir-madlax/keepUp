@@ -41,10 +41,14 @@ onMounted(async () => {
     
     console.log('Auth callback handled successfully, preparing to redirect')
     
-    // Normal login flow, redirect to home page
-    await router.push('/')
+    // 获取登录前保存的页面路径，如果没有则跳转首页
+    const redirectUrl = localStorage.getItem('authRedirectUrl') || '/'
+    localStorage.removeItem('authRedirectUrl')  // 清理
+    await router.push(redirectUrl)
   } catch (error) {
     console.error('Auth handling error:', error)
+    // 出错时也要清理保存的路径
+    localStorage.removeItem('authRedirectUrl')
     // On error, also redirect to home page
     await router.push('/')
   }
