@@ -4,6 +4,9 @@ cd /home/ec2-user/keepUp/backend
 git pull
 docker-compose up -d --build
 
+如果有安装后端的依赖，需要backend目录下，requirements.txt中添加新的依赖，
+添加新的依赖，让发布到aws的容器中也能安装新的依赖。
+
 docker-compose logs -f
  vim .env
  
