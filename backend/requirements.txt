@@ -44,4 +44,4 @@ youtube-transcript-api==1.1.0
 tencentcloud-sdk-python==3.0.1206
 
 # Gemini Deep Research API
-google-genai
+google-genai==1.33.0
