@@ -15,6 +15,8 @@ from app.utils.file_processor import process_file_content
 from ..repositories.article_views import ArticleViewsRepository
 from app.services.openrouter_service import OpenRouterService
 from app.services.private_content_service import PrivateContentService
+from app.services.deep_research_service import DeepResearchService
+from app.services.platform_parser.github import GitHubParser
 
 import asyncio
 import json
@@ -482,6 +484,187 @@ async def create_article_view_record(user_id: str, article_id: int):
         # 这里我们只记录错误，不抛出异常，因为这不是核心流程
         logger.error(f"创建文章浏览记录失败: {str(e)}", exc_info=True)
 
+
+async def process_github_agent_task(request: FetchRequest):
+    """
+    GitHub Agent 项目分析后台任务
+    
+    使用 Gemini Deep Research API 分析 GitHub 项目，
+    失败重试 1 次，然后按现有失败处理逻辑。
+    
+    Args:
+        request: 包含 GitHub URL 的请求对象
+    """
+    MAX_RETRIES = 2  # 初次 + 1次重试
+    
+    try:
+        await RequestLogger.info(
+            request_id=request.id,
+            step=Steps.PROCESS_START,
+            message=f"开始 GitHub Agent 分析: URL={request.original_url}"
+        )
+        
+        # 1. 提取项目名称作为标题
+        project_title = GitHubParser.extract_project_name(request.original_url)
+        
+        # 2. 创建/获取作者信息
+        author_name = "GitHub Agent Analysis"
+        author = await SupabaseService.get_author_by_name(author_name)
+        if not author:
+            author = await SupabaseService.create_author({
+                "name": author_name,
+                "icon": "/images/icons/github.svg"
+            })
+        
+        # 3. 创建文章基础记录（状态为 pending）
+        # 使用字典直接插入，避免模型字段限制
+        from app.repositories.supabase import SupabaseService as SupabaseClient
+        client = SupabaseClient.get_client()
+        
+        article_insert_data = {
+            "title": project_title,
+            "content": "",
+            "channel": "github",
+            "original_link": request.original_url,
+            "user_id": request.user_id,
+            "author_id": author["id"],
+            "is_visible": False,
+            "cover_image_url": "/images/covers/article_default.png",
+            "tags": ["GitHub", "Agent分析"]
+        }
+        
+        try:
+            # 直接使用 Supabase client 插入文章
+            result = client.table("keep_articles").insert(article_insert_data).execute()
+            if not result.data:
+                raise ValueError("创建文章失败")
+            article = result.data[0]
+            
+            await SupabaseService.update_article_id(request.id, article['id'])
+            
+            await RequestLogger.info(
+                request.id,
+                Steps.PROCESS_START,
+                f"文章记录创建成功: article_id={article['id']}"
+            )
+        except Exception as e:
+            error_msg = str(e)
+            await RequestLogger.error(request.id, Steps.PROCESS_ERROR, error_msg, e)
+            await SupabaseService.update_status(request.id, "failed", error_msg)
+            return
+        
+        # 4. 调用 Deep Research API（含重试逻辑）
+        research_result = None
+        last_error = None
+        
+        for attempt in range(MAX_RETRIES):
+            try:
+                await RequestLogger.info(
+                    request.id,
+                    Steps.SUMMARY_PROCESS,
+                    f"Deep Research 第 {attempt + 1} 次尝试..."
+                )
+                
+                research_result = await DeepResearchService.run_deep_research(
+                    github_url=request.original_url,
+                    request_id=request.id
+                )
+                
+                if research_result["success"]:
+                    await RequestLogger.info(
+                        request.id,
+                        Steps.SUMMARY_PROCESS,
+                        f"Deep Research 成功完成，耗时 {int(research_result['elapsed_seconds'])} 秒"
+                    )
+                    break
+                else:
+                    last_error = research_result.get("error", "未知错误")
+                    await RequestLogger.info(
+                        request.id,
+                        Steps.SUMMARY_PROCESS,
+                        f"Deep Research 第 {attempt + 1} 次失败: {last_error}"
+                    )
+                    
+            except Exception as e:
+                last_error = str(e)
+                await RequestLogger.info(
+                    request.id,
+                    Steps.SUMMARY_PROCESS,
+                    f"Deep Research 第 {attempt + 1} 次异常: {last_error}"
+                )
+            
+            # 如果不是最后一次尝试，等待后重试
+            if attempt < MAX_RETRIES - 1:
+                await asyncio.sleep(10)  # 等待 10 秒后重试
+        
+        # 5. 检查结果
+        if not research_result or not research_result["success"]:
+            error_msg = f"GitHub Agent 分析失败（已重试 {MAX_RETRIES} 次）: {last_error}"
+            await RequestLogger.error(
+                request.id,
+                Steps.PROCESS_ERROR,
+                error_msg,
+                Exception(error_msg)
+            )
+            await SupabaseService.update_status(request.id, "failed", error_msg)
+            return
+        
+        # 6. 保存分析报告到文章 sections
+        report_content = research_result["report"]
+        
+        # 创建 "总结" section 存储完整报告
+        sections = [
+            {
+                "article_id": article['id'],
+                "section_type": "总结",
+                "content": report_content,
+                "language": "zh",
+                "sort_order": 1
+            }
+        ]
+        
+        await SupabaseService.create_article_sections(article['id'], sections)
+        
+        await RequestLogger.info(
+            request.id,
+            Steps.SUMMARY_PROCESS,
+            f"分析报告已保存，长度: {len(report_content)} 字符"
+        )
+        
+        # 7. 更新文章为可见状态
+        await SupabaseService.update_article_visibility(article['id'], True)
+        
+        # 8. 更新请求状态为完成
+        await SupabaseService.update_status(request.id, "processed")
+        
+        # 9. 创建浏览记录
+        await create_article_view_record(request.user_id, article['id'])
+        
+        await RequestLogger.info(
+            request.id,
+            Steps.PROCESS_COMPLETE,
+            "GitHub Agent 分析完成",
+            metadata={
+                "article_id": article['id'],
+                "report_length": len(report_content),
+                "elapsed_seconds": research_result["elapsed_seconds"]
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"GitHub Agent 分析失败: request_id={request.id}, error={str(e)}")
+        await RequestLogger.error(
+            request.id,
+            Steps.PROCESS_ERROR,
+            "GitHub Agent 分析异常",
+            e
+        )
+        await SupabaseService.update_status(
+            request.id,
+            "failed",
+            error_message=str(e)
+        )
+
 @router.post("/workflow/process")
 async def process_workflow(request: FetchRequest, background_tasks: BackgroundTasks):
     """接收请求并立即返回"""
@@ -556,7 +739,11 @@ async def process_workflow(request: FetchRequest, background_tasks: BackgroundTa
         request.original_url = original_url
         
         # 7. 异步启动处理任务
-        background_tasks.add_task(process_article_task, request)
+        # GitHub 平台使用专用的 Deep Research 处理流程
+        if platform == "github":
+            background_tasks.add_task(process_github_agent_task, request)
+        else:
+            background_tasks.add_task(process_article_task, request)
         
         await RequestLogger.info(
             request.id,

@@ -382,6 +382,7 @@ const getChannelIcon = (channel: string | undefined): string => {
     weixin: 'wechat.svg',
     webpage: 'web.svg',
     xiaoyuzhou: 'xiaoyuzhou.svg',
+    github: 'github.svg',
     // 私密内容图标
     private_general: 'private_general.svg',
     private_parent: 'private_parent.svg',
@@ -402,7 +403,8 @@ const getPlatformIcon = (platform: string | undefined) => {
     apple: 'apple-podcast.svg',
     'apple podcast': 'apple-podcast.svg',
     webpage: 'web.svg',
-    xiaoyuzhou: 'xiaoyuzhou.svg'
+    xiaoyuzhou: 'xiaoyuzhou.svg',
+    github: 'github.svg'
   }
   return iconMap[key] || 'default.svg'
 }

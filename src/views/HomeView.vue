@@ -132,7 +132,7 @@
           <!-- If you are adding a new supported platform for the homepage input row, update here AND the old-user row below. -->
           <div class="flex justify-center items-center gap-6 mb-6">
             <img 
-              v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'bilibili', 'xiaoyuzhou']"
+              v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'bilibili', 'xiaoyuzhou', 'github']"
               :key="channel"
               :src="`/images/icons/${channel}.svg`"
               :alt="channel"
@@ -165,7 +165,7 @@
                   <!-- Update this list when adding a supported platform for the homepage input row. -->
                   <div class="flex items-center gap-2 sm:gap-3">
                     <img 
-                      v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'wechat', 'bilibili', 'xiaoyuzhou']"
+                      v-for="channel in ['youtube', 'apple-podcast', 'spotify', 'wechat', 'bilibili', 'xiaoyuzhou', 'github']"
                       :key="channel"
                       :src="`/images/icons/${channel}.svg`"
                       :alt="channel"
@@ -661,6 +661,9 @@ const getPlatformFromUrl = (url: string): string => {
   }
   if (url.includes('podcasts.apple.com')) {
     return 'apple'
+  }
+  if (url.includes('github.com')) {
+    return 'github'
   }
   return 'webpage'
 }

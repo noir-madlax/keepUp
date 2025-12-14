@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     # OpenRouter Configuration
     OPENROUTER_API_KEY: str
     
+    # Gemini Configuration (Deep Research)
+    GEMINI_API_KEY: str = ""
+    
     # 微信文章API配置（极致了）
     DAJIALA_KEY: str
     DAJIALA_VERIFYCODE: str

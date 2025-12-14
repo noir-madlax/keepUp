@@ -8,12 +8,16 @@ from .platform_parser.webpage import WebPageParser
 from .platform_parser.xiaoyuzhou import XiaoYuZhouParser
 from .platform_parser.wechat import WeChatParser
 from .platform_parser.bilibili import BilibiliParser
+from .platform_parser.github import GitHubParser
 
 class ContentResolver:
     """内容解析服务"""
     
     def __init__(self):
+        # 注意：GitHub Parser 优先级最高，放在最前面
+        # 这样可以确保所有 GitHub 链接都走 Deep Research 分析
         self.parsers: list[PlatformParser] = [
+            GitHubParser(),  # GitHub 优先（Deep Research 分析）
             WeChatParser(),
             BilibiliParser(),
             XiaoYuZhouParser(),
