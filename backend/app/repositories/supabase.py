@@ -575,6 +575,30 @@ class SupabaseService:
             raise
     
     @classmethod
+    async def update_article_user_id(cls, article_id: int, user_id: str) -> None:
+        """更新文章的用户ID
+        
+        Args:
+            article_id: 文章ID
+            user_id: 用户ID
+        """
+        try:
+            client = cls.get_client()
+            
+            result = client.table('keep_articles').update({
+                'user_id': user_id
+            }).eq('id', article_id).execute()
+            
+            if not result.data:
+                raise Exception(f"未找到 ID 为 {article_id} 的文章")
+            
+            logger.info(f"文章用户ID更新成功: article_id={article_id}, user_id={user_id}")
+            
+        except Exception as e:
+            logger.error(f"更新文章用户ID失败: {str(e)}", exc_info=True)
+            raise
+    
+    @classmethod
     async def update_article_id(cls, request_id: int, article_id: int) -> None:
         """更新请求记录的文章ID
         

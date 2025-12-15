@@ -12,7 +12,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   const loadUser = async () => {
     try {
-      if (isInitialized.value) return
+      // 2024-12-15: 修复登录状态检查问题
+      // 只有当「已初始化」且「用户已存在」时才跳过，避免 onAuthStateChange 未触发时误判为未登录
+      if (isInitialized.value && user.value) {
+        return
+      }
 
       // 2024-03-24: 检查 localStorage 中是否有有效的 token
       const hasToken = Object.keys(localStorage).some(key => 
@@ -23,6 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (!hasToken) {
         console.log('[loadUser] No valid token found in localStorage')
         user.value = null
+        isInitialized.value = true
         return
       }
 

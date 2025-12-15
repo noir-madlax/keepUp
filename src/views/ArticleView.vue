@@ -1189,10 +1189,9 @@ const recordArticleView = async (userId: string, articleId: number) => {
 // 修改组件挂载时的事件监听
 onMounted(async () => {
   try {
-    // 确保用户状态已加载
-    if (!authStore.isInitialized) {
-      await authStore.loadUser()
-    }
+    // 2024-12-15: 与 HomeView 保持一致，直接调用 loadUser
+    // 不在外部检查 isInitialized，让 loadUser 内部处理
+    await authStore.loadUser()
 
     // 如果未登录，显示登录框并返回
     if (!authStore.isAuthenticated) {

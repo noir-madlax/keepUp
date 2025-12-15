@@ -405,6 +405,10 @@ async def process_article_task(request: FetchRequest):
             article_data.original_link = request.original_url  # 使用原始 URL
             article = await SupabaseService.create_article(article_data)
             
+            # 更新文章的用户ID（用于删除按钮显示判断）
+            if request.user_id:
+                await SupabaseService.update_article_user_id(article['id'], request.user_id)
+            
             # 更新请求记录的文章ID
             await SupabaseService.update_article_id(request.id, article['id'])
             
