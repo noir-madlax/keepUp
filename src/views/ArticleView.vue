@@ -1191,7 +1191,7 @@ onMounted(async () => {
   try {
     // 2024-12-15: 与 HomeView 保持一致，直接调用 loadUser
     // 不在外部检查 isInitialized，让 loadUser 内部处理
-    await authStore.loadUser()
+      await authStore.loadUser()
 
     // 如果未登录，显示登录框并返回
     if (!authStore.isAuthenticated) {

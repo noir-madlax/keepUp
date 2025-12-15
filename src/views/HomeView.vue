@@ -307,7 +307,8 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, onActivated, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, onActivated, nextTick, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import ArticleCard from '../components/ArticleCard.vue'
 import { supabase } from '../supabaseClient'
 import { ElMessage } from 'element-plus'
@@ -323,6 +324,7 @@ import PrivateUploadModal from '../components/PrivateUploadModal.vue'
 
 import UploadInput from '../components/UploadInput.vue'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const showLoginModal = ref(false)
 const showRAGModal = ref(false)
@@ -935,13 +937,72 @@ const handleLoginSuccess = async () => {
   }
 }
 
+// 2024-12-15: 检测是否是OAuth回调（URL包含OAuth参数）
+const isOAuthCallback = () => {
+  const hash = window.location.hash
+  const search = window.location.search
+  // 检查 implicit flow (hash中有access_token) 或 authorization code flow (search中有code)
+  return hash.includes('access_token') || 
+         hash.includes('refresh_token') || 
+         search.includes('code=')
+}
+
+// 2024-12-15: 处理OAuth回调，等待session建立并重定向到原页面
+const handleOAuthCallbackInHome = async () => {
+  console.log('[handleOAuthCallbackInHome] Detected OAuth callback in home page')
+  
+  // 清除URL中的OAuth参数，避免刷新时重复处理
+  if (window.location.hash) {
+    window.history.replaceState(null, '', window.location.pathname)
+  }
+  
+  // 等待 onAuthStateChange 处理完成（最多等待3秒）
+  let attempts = 0
+  const maxAttempts = 30  // 30 * 100ms = 3秒
+  
+  while (!authStore.isAuthenticated && attempts < maxAttempts) {
+    await new Promise(resolve => setTimeout(resolve, 100))
+    attempts++
+  }
+  
+  console.log('[handleOAuthCallbackInHome] Auth status after waiting:', authStore.isAuthenticated)
+  
+  if (authStore.isAuthenticated) {
+    // 检查是否需要重定向到原页面
+    const redirectUrl = localStorage.getItem('authRedirectUrl')
+    if (redirectUrl && redirectUrl !== '/') {
+      console.log('[handleOAuthCallbackInHome] Redirecting to:', redirectUrl)
+      localStorage.removeItem('authRedirectUrl')
+      await router.push(redirectUrl)
+      return true  // 表示已处理并跳转
+    }
+    localStorage.removeItem('authRedirectUrl')
+  }
+  
+  return false  // 表示留在首页
+}
+
 // 修改 onMounted 钩子
 onMounted(async () => {
   console.log('[onMounted] Component mounting, auth status:', authStore.isAuthenticated)
   
-  // 先检查登录状态
-  await authStore.loadUser()
-  console.log('[onMounted] User loaded, new auth status:', authStore.isAuthenticated)
+  // 2024-12-15: 检测是否是OAuth回调（Supabase可能将用户重定向到首页而不是/auth/callback）
+  if (isOAuthCallback()) {
+    const redirected = await handleOAuthCallbackInHome()
+    if (redirected) {
+      return  // 已跳转到其他页面，不继续执行
+    }
+    // OAuth处理完成，如果已登录则跳过loadUser直接进入数据加载
+    if (authStore.isAuthenticated) {
+      console.log('[onMounted] OAuth callback handled, user authenticated')
+    }
+  }
+  
+  // 检查登录状态（OAuth回调已处理的情况下可能已经登录）
+  if (!authStore.isAuthenticated) {
+    await authStore.loadUser()
+    console.log('[onMounted] User loaded, new auth status:', authStore.isAuthenticated)
+  }
   
   if (!authStore.isAuthenticated) {
     showLoginModal.value = true
