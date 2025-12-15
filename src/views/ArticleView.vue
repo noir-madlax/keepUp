@@ -776,9 +776,13 @@ const fetchArticle = async () => {
       .eq('language', locale.value)
       .order('sort_order')
 
-    // 设置当前文章ID
+    // 设置当前文章ID和元信息（用于分享功能）
     if (realArticleId) {
-      chatStore.setCurrentArticle(Number(realArticleId))
+      chatStore.setCurrentArticle(Number(realArticleId), {
+        title: articleResult.data.title || '',
+        authorName: articleResult.data.author?.name || '',
+        isPrivate: articleResult.data.is_private || false
+      })
     }
 
     // 如果当前语言没有内容,获取另一种语言的内容

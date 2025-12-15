@@ -172,6 +172,13 @@ export const useChatStore = defineStore('chat', () => {
   const toolbarVisible = ref(false)
   const toolbarPosition = ref<ToolbarPosition>({ top: 0, left: 0 })
   const selectedText = ref('')
+  
+  // 文章元信息（用于分享功能）
+  const currentArticleInfo = ref<{
+    title: string
+    authorName: string
+    isPrivate: boolean
+  } | null>(null)
   const isAIResponding = ref(false)
   const isAIInitialLoading = ref(false)
   const lastCreatedSession = ref<ChatSession | null>(null)
@@ -520,13 +527,22 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   // 2024-01-20 11:35: 添加设置当前文章ID的方法
-  const setCurrentArticle = (articleId: number) => {
+  // 2024-12-15: 扩展支持文章元信息（用于分享功能）
+  const setCurrentArticle = (
+    articleId: number, 
+    articleInfo?: { title: string; authorName: string; isPrivate: boolean }
+  ) => {
     // 2024-03-22 15:30: 如果当前有会话且属于不同文章，清除会话
     if (currentSession.value && currentSession.value.article_id !== articleId) {
       currentSession.value = null
       hasActiveSession.value = false
     }
     currentArticleId.value = articleId
+    
+    // 存储文章元信息
+    if (articleInfo) {
+      currentArticleInfo.value = articleInfo
+    }
   }
 
   // 2024-01-20 11:35: 添加切换聊天窗口状态的方法
@@ -640,6 +656,8 @@ export const useChatStore = defineStore('chat', () => {
     reloadCurrentAIMessage,
     abortChat,
     setCurrentArticle,
-    toggleChatWindow
+    toggleChatWindow,
+    currentArticleId,
+    currentArticleInfo
   }
 }) 

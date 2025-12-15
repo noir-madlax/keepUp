@@ -34,14 +34,12 @@
               <span>{{ t('chat.actions.expand') }}</span>
             </button>
 
-            <!-- 给出原文按钮 - 绿色气泡 -->
+            <!-- 分享按钮 -->
             <button
-              @click="handleChatAction('ORIGINAL')"
+              @click="handleShare"
               class="bubble-button"
-              :class="{ 'disabled-button': chatStore.isAIResponding }"
-              :disabled="chatStore.isAIResponding"
             >
-              <img src="/images/icons/original.svg" alt="Original" class="w-4 h-4" />
+              <img src="/images/icons/share.svg" alt="Share" class="w-4 h-4" />
               <span>{{ t('chat.actions.original') }}</span>
             </button>
 
@@ -68,6 +66,7 @@ import { useChatStore } from '../../stores/chat'
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PromptType } from '../../types/chat'
+import { ElMessage } from 'element-plus'
 
 // 2024-03-14 21:30: 添加disabled prop
 const props = defineProps<{
@@ -116,10 +115,6 @@ const CHAT_ACTIONS = {
     label: t('chat.actions.expand'),
     prompt: t('chat.actions.expand_prompt')
   },
-  ORIGINAL: {
-    label: t('chat.actions.original'),
-    prompt: t('chat.actions.original_prompt')
-  },
   EXPLAIN: {
     label: t('chat.actions.explain_selection'),
     prompt: t('chat.actions.explain_selection_prompt')
@@ -152,9 +147,6 @@ const handleChatAction = async (action: keyof typeof CHAT_ACTIONS) => {
       case 'EXPAND':
         promptType = PromptType.ELABORATE
         break
-      case 'ORIGINAL':
-        promptType = PromptType.ORIGIN
-        break
       case 'EXPLAIN':
         promptType = PromptType.EXPLAIN
         break
@@ -168,6 +160,47 @@ const handleChatAction = async (action: keyof typeof CHAT_ACTIONS) => {
     console.error('发送消息失败:', error)
     chatStore.isInitializing = false
     chatStore.isAIResponding = false
+  }
+}
+
+// 处理分享按钮点击
+const handleShare = async () => {
+  const selection = window.getSelection()
+  const selectedText = selection?.toString().trim()
+  
+  if (!selectedText) {
+    console.warn('没有选中文本')
+    return
+  }
+
+  const articleInfo = chatStore.currentArticleInfo
+  const articleId = chatStore.currentArticleId
+  
+  if (!articleInfo || !articleId) {
+    console.warn('没有文章信息')
+    return
+  }
+
+  // 截断选中内容（前100字）
+  const truncatedText = selectedText.length > 100 
+    ? selectedText.slice(0, 100) + '...' 
+    : selectedText
+
+  // 生成分享文案
+  let shareText: string
+  if (articleInfo.isPrivate || !articleInfo.authorName) {
+    // 私密文章或没有作者名，不显示作者
+    shareText = `📢《${articleInfo.title}》中提到：\n"${truncatedText}"\n🔗 ${window.location.origin}/article/${articleId}`
+  } else {
+    // 正常文章
+    shareText = `📢 ${articleInfo.authorName} 在《${articleInfo.title}》中提到：\n"${truncatedText}"\n🔗 ${window.location.origin}/article/${articleId}`
+  }
+
+  try {
+    await navigator.clipboard.writeText(shareText)
+    ElMessage.success(t('article.copySuccess'))
+  } catch (err) {
+    console.error('复制失败:', err)
   }
 }
 </script>
