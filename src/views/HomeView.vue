@@ -513,8 +513,33 @@ const startPolling = () => {
             newArticlesData = []
           }
         } else {
-          // 查询公开内容 + 自己的私密内容
+          // 查询公开内容 + 自己的私密内容 + 访问过的别人的私密内容
           const userId = authStore.user?.id
+          
+          // 先获取用户访问过的私密文章 ID
+          let viewedPrivateIds: number[] = []
+          if (userId) {
+            const { data: viewedData } = await supabase
+              .from('keep_article_views')
+              .select('article_id')
+              .eq('user_id', userId)
+            
+            if (viewedData && viewedData.length > 0) {
+              // 获取这些文章中的私密文章 ID（过滤掉 null 值）
+              const articleIds = viewedData.map((v: any) => v.article_id).filter((id: any) => id !== null)
+              const { data: privateArticles } = await supabase
+                .from('keep_articles')
+                .select('id')
+                .in('id', articleIds)
+                .eq('is_private', true)
+                .neq('user_id', userId)  // 排除自己的私密文章（已经在主查询中）
+              
+              if (privateArticles) {
+                viewedPrivateIds = privateArticles.map((a: any) => a.id)
+              }
+            }
+          }
+          
           let query = supabase
             .from('keep_articles')
             .select(`
@@ -539,7 +564,12 @@ const startPolling = () => {
           
           // 添加私密内容过滤条件
           if (userId) {
-            query = query.or(`is_private.eq.false,and(is_private.eq.true,user_id.eq.${userId})`)
+            // 登录用户：展示公开内容 + 自己的私密内容 + 访问过的别人的私密内容
+            if (viewedPrivateIds.length > 0) {
+              query = query.or(`is_private.eq.false,and(is_private.eq.true,user_id.eq.${userId}),id.in.(${viewedPrivateIds.join(',')})`)
+            } else {
+              query = query.or(`is_private.eq.false,and(is_private.eq.true,user_id.eq.${userId})`)
+            }
           } else {
             query = query.eq('is_private', false)
           }
@@ -741,8 +771,8 @@ const fetchArticles = async (isRefresh = false) => {
           .eq('user_id', userId)
         
         if (viewedData && viewedData.length > 0) {
-          // 获取这些文章中的私密文章 ID
-          const articleIds = viewedData.map((v: any) => v.article_id)
+          // 获取这些文章中的私密文章 ID（过滤掉 null 值）
+          const articleIds = viewedData.map((v: any) => v.article_id).filter((id: any) => id !== null)
           const { data: privateArticles } = await supabase
             .from('keep_articles')
             .select('id')
