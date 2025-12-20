@@ -86,6 +86,9 @@ class ChatService:
     async def _get_article_content(self, article_id: int) -> str:
         """获取文章内容
         
+        优先从 keep_article_requests.content 获取，
+        如果为空则从 keep_articles.content 获取（支持私有文章）。
+        
         Args:
             article_id: 文章ID
             
@@ -96,20 +99,31 @@ class ChatService:
             ValueError: 当找不到文章内容时
         """
         try:
-            # 1. 获取请求ID
-            request_id = await SupabaseService.get_request_id_by_article_id(article_id)
-            if not request_id:
-                raise ValueError(f"未找到文章对应的请求: article_id={article_id}")
-                
-            # 2. 获取文章请求信息
-            article_request = await SupabaseService.get_article_request(request_id)
-            if not article_request:
-                raise ValueError(f"未找到请求信息: request_id={request_id}")
-                
-            # 3. 返回文章内容
-            content = article_request.get("content")
+            content = None
+            
+            # 1. 先尝试从 keep_article_requests 获取内容
+            try:
+                request_id = await SupabaseService.get_request_id_by_article_id(article_id)
+                if request_id:
+                    article_request = await SupabaseService.get_article_request(request_id)
+                    if article_request:
+                        content = article_request.get("content")
+                        if content:
+                            logger.info(f"从 article_requests 获取到内容: article_id={article_id}")
+            except Exception as e:
+                logger.warning(f"从 article_requests 获取内容失败，尝试从 articles 获取: {str(e)}")
+            
+            # 2. 如果 article_requests 中没有内容，从 keep_articles 获取（支持私有文章）
             if not content:
-                raise ValueError(f"文章内容为空: request_id={request_id}")
+                article = await SupabaseService.get_article_by_id(article_id)
+                if article:
+                    content = article.get("content")
+                    if content:
+                        logger.info(f"从 articles 获取到内容: article_id={article_id}")
+            
+            # 3. 检查是否获取到内容
+            if not content:
+                raise ValueError(f"文章内容为空: article_id={article_id}")
                 
             return content
             
