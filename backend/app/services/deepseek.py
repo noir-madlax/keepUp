@@ -10,6 +10,8 @@ from app.utils.sse import SSEMessage
 class DeepseekService:
     # OpenRouter 配置
     OPENROUTER_MODEL = "google/gemini-2.5-flash"
+    # 长上下文兜底模型（1M token context window）
+    OPENROUTER_LONG_CONTEXT_MODEL = "google/gemini-3-flash-preview"
     
     # AWS Bedrock 配置
     BEDROCK_MODEL = "us.anthropic.claude-haiku-4-5-20251001-v1:0"  # Claude Haiku 4.5
@@ -21,13 +23,27 @@ class DeepseekService:
         self.api_url = "https://openrouter.ai/api/v1/chat/completions"
         
     async def chat_stream(self, context: Dict) -> AsyncGenerator[str, None]:
-        """流式调用 Chat API，根据配置选择Provider"""
+        """流式调用 Chat API，根据配置选择Provider
+        
+        当 Bedrock 因输入过长失败时，自动 fallback 到 OpenRouter 长上下文模型
+        """
         provider = settings.LLM_CHAT_PROVIDER
         logger.info(f"Chat使用 {provider} 进行流式响应")
         
         if provider == "bedrock":
-            async for chunk in self._chat_stream_bedrock(context):
-                yield chunk
+            try:
+                async for chunk in self._chat_stream_bedrock(context):
+                    yield chunk
+            except Exception as e:
+                # 检查是否是输入过长的错误，如果是则 fallback 到 OpenRouter 长上下文模型
+                error_msg = str(e)
+                if "Input is too long" in error_msg or "too long for requested model" in error_msg.lower():
+                    logger.warning(f"Bedrock 输入过长，自动切换到 OpenRouter 长上下文模型: {self.OPENROUTER_LONG_CONTEXT_MODEL}")
+                    async for chunk in self._chat_stream_openrouter(context, use_long_context_model=True):
+                        yield chunk
+                else:
+                    # 其他错误继续抛出
+                    raise
         else:
             async for chunk in self._chat_stream_openrouter(context):
                 yield chunk
@@ -103,12 +119,22 @@ class DeepseekService:
             logger.error(f"Bedrock Chat API 调用失败: {str(e)}", exc_info=True)
             raise
     
-    async def _chat_stream_openrouter(self, context: Dict) -> AsyncGenerator[str, None]:
-        """流式调用 OpenRouter API (Gemini Flash) - 原有实现"""
+    async def _chat_stream_openrouter(self, context: Dict, use_long_context_model: bool = False) -> AsyncGenerator[str, None]:
+        """流式调用 OpenRouter API
+        
+        Args:
+            context: 上下文信息
+            use_long_context_model: 是否使用长上下文模型（用于 Bedrock 输入过长时的兜底）
+        """
         try:
+            # 根据参数选择模型
+            model = self.OPENROUTER_LONG_CONTEXT_MODEL if use_long_context_model else self.OPENROUTER_MODEL
+            if use_long_context_model:
+                logger.info(f"使用 OpenRouter 长上下文模型: {model}")
+            
             # 构建请求数据
             request_data = {
-                "model": self.OPENROUTER_MODEL,
+                "model": model,
                 "messages": [
                     {
                         "role": "system",
