@@ -181,9 +181,9 @@ const handleShare = async () => {
     return
   }
 
-  // 截断选中内容（前100字）
-  const truncatedText = selectedText.length > 100 
-    ? selectedText.slice(0, 100) + '...' 
+  // 截断选中内容（前200字）
+  const truncatedText = selectedText.length > 200 
+    ? selectedText.slice(0, 200) + '...' 
     : selectedText
 
   // 生成分享文案
