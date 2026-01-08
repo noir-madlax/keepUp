@@ -126,14 +126,20 @@ class YouTubeFetcher(ContentFetcher):
         try:
             parsed_url = urlparse(url)
             if parsed_url.hostname in ['youtube.com', 'www.youtube.com', 'm.youtube.com']:
-                query_params = parse_qs(parsed_url.query)
-                return query_params.get('v', [None])[0]
+                # 优先检查路径格式
+                if '/live/' in parsed_url.path:
+                    # 处理直播链接格式: youtube.com/live/xxx
+                    return parsed_url.path.split('/live/')[-1].split('?')[0]
+                elif 'embed' in parsed_url.path:
+                    return parsed_url.path.split('/')[-1]
+                elif '/v/' in parsed_url.path:
+                    return parsed_url.path.split('/v/')[-1]
+                else:
+                    # 标准格式: youtube.com/watch?v=xxx
+                    query_params = parse_qs(parsed_url.query)
+                    return query_params.get('v', [None])[0]
             elif parsed_url.hostname == 'youtu.be':
                 return parsed_url.path[1:]
-            elif 'embed' in parsed_url.path:
-                return parsed_url.path.split('/')[-1]
-            elif '/v/' in parsed_url.path:
-                return parsed_url.path.split('/v/')[-1]
             return None
         except Exception as e:
             logger.error(f"提取视频ID失败: {str(e)}")
