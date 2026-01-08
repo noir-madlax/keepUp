@@ -57,6 +57,7 @@ class YouTubeFetcher(ContentFetcher):
             r'(?:https?://)?(?:www\.)?youtube\.com/embed/[\w-]+',
             r'(?:https?://)?(?:www\.)?youtube\.com/v/[\w-]+',
             r'(?:https?://)?(?:m\.)?youtube\.com/watch\?v=[\w-]+',
+            r'(?:https?://)?(?:www\.)?youtube\.com/live/[\w-]+',  # 支持直播链接格式
         ]
         
         return any(re.match(pattern, url) for pattern in youtube_patterns)
