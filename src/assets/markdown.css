@@ -17,3 +17,51 @@
 .prose p {
   @apply mb-4 leading-relaxed;
 }
+
+/* 2025-01-13: 修复 blockquote 引用块在深色背景下的可读性问题 */
+.prose blockquote {
+  @apply bg-blue-50 border-l-4 border-blue-400 px-4 py-3 my-4;
+  @apply text-gray-800 not-italic;
+  background-color: #f0f7ff !important;
+}
+
+.prose blockquote p {
+  @apply text-gray-800 m-0;
+  color: #1f2937 !important;
+}
+
+.prose blockquote em,
+.prose blockquote strong {
+  color: #374151 !important;
+}
+
+/* 2025-01-13: 修复代码块 pre/code 的可读性问题 */
+.prose pre {
+  @apply bg-gray-100 text-gray-800 rounded-lg p-4 my-4 overflow-x-auto;
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+.prose code {
+  @apply bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm;
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0;
+  background-color: transparent !important;
+}
+
+/* 2025-01-13: 修复斜体文字（em标签）在深色背景下的可读性 */
+.prose em {
+  @apply text-gray-700;
+  color: #374151 !important;
+  font-style: italic;
+}
+
+/* 2025-01-13: 修复强调文字的可读性 */
+.prose strong {
+  @apply text-gray-900 font-semibold;
+  color: #111827 !important;
+}
