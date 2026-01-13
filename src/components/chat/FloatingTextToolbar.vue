@@ -54,8 +54,11 @@ const CHAT_ACTIONS = {
 }
 
 // 处理聊天按钮点击
+// 2025-01-13: 修改为创建带有 position 的 session，用于波浪线标记
 const handleChatAction = async (action: keyof typeof CHAT_ACTIONS) => {
   const selectedText = chatStore.selectedText
+  const textPosition = chatStore.selectedTextPosition
+  const sectionType = chatStore.selectedSectionType
   
   if (!selectedText) {
     console.warn('没有选中文本')
@@ -67,6 +70,11 @@ const handleChatAction = async (action: keyof typeof CHAT_ACTIONS) => {
     chatStore.chatWindowState = 'expanded'
     chatStore.isInitializing = true
     chatStore.isAIResponding = true
+    
+    // 先保存位置信息，因为 hideToolbar 会清除
+    const savedPosition = textPosition
+    const savedSectionType = sectionType
+    const savedText = selectedText
     
     // 隐藏工具栏
     chatStore.hideToolbar()
@@ -80,7 +88,27 @@ const handleChatAction = async (action: keyof typeof CHAT_ACTIONS) => {
         promptType = PromptType.BASE
     }
     
-    const prompt = `${selectedText}\n\n${CHAT_ACTIONS[action].prompt}`
+    // 2025-01-13: 创建带有 position 的 session
+    if (savedPosition && savedSectionType && chatStore.currentArticleId) {
+      // 有位置信息，创建带标记的 session
+      await chatStore.createSession(
+        chatStore.currentArticleId,
+        'sentence',  // mark_type 为选中的句子
+        savedText,   // mark_content 为选中的文字
+        'question',
+        {
+          position: savedPosition,
+          sectionType: savedSectionType,
+          selection: {
+            type: 'sentence',
+            content: savedText,
+            position: savedPosition
+          }
+        }
+      )
+    }
+    
+    const prompt = `${savedText}\n\n${CHAT_ACTIONS[action].prompt}`
     await chatStore.sendMessage(prompt, promptType)
   } catch (error) {
     console.error('发送消息失败:', error)

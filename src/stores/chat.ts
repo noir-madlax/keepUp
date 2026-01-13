@@ -173,6 +173,10 @@ export const useChatStore = defineStore('chat', () => {
   const toolbarPosition = ref<ToolbarPosition>({ top: 0, left: 0 })
   const selectedText = ref('')
   
+  // 2025-01-13: 添加选中文字的位置信息（用于波浪线标记）
+  const selectedTextPosition = ref<any>(null)
+  const selectedSectionType = ref<string>('')
+  
   // 文章元信息（用于分享功能）
   const currentArticleInfo = ref<{
     title: string
@@ -189,9 +193,12 @@ export const useChatStore = defineStore('chat', () => {
   const isReadOnly = ref(false)
 
   // 显示工具栏
-  const showToolbar = (position: ToolbarPosition, text: string) => {
+  // 2025-01-13: 添加 textPosition 和 sectionType 参数
+  const showToolbar = (position: ToolbarPosition, text: string, textPosition?: any, sectionType?: string) => {
     toolbarPosition.value = position
     selectedText.value = text
+    selectedTextPosition.value = textPosition || null
+    selectedSectionType.value = sectionType || ''
     toolbarVisible.value = true
   }
 
@@ -199,6 +206,8 @@ export const useChatStore = defineStore('chat', () => {
   const hideToolbar = () => {
     toolbarVisible.value = false
     selectedText.value = ''
+    selectedTextPosition.value = null
+    selectedSectionType.value = ''
   }
 
   // 添加类型检查函数
@@ -650,6 +659,8 @@ export const useChatStore = defineStore('chat', () => {
     toolbarVisible,
     toolbarPosition,
     selectedText,
+    selectedTextPosition,  // 2025-01-13: 选中文字的位置信息
+    selectedSectionType,   // 2025-01-13: 选中文字所在的 section 类型
     isLoading: isAIResponding,
     isAIResponding,
     isAIInitialLoading,

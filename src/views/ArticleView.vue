@@ -1875,7 +1875,22 @@ const contentLanguage = ref('')
     position.top = rect.top - 50
   }
 
-  chatStore.showToolbar(position, selection.toString())
+  // 2025-01-13: 捕获选中文字的位置信息（用于波浪线标记）
+  let textPosition = null
+  let sectionType = ''
+  
+  // 找到选中文字所在的 section 容器
+  const startContainer = range.startContainer
+  const sectionElement = startContainer.parentElement?.closest('[data-section-type]')
+  if (sectionElement) {
+    sectionType = sectionElement.getAttribute('data-section-type') || ''
+    // 获取 section 内的内容容器（prose 区域）
+    const contentContainer = sectionElement.querySelector('.prose') || sectionElement
+    textPosition = TextPositionHelper.capturePosition(contentContainer as Element, selection)
+    console.log('捕获的文字位置:', { textPosition, sectionType, text: selection.toString() })
+  }
+
+  chatStore.showToolbar(position, selection.toString(), textPosition, sectionType)
 }
 
   // 分发到统一处理：鼠标场景
@@ -1897,18 +1912,31 @@ const contentLanguage = ref('')
 // 添加获取文章标记的方法
 const articleMarks = ref<ChatSession[]>([])
 
-// 2025-01-13: 获取文章的公开聊天标记（所有用户可见）
+// 2025-01-13: 获取文章的聊天标记
+// 显示：1. 所有公开的标记 2. 自己的所有标记（包括私密的）
 const fetchArticleMarks = async () => {
   try {
-    const { data, error } = await supabase
+    const userId = authStore.user?.id
+    
+    let query = supabase
       .from('keep_chat_sessions')
       .select('*')
       .eq('article_id', route.params.id)
-      .eq('is_private', false)  // 只获取公开的聊天标记
+    
+    // 过滤条件：公开的 OR 自己的
+    if (userId) {
+      query = query.or(`is_private.eq.false,user_id.eq.${userId}`)
+    } else {
+      // 未登录用户只能看公开的
+      query = query.eq('is_private', false)
+    }
+    
+    const { data, error } = await query
     
     if (error) throw error
     if (data) {
       articleMarks.value = data as ChatSession[]
+      console.log('获取到的聊天标记:', data.length, '条')
     }
   } catch (error) {
     console.error('获取文章标记失败:', error)
