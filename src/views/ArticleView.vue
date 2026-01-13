@@ -449,11 +449,12 @@
     </div>
 
     <!-- 登录模态框 -->
+    <!-- 2025-01-13: 私密文章未登录时不允许直接关闭，公开文章可以关闭 -->
     <login-modal 
       v-if="showLoginModal" 
       @close="handleLoginModalClose"
       @success="handleLoginSuccess"
-      :allowClose="authStore.isAuthenticated"
+      :allowClose="authStore.isAuthenticated || (article && !article.is_private)"
       class="z-[10001]"
     />
 
@@ -764,6 +765,14 @@ const fetchArticle = async () => {
     const articleResult = await articleQuery.single()
     
     if (articleResult.error) throw articleResult.error
+    
+    // 2025-01-13: 检查私密文章权限
+    // 如果是私密文章且未登录，显示登录框
+    if (articleResult.data.is_private && !authStore.isAuthenticated) {
+      showLoginModal.value = true
+      isLoading.value = false
+      return
+    }
     
     // 使用获取到的文章ID查询小节
     const realArticleId = articleResult.data.id
@@ -1195,13 +1204,10 @@ onMounted(async () => {
   try {
     // 2024-12-15: 与 HomeView 保持一致，直接调用 loadUser
     // 不在外部检查 isInitialized，让 loadUser 内部处理
-      await authStore.loadUser()
+    await authStore.loadUser()
 
-    // 如果未登录，显示登录框并返回
-    if (!authStore.isAuthenticated) {
-      showLoginModal.value = true
-      return
-    }
+    // 2025-01-13: 移除强制登录检查，改为在 fetchArticle 中判断私密文章
+    // 未登录用户可以查看公开文章，私密文章需要登录
 
     isLoading.value = true
     
@@ -1214,10 +1220,18 @@ onMounted(async () => {
     // 保持chat窗口默认展开状态
     
     // 加载文章数据
-    await Promise.all([
-      fetchArticle(),
-      fetchArticleMarks()
-    ])
+    await fetchArticle()
+    
+    // 2025-01-13: 如果是私密文章且未登录，fetchArticle 会设置 showLoginModal
+    // 此时不需要继续加载其他数据
+    if (showLoginModal.value && !authStore.isAuthenticated) {
+      return
+    }
+    
+    // 只有成功加载文章后才获取标记（需要登录）
+    if (authStore.isAuthenticated) {
+      await fetchArticleMarks()
+    }
 
     // 添加页面滚动事件监听（监听文章容器滚动）
     const sc = scrollContainerRef.value
@@ -1229,10 +1243,10 @@ onMounted(async () => {
       container.addEventListener('scroll', handleTabsScroll)
     }
     
-  // 解析展示段并初始检查
-  await nextTick()
-  parseDisplayAnchors()
-  handleScroll()
+    // 解析展示段并初始检查
+    await nextTick()
+    parseDisplayAnchors()
+    handleScroll()
     handleTabsScroll()
 
   } catch (error) {
@@ -2304,13 +2318,27 @@ const handleLoginSuccess = async () => {
       return
     }
     
-    // 加载文章数据
+    isLoading.value = true
+    
+    // 加载文章数据（登录后可以访问私密文章）
     await fetchArticle()
-    await fetchArticleMarks()
+    
+    // 2025-01-13: 只有文章加载成功后才获取标记
+    if (article.value) {
+      await fetchArticleMarks()
+      
+      // 重新解析展示段
+      await nextTick()
+      parseDisplayAnchors()
+      handleScroll()
+      handleTabsScroll()
+    }
     
   } catch (error) {
     console.error('[handleLoginSuccess] Error:', error)
     ElMessage.error(t('error.loginFailed'))
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -2387,10 +2415,22 @@ const handleScrollToBottom = () => {
 
 // 添加handleLoginModalClose函数
 const handleLoginModalClose = () => {
-  // 2024-03-21: 只有在已登录状态下才允许关闭登录框
+  // 2025-01-13: 修改关闭逻辑
+  // 如果已登录，可以关闭
   if (authStore.isAuthenticated) {
     showLoginModal.value = false
+    return
   }
+  
+  // 如果未登录且是私密文章，关闭后跳转回首页
+  // 因为未登录用户无法查看私密文章
+  if (article.value?.is_private || !article.value) {
+    router.push('/')
+    return
+  }
+  
+  // 公开文章可以直接关闭登录框继续浏览
+  showLoginModal.value = false
 }
 
 // 在 setup 中添加

@@ -212,7 +212,7 @@
                     <div class="flex items-center gap-2">
                       <!-- RAG 智能问答按钮 -->
                       <button
-                        @click="showRAGModal = true"
+                        @click="handleRAGClick"
                         class="px-3 h-9 sm:h-7 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full hover:from-purple-600 hover:to-blue-600 transition-all shadow-md hover:shadow-lg text-xs font-medium flex items-center gap-1.5"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,8 +222,9 @@
                         <span class="sm:hidden">问答</span>
                       </button>
 
-                      <!-- 只看我上传 开关（简单按钮） -->
+                      <!-- 只看我上传 开关（简单按钮）- 仅登录用户可见 -->
                       <button
+                        v-if="authStore.isAuthenticated"
                         type="button"
                         @click.stop="toggleMineOnly"
                         @mousedown.stop.prevent="() => {}"
@@ -288,8 +289,8 @@
                 </div>
               </div>
 
-              <!-- 加载更多 -->
-              <div v-if="authStore.isAuthenticated && (isLoading || hasMore)" class="text-center py-4">
+              <!-- 加载更多 - 2025-01-13: 移除登录检查，未登录用户也可滚动加载 -->
+              <div v-if="isLoading || hasMore" class="text-center py-4">
                 <div v-if="isLoading" class="flex justify-center items-center space-x-2">
                   <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                   <span class="text-gray-500">Loading more...</span>
@@ -703,7 +704,7 @@ const getPlatformFromUrl = (url: string): string => {
 
 // 修改 fetchArticles 函数
 const fetchArticles = async (isRefresh = false) => {
-  if (!authStore.isAuthenticated) return
+  // 2025-01-13: 移除强制登录检查，未登录用户也可以获取公开文章
   
   try {
     isLoading.value = true
@@ -1034,26 +1035,19 @@ onMounted(async () => {
     console.log('[onMounted] User loaded, new auth status:', authStore.isAuthenticated)
   }
   
-  if (!authStore.isAuthenticated) {
-    showLoginModal.value = true
-    // 未登录时直接返回，不执行后续数据获取
-    return
-  }
-  
-  // 只在登录状态下执行数据获取
-  console.log('[onMounted] User is authenticated, initializing data')
+  // 2025-01-13: 移除强制登录检查，未登录用户也可以浏览公开内容
+  // 登录状态下会显示更多内容（私密文章等）
+  console.log('[onMounted] Initializing data, auth status:', authStore.isAuthenticated)
 
   try {
-    // 获取文章和作者数据
+    // 获取文章数据（未登录时只获取公开文章）
     await Promise.all([
       fetchArticles()
     ])
   } catch (error) {
     console.error('[onMounted] Error loading data:', error)
-  } finally {
   }
   
-
   // 添加滚动监听
   window.addEventListener('scroll', handleScroll)
 
@@ -1128,10 +1122,9 @@ const { t } = useI18n()
 
 // 添加滚动加载处理函数
 const handleScroll = () => {
-  // 2024-03-15: 未登录用户不执行滚动加载
-  if (!authStore.isAuthenticated) return
+  // 2025-01-13: 允许未登录用户也可以滚动加载公开文章
   
-  // 获取滚容
+  // 获取滚动容器
   const container = document.documentElement
   
   // 计算距离底部的距离
@@ -1241,6 +1234,15 @@ const handlePrivateUploadClick = () => {
     return
   }
   showPrivateUploadModal.value = true
+}
+
+// 2025-01-13: 处理智能问答按钮点击，未登录时弹出登录框
+const handleRAGClick = () => {
+  if (!authStore.isAuthenticated) {
+    showLoginModal.value = true
+    return
+  }
+  showRAGModal.value = true
 }
 
 // 处理私密上传提交成功
