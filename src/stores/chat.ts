@@ -292,6 +292,10 @@ export const useChatStore = defineStore('chat', () => {
 
       await loadSession(session.id)
       hasActiveSession.value = true
+      
+      // 2025-01-13: 更新 lastCreatedSession，用于通知 ArticleView 刷新标记
+      lastCreatedSession.value = session as ChatSession
+      
       return session
 
     } catch (error) {

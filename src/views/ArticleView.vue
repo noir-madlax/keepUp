@@ -2314,25 +2314,30 @@ onMounted(async () => {
   await fetchArticleMarks()
 })
 
-// 监听最新创建的会话
+// 2025-01-13: 监听最新创建的会话，立即显示波浪线标记
 watch(() => chatStore.lastCreatedSession, async (newSession) => {
-  if (newSession) {
-    // 重新获取文章标记
-    await fetchArticleMarks()
+  if (newSession && newSession.position) {
+    console.log('新创建的会话，立即更新标记:', newSession)
     
-    // 在下一个 tick 重新处理标记
-    nextTick(() => {
-      const sections = document.querySelectorAll('[data-section-type]')
-      sections.forEach(section => {
-        if (section.getAttribute('data-section-type') === newSession.section_type) {
-          // 重新渲染该 section 的内容
-          const sectionData = sections.value.find(s => s.section_type === newSession.section_type)
-          if (sectionData) {
-            renderSectionContent(sectionData)
-          }
+    // 1. 将新 session 添加到 articleMarks
+    articleMarks.value = [...articleMarks.value, newSession]
+    
+    // 2. 在下一个 tick 重新处理该 section 的标记
+    await nextTick()
+    
+    // 找到对应的 section 数据
+    const sectionData = sections.value.find(s => s.section_type === newSession.section_type)
+    if (sectionData) {
+      // 找到 DOM 中对应的 section 容器
+      const sectionElement = document.querySelector(`[data-section-type="${newSession.section_type}"]`)
+      if (sectionElement) {
+        // 重新渲染该 section 的内容
+        const contentElement = sectionElement.querySelector('.prose')
+        if (contentElement) {
+          contentElement.innerHTML = renderSectionContent(sectionData)
         }
-      })
-    })
+      }
+    }
   }
 })
 
