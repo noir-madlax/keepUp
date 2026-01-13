@@ -16,7 +16,7 @@ class DeepseekService:
     # AWS Bedrock 配置
     BEDROCK_MODEL = "us.anthropic.claude-haiku-4-5-20251001-v1:0"  # Claude Haiku 4.5
     BEDROCK_REGION = settings.AWS_BEDROCK_REGION
-    BEDROCK_MAX_TOKENS = 4096
+    BEDROCK_MAX_TOKENS = 8192
     
     def __init__(self):
         self.api_key = settings.OPENROUTER_API_KEY

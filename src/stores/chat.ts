@@ -184,6 +184,9 @@ export const useChatStore = defineStore('chat', () => {
   const lastCreatedSession = ref<ChatSession | null>(null)
   const isInitializing = ref(false)
   const currentAIMessage = ref<ChatMessage | null>(null)
+  
+  // 2025-01-13: 只读模式（查看他人的公开聊天记录时）
+  const isReadOnly = ref(false)
 
   // 显示工具栏
   const showToolbar = (position: ToolbarPosition, text: string) => {
@@ -289,6 +292,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   // 加载会话
+  // 2025-01-13: 添加只读模式判断（查看他人的公开聊天记录）
   const loadSession = async (sessionId: string) => {
     try {
       const { data: session, error } = await supabase
@@ -305,6 +309,12 @@ export const useChatStore = defineStore('chat', () => {
       if (!isChatSession(session)) throw new Error(t('chat.errors.invalidSessionData'))
 
       currentSession.value = session
+      
+      // 2025-01-13: 判断是否为只读模式（session 不属于当前用户）
+      isReadOnly.value = session.user_id !== authStore.user?.id
+      
+      // 设置活跃会话状态
+      hasActiveSession.value = true
     } catch (error) {
       console.error('加载会话失败:', error)
       ElMessage.error(t('chat.errors.loadSessionFailed'))
@@ -658,6 +668,7 @@ export const useChatStore = defineStore('chat', () => {
     setCurrentArticle,
     toggleChatWindow,
     currentArticleId,
-    currentArticleInfo
+    currentArticleInfo,
+    isReadOnly  // 2025-01-13: 只读模式状态
   }
 }) 

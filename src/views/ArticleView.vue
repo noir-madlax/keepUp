@@ -1228,10 +1228,8 @@ onMounted(async () => {
       return
     }
     
-    // 只有成功加载文章后才获取标记（需要登录）
-    if (authStore.isAuthenticated) {
-      await fetchArticleMarks()
-    }
+    // 2025-01-13: 获取公开的聊天标记（不需要登录，公开标记所有人可见）
+    await fetchArticleMarks()
 
     // 添加页面滚动事件监听（监听文章容器滚动）
     const sc = scrollContainerRef.value
@@ -1899,12 +1897,14 @@ const contentLanguage = ref('')
 // 添加获取文章标记的方法
 const articleMarks = ref<ChatSession[]>([])
 
+// 2025-01-13: 获取文章的公开聊天标记（所有用户可见）
 const fetchArticleMarks = async () => {
   try {
     const { data, error } = await supabase
       .from('keep_chat_sessions')
       .select('*')
       .eq('article_id', route.params.id)
+      .eq('is_private', false)  // 只获取公开的聊天标记
     
     if (error) throw error
     if (data) {
@@ -1916,6 +1916,7 @@ const fetchArticleMarks = async () => {
 }
 
 // 添加处理标记的方法
+// 2025-01-13: 修改为显示波浪线+气泡，支持点击查看公开聊天记录
 const processQuestionMarks = () => {
   // 处理普通问号标记
   const questionWrappers = document.querySelectorAll('.question-mark-wrapper')
@@ -1931,13 +1932,14 @@ const processQuestionMarks = () => {
       const container = document.createElement('div')
       
       // 使用 h 函数创建 VNode
+      // 2025-01-13: showQuestionMark 改为 true，显示波浪线+气泡+点击事件
       const vnode = h(QuestionMark, {
         markId,
         articleId: Number(articleId),
         sectionType,
         markContent,
         position: JSON.parse(position),
-        showQuestionMark: false
+        showQuestionMark: true
       }, () => [wrapper.textContent])
 
       // 渲染到临时容器
