@@ -2236,40 +2236,59 @@ const renderSectionContent = (section: ArticleSection) => {
     })
 
     // 获取该 section 的所有标记（保留原有的chat sessions标记处理）
+    // 2026-01-20: 同时包含 section_type 匹配的标记和 "general" 类型的标记
     const sectionMarks = articleMarks.value?.filter(
-      mark => mark.section_type === section.section_type
+      mark => mark.section_type === section.section_type || mark.section_type === 'general'
     ) || []
 
     // 处理chat sessions标记
     sectionMarks.forEach(mark => {
       const position = mark.position
 
-      if (!position || 
-          typeof position.nodeIndex !== 'number' || 
-          typeof position.startOffset !== 'number' || 
-          typeof position.endOffset !== 'number') {
-        console.warn('无效的标记位置:', { mark, position })
-        return
+      // 2026-01-20: 改进 position 处理逻辑
+      // 如果 position 有效，使用 position 定位
+      // 如果 position 为 null 但有 mark_content，尝试通过文本搜索定位
+      let range: Range | null = null
+      
+      if (position && 
+          typeof position.nodeIndex === 'number' && 
+          typeof position.startOffset === 'number' && 
+          typeof position.endOffset === 'number') {
+        // 有效的 position，使用原有逻辑
+        const textMark: TextMark = {
+          nodeIndex: position.nodeIndex,
+          startOffset: position.startOffset,
+          endOffset: position.endOffset,
+          text: mark.mark_content
+        }
+        range = TextPositionHelper.findPosition(container, textMark)
+      } else if (mark.mark_content) {
+        // position 为 null，但有 mark_content，尝试通过文本搜索
+        console.log('position 为空，尝试通过 mark_content 搜索:', mark.mark_content.slice(0, 50))
+        
+        // 构造一个只用于文本搜索的 textMark
+        const textMark: TextMark = {
+          nodeIndex: -1,  // 无效的 nodeIndex，会触发文本搜索回退
+          startOffset: 0,
+          endOffset: 0,
+          text: mark.mark_content
+        }
+        range = TextPositionHelper.findPosition(container, textMark)
       }
-
-      const textMark: TextMark = {
-        nodeIndex: position.nodeIndex,
-        startOffset: position.startOffset,
-        endOffset: position.endOffset,
-        text: mark.mark_content
-      }
-
-      const range = TextPositionHelper.findPosition(container, textMark)
+      
       if (range) {
         const markInfo = {
           'mark-id': mark.id,
           'article-id': section.article_id,
           'section-type': section.section_type,
           'mark-content': mark.mark_content,
-          'position': JSON.stringify(position)
+          'position': position ? JSON.stringify(position) : '{}'
         }
         
         TextPositionHelper.applyMarkStyle(range, markInfo)
+      } else if (mark.section_type === 'general') {
+        // general 类型的标记可能需要在其他 section 中查找，这里跳过不打印警告
+        console.log('general 类型标记未在当前 section 找到匹配:', section.section_type)
       }
     })
 
