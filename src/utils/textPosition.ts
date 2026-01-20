@@ -177,100 +177,108 @@ export class TextPositionHelper {
   }
 
   // 还原位置
+  // 2026-01-20: 修复跨节点选区导致的标记无法显示问题
+  // 当 nodeIndex 匹配失败时，回退到基于文本内容搜索
   static findPosition(container: Element, mark: TextMark): Range | null {
     console.log('开始还原标记位置:', {
-      mark,
-      container: {
-        tagName: container.tagName,
-        className: container.className,
-        attributes: Object.fromEntries(
-          Array.from(container.attributes)
-            .map(attr => [attr.name, attr.value])
-        )
-      }
+      markText: mark.text?.slice(0, 50),
+      nodeIndex: mark.nodeIndex
     })
 
     const nodes = this.getTextNodes(container)
     
-    // 打印所有可用节点
-    console.log('可用于匹配的节点:', {
-      totalNodes: nodes.length,
-      targetIndex: mark.nodeIndex,
-      allNodes: nodes.map((n, i) => ({
-        index: i,
-        domIndex: n.domIndex,
-        content: n.node.textContent,
-        isTarget: n.domIndex === mark.nodeIndex,
-        parentInfo: {
-          tag: n.node.parentElement?.tagName,
-          classes: n.node.parentElement?.className
-        }
-      }))
-    })
-
+    // 1. 首先尝试原有的 nodeIndex 匹配
     const nodeInfo = nodes.find(({domIndex}) => domIndex === mark.nodeIndex)
-    if (!nodeInfo) {
-      console.warn('未找到目标节点:', {
-        wantedIndex: mark.nodeIndex,
-        availableIndexes: nodes.map(n => n.domIndex),
-        markInfo: mark
-      })
-      return null
-    }
-
-    const actualText = nodeInfo.node.textContent?.slice(mark.startOffset, mark.endOffset)
-    
-    // 打印文本匹配结果
-    console.log('文本匹配结果:', {
-      expected: {
-        text: mark.text,
-        length: mark.text.length
-      },
-      actual: {
-        text: actualText,
-        length: actualText?.length,
-        fullNodeText: nodeInfo.node.textContent,
-        startOffset: mark.startOffset,
-        endOffset: mark.endOffset
-      },
-      isMatch: actualText?.trim() === mark.text.trim()
-    })
-
-    if (actualText?.trim() !== mark.text.trim()) {
-      console.warn('文本不匹配详情:', {
-        expected: mark.text,
-        actual: actualText,
-        nodeIndex: mark.nodeIndex,
-        fullNodeContent: nodeInfo.node.textContent,
-        offsets: {
-          start: mark.startOffset,
-          end: mark.endOffset
-        },
-        parent: {
-          tag: nodeInfo.node.parentElement?.tagName,
-          html: nodeInfo.node.parentElement?.innerHTML
+    if (nodeInfo) {
+      const actualText = nodeInfo.node.textContent?.slice(mark.startOffset, mark.endOffset)
+      if (actualText?.trim() === mark.text.trim()) {
+        try {
+          const range = document.createRange()
+          range.setStart(nodeInfo.node, mark.startOffset)
+          range.setEnd(nodeInfo.node, mark.endOffset)
+          console.log('nodeIndex 匹配成功')
+          return range
+        } catch (error) {
+          console.warn('nodeIndex 匹配创建 Range 失败:', error)
         }
-      })
+      }
+    }
+    
+    // 2. 回退：使用文本内容搜索（处理跨节点的长文本和DOM结构变化）
+    const searchText = mark.text.trim()
+    if (!searchText) {
+      console.warn('标记文本为空，无法搜索')
       return null
     }
-
-    try {
-      const range = document.createRange()
-      range.setStart(nodeInfo.node, mark.startOffset)
-      range.setEnd(nodeInfo.node, mark.endOffset)
-
-      // 验证 range 内容
-      console.log('Range 内容验证:', {
-        rangeText: range.toString(),
-        expectedText: mark.text,
-        isValid: range.toString().trim() === mark.text.trim()
-      })
-
-      return range
-    } catch (error) {
-      console.error('创建 Range 失败:', error)
-      return null
+    
+    console.log('nodeIndex 匹配失败，尝试文本搜索回退...')
+    
+    // 2a. 先尝试完整文本匹配（适用于短文本）
+    for (const {node} of nodes) {
+      const nodeText = node.textContent || ''
+      const index = nodeText.indexOf(searchText)
+      if (index !== -1) {
+        try {
+          const range = document.createRange()
+          range.setStart(node, index)
+          range.setEnd(node, index + searchText.length)
+          console.log('完整文本搜索匹配成功')
+          return range
+        } catch (error) {
+          console.warn('完整文本搜索创建 Range 失败:', error)
+        }
+      }
     }
+    
+    // 2b. 对于跨多行的长文本，只标记第一行（这是合理的降级处理）
+    const firstLine = searchText.split('\n')[0].trim()
+    if (firstLine && firstLine !== searchText && firstLine.length > 5) {
+      console.log('尝试第一行匹配:', firstLine.slice(0, 30))
+      for (const {node} of nodes) {
+        const nodeText = node.textContent || ''
+        const index = nodeText.indexOf(firstLine)
+        if (index !== -1) {
+          try {
+            const range = document.createRange()
+            range.setStart(node, index)
+            range.setEnd(node, index + firstLine.length)
+            console.log('第一行文本搜索匹配成功')
+            return range
+          } catch (error) {
+            console.warn('第一行文本搜索创建 Range 失败:', error)
+          }
+        }
+      }
+    }
+    
+    // 2c. 尝试匹配文本的前20个字符（处理内容略有变化的情况）
+    const textPrefix = searchText.slice(0, 20).trim()
+    if (textPrefix && textPrefix.length >= 10) {
+      console.log('尝试前缀匹配:', textPrefix)
+      for (const {node} of nodes) {
+        const nodeText = node.textContent || ''
+        const index = nodeText.indexOf(textPrefix)
+        if (index !== -1) {
+          // 找到前缀后，尝试匹配尽可能多的内容
+          const maxEnd = Math.min(index + searchText.length, nodeText.length)
+          try {
+            const range = document.createRange()
+            range.setStart(node, index)
+            range.setEnd(node, maxEnd)
+            console.log('前缀匹配成功')
+            return range
+          } catch (error) {
+            console.warn('前缀匹配创建 Range 失败:', error)
+          }
+        }
+      }
+    }
+    
+    console.warn('所有匹配策略都失败:', { 
+      markText: mark.text?.slice(0, 50),
+      availableNodes: nodes.length 
+    })
+    return null
   }
 
   // 添加新方法：应用标记样式
