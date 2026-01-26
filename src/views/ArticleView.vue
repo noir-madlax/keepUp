@@ -1274,11 +1274,59 @@ watch(() => sections.value, () => {
   })
 })
 
-// 复制当前页面URL
+// 生成分享文本
+const generateShareText = (quoteContent?: string): string => {
+  const authorName = getAuthorName()
+  const articleTitle = getArticleTitle()
+  const shareUrl = window.location.href
+  
+  if (quoteContent) {
+    // 引用分享：截取前100字符，超出部分用省略号
+    const truncatedQuote = quoteContent.length > 100 
+      ? quoteContent.slice(0, 100) + '...' 
+      : quoteContent
+    return `📢 ${authorName} 在《${articleTitle}》中提到：\n"${truncatedQuote}"\n🔗 ${shareUrl}`
+  } else {
+    // 整篇文章分享
+    return `📢 ${authorName} 发布了《${articleTitle}》\n🔗 ${shareUrl}`
+  }
+}
+
+// 记录分享行为到数据库
+const recordShare = async (shareText: string, shareType: 'article' | 'quote', quoteContent?: string) => {
+  // 只有登录用户才记录分享行为
+  if (!authStore.user?.id || !article.value?.id) return
+  
+  try {
+    const { error } = await supabase
+      .from('keep_user_shares')
+      .insert({
+        user_id: authStore.user.id,
+        article_id: article.value.id,
+        share_type: shareType,
+        quote_content: quoteContent || null,
+        share_text: shareText,
+        share_url: window.location.href,
+        platform: 'clipboard'
+      })
+    
+    if (error) {
+      console.error('记录分享失败:', error)
+    }
+  } catch (err) {
+    console.error('记录分享失败:', err)
+  }
+}
+
+// 复制当前页面URL（分享整篇文章）
 const copyCurrentUrl = async () => {
   try {
-    await navigator.clipboard.writeText(window.location.href)
+    const shareText = generateShareText()
+    await navigator.clipboard.writeText(shareText)
     ElMessage.success(t('article.copySuccess'))
+    
+    // 记录分享行为
+    await recordShare(shareText, 'article')
   } catch (err) {
     console.error('复制失败:', err)
     ElMessage.error(t('article.copyError'))
