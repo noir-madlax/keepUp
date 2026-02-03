@@ -14,7 +14,7 @@ Deno.serve(async (req)=>{
     });
   }
   try {
-    const { question, top_k = 20, score_threshold = 0.15, use_layered = true } = await req.json();
+    const { question, top_k = 20, score_threshold = 0.15 } = await req.json();
     if (!question || question.trim().length === 0) {
       return new Response(JSON.stringify({
         error: '问题不能为空'
@@ -27,75 +27,82 @@ Deno.serve(async (req)=>{
       });
     }
     const startTime = performance.now();
+    
     // 1. 生成查询嵌入
     const embeddingStart = performance.now();
     const queryEmbedding = await generateEmbedding(question);
     const embeddingTime = performance.now() - embeddingStart;
+    
     const supabase = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '');
-    let sources = [];
-    let searchTime = 0;
-    if (use_layered) {
-      // === 分层检索模式 ===
-      // 第一层：在总结中搜索，快速定位相关文章
-      const layer1Start = performance.now();
-      const { data: summaryResults, error: summaryError } = await supabase.rpc('search_article_embeddings', {
-        query_embedding: `[${queryEmbedding.join(',')}]`,
-        match_threshold: 0.1,
-        match_count: 20
-      });
-      if (summaryError) {
-        throw new Error(`总结层检索失败: ${summaryError.message}`);
-      }
-      const layer1Time = performance.now() - layer1Start;
-      // 提取相关文章ID
-      const relevantArticleIds = summaryResults && summaryResults.length > 0 ? [
-        ...new Set(summaryResults.map((r)=>r.article_id))
-      ] : null;
-      console.log(`第一层检索完成: 找到 ${relevantArticleIds?.length || 0} 篇相关文章`);
-      // 第二层：在筛选的文章中搜索原文内容
-      const layer2Start = performance.now();
-      const { data: transcriptResults, error: transcriptError } = await supabase.rpc('search_article_embeddings_v2', {
+    
+    // 2. 获取私有文章ID列表（用于排除）
+    const { data: privateArticles } = await supabase
+      .from('keep_articles')
+      .select('id')
+      .eq('is_private', true);
+    const privateArticleIds = privateArticles?.map(a => a.id) || [];
+    console.log(`排除 ${privateArticleIds.length} 篇私有文章`);
+    
+    // 3. === 并行检索模式（v3.0）===
+    // 同时搜索"总结"和"原文字幕"，避免总结没命中导致原文遗漏
+    const searchStart = performance.now();
+    
+    // 并行执行两个搜索
+    const [summarySearchResult, transcriptSearchResult] = await Promise.all([
+      // 搜索总结内容
+      supabase.rpc('search_article_embeddings_v3', {
         query_embedding: `[${queryEmbedding.join(',')}]`,
         match_threshold: score_threshold,
-        match_count: top_k,
-        lang: null,
-        allowed_types: [
-          'transcript',
-          '原文字幕',
-          'raw',
-          'paragraph',
-          'section'
-        ],
-        article_filter: relevantArticleIds,
-        ef_search_param: 100
-      });
-      if (transcriptError) {
-        throw new Error(`原文层检索失败: ${transcriptError.message}`);
-      }
-      const layer2Time = performance.now() - layer2Start;
-      searchTime = layer1Time + layer2Time;
-      sources = transcriptResults || [];
-      console.log(`第二层检索完成: 找到 ${sources.length} 个原文片段`);
-      console.log(`检索时间 - 第一层: ${layer1Time.toFixed(2)}ms, 第二层: ${layer2Time.toFixed(2)}ms`);
-      // 如果原文检索没有结果，回退使用总结结果
-      if (sources.length === 0 && summaryResults && summaryResults.length > 0) {
-        console.log('原文检索无结果，回退使用总结内容');
-        sources = summaryResults.slice(0, top_k);
-      }
-    } else {
-      // === 传统单层检索模式（仅用于对比测试）===
-      const searchStart = performance.now();
-      const { data: results, error: searchError } = await supabase.rpc('search_article_embeddings', {
+        match_count: Math.ceil(top_k / 2),
+        allowed_types: ['总结', 'Summary', '人物介绍', 'Key Takeaways'],
+        excluded_article_ids: privateArticleIds.length > 0 ? privateArticleIds : null
+      }),
+      // 搜索原文字幕内容
+      supabase.rpc('search_article_embeddings_v3', {
         query_embedding: `[${queryEmbedding.join(',')}]`,
         match_threshold: score_threshold,
-        match_count: top_k
-      });
-      if (searchError) {
-        throw new Error(`向量检索失败: ${searchError.message}`);
-      }
-      searchTime = performance.now() - searchStart;
-      sources = results || [];
+        match_count: Math.ceil(top_k / 2),
+        allowed_types: ['原文字幕', 'transcript', 'raw', 'paragraph', 'section'],
+        excluded_article_ids: privateArticleIds.length > 0 ? privateArticleIds : null
+      })
+    ]);
+    
+    const searchTime = performance.now() - searchStart;
+    
+    // 检查错误
+    if (summarySearchResult.error) {
+      console.error('总结搜索失败:', summarySearchResult.error);
     }
+    if (transcriptSearchResult.error) {
+      console.error('原文搜索失败:', transcriptSearchResult.error);
+    }
+    
+    // 4. 合并结果并去重
+    const summaryResults = summarySearchResult.data || [];
+    const transcriptResults = transcriptSearchResult.data || [];
+    
+    console.log(`总结搜索: ${summaryResults.length} 条, 原文搜索: ${transcriptResults.length} 条`);
+    
+    // 合并并按相似度排序
+    const allResults = [...summaryResults, ...transcriptResults];
+    
+    // 去重（同一个 section_id 只保留分数最高的）
+    const uniqueResults = new Map();
+    for (const result of allResults) {
+      const key = `${result.article_id}-${result.section_id}-${result.chunk_id || 0}`;
+      const existing = uniqueResults.get(key);
+      if (!existing || result.score > existing.score) {
+        uniqueResults.set(key, result);
+      }
+    }
+    
+    // 按相似度排序，取 top_k
+    let sources = Array.from(uniqueResults.values())
+      .sort((a, b) => b.score - a.score)
+      .slice(0, top_k);
+    
+    console.log(`合并去重后: ${sources.length} 条结果`);
+    
     // 如果没有找到任何结果
     if (!sources || sources.length === 0) {
       return new Response(JSON.stringify({
@@ -105,7 +112,7 @@ Deno.serve(async (req)=>{
         search_time_ms: searchTime,
         generation_time_ms: 0,
         total_time_ms: performance.now() - startTime,
-        search_mode: use_layered ? 'layered' : 'single'
+        search_mode: 'parallel'
       }), {
         status: 200,
         headers: {
@@ -114,11 +121,13 @@ Deno.serve(async (req)=>{
         }
       });
     }
-    // 3. 生成回答
+    
+    // 5. 生成回答
     const generationStart = performance.now();
     const answer = await generateAnswer(question, sources);
     const generationTime = performance.now() - generationStart;
     const totalTime = performance.now() - startTime;
+    
     return new Response(JSON.stringify({
       answer,
       sources,
@@ -126,7 +135,7 @@ Deno.serve(async (req)=>{
       search_time_ms: searchTime,
       generation_time_ms: generationTime,
       total_time_ms: totalTime,
-      search_mode: use_layered ? 'layered' : 'single'
+      search_mode: 'parallel'
     }), {
       status: 200,
       headers: {
@@ -199,21 +208,28 @@ async function generateAnswer(question, sources) {
 `;
   });
   const context = contextParts.join('\n---\n\n');
-  const prompt = `你是一个专业的内容助手，负责根据提供的文章片段回答用户的问题。
+  const prompt = `你是一个专业的知识库助手，负责根据搜索到的文章片段，为用户提供完整、详细的回答。
 
 **用户问题：**
 ${question}
 
-**相关文章片段：**
+**搜索到的相关内容：**
 ${context}
 
 **回答要求：**
-1. 必须使用中文回答（如果原文是英文，需要直接翻译成中文回答，但是不要修改原来的文字意思，不要调整，直接翻译）
-2. 严格基于提供的文章片段内容回答，不要编造信息
-3. 如果文章片段无法回答问题，请诚实说明
-4. 回答要准确、有条理、有层次
-5. 可以引用来源编号（如"根据来源1，文章名称：xxxx"）
-6. 保持专业和客观的语气
+1. **必须使用中文回答**：如果原文是英文，直接翻译成中文呈现，保持原意不变
+2. **详细展示原文内容**：不要让用户去查看原文，直接在回答中完整呈现搜索到的关键内容
+3. **组织语言，整合多个来源**：
+   - 将相关的内容按主题归类整理
+   - 如果多个来源讨论同一话题，合并呈现并标注来源
+   - 按逻辑顺序组织回答，让用户一次性获取所有相关信息
+4. **回答可以较长**：宁可详细也不要遗漏重要信息，确保用户不需要再去原文查找
+5. **保持原文准确性**：严格基于搜索到的内容回答，不要编造信息
+6. **格式清晰**：
+   - 使用标题、列表、分段等方式组织内容
+   - 在引用具体内容时标注来源编号（如"根据来源1"）
+   - 如果有多个相关文章，分别说明各文章的观点
+7. 如果搜索到的内容无法完全回答问题，诚实说明哪些部分可以回答，哪些部分信息不足
 
 **你的回答：**`;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`;
@@ -234,7 +250,7 @@ ${context}
       ],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 15000
+        maxOutputTokens: 30000
       }
     })
   });
