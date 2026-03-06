@@ -1,8 +1,8 @@
 /**
  * RAG 问答 Composable
- * 提供向量搜索和 AI 问答功能
+ * 提供向量搜索和 AI 问答功能，支持分阶段进度展示
  */
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import { supabase } from '@/supabaseClient';
 
 export interface RAGSource {
@@ -30,14 +30,52 @@ export interface RAGMessage {
   timestamp: Date;
 }
 
+export interface RAGSearchResult {
+  totalChunks: number;
+  summaryCount: number;
+  transcriptCount: number;
+  uniqueArticleCount: number;
+  topScore: number;
+  avgScore: number;
+  topSources: RAGSource[];
+}
+
+export interface RAGProgress {
+  stage: 'embedding' | 'searching' | 'search_done' | 'generating' | 'done' | 'error';
+  message: string;
+  detail?: string;
+  searchResult?: RAGSearchResult;
+  stageTimings?: Record<string, number>;
+  elapsedMs: number;
+}
+
 export function useRAG() {
   const loading = ref(false);
   const error = ref<string | null>(null);
   const messages = ref<RAGMessage[]>([]);
+  const progress = ref<RAGProgress | null>(null);
 
-  /**
-   * 发起 RAG 问答
-   */
+  let timerHandle: ReturnType<typeof setInterval> | null = null;
+  let startTime = 0;
+
+  function startTimer() {
+    startTime = Date.now();
+    timerHandle = setInterval(() => {
+      if (progress.value && progress.value.stage !== 'done' && progress.value.stage !== 'error') {
+        progress.value = { ...progress.value, elapsedMs: Date.now() - startTime };
+      }
+    }, 100);
+  }
+
+  function stopTimer() {
+    if (timerHandle) {
+      clearInterval(timerHandle);
+      timerHandle = null;
+    }
+  }
+
+  onUnmounted(() => stopTimer());
+
   const ask = async (
     question: string,
     options?: { top_k?: number; score_threshold?: number }
@@ -49,16 +87,25 @@ export function useRAG() {
 
     loading.value = true;
     error.value = null;
+    const stageTimings: Record<string, number> = {};
 
-    // 添加用户消息
     messages.value.push({
       role: 'user',
       content: question,
       timestamp: new Date()
     });
 
+    startTimer();
+
     try {
-      const { data, error: funcError } = await supabase.functions.invoke('rag_search', {
+      // 阶段1: Embedding + 向量搜索
+      progress.value = {
+        stage: 'searching',
+        message: '正在理解问题并检索知识库...',
+        elapsedMs: 0
+      };
+
+      const { data: step1Data, error: step1Error } = await supabase.functions.invoke('rag_search_step1', {
         body: {
           question: question.trim(),
           top_k: options?.top_k ?? 20,
@@ -66,17 +113,70 @@ export function useRAG() {
         }
       });
 
-      if (funcError) {
-        throw new Error(funcError.message || '搜索失败');
+      if (step1Error) throw new Error(step1Error.message || '搜索失败');
+      if (!step1Data) throw new Error('未收到搜索结果');
+
+      stageTimings['embedding'] = step1Data.query_embedding_time_ms;
+      stageTimings['search'] = step1Data.search_time_ms;
+
+      const searchResult: RAGSearchResult = {
+        totalChunks: step1Data.sources?.length ?? 0,
+        summaryCount: step1Data.summary_count ?? 0,
+        transcriptCount: step1Data.transcript_count ?? 0,
+        uniqueArticleCount: step1Data.unique_article_count ?? 0,
+        topScore: step1Data.top_score ?? 0,
+        avgScore: step1Data.avg_score ?? 0,
+        topSources: (step1Data.sources || []).slice(0, 5)
+      };
+
+      if (searchResult.totalChunks === 0) {
+        progress.value = { stage: 'done', message: '未找到相关内容', elapsedMs: Date.now() - startTime, stageTimings };
+        stopTimer();
+        messages.value.push({
+          role: 'assistant',
+          content: '抱歉，我在知识库中没有找到与您问题相关的内容。请尝试换个问法或提供更多上下文信息。',
+          sources: [],
+          timestamp: new Date()
+        });
+        loading.value = false;
+        return null;
       }
 
-      if (!data) {
-        throw new Error('未收到响应数据');
-      }
+      // 阶段2: 展示搜索结果 + 开始生成
+      progress.value = {
+        stage: 'generating',
+        message: '正在整合信息生成回答...',
+        searchResult,
+        stageTimings,
+        elapsedMs: Date.now() - startTime
+      };
 
-      const response = data as RAGResponse;
+      const { data: step2Data, error: step2Error } = await supabase.functions.invoke('rag_generate', {
+        body: {
+          question: question.trim(),
+          sources: step1Data.sources
+        }
+      });
 
-      // 添加 AI 回答消息
+      if (step2Error) throw new Error(step2Error.message || '生成回答失败');
+      if (!step2Data?.answer) throw new Error('未收到回答');
+
+      stageTimings['generation'] = step2Data.generation_time_ms;
+
+      // 完成
+      const totalElapsed = Date.now() - startTime;
+      progress.value = { stage: 'done', message: '回答完成', elapsedMs: totalElapsed, stageTimings, searchResult };
+      stopTimer();
+
+      const response: RAGResponse = {
+        answer: step2Data.answer,
+        sources: step1Data.sources,
+        query_embedding_time_ms: stageTimings['embedding'],
+        search_time_ms: stageTimings['search'],
+        generation_time_ms: stageTimings['generation'],
+        total_time_ms: totalElapsed
+      };
+
       messages.value.push({
         role: 'assistant',
         content: response.answer,
@@ -85,14 +185,21 @@ export function useRAG() {
       });
 
       return response;
-    } catch (e: any) {
-      const errorMsg = e.message || '搜索失败，请稍后重试';
+    } catch (e: unknown) {
+      const errorMsg = e instanceof Error ? e.message : '搜索失败，请稍后重试';
       error.value = errorMsg;
-      
-      // 添加错误消息
+      progress.value = {
+        stage: 'error',
+        message: errorMsg,
+        elapsedMs: Date.now() - startTime,
+        stageTimings,
+        searchResult: progress.value?.searchResult
+      };
+      stopTimer();
+
       messages.value.push({
         role: 'assistant',
-        content: `❌ ${errorMsg}`,
+        content: `搜索失败: ${errorMsg}`,
         timestamp: new Date()
       });
 
@@ -103,12 +210,10 @@ export function useRAG() {
     }
   };
 
-  /**
-   * 清空对话历史
-   */
   const clearMessages = () => {
     messages.value = [];
     error.value = null;
+    progress.value = null;
   };
 
   return {
@@ -116,7 +221,7 @@ export function useRAG() {
     loading,
     error,
     messages,
+    progress,
     clearMessages
   };
 }
-
