@@ -142,14 +142,26 @@
 
           <!-- 新用户上传条 -->
           <div class="w-full max-w-3xl mx-auto px-4">
-            <UploadInput
-              v-model="requestUrl"
-              container-class="relative"
-              input-class="w-full h-12 sm:h-14 px-6 pr-14 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-gray-100 text-gray-800 placeholder-gray-400 transition-all duration-300 text-base sm:text-lg"
-              enter-icon-class="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 opacity-80 hover:opacity-100 transition-all duration-200 cursor-pointer"
-              @submit="handleSubmit"
-              @showLogin="showLoginModal = true"
-            />
+            <div class="flex items-center gap-2">
+              <div class="relative flex-grow">
+                <UploadInput
+                  v-model="requestUrl"
+                  container-class="relative"
+                  input-class="w-full h-12 sm:h-14 px-6 pr-14 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-gray-100 text-gray-800 placeholder-gray-400 transition-all duration-300 text-base sm:text-lg"
+                  enter-icon-class="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 opacity-80 hover:opacity-100 transition-all duration-200 cursor-pointer"
+                  @submit="handleSubmit"
+                  @showLogin="showLoginModal = true"
+                />
+              </div>
+              <button
+                @click="handleFileUploadClick"
+                class="file-upload-btn flex items-center gap-1.5 px-3 py-2.5 sm:py-3.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200"
+                title="上传文件"
+              >
+                <img src="/images/icons/pdf.svg" alt="PDF" class="w-5 h-5" />
+                <span class="hidden sm:inline">上传文件</span>
+              </button>
+            </div>
           </div>
         </div>
       </template>
@@ -189,6 +201,15 @@
                       @showLogin="showLoginModal = true"
                     />
                   </div>
+                  <!-- 上传文件按钮（PDF/DOC/TXT） -->
+                  <button
+                    @click="handleFileUploadClick"
+                    class="file-upload-btn flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200"
+                    title="上传文件"
+                  >
+                    <img src="/images/icons/pdf.svg" alt="PDF" class="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span class="hidden sm:inline">上传文件</span>
+                  </button>
                   <!-- 私密上传按钮 -->
                   <button 
                     @click="handlePrivateUploadClick"
@@ -1148,6 +1169,8 @@ const articleRequestFormRef = ref<InstanceType<typeof ArticleRequestForm> | null
 // 添加新的处理函数
 const handleArticleRefresh = async () => {
   await fetchArticles(true)
+  // 文件上传等场景只 emit refresh，需要启动轮询以更新处理中卡片
+  startPolling()
 }
 
 // 修改 handleUploadSuccess 函数
@@ -1225,6 +1248,15 @@ const handleSubmit = (url: string) => {
     articleRequestFormRef.value.quickSubmit(url)
     handleClearInput()
   }
+}
+
+// 处理公开文件上传按钮点击（PDF/DOC/TXT）
+const handleFileUploadClick = () => {
+  if (!authStore.isAuthenticated) {
+    showLoginModal.value = true
+    return
+  }
+  articleRequestFormRef.value?.openModalWithUrl('', 'file')
 }
 
 // 处理私密上传按钮点击
@@ -1483,6 +1515,26 @@ input::placeholder {
 /* 添加新的样式 */
 input::placeholder {
   color: #9CA3AF;
+}
+
+/* 上传文件按钮样式 */
+.file-upload-btn {
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.08) 0%,
+    rgba(99, 102, 241, 0.12) 100%
+  );
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #3b82f6;
+}
+
+.file-upload-btn:hover {
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.12) 0%,
+    rgba(99, 102, 241, 0.18) 100%
+  );
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
 }
 
 /* 私密上传按钮样式 */
