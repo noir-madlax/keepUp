@@ -1,6 +1,7 @@
 import httpx
 import boto3
 import json
+import asyncio
 from botocore.config import Config
 from typing import Optional, Dict, Any
 from app.config import settings
@@ -17,7 +18,8 @@ class OpenRouterService:
     MODEL = "google/gemini-2.5-pro"  # OpenRouter模型
     
     # AWS Bedrock 配置
-    BEDROCK_MODEL = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"  # Claude Sonnet 4.5
+    # Claude Sonnet 4.6（2026-07 实测 Sonnet 5 在本账号被 Bedrock 账号级封锁："not available for this account"，解锁后可改为 us.anthropic.claude-sonnet-5）
+    BEDROCK_MODEL = "us.anthropic.claude-sonnet-4-6"
     BEDROCK_REGION = settings.AWS_BEDROCK_REGION
     BEDROCK_MAX_TOKENS = 64000
     
@@ -147,7 +149,7 @@ class OpenRouterService:
     @staticmethod
     @retry_decorator()
     async def call_bedrock_api(prompt: str, content: str, request_id: int, lang: str) -> Optional[Dict[str, Any]]:
-        """调用 AWS Bedrock API (Claude Sonnet 4.5)
+        """调用 AWS Bedrock API (Claude Sonnet 4.6)
         
         Args:
             prompt: 提示词
@@ -197,15 +199,16 @@ class OpenRouterService:
             logger.info(f"区域: {OpenRouterService.BEDROCK_REGION}")
             logger.info(f"输入内容长度: {len(content)} 字符")
             
-            # 调用Bedrock API
-            response = bedrock_client.invoke_model(
-                modelId=OpenRouterService.BEDROCK_MODEL,
-                body=json.dumps(request_data),
-                contentType="application/json"
-            )
-            
-            # 解析响应
-            response_body = response['body'].read()
+            # boto3 同步调用必须放到线程池，否则会堵死整个 FastAPI 事件循环
+            def _invoke_and_read():
+                response = bedrock_client.invoke_model(
+                    modelId=OpenRouterService.BEDROCK_MODEL,
+                    body=json.dumps(request_data),
+                    contentType="application/json"
+                )
+                return response['body'].read()
+
+            response_body = await asyncio.to_thread(_invoke_and_read)
             bedrock_response = json.loads(response_body)
             
             # 记录token使用情况
