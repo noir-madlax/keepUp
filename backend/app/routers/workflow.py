@@ -439,6 +439,16 @@ async def process_article_task(request: FetchRequest):
             
             # 保存字幕内容
             await SupabaseService.update_content(request.id, content)
+            if getattr(request, "platform", None) == "youtube" and "转录内容:" not in content:
+                error_msg = "Unable to get subtitle content"
+                await RequestLogger.error(
+                    request.id,
+                    Steps.CONTENT_FETCH,
+                    error_msg,
+                    Exception(error_msg)
+                )
+                await SupabaseService.update_status(request.id, "failed", error_msg)
+                return
         
         # 等待确保数据已保存
         await asyncio.sleep(1)

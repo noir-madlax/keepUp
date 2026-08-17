@@ -19,6 +19,8 @@ from app.models.request import FetchRequest
 from app.models.author import AuthorInfo
 from app.models.article import ArticleCreate
 from app.services.transcript.fallback_provider import TranscriptFallbackProvider
+from app.services.transcript.youtube_audio import YouTubeAudioAsrProvider
+from app.services.transcript.text_utils import build_youtube_content
 import unicodedata
 import os
 import re as _re
@@ -186,20 +188,29 @@ class YouTubeFetcher(ContentFetcher):
                 except Exception as _:
                     # 兜底错误不影响主流程
                     logger.exception("[YT Fallback] Unexpected error during fallback pipeline")
-            
-            # 组合内容
-            content_parts = [
-                f"标题: {video_info.title}",
-                f"作者: {video_info.author}",
-                f"描述: {video_info.description}",
-            ]
-            
-            if transcript:
-                content_parts.append(f"转录内容: {transcript}")
-            
-            content = "\n\n".join(content_parts)
+
+            # 字幕与小宇宙都失败时，下载音频走腾讯 ASR（与私密音频同一套公网 URL）
+            if not transcript:
+                try:
+                    user_id = (request.user_id if request else None) or "youtube-asr"
+                    logger.info("[YT Audio ASR] Captions empty. Download audio and transcribe...")
+                    provider = YouTubeAudioAsrProvider()
+                    transcript = await provider.transcribe(url, user_id)
+                except Exception:
+                    logger.exception("[YT Audio ASR] Unexpected error during audio ASR pipeline")
+                    transcript = None
+
+            content = build_youtube_content(
+                video_info.title,
+                video_info.author,
+                video_info.description,
+                transcript,
+            )
+            if not content:
+                logger.error("YouTube transcript unavailable after captions, XiaoYuZhou fallback, and audio ASR")
+                return None
+
             logger.info(f"成功获取YouTube内容，长度: {len(content)}")
-            
             return content
             
         except Exception as e:

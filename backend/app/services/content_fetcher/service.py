@@ -32,6 +32,8 @@ class ContentFetcherService:
                 if fetcher.can_handle(url):
                     if isinstance(fetcher, FileFetcher) and self.request and self.request.content:
                         return await fetcher.fetch(url, self.request)
+                    if isinstance(fetcher, YouTubeFetcher):
+                        return await fetcher.fetch(url, self.request)
                     return await fetcher.fetch(url)
             return None
         except Exception as e:

@@ -4,18 +4,20 @@ FROM python:3.11-slim
 # 设置工作目录
 WORKDIR /app
 
-# 安装系统依赖和 Node.js
+# Node 22 is required by yt-dlp EJS for YouTube audio downloads.
+# ffmpeg is required to fix the m4a container after DASH audio download.
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     ca-certificates \
     gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    ffmpeg \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# 验证 Node.js 安装
-RUN node --version && npm --version
+# 验证 Node.js / ffmpeg 安装
+RUN node --version && npm --version && ffmpeg -version | head -n 1
 
 # 复制 requirements.txt
 COPY requirements.txt .
