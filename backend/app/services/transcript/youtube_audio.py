@@ -45,8 +45,25 @@ class YouTubeAudioAsrProvider:
             out_tmpl,
             "--no-playlist",
             "--no-warnings",
-            video_url,
         ]
+        proxy_url = None
+        use_proxy_env = os.getenv("USE_PROXY")
+        if use_proxy_env is not None:
+            if use_proxy_env.lower() == "true":
+                proxy_url = os.getenv("PROXY_URL")
+        else:
+            try:
+                from app.config import settings
+
+                if getattr(settings, "USE_PROXY", False) and getattr(settings, "PROXY_URL", None):
+                    proxy_url = settings.PROXY_URL
+            except Exception:
+                proxy_url = None
+        if proxy_url:
+            # Bright Data web unlocker MITMs TLS; same verify=False pattern as caption fetch.
+            cmd.extend(["--proxy", proxy_url, "--no-check-certificates"])
+            logger.info("[YT Audio ASR] yt-dlp proxy enabled")
+        cmd.append(video_url)
         logger.info(f"[YT Audio ASR] download start url={video_url}")
         completed = subprocess.run(
             cmd,

@@ -79,6 +79,32 @@ class YoutubeAudioDownloadCommandTest(unittest.TestCase):
             self.assertIn("--js-runtimes", cmd)
             self.assertIn("node:/usr/bin/node", cmd)
             self.assertIn("140/bestaudio[ext=m4a]/bestaudio", cmd)
+            self.assertNotIn("--proxy", cmd)
+
+    def test_download_uses_proxy_when_configured(self):
+        from app.services.transcript.youtube_audio import YouTubeAudioAsrProvider
+
+        provider = YouTubeAudioAsrProvider()
+        provider.yt_dlp = "/usr/bin/yt-dlp"
+        provider.node = "/usr/bin/node"
+        provider.ffmpeg = "/usr/bin/ffmpeg"
+
+        with patch.dict(
+            os.environ,
+            {"USE_PROXY": "true", "PROXY_URL": "http://proxy.example:8080"},
+            clear=False,
+        ):
+            with patch("app.services.transcript.youtube_audio.subprocess.run") as run:
+                run.return_value = MagicMock(returncode=0, stderr="", stdout="")
+                with patch("app.services.transcript.youtube_audio.Path.glob", return_value=[]):
+                    with self.assertRaises(RuntimeError):
+                        provider._download_audio(
+                            "https://www.youtube.com/watch?v=toRqAY3xp4A", "/tmp/x"
+                        )
+            cmd = run.call_args[0][0]
+            self.assertIn("--proxy", cmd)
+            self.assertIn("http://proxy.example:8080", cmd)
+            self.assertIn("--no-check-certificates", cmd)
 
 
 class YoutubeFetchFailClosedTest(unittest.IsolatedAsyncioTestCase):
