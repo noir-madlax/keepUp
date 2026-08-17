@@ -82,6 +82,35 @@ class YoutubeAudioDownloadCommandTest(unittest.TestCase):
 
 
 class YoutubeFetchFailClosedTest(unittest.IsolatedAsyncioTestCase):
+    async def test_fetch_uses_captions_and_skips_audio_asr(self):
+        try:
+            from app.services.content_fetcher.youtube import YouTubeFetcher
+            from app.services.content_fetcher.base import VideoInfo
+        except ImportError as e:
+            self.skipTest(f"youtube fetcher deps missing: {e}")
+
+        fetcher = YouTubeFetcher.__new__(YouTubeFetcher)
+        video = VideoInfo.model_construct(
+            title="t",
+            description="d",
+            author={"name": "a"},
+            article=None,
+        )
+        fetcher.get_video_info = AsyncMock(return_value=video)
+        fetcher._extract_video_id = MagicMock(return_value="IFvLorAL5-8")
+        fetcher._get_transcript = AsyncMock(return_value="[00:00:00] caption text")
+        fetcher._select_fallback_podcast_url = AsyncMock()
+
+        with patch(
+            "app.services.content_fetcher.youtube.YouTubeAudioAsrProvider"
+        ) as provider_cls:
+            result = await fetcher.fetch("https://www.youtube.com/watch?v=IFvLorAL5-8")
+
+        provider_cls.assert_not_called()
+        fetcher._select_fallback_podcast_url.assert_not_called()
+        self.assertIsNotNone(result)
+        self.assertIn("转录内容: [00:00:00] caption text", result)
+
     async def test_fetch_returns_none_when_all_transcripts_fail(self):
         try:
             from app.services.content_fetcher.youtube import YouTubeFetcher
