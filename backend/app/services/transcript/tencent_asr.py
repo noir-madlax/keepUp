@@ -11,6 +11,8 @@ from tencentcloud.common.profile.client_profile import ClientProfile
 from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.asr.v20190614 import asr_client, models
 
+from app.services.transcript.text_utils import strip_inner_timestamps
+
 
 class TencentASRClient:
     def __init__(self):
@@ -88,13 +90,15 @@ class TencentASRClient:
         if isinstance(detail, list) and detail:
             for seg in detail:
                 bg = seg.get("SliceStartTime", 0) / 1000.0
-                text = seg.get("FinalSentence") or seg.get("Text") or ""
+                text = strip_inner_timestamps(
+                    seg.get("FinalSentence") or seg.get("Text") or ""
+                )
                 ts = self._sec_to_hhmmss(bg)
                 if text:
-                    lines.append(f"[{ts}] {text.strip()}")
+                    lines.append(f"[{ts}] {text}")
         else:
             # fallback: use Result plain text without timestamps
-            plain = data.get("Result", "").strip()
+            plain = strip_inner_timestamps(data.get("Result", ""))
             if plain:
                 lines.append(f"[00:00:00] {plain}")
         return "\n".join(lines)
