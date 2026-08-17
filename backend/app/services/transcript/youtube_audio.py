@@ -22,11 +22,67 @@ class YouTubeAudioAsrProvider:
     """yt-dlp m4a download → Supabase public URL → Tencent ASR."""
 
     AUDIO_FORMAT = "140/bestaudio[ext=m4a]/bestaudio"
+    PLAYER_CLIENT = "youtube:player_client=tv_embedded"
 
     def __init__(self) -> None:
         self.yt_dlp = shutil.which("yt-dlp") or "yt-dlp"
         self.node = shutil.which("node")
         self.ffmpeg = shutil.which("ffmpeg")
+
+    def _webshare_proxy_urls(self) -> list[str]:
+        """Return HTTP proxies that can fetch googlevideo (not Web Unlocker)."""
+        token = os.getenv("WEBSHARE_API_TOKEN")
+        if not token:
+            try:
+                from app.config import settings
+
+                token = getattr(settings, "WEBSHARE_API_TOKEN", None)
+            except Exception:
+                token = None
+        if not token:
+            return []
+        try:
+            import requests
+
+            resp = requests.get(
+                "https://proxy.webshare.io/api/v2/proxy/list/",
+                headers={"Authorization": f"Token {token}"},
+                params={"mode": "direct", "page": 1, "page_size": 10},
+                timeout=20,
+            )
+            resp.raise_for_status()
+            results = resp.json().get("results") or []
+        except Exception as e:
+            logger.warning(f"[YT Audio ASR] webshare list failed: {type(e).__name__}")
+            return []
+
+        ranked = sorted(results, key=lambda item: 0 if item.get("country_code") == "US" else 1)
+        urls: list[str] = []
+        for item in ranked:
+            user = item.get("username")
+            password = item.get("password")
+            address = item.get("proxy_address")
+            port = item.get("port")
+            if all([user, password, address, port]):
+                urls.append(f"http://{user}:{password}@{address}:{port}")
+        return urls
+
+    def _base_cmd(self, out_tmpl: str) -> list[str]:
+        return [
+            self.yt_dlp,
+            "--js-runtimes",
+            f"node:{self.node}",
+            "--impersonate",
+            "chrome",
+            "--extractor-args",
+            self.PLAYER_CLIENT,
+            "-f",
+            self.AUDIO_FORMAT,
+            "-o",
+            out_tmpl,
+            "--no-playlist",
+            "--no-warnings",
+        ]
 
     def _download_audio(self, video_url: str, dest_dir: str) -> str:
         if not self.node:
@@ -35,55 +91,50 @@ class YouTubeAudioAsrProvider:
             logger.warning("[YT Audio ASR] ffmpeg not found; m4a container fixup may fail")
 
         out_tmpl = str(Path(dest_dir) / "audio.%(ext)s")
-        cmd = [
-            self.yt_dlp,
-            "--js-runtimes",
-            f"node:{self.node}",
-            "-f",
-            self.AUDIO_FORMAT,
-            "-o",
-            out_tmpl,
-            "--no-playlist",
-            "--no-warnings",
-        ]
-        proxy_url = None
-        use_proxy_env = os.getenv("USE_PROXY")
-        if use_proxy_env is not None:
-            if use_proxy_env.lower() == "true":
-                proxy_url = os.getenv("PROXY_URL")
-        else:
-            try:
-                from app.config import settings
+        proxies = self._webshare_proxy_urls()
+        if not proxies:
+            logger.warning("[YT Audio ASR] no Webshare proxies; trying direct download")
+            proxies = [None]
 
-                if getattr(settings, "USE_PROXY", False) and getattr(settings, "PROXY_URL", None):
-                    proxy_url = settings.PROXY_URL
-            except Exception:
-                proxy_url = None
-        if proxy_url:
-            # Bright Data web unlocker MITMs TLS; same verify=False pattern as caption fetch.
-            cmd.extend(["--proxy", proxy_url, "--no-check-certificates"])
-            logger.info("[YT Audio ASR] yt-dlp proxy enabled")
-        cmd.append(video_url)
-        logger.info(f"[YT Audio ASR] download start url={video_url}")
-        completed = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=int(os.getenv("YOUTUBE_AUDIO_DOWNLOAD_TIMEOUT", "180")),
-            check=False,
-        )
-        if completed.returncode != 0:
-            err = (completed.stderr or completed.stdout or "").strip()[-800:]
-            raise RuntimeError(f"yt-dlp failed: {err}")
+        timeout = int(os.getenv("YOUTUBE_AUDIO_DOWNLOAD_TIMEOUT", "300"))
+        last_err = "yt-dlp failed"
+        for proxy_url in proxies[:5]:
+            cmd = self._base_cmd(out_tmpl)
+            if proxy_url:
+                cmd.extend(["--proxy", proxy_url])
+                logger.info("[YT Audio ASR] yt-dlp webshare proxy enabled")
+            cmd.append(video_url)
+            logger.info(f"[YT Audio ASR] download start url={video_url}")
+            completed = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                check=False,
+            )
+            err = (completed.stderr or completed.stdout or "").strip()
+            if proxy_url:
+                err = err.replace(proxy_url, "[proxy]")
+            if completed.returncode == 0:
+                files = [
+                    path
+                    for path in Path(dest_dir).glob("audio.*")
+                    if path.is_file() and path.stat().st_size > 0
+                ]
+                if files:
+                    audio_path = str(files[0])
+                    logger.info(
+                        f"[YT Audio ASR] download ok path={audio_path} size={os.path.getsize(audio_path)}"
+                    )
+                    return audio_path
+                last_err = "yt-dlp finished but produced no audio file"
+            else:
+                last_err = err[-800:] or last_err
+                logger.warning("[YT Audio ASR] yt-dlp attempt failed, trying next proxy")
+            for leftover in Path(dest_dir).glob("audio.*"):
+                leftover.unlink(missing_ok=True)
 
-        files = list(Path(dest_dir).glob("audio.*"))
-        if not files:
-            raise RuntimeError("yt-dlp finished but produced no audio file")
-        audio_path = str(files[0])
-        logger.info(
-            f"[YT Audio ASR] download ok path={audio_path} size={os.path.getsize(audio_path)}"
-        )
-        return audio_path
+        raise RuntimeError(f"yt-dlp failed: {last_err}")
 
     async def transcribe(self, video_url: str, user_id: str) -> Optional[str]:
         dest_dir = tempfile.mkdtemp(prefix="yt-asr-")
