@@ -60,51 +60,87 @@ class BuildYoutubeContentTest(unittest.TestCase):
         self.assertIn("转录内容: [00:00:00] hello", content)
 
 
-class YoutubeAudioDownloadCommandTest(unittest.TestCase):
-    def test_download_invokes_yt_dlp_with_node_runtime(self):
-        from app.services.transcript.youtube_audio import YouTubeAudioAsrProvider
+class MsToHhmmssTest(unittest.TestCase):
+    def test_zero(self):
+        from app.services.transcript.text_utils import ms_to_hhmmss
 
-        provider = YouTubeAudioAsrProvider()
-        provider.yt_dlp = "/usr/bin/yt-dlp"
-        provider.node = "/usr/bin/node"
-        provider.ffmpeg = "/usr/bin/ffmpeg"
-        provider._webshare_proxy_urls = MagicMock(return_value=[])
+        self.assertEqual(ms_to_hhmmss(0), "00:00:00")
 
-        with patch("app.services.transcript.youtube_audio.subprocess.run") as run:
-            run.return_value = MagicMock(returncode=0, stderr="", stdout="")
-            with patch("app.services.transcript.youtube_audio.Path.glob", return_value=[]):
-                with self.assertRaises(RuntimeError):
-                    provider._download_audio("https://www.youtube.com/watch?v=toRqAY3xp4A", "/tmp/x")
-            cmd = run.call_args[0][0]
-            self.assertEqual(cmd[0], "/usr/bin/yt-dlp")
-            self.assertIn("--js-runtimes", cmd)
-            self.assertIn("node:/usr/bin/node", cmd)
-            self.assertIn("--impersonate", cmd)
-            self.assertIn("chrome", cmd)
-            self.assertIn("youtube:player_client=tv_embedded", cmd)
-            self.assertIn("140/bestaudio[ext=m4a]/bestaudio", cmd)
-            self.assertNotIn("--proxy", cmd)
+    def test_minutes_and_seconds(self):
+        from app.services.transcript.text_utils import ms_to_hhmmss
 
-    def test_download_uses_webshare_proxy(self):
-        from app.services.transcript.youtube_audio import YouTubeAudioAsrProvider
+        self.assertEqual(ms_to_hhmmss(8150), "00:00:08")
+        self.assertEqual(ms_to_hhmmss(75_000), "00:01:15")
 
-        provider = YouTubeAudioAsrProvider()
-        provider.yt_dlp = "/usr/bin/yt-dlp"
-        provider.node = "/usr/bin/node"
-        provider.ffmpeg = "/usr/bin/ffmpeg"
-        provider._webshare_proxy_urls = MagicMock(return_value=["http://proxy.example:8080"])
 
-        with patch("app.services.transcript.youtube_audio.subprocess.run") as run:
-            run.return_value = MagicMock(returncode=0, stderr="", stdout="")
-            with patch("app.services.transcript.youtube_audio.Path.glob", return_value=[]):
-                with self.assertRaises(RuntimeError):
-                    provider._download_audio(
-                        "https://www.youtube.com/watch?v=toRqAY3xp4A", "/tmp/x"
-                    )
-        cmd = run.call_args[0][0]
-        self.assertIn("--proxy", cmd)
-        self.assertIn("http://proxy.example:8080", cmd)
-        self.assertNotIn("--no-check-certificates", cmd)
+class SupadataTranscriptClientTest(unittest.TestCase):
+    def test_chunks_to_bracketed(self):
+        from app.services.transcript.supadata import SupadataTranscriptClient
+
+        text = SupadataTranscriptClient.to_bracketed_transcript(
+            [
+                {"text": "hello", "offset": 0, "duration": 1000},
+                {"text": "world", "offset": 8150, "duration": 1200},
+            ]
+        )
+        self.assertEqual(text, "[00:00:00] hello\n[00:00:08] world")
+
+    def test_plain_string_content(self):
+        from app.services.transcript.supadata import SupadataTranscriptClient
+
+        text = SupadataTranscriptClient.to_bracketed_transcript("hello world")
+        self.assertEqual(text, "[00:00:00] hello world")
+
+    def test_empty_content(self):
+        from app.services.transcript.supadata import SupadataTranscriptClient
+
+        self.assertEqual(SupadataTranscriptClient.to_bracketed_transcript([]), "")
+        self.assertEqual(SupadataTranscriptClient.to_bracketed_transcript(""), "")
+
+    def test_missing_key_returns_none(self):
+        from app.services.transcript.supadata import SupadataTranscriptClient
+
+        client = SupadataTranscriptClient()
+        client.api_key = None
+        self.assertIsNone(client.transcribe("https://www.youtube.com/watch?v=toRqAY3xp4A"))
+
+    def test_mode_auto_immediate_200(self):
+        from app.services.transcript.supadata import SupadataTranscriptClient
+
+        client = SupadataTranscriptClient()
+        client.api_key = "test-key"
+        payload = {
+            "content": [{"text": "深蹲", "offset": 0, "duration": 1200, "lang": "zh"}],
+            "lang": "zh",
+        }
+        with patch("app.services.transcript.supadata.requests.get") as get:
+            get.return_value = MagicMock(status_code=200, json=lambda: payload, text="")
+            result = client.transcribe("https://www.youtube.com/watch?v=toRqAY3xp4A", "auto")
+        self.assertEqual(result, "[00:00:00] 深蹲")
+        args, kwargs = get.call_args
+        self.assertIn("/transcript", args[0])
+        self.assertEqual(kwargs["params"]["mode"], "auto")
+        self.assertEqual(kwargs["params"]["text"], "false")
+
+    def test_polls_202_job_until_completed(self):
+        from app.services.transcript.supadata import SupadataTranscriptClient
+
+        client = SupadataTranscriptClient()
+        client.api_key = "test-key"
+        client.poll_interval = 0
+        queued = MagicMock(status_code=202, json=lambda: {"jobId": "job-1"}, text="")
+        pending = MagicMock(status_code=200, json=lambda: {"status": "active"}, text="")
+        done = MagicMock(
+            status_code=200,
+            json=lambda: {
+                "status": "completed",
+                "content": [{"text": "hello", "offset": 1000, "duration": 500}],
+            },
+            text="",
+        )
+        with patch("app.services.transcript.supadata.requests.get", side_effect=[queued, pending, done]):
+            result = client.transcribe("https://www.youtube.com/watch?v=xxqFoBHD9UE")
+        self.assertEqual(result, "[00:00:01] hello")
 
 
 class YoutubeFetchFailClosedTest(unittest.IsolatedAsyncioTestCase):
@@ -128,7 +164,7 @@ class YoutubeFetchFailClosedTest(unittest.IsolatedAsyncioTestCase):
         fetcher._select_fallback_podcast_url = AsyncMock()
 
         with patch(
-            "app.services.content_fetcher.youtube.YouTubeAudioAsrProvider"
+            "app.services.content_fetcher.youtube.SupadataTranscriptClient"
         ) as provider_cls:
             result = await fetcher.fetch("https://www.youtube.com/watch?v=IFvLorAL5-8")
 
@@ -157,11 +193,41 @@ class YoutubeFetchFailClosedTest(unittest.IsolatedAsyncioTestCase):
         fetcher._select_fallback_podcast_url = AsyncMock(return_value=(None, None, ""))
 
         with patch(
-            "app.services.content_fetcher.youtube.YouTubeAudioAsrProvider"
+            "app.services.content_fetcher.youtube.SupadataTranscriptClient"
         ) as provider_cls:
-            provider_cls.return_value.transcribe = AsyncMock(return_value=None)
+            provider_cls.return_value.transcribe = MagicMock(return_value=None)
             result = await fetcher.fetch("https://www.youtube.com/watch?v=toRqAY3xp4A")
+        provider_cls.assert_called_once()
         self.assertIsNone(result)
+
+    async def test_fetch_uses_supadata_whisper_when_captions_empty(self):
+        try:
+            from app.services.content_fetcher.youtube import YouTubeFetcher
+            from app.services.content_fetcher.base import VideoInfo
+        except ImportError as e:
+            self.skipTest(f"youtube fetcher deps missing: {e}")
+
+        fetcher = YouTubeFetcher.__new__(YouTubeFetcher)
+        video = VideoInfo.model_construct(
+            title="t",
+            description="d",
+            author={"name": "a"},
+            article=None,
+        )
+        fetcher.get_video_info = AsyncMock(return_value=video)
+        fetcher._extract_video_id = MagicMock(return_value="NESeTg2-9bk")
+        fetcher._get_transcript = AsyncMock(return_value=None)
+        fetcher._select_fallback_podcast_url = AsyncMock(return_value=(None, None, ""))
+
+        with patch(
+            "app.services.content_fetcher.youtube.SupadataTranscriptClient"
+        ) as provider_cls:
+            provider_cls.return_value.transcribe = MagicMock(
+                return_value="[00:00:00] generated speech"
+            )
+            result = await fetcher.fetch("https://www.youtube.com/watch?v=NESeTg2-9bk")
+        self.assertIsNotNone(result)
+        self.assertIn("转录内容: [00:00:00] generated speech", result)
 
 
 if __name__ == "__main__":
