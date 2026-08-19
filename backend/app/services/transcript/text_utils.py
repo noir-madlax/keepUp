@@ -7,6 +7,15 @@ from typing import Optional
 INNER_TIMESTAMP_RE = re.compile(r"\[\d+:\d+(?:\.\d+)?,\d+:\d+(?:\.\d+)?\]\s*")
 
 
+def ms_to_hhmmss(ms: float) -> str:
+    """Convert millisecond offsets from Supadata chunks to [HH:MM:SS] prefixes."""
+    seconds = max(0, int(float(ms) / 1000.0))
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    secs = seconds % 60
+    return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+
+
 def strip_inner_timestamps(text: Optional[str]) -> str:
     if not text:
         return ""

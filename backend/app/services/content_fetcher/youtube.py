@@ -19,7 +19,7 @@ from app.models.request import FetchRequest
 from app.models.author import AuthorInfo
 from app.models.article import ArticleCreate
 from app.services.transcript.fallback_provider import TranscriptFallbackProvider
-from app.services.transcript.youtube_audio import YouTubeAudioAsrProvider
+from app.services.transcript.supadata import SupadataTranscriptClient
 from app.services.transcript.text_utils import build_youtube_content
 import unicodedata
 import os
@@ -189,15 +189,14 @@ class YouTubeFetcher(ContentFetcher):
                     # 兜底错误不影响主流程
                     logger.exception("[YT Fallback] Unexpected error during fallback pipeline")
 
-            # 字幕与小宇宙都失败时，下载音频走腾讯 ASR（与私密音频同一套公网 URL）
+            # 字幕与小宇宙都失败时，让 Supadata 用 Whisper 生成转写（不在 Lightsail 上下 YouTube 音频）
             if not transcript:
                 try:
-                    user_id = (request.user_id if request else None) or "youtube-asr"
-                    logger.info("[YT Audio ASR] Captions empty. Download audio and transcribe...")
-                    provider = YouTubeAudioAsrProvider()
-                    transcript = await provider.transcribe(url, user_id)
+                    logger.info("[YT Supadata] Captions empty. Request mode=auto (native then Whisper)...")
+                    provider = SupadataTranscriptClient()
+                    transcript = await asyncio.to_thread(provider.transcribe, url, "auto")
                 except Exception:
-                    logger.exception("[YT Audio ASR] Unexpected error during audio ASR pipeline")
+                    logger.exception("[YT Supadata] Unexpected error during Whisper fallback")
                     transcript = None
 
             content = build_youtube_content(
@@ -207,7 +206,7 @@ class YouTubeFetcher(ContentFetcher):
                 transcript,
             )
             if not content:
-                logger.error("YouTube transcript unavailable after captions, XiaoYuZhou fallback, and audio ASR")
+                logger.error("YouTube transcript unavailable after captions, XiaoYuZhou fallback, and Supadata Whisper")
                 return None
 
             logger.info(f"成功获取YouTube内容，长度: {len(content)}")
