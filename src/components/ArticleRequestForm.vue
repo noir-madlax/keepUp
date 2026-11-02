@@ -259,7 +259,7 @@
                     ref="fileInput"
                     class="hidden"
                     @change="handleFileSelect"
-                    accept=".doc,.docx,.pdf,.txt"
+                    accept=".doc,.docx,.pdf,.txt,.epub,.azw3"
                   />
 
                   <div v-if="!selectedFile" class="space-y-2">
@@ -270,7 +270,7 @@
                       {{ t('summarize.browseFiles') }}
                     </button>
                     <p class="text-xs text-gray-400 mt-2">
-                      {{ t('summarize.supportedFormats') }}: DOC, PDF, TXT ({{ t('summarize.maxSize') }}: 10MB)
+                      {{ t('summarize.supportedFormats') }}: DOC, PDF, TXT, EPUB, AZW3 ({{ t('summarize.maxSize') }}: 50MB)
                     </p>
                   </div>
 
@@ -779,8 +779,8 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
 const isDragging = ref(false)
 
-// 与后端 /workflow/upload 的 10MB 限制对齐
-const MAX_FILE_SIZE = 10 * 1024 * 1024
+// 与后端 /workflow/upload 的 50MB 限制对齐
+const MAX_FILE_SIZE = 50 * 1024 * 1024
 
 // 获取文件图标
 const getFileIcon = (filename: string): string => {
@@ -808,7 +808,7 @@ const validateFile = (file: File): boolean => {
 
   // 检查文件类型
   const ext = file.name.split('.').pop()?.toLowerCase()
-  const allowedTypes = ['doc', 'docx', 'pdf', 'txt']
+  const allowedTypes = ['doc', 'docx', 'pdf', 'txt', 'epub', 'azw3']
   if (!ext || !allowedTypes.includes(ext)) {
     ElMessage.error(t('summarize.messages.invalidFileType'))
     return false

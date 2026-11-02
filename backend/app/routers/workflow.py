@@ -11,7 +11,7 @@ from app.services.podcast_matcher import PodcastMatcher
 from app.services.content_fetcher.youtube import YouTubeFetcher
 from app.services.content_resolver import ContentResolver
 from app.services.request_logger import RequestLogger, Steps
-from app.utils.file_processor import process_file_content
+from app.utils.file_processor import process_file_content, SUPPORTED_EXTENSIONS, MAX_UPLOAD_SIZE
 from ..repositories.article_views import ArticleViewsRepository
 from app.services.openrouter_service import OpenRouterService
 from app.services.private_content_service import PrivateContentService
@@ -799,16 +799,15 @@ async def upload_workflow(
     try:
         # 1. 验证文件类型
         file_extension = file.filename.split('.')[-1].lower()
-        if file_extension not in ['pdf', 'doc', 'docx', 'txt']:
+        if file_extension not in SUPPORTED_EXTENSIONS:
             return {
                 "success": False,
                 "message": "不支持的文件类型"
             }
             
-        # 2. 验证文件大小（10MB限制）
-        MAX_SIZE = 10 * 1024 * 1024  # 10MB
+        # 2. 验证文件大小（上限见 MAX_UPLOAD_SIZE）
         content = await file.read()
-        if len(content) > MAX_SIZE:
+        if len(content) > MAX_UPLOAD_SIZE:
             return {
                 "success": False,
                 "message": "文件大小超过限制"
@@ -825,7 +824,16 @@ async def upload_workflow(
         request_id = request_data["id"]
         
         # 4. 处理文件内容
-        text_content = await process_file_content(content, file_extension)
+        try:
+            text_content = await process_file_content(content, file_extension)
+        except Exception as extract_error:
+            # 解析失败时把请求标记为 failed，避免记录一直停留在 pending
+            logger.error(f"文件内容提取失败: {str(extract_error)}")
+            await SupabaseService.update_status(request_id, "failed", str(extract_error))
+            return {
+                "success": False,
+                "message": str(extract_error)
+            }
         
         if not text_content:
             await SupabaseService.update_status(request_id, "failed", "文件内容提取失败")

@@ -21,7 +21,9 @@ class OpenRouterService:
     # Claude Sonnet 4.6（2026-07 实测 Sonnet 5 在本账号被 Bedrock 账号级封锁："not available for this account"，解锁后可改为 us.anthropic.claude-sonnet-5）
     BEDROCK_MODEL = "us.anthropic.claude-sonnet-4-6"
     BEDROCK_REGION = settings.AWS_BEDROCK_REGION
-    BEDROCK_MAX_TOKENS = 64000
+    # Sonnet 4.6 在 Bedrock 上输出上限为 128000（实测 199000 会被 ValidationException 拒绝）；
+    # 实测输入 239K tokens + max_tokens=128000 仍可正常调用，输入与 max_tokens 之和不受 200K 限制
+    BEDROCK_MAX_TOKENS = 128000
     
     @staticmethod
     async def get_prompt_data(lang: str, channel: str = None, content: str = None) -> Optional[str]:

@@ -24,6 +24,8 @@ pymysql==1.1.0
 cryptography==45.0.4
 python-docx==1.0.1  # 处理 Word 文档
 PyPDF2==3.0.1      # 处理 PDF 文件
+EbookLib==0.21     # 处理 EPUB 电子书
+mobi==0.4.1        # 处理 AZW3/MOBI 电子书（解包为 EPUB/HTML）
 
 # url 转换
 spotipy==2.24.0
